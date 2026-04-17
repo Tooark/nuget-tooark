@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Tooark.Exceptions;
 using Tooark.Observability.Injections;
 using Tooark.Observability.Options;
 
@@ -459,6 +460,34 @@ public class TooarkDependencyInjectionTracingTests
 
     // Assert
     Assert.NotNull(provider);
+  }
+
+  // Teste para garantir que o OTLP específico de tracing faz override do global.
+  [Fact]
+  public void ConfigureTracingExporters_WhenTracingOtlpOverridesGlobal_UsesTracingOtlp()
+  {
+    // Arrange
+    var options = CreateOptions(
+      otlpEnabled: true,
+      otlpEndpoint: "http://localhost:4317",
+      useConsoleExporterInDev: false
+    );
+    options.Tracing.Otlp = new OtlpOptions
+    {
+      Endpoint = "not-a-uri"
+    };
+
+    var builder = Sdk.CreateTracerProviderBuilder()
+      .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("svc"))
+      .AddSource("TestSource");
+
+    // Act + Assert
+    var ex = Assert.Throws<InternalServerErrorException>(() =>
+    {
+      TooarkDependencyInjection.ConfigureTracingExporters(builder, options, isDevelopment: false);
+      using var provider = builder.Build();
+    });
+    Assert.Contains("Options.Otlp.Endpoint.Invalid", ex.Message);
   }
 
   // Teste para configurar filtro quando o path é null

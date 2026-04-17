@@ -248,6 +248,115 @@ public static partial class TooarkDependencyInjection
   }
 
   /// <summary>
+  /// Resolve a configuração efetiva de OTLP para um recurso específico,
+  /// herdando do OTLP global e aplicando overrides do recurso quando informados.
+  /// </summary>
+  /// <param name="options">Opções globais de observabilidade.</param>
+  /// <param name="resourceOtlp">Opções OTLP específicas do recurso.</param>
+  /// <returns>Configuração OTLP efetiva.</returns>
+  internal static OtlpOptions ResolveOtlpOptions(ObservabilityOptions options, OtlpOptions? resourceOtlp)
+  {
+    // Começa com uma cópia das opções globais para permitir composição segura de overrides
+    var resolved = CloneOtlpOptions(options.Otlp);
+
+    // Se não houver opções específicas para o recurso, retorna as opções globais
+    if (resourceOtlp is null)
+    {
+      return resolved;
+    }
+
+    var defaultOtlp = new OtlpOptions();
+    var defaultBatch = new OtlpBatchOptions();
+
+    // Aplica overrides do recurso somente se forem diferentes dos defaults (evita sobrescrever configurações globais com valores padrão)
+    if (resourceOtlp.Enabled != defaultOtlp.Enabled)
+    {
+      resolved.Enabled = resourceOtlp.Enabled;
+    }
+
+    // Considera override se o valor for diferente de nulo ou vazio (mesmo que seja o default), pois é valor crítico para a configuração do exportador
+    if (resourceOtlp.Protocol != defaultOtlp.Protocol)
+    {
+      resolved.Protocol = resourceOtlp.Protocol;
+    }
+
+    // Considera override se for um valor válido (mesmo que seja o default), pois um endpoint inválido pode quebrar a configuração do exportador
+    if (!string.IsNullOrWhiteSpace(resourceOtlp.Endpoint))
+    {
+      resolved.Endpoint = resourceOtlp.Endpoint;
+    }
+
+    // Aplica overrides do export processor type se for diferente do default, pois isso pode alterar significativamente o comportamento do exportador
+    if (resourceOtlp.ExportProcessorType != defaultOtlp.ExportProcessorType)
+    {
+      resolved.ExportProcessorType = resourceOtlp.ExportProcessorType;
+    }
+
+    // Aplica overrides do ServerlessOptimized se for diferente do default, pois isso altera vários defaults internos e é um ajuste crítico para ambientes serverless
+    if (resourceOtlp.ServerlessOptimized != defaultOtlp.ServerlessOptimized)
+    {
+      resolved.ServerlessOptimized = resourceOtlp.ServerlessOptimized;
+    }
+
+    // Aplica overrides dos headers se forem diferentes dos defaults, mesmo que sejam vazios, pois isso pode ser um ajuste crítico para a configuração do exportador (ex: remover headers herdados do global)
+    if (!string.IsNullOrWhiteSpace(resourceOtlp.Headers))
+    {
+      resolved.Headers = resourceOtlp.Headers;
+    }
+
+    // Para as opções do batch, considera override se forem diferentes dos defaults ou se o ServerlessOptimized estiver habilitado (pois isso altera os defaults)
+    if (resourceOtlp.Batch.MaxQueueSize != defaultBatch.MaxQueueSize)
+    {
+      resolved.Batch.MaxQueueSize = resourceOtlp.Batch.MaxQueueSize;
+    }
+
+    // O MaxExportBatchSize é um valor crítico para a performance e pode ser ajustado para otimizações serverless, então ele deve ser aplicado mesmo que seja igual ao default quando o ServerlessOptimized estiver habilitado
+    if (resourceOtlp.Batch.MaxExportBatchSize != defaultBatch.MaxExportBatchSize)
+    {
+      resolved.Batch.MaxExportBatchSize = resourceOtlp.Batch.MaxExportBatchSize;
+    }
+
+    // O ScheduledDelayMilliseconds é um valor crítico para a performance e pode ser ajustado para otimizações serverless, então ele deve ser aplicado mesmo que seja igual ao default quando o ServerlessOptimized estiver habilitado
+    if (resourceOtlp.Batch.ScheduledDelayMilliseconds != defaultBatch.ScheduledDelayMilliseconds)
+    {
+      resolved.Batch.ScheduledDelayMilliseconds = resourceOtlp.Batch.ScheduledDelayMilliseconds;
+    }
+
+    // O ExporterTimeoutMilliseconds é um valor crítico para a performance e pode ser ajustado para otimizações serverless, então ele deve ser aplicado mesmo que seja igual ao default quando o ServerlessOptimized estiver habilitado
+    if (resourceOtlp.Batch.ExporterTimeoutMilliseconds != defaultBatch.ExporterTimeoutMilliseconds)
+    {
+      resolved.Batch.ExporterTimeoutMilliseconds = resourceOtlp.Batch.ExporterTimeoutMilliseconds;
+    }
+
+    return resolved;
+  }
+
+  /// <summary>
+  /// Cria uma cópia de <see cref="OtlpOptions"/> para permitir composição segura de overrides.
+  /// </summary>
+  /// <param name="options">Opções de origem.</param>
+  /// <returns>Cópia das opções.</returns>
+  internal static OtlpOptions CloneOtlpOptions(OtlpOptions options)
+  {
+    return new OtlpOptions
+    {
+      Enabled = options.Enabled,
+      Protocol = options.Protocol,
+      Endpoint = options.Endpoint,
+      ExportProcessorType = options.ExportProcessorType,
+      ServerlessOptimized = options.ServerlessOptimized,
+      Headers = options.Headers,
+      Batch = new OtlpBatchOptions
+      {
+        MaxQueueSize = options.Batch.MaxQueueSize,
+        MaxExportBatchSize = options.Batch.MaxExportBatchSize,
+        ScheduledDelayMilliseconds = options.Batch.ScheduledDelayMilliseconds,
+        ExporterTimeoutMilliseconds = options.Batch.ExporterTimeoutMilliseconds
+      }
+    };
+  }
+
+  /// <summary>
   /// Valida e normaliza headers OTLP.
   /// </summary>
   /// <param name="headers">Headers em formato "k1=v1,k2=v2".</param>

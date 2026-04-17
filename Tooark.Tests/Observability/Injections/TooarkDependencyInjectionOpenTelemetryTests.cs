@@ -641,6 +641,117 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.Contains("Options.Otlp.Endpoint.Invalid", ex.Message);
   }
 
+  // Teste para resolver OTLP efetivo herdando do OTLP global.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceOtlpIsNull_ReturnsCloneFromGlobalOptions()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "http://global-collector:4317",
+        Protocol = "http",
+        Headers = "x-api-key=123",
+        ServerlessOptimized = true,
+        Batch = new OtlpBatchOptions
+        {
+          MaxQueueSize = 333,
+          MaxExportBatchSize = 111,
+          ScheduledDelayMilliseconds = 2222,
+          ExporterTimeoutMilliseconds = 4444
+        }
+      }
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, null);
+
+    // Assert
+    Assert.NotSame(options.Otlp, resolved);
+    Assert.True(resolved.Enabled);
+    Assert.Equal("http://global-collector:4317", resolved.Endpoint);
+    Assert.Equal("http", resolved.Protocol);
+    Assert.Equal("x-api-key=123", resolved.Headers);
+    Assert.True(resolved.ServerlessOptimized);
+    Assert.Equal(333, resolved.Batch.MaxQueueSize);
+    Assert.Equal(111, resolved.Batch.MaxExportBatchSize);
+    Assert.Equal(2222, resolved.Batch.ScheduledDelayMilliseconds);
+    Assert.Equal(4444, resolved.Batch.ExporterTimeoutMilliseconds);
+  }
+
+  // Teste para resolver OTLP efetivo com override parcial do recurso.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceOverridesSubset_MergesWithGlobalOptions()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "http://global-collector:4317",
+        Headers = "authorization=Bearer abc",
+        Batch = new OtlpBatchOptions
+        {
+          MaxQueueSize = 2048,
+          MaxExportBatchSize = 512,
+          ScheduledDelayMilliseconds = 5000,
+          ExporterTimeoutMilliseconds = 30000
+        }
+      }
+    };
+    var resourceOtlp = new OtlpOptions
+    {
+      Endpoint = "http://metrics-collector:4318",
+      Protocol = "http",
+      Batch = new OtlpBatchOptions
+      {
+        ScheduledDelayMilliseconds = 1500
+      }
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, resourceOtlp);
+
+    // Assert
+    Assert.True(resolved.Enabled);
+    Assert.Equal("http://metrics-collector:4318", resolved.Endpoint);
+    Assert.Equal("http", resolved.Protocol);
+    Assert.Equal("authorization=Bearer abc", resolved.Headers);
+    Assert.Equal(2048, resolved.Batch.MaxQueueSize);
+    Assert.Equal(512, resolved.Batch.MaxExportBatchSize);
+    Assert.Equal(1500, resolved.Batch.ScheduledDelayMilliseconds);
+    Assert.Equal(30000, resolved.Batch.ExporterTimeoutMilliseconds);
+  }
+
+  // Teste para manter valores globais quando o recurso não informa overrides efetivos.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceUsesDefaults_KeepsGlobalValues()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "http://global-collector:4317",
+        Headers = "tenant-id=abc",
+        ServerlessOptimized = true
+      }
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, new OtlpOptions());
+
+    // Assert
+    Assert.True(resolved.Enabled);
+    Assert.Equal("http://global-collector:4317", resolved.Endpoint);
+    Assert.Equal("tenant-id=abc", resolved.Headers);
+    Assert.True(resolved.ServerlessOptimized);
+  }
+
   #endregion
 
   #region AddTooarkOpenTelemetry - ValidateAndNormalizeOtlpHeaders Tests

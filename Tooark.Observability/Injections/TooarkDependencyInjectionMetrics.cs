@@ -77,16 +77,18 @@ public static partial class TooarkDependencyInjection
     bool isDevelopment
   )
   {
+    var effectiveOtlpOptions = ResolveOtlpOptions(options, options.Metrics.Otlp);
+
     // Rastreia se algum exportador foi configurado
     var hasOtlpExporter = false;
 
     // Configura OTLP exporter se habilitado
-    if (options.Otlp.Enabled)
+    if (effectiveOtlpOptions.Enabled)
     {
       // Configura OTLP exporter
-      builder.AddOtlpExporter(otlpOptions =>
+      builder.AddOtlpExporter(exporterOptions =>
       {
-        ConfigureOtlpExporter(otlpOptions, options.Otlp);
+        ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions);
       });
 
       hasOtlpExporter = true;

@@ -24,4 +24,9 @@ public class LoggingOptions
   /// Indica se deve fazer parse dos valores de estado nos logs. Padrão: true.
   /// </summary>
   public bool ParseStateValues { get; set; } = true;
+
+  /// <summary>
+  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para logs.
+  /// </summary>
+  public OtlpOptions? Otlp { get; set; }
 }

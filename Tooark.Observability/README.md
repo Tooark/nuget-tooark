@@ -64,6 +64,10 @@ Exemplo com **todas as opções disponíveis** no pacote:
     "Tracing": {
       "Enabled": true,
       "SamplingRatio": 1.0,
+      "Otlp": {
+        "Endpoint": "http://localhost:4318",
+        "Protocol": "http"
+      },
       "IgnorePathPrefix": "/api",
       "IgnorePaths": [
         "/health",
@@ -98,13 +102,19 @@ Exemplo com **todas as opções disponíveis** no pacote:
       "Enabled": true,
       "RuntimeMetricsEnabled": true,
       "MeterName": "Tooark",
-      "AdditionalMeters": ["MeuMeter", "OutroMeter"]
+      "AdditionalMeters": ["MeuMeter", "OutroMeter"],
+      "Otlp": {
+        "Headers": "tenant-id=metrics-tenant"
+      }
     },
     "Logging": {
       "Enabled": true,
       "IncludeFormattedMessage": true,
       "IncludeScopes": true,
-      "ParseStateValues": true
+      "ParseStateValues": true,
+      "Otlp": {
+        "Endpoint": "http://localhost:4320"
+      }
     },
     "Otlp": {
       "Enabled": true,
@@ -118,6 +128,32 @@ Exemplo com **todas as opções disponíveis** no pacote:
         "MaxExportBatchSize": 512,
         "ScheduledDelayMilliseconds": 5000,
         "ExporterTimeoutMilliseconds": 30000
+      }
+    }
+  }
+}
+```
+
+### Override de OTLP por recurso
+
+As configurações em `Observability:Otlp` funcionam como base para `Tracing`, `Metrics` e `Logging`.
+
+Se você definir `Tracing:Otlp`, `Metrics:Otlp` ou `Logging:Otlp`, apenas os campos informados naquele recurso sobrescrevem o OTLP global. Os demais continuam herdados do bloco principal.
+
+Exemplo: neste caso, `Tracing` reutiliza `Enabled`, `Headers`, `Batch` e demais campos do OTLP global, alterando apenas `Endpoint` e `Protocol`.
+
+```json
+{
+  "Observability": {
+    "Otlp": {
+      "Enabled": true,
+      "Endpoint": "http://localhost:4317",
+      "Headers": "api-key=global-key"
+    },
+    "Tracing": {
+      "Otlp": {
+        "Endpoint": "http://localhost:4318",
+        "Protocol": "http"
       }
     }
   }

@@ -129,6 +129,35 @@ public class TooarkDependencyInjectionMetricsTests
     Assert.NotNull(provider);
   }
 
+  // Teste para garantir que o OTLP específico de metrics pode habilitar exportação mesmo com OTLP global desabilitado.
+  [Fact]
+  public void ConfigureMetricsExporters_WhenMetricsOtlpOverridesGlobalDisabled_BuildsSuccessfully()
+  {
+    // Arrange
+    var options = CreateOptions(
+      runtimeMetricsEnabled: false,
+      useConsoleExporterInDev: false,
+      otlpEnabled: false
+    );
+    options.Metrics.Otlp = new OtlpOptions
+    {
+      Enabled = true,
+      Endpoint = "http://localhost:4318",
+      Protocol = "http"
+    };
+
+    var builder = Sdk
+      .CreateMeterProviderBuilder()
+      .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("svc"));
+
+    // Act
+    TooarkDependencyInjection.ConfigureMetricsExporters(builder, options, isDevelopment: false);
+    using var provider = builder.Build();
+
+    // Assert
+    Assert.NotNull(provider);
+  }
+
   // Teste para configurar exportador de console em desenvolvimento
   [Fact]
   public void ConfigureMetricsExporters_WhenDevAndNoOtlp_AddsConsoleExporterBranch_AndBuilds()

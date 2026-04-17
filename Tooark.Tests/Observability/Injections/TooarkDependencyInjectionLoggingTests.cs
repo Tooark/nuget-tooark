@@ -133,6 +133,41 @@ public class TooarkDependencyInjectionLoggingTests
     Assert.True(true);
   }
 
+  // Teste para garantir que o OTLP específico de logging faz override do global.
+  [Fact]
+  public void ConfigureLoggingExporters_WhenLoggingOtlpOverridesGlobal_UsesLoggingOtlp()
+  {
+    // Arrange
+    var options = CreateOptions(
+      useConsoleExporterInDev: true,
+      otlpEnabled: true,
+      otlpEndpoint: "http://localhost:4317"
+    );
+    options.Logging.Otlp = new OtlpOptions
+    {
+      Endpoint = "not-a-uri"
+    };
+
+    var rb = ResourceBuilder.CreateDefault().AddService("svc");
+    var services = new ServiceCollection();
+    services.AddLogging(lb =>
+    {
+      lb.AddOpenTelemetry(otel =>
+      {
+        TooarkDependencyInjection.ConfigureLogging(otel, options, rb, isDevelopment: false);
+      });
+    });
+
+    using var sp = services.BuildServiceProvider();
+
+    // Act + Assert
+    var ex = Assert.Throws<InternalServerErrorException>(() =>
+    {
+      _ = sp.GetServices<ILoggerProvider>().ToList();
+    });
+    Assert.Contains("Options.Otlp.Endpoint.Invalid", ex.Message);
+  }
+
   // Teste para exportador de console em ambiente de desenvolvimento
   [Fact]
   public void ConfigureLoggingExporters_WhenDevAndNoOtlp_AddsConsoleExporterBranch_DoesNotThrow()

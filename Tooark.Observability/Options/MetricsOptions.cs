@@ -37,5 +37,10 @@ public class MetricsOptions
   /// - "MyCompany.MyProduct"
   /// - "MyCompany.MyProduct.MyComponent"
   /// </remarks>
-  public string[] AdditionalMeters { get; set; } = [];
+  public string[] AdditionalMeters { get; set; } = [];  
+
+  /// <summary>
+  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para métricas.
+  /// </summary>
+  public OtlpOptions? Otlp { get; set; }
 }

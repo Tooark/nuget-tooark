@@ -104,7 +104,12 @@ public class TracingOptions
   /// <summary>
   /// Configura coleta e exibição de dados sensíveis granulares para Tracing.
   /// </summary>
-  public DataSensitiveOptions DataSensitive { get; set; } = new();
+  public DataSensitiveOptions DataSensitive { get; set; } = new();  
+
+  /// <summary>
+  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para tracing.
+  /// </summary>
+  public OtlpOptions? Otlp { get; set; }
 
   #endregion
 }
