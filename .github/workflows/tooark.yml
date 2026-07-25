@@ -40,12 +40,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache Trivy vulnerability DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: security-scanner-trivy-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            security-scanner-trivy-${{ runner.os }}-
+
       - name: Security scan (gate)
         env:
           TRIVY_SEVERITY_FAIL: "HIGH,CRITICAL"
           TRIVY_EXIT_CODE: 1
         run: |
           mkdir -p "${{ github.workspace }}/scan-reports"
+          # Pré-cria o cache do Trivy com permissão de escrita para o usuário 'app'
+          # (não-root) que roda dentro da imagem. Sem isso, o Docker cria o ponto de
+          # montagem como root e o container falha ao criar o subdiretório 'db'.
+          mkdir -p "$HOME/.cache/trivy"
+          chmod -R 777 "$HOME/.cache/trivy"
           docker run --rm \
             -v "${{ github.workspace }}:/workspace:ro" \
             -v "$HOME/.cache/trivy:/home/app/.cache/trivy" \
