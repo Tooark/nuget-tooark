@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
     <PackageId>Tooark.Mediator.Abstractions</PackageId>
     <Title>Tooark.Mediator.Abstractions</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>

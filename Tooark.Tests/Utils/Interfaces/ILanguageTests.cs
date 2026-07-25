@@ -4,6 +4,7 @@ using Tooark.Utils.Interfaces;
 
 namespace Tooark.Tests.Utils.Interfaces;
 
+[Collection("CultureSensitive")]
 public class ILanguageTests
 {
   // Testa se o valor padrão da linguagem é "en-US"

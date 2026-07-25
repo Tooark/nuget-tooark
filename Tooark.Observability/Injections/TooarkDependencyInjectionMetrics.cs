@@ -85,6 +85,9 @@ public static partial class TooarkDependencyInjection
     // Configura OTLP exporter se habilitado
     if (effectiveOtlpOptions.Enabled)
     {
+      // Valida o endpoint de forma eager (independente do timing do callback do OpenTelemetry)
+      ValidateOtlpEndpoint(effectiveOtlpOptions);
+
       // Configura OTLP exporter
       builder.AddOtlpExporter(exporterOptions =>
       {

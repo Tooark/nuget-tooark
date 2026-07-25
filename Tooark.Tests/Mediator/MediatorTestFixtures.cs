@@ -221,7 +221,9 @@ public sealed class CanceledRequestHandler : IRequestHandler<CanceledRequest, Un
 {
   public async Task<Unit> HandleAsync(CanceledRequest request, CancellationToken cancellationToken = default)
   {
-    await Task.Delay(100, cancellationToken);
+    // Aguarda indefinidamente até o cancelamento, garantindo o TaskCanceledException de forma
+    // determinística (sem corrida entre o delay do handler e o timer do CancellationTokenSource).
+    await Task.Delay(Timeout.Infinite, cancellationToken);
     return Unit.Value;
   }
 }
