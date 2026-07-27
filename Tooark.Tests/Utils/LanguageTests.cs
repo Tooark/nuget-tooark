@@ -3,6 +3,7 @@ using Tooark.Utils;
 
 namespace Tooark.Tests.Utils;
 
+[Collection("CultureSensitive")]
 public class LanguageTests
 {
   public LanguageTests()

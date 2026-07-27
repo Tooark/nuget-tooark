@@ -487,3 +487,13 @@ scripts/**
 
 # Arquivo de documentação
 *.xml
+
+# Script files
+*.ps1
+*.sh
+
+## Report files
+**/reports/*.json
+
+## Files Claude Code
+.claude/

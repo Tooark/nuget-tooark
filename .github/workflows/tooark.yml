@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 env:
   VERSION: 0.0.0
+  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.5
 
 jobs:
   build-and-deploy:
@@ -16,11 +17,11 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Set up .Net Core
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
@@ -29,6 +30,48 @@ jobs:
 
       - name: Tests with .NET
         run: dotnet test
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Trivy vulnerability DB
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/trivy
+          key: security-scanner-trivy-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            security-scanner-trivy-${{ runner.os }}-
+
+      - name: Security scan (gate)
+        env:
+          TRIVY_SEVERITY_FAIL: "HIGH,CRITICAL"
+          TRIVY_EXIT_CODE: 1
+        run: |
+          mkdir -p "${{ github.workspace }}/scan-reports"
+          chmod -R 777 "${{ github.workspace }}/scan-reports"
+          mkdir -p "$HOME/.cache/trivy"
+          chmod -R 777 "$HOME/.cache/trivy"
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace:ro" \
+            -v "$HOME/.cache/trivy:/home/app/.cache/trivy" \
+            -v "${{ github.workspace }}/scan-reports:/reports" \
+            -e GITHUB_ACTIONS -e GITHUB_REF_NAME -e GITHUB_SHA \
+            -e GITHUB_REPOSITORY -e GITHUB_ACTOR -e GITHUB_RUN_ID \
+            -e GITHUB_JOB -e GITHUB_SERVER_URL \
+            -e TRIVY_SEVERITY -e TRIVY_SEVERITY_FAIL \
+            "${{ env.SECURITY_SCANNER_IMAGE }}" \
+            filesystem-scan /workspace
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: scan-reports/
 
       - name: Create the packages
         run: |
@@ -84,7 +127,7 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/Tooark/tooark/releases \
-            -d "{\"tag_name\": \"v${{ env.VERSION }}\", \"target_commitish\": \"main\", \"name\": \"Release v${{ env.VERSION }}\", \"body\": $RELEASE_BODY_JSON, \"draft\": true, \"prerelease\": false}"
+            -d "{\"tag_name\": \"v${{ env.VERSION }}\", \"target_commitish\": \"main\", \"name\": \"Release v${{ env.VERSION }}\", \"body\": $RELEASE_BODY_JSON, \"draft\": false, \"prerelease\": false, \"make_latest\": \"true\"}"
 
       - name: Publish Tooark.Notifications to NuGet
         run: dotnet nuget push Tooark.Notifications/bin/Release/Tooark.Notifications.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json

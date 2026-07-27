@@ -5,6 +5,7 @@ using Tooark.Utils;
 
 namespace Tooark.Tests.Utils;
 
+[Collection("CultureSensitive")]
 public class GetInfoTests
 {
   // Lista de idiomas para testes
