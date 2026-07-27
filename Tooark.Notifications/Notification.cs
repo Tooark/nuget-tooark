@@ -1,4 +1,5 @@
-﻿using Tooark.Notifications.Messages;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Tooark.Notifications.Messages;
 
 namespace Tooark.Notifications;
 
@@ -23,35 +24,41 @@ public abstract class Notification
   /// Retorna a lista de notificações.
   /// </summary>
   /// <returns>Lista de notificações.</returns>
+  [NotMapped]
   public IReadOnlyCollection<NotificationItem> Notifications => _notifications.AsReadOnly();
 
 
   /// <summary>
   /// Retorna True se a lista de notificações estiver vazia por nenhum erro ter gerado notificação.
   /// </summary>
+  [NotMapped]
   public bool IsValid => _notifications.Count == 0;
 
   /// <summary>
   /// Retornar o tamanho da lista de notificações.
   /// </summary>
+  [NotMapped]
   public long Count => _notifications.Count;
 
   /// <summary>
   /// Retorna a lista de códigos de erros das notificações.
   /// </summary>
   /// <returns>Lista de códigos de erros das notificações.</returns>
+  [NotMapped]
   public IReadOnlyList<string> Codes => _notifications.Select(x => x.Code).ToList().AsReadOnly();
 
   /// <summary>
   /// Retorna a lista de chaves das notificações.
   /// </summary>
   /// <returns>Lista de chaves das notificações.</returns>
+  [NotMapped]
   public IReadOnlyList<string> Keys => _notifications.Select(x => x.Key).ToList().AsReadOnly();
 
   /// <summary>
   /// Retorna a lista de mensagens das notificações.
   /// </summary>
   /// <returns>Lista de mensagens das notificações.</returns>
+  [NotMapped]
   public IReadOnlyList<string> Messages => _notifications.Select(x => x.Message).ToList().AsReadOnly();
 
 

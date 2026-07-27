@@ -196,6 +196,24 @@ public static partial class TooarkDependencyInjection
   }
 
   /// <summary>
+  /// Valida o endpoint OTLP, lançando exceção quando inválido.
+  /// </summary>
+  /// <remarks>
+  /// Deve ser invocado de forma eager (durante a configuração), e não somente dentro do callback
+  /// do <c>AddOtlpExporter</c>, pois o momento de execução desse callback varia entre versões do
+  /// OpenTelemetry e pode não disparar na instanciação dos provedores.
+  /// </remarks>
+  /// <param name="options">Opções de OTLP.</param>
+  /// <exception cref="InternalServerErrorException">Quando o endpoint é nulo ou não é uma URI absoluta válida.</exception>
+  internal static void ValidateOtlpEndpoint(OtlpOptions options)
+  {
+    if (options.Endpoint == null || !Uri.IsWellFormedUriString(options.Endpoint, UriKind.Absolute))
+    {
+      throw new InternalServerErrorException("Options.Otlp.Endpoint.Invalid");
+    }
+  }
+
+  /// <summary>
   /// Configura as opções do exportador OTLP.
   /// </summary>
   /// <param name="otlpOptions">OtlpExporterOptions a ser configurado.</param>
@@ -203,13 +221,10 @@ public static partial class TooarkDependencyInjection
   internal static void ConfigureOtlpExporter(OtlpExporterOptions otlpOptions, OtlpOptions options)
   {
     // Valida o endpoint
-    if (options.Endpoint == null || !Uri.IsWellFormedUriString(options.Endpoint, UriKind.Absolute))
-    {
-      throw new InternalServerErrorException("Options.Otlp.Endpoint.Invalid");
-    }
+    ValidateOtlpEndpoint(options);
 
-    // Configura o endpoint e protocolo
-    otlpOptions.Endpoint = new Uri(options.Endpoint);
+    // Configura o endpoint e protocolo (não-nulo garantido por ValidateOtlpEndpoint)
+    otlpOptions.Endpoint = new Uri(options.Endpoint!);
     otlpOptions.Protocol = options.Protocol;
 
     // Configura o tipo de processador de exportação

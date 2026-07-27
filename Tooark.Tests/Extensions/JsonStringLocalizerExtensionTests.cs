@@ -5,6 +5,7 @@ using Tooark.Utils;
 
 namespace Tooark.Tests.Extensions;
 
+[Collection("CultureSensitive")]
 public class JsonStringLocalizerExtensionTests
 {
   // Construtor para inicializar as variáveis de teste
