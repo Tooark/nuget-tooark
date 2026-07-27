@@ -495,5 +495,8 @@ scripts/**
 ## Report files
 **/reports/*.json
 
+## Security scan reports
+scan-reports/
+
 ## Files Claude Code
 .claude/
