@@ -36,8 +36,6 @@ public static partial class TooarkDependencyInjection
     // Adiciona instrumentação padrão
     builder.AddAspNetCoreInstrumentation(aspNetOptions =>
     {
-      var dataSensitive = options.Tracing.DataSensitive;
-
       // Registra exceções como evento + tags no span
       aspNetOptions.RecordException = true;
 
@@ -55,8 +53,6 @@ public static partial class TooarkDependencyInjection
     // Adiciona instrumentação HTTP Client
     builder.AddHttpClientInstrumentation(httpClientOptions =>
     {
-      var dataSensitive = options.Tracing.DataSensitive;
-
       // Registra exceções como evento + tags no span
       httpClientOptions.RecordException = true;
 
@@ -133,9 +129,8 @@ public static partial class TooarkDependencyInjection
   /// </summary>
   /// <param name="options">Opções de Observability.</param>
   /// <returns>Função de filtro.</returns>
-  internal static Func<HttpContext, bool> BuildAspNetCoreFilter(ObservabilityOptions options) => httpContext =>
+  internal static Func<HttpContext, bool> BuildAspNetCoreFilter(ObservabilityOptions options)
   {
-    var path = httpContext.Request.Path.Value ?? string.Empty;
     var prefix = options.Tracing.IgnorePathPrefix ?? string.Empty;
 
     // Normaliza o prefixo: adiciona '/' no início se necessário e remove '/' do inicio e final
@@ -144,15 +139,25 @@ public static partial class TooarkDependencyInjection
       prefix = "/" + prefix.TrimStart('/').TrimEnd('/');
     }
 
-    // Constrói os paths completos a serem ignorados
-    var ignorePath = options.Tracing.IgnorePaths
+    // Pré-computa os paths completos a serem ignorados (uma única vez, não a cada requisição)
+    var ignorePaths = options.Tracing.IgnorePaths
       .Select(p => prefix + "/" + p.TrimStart('/').TrimEnd('/'))
       .ToArray();
 
-    // Retorna true se o path NÃO estiver na lista de ignorados
-    return ignorePath.Length > 0
-      && !ignorePath.Any(ignorePath => path.StartsWith(ignorePath, StringComparison.OrdinalIgnoreCase));
-  };
+    // Sem paths a ignorar, rastreia todas as requisições
+    if (ignorePaths.Length == 0)
+    {
+      return _ => true;
+    }
+
+    return httpContext =>
+    {
+      var path = httpContext.Request.Path.Value ?? string.Empty;
+
+      // Retorna true se o path NÃO estiver na lista de ignorados
+      return !ignorePaths.Any(ignored => path.StartsWith(ignored, StringComparison.OrdinalIgnoreCase));
+    };
+  }
 
   /// <summary>
   /// Constrói o enricher para ASP.NET Core.
@@ -172,13 +177,20 @@ public static partial class TooarkDependencyInjection
       // Configura remoção de dados sensíveis de Tracing
       var dataSensitive = options.Tracing.DataSensitive;
 
-      // Remove dados sensíveis dos atributos
-      var safeTarget = request.Path.Value ?? string.Empty;
-      if (dataSensitive.HideQueryParameters && !string.IsNullOrWhiteSpace(safeTarget))
+      // Remove a query string dos atributos do span
+      if (dataSensitive.HideQueryParameters)
       {
-        // Se o path atual contém query, substitui pelo safeTarget
-        var currentTarget = activity.GetTagItem("http.target") as string;
-        if (string.IsNullOrWhiteSpace(currentTarget) || currentTarget.Contains('?', StringComparison.Ordinal))
+        // Convenção semântica atual: a query fica no atributo url.query (SetTag com null remove a tag)
+        if (activity.GetTagItem("url.query") is not null)
+        {
+          activity.SetTag("url.query", null);
+        }
+
+        // Convenção legada: reescreve http.target quando presente com query
+        var safeTarget = request.Path.Value;
+        if (!string.IsNullOrWhiteSpace(safeTarget)
+          && activity.GetTagItem("http.target") is string currentTarget
+          && currentTarget.Contains('?', StringComparison.Ordinal))
         {
           activity.SetTag("http.target", safeTarget);
         }
@@ -227,13 +239,22 @@ public static partial class TooarkDependencyInjection
       // Configura remoção de dados sensíveis de Tracing
       var dataSensitive = options.Tracing.DataSensitive;
 
-      // Remove dados sensíveis dos atributos
-      var safeTarget = request.RequestUri?.AbsolutePath;
-      if (dataSensitive.HideQueryParameters && !string.IsNullOrWhiteSpace(safeTarget))
+      // Remove a query string dos atributos do span
+      if (dataSensitive.HideQueryParameters)
       {
-        // Se contém query, substitui pelo safeTarget
-        var currentTarget = activity.GetTagItem("http.target") as string;
-        if (string.IsNullOrWhiteSpace(currentTarget) || currentTarget.Contains('?', StringComparison.Ordinal))
+        // Convenção semântica atual: url.full carrega a URL completa, incluindo a query
+        if (activity.GetTagItem("url.full") is string fullUrl
+          && fullUrl.IndexOf('?', StringComparison.Ordinal) is int queryIndex
+          && queryIndex >= 0)
+        {
+          activity.SetTag("url.full", fullUrl[..queryIndex]);
+        }
+
+        // Convenção legada: reescreve http.target quando presente com query
+        var safeTarget = request.RequestUri?.AbsolutePath;
+        if (!string.IsNullOrWhiteSpace(safeTarget)
+          && activity.GetTagItem("http.target") is string currentTarget
+          && currentTarget.Contains('?', StringComparison.Ordinal))
         {
           activity.SetTag("http.target", safeTarget);
         }

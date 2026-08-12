@@ -143,7 +143,7 @@ public class TooarkDependencyInjectionLoggingTests
       otlpEnabled: true,
       otlpEndpoint: "http://localhost:4317"
     );
-    options.Logging.Otlp = new OtlpOptions
+    options.Logging.Otlp = new OtlpOverrideOptions
     {
       Endpoint = "not-a-uri"
     };

@@ -5,10 +5,35 @@ namespace Tooark.Observability.Options;
 /// </summary>
 public class MetricsOptions
 {
+  #region Constants
+
+  /// <summary>
+  /// Intervalo padrão (em ms) de exportação de métricas.
+  /// </summary>
+  internal const int DefaultExportIntervalMilliseconds = 60000;
+
+  /// <summary>
+  /// Intervalo (em ms) de exportação de métricas aplicado quando o OTLP efetivo tem ServerlessOptimized habilitado.
+  /// </summary>
+  internal const int ServerlessExportIntervalMilliseconds = 5000;
+
+  #endregion
+
   /// <summary>
   /// Indica se a coleta de métricas está habilitada. Padrão: true.
   /// </summary>
   public bool Enabled { get; set; } = true;
+
+  /// <summary>
+  /// Intervalo (em ms) entre exportações de métricas via OTLP. Padrão: null (usa 60000).
+  /// </summary>
+  /// <remarks>
+  /// Métricas usam um reader periódico (não o processador Batch), então as opções de Batch do OTLP não se aplicam.
+  /// Quando null: usa 60000ms, ou 5000ms se o OTLP efetivo tiver ServerlessOptimized habilitado
+  /// (reduz perda de métricas em ambientes com scale-to-zero).
+  /// Valores menores ou iguais a zero são tratados como null.
+  /// </remarks>
+  public int? ExportIntervalMilliseconds { get; set; }
 
   /// <summary>
   /// Indica se as métricas de runtime .NET estão habilitadas. Padrão: true.
@@ -40,7 +65,7 @@ public class MetricsOptions
   public string[] AdditionalMeters { get; set; } = [];  
 
   /// <summary>
-  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para métricas.
+  /// Overrides de configuração do exportador OTLP para métricas. Valores não informados herdam do OTLP global.
   /// </summary>
-  public OtlpOptions? Otlp { get; set; }
+  public OtlpOverrideOptions? Otlp { get; set; }
 }

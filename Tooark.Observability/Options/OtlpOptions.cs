@@ -7,6 +7,25 @@ namespace Tooark.Observability.Options;
 /// </summary>
 public class OtlpOptions
 {
+  #region Constants
+
+  /// <summary>
+  /// Valor de <see cref="OtlpBatchOptions.MaxQueueSize"/> aplicado quando <see cref="ServerlessOptimized"/> está habilitado.
+  /// </summary>
+  internal const int ServerlessMaxQueueSize = 512;
+
+  /// <summary>
+  /// Valor de <see cref="OtlpBatchOptions.MaxExportBatchSize"/> aplicado quando <see cref="ServerlessOptimized"/> está habilitado.
+  /// </summary>
+  internal const int ServerlessMaxExportBatchSize = 128;
+
+  /// <summary>
+  /// Valor de <see cref="OtlpBatchOptions.ScheduledDelayMilliseconds"/> aplicado quando <see cref="ServerlessOptimized"/> está habilitado.
+  /// </summary>
+  internal const int ServerlessScheduledDelayMilliseconds = 1000;
+
+  #endregion
+
   /// <summary>
   /// Indica se o exportador OTLP está habilitado. Padrão: false.
   /// </summary>

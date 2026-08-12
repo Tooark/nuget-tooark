@@ -124,9 +124,9 @@ public class TooarkDependencyInjectionTracingTests
     Assert.True(filter(ctx));
   }
 
-  // Teste para garantir que paths ignorados retornam false
+  // Teste para garantir que, sem paths a ignorar, todas as requisições são rastreadas
   [Fact]
-  public void BuildAspNetCoreFilter_WhenIgnorePathsEmpty_ReturnsFalse_ByCurrentLogic()
+  public void BuildAspNetCoreFilter_WhenIgnorePathsEmpty_TracesEverything()
   {
     // Arrange
     var options = CreateOptions(ignorePaths: []);
@@ -137,7 +137,7 @@ public class TooarkDependencyInjectionTracingTests
     ctx.Request.Path = "/anything";
 
     // Assert
-    Assert.False(filter(ctx));
+    Assert.True(filter(ctx));
   }
 
   #endregion
@@ -200,9 +200,9 @@ public class TooarkDependencyInjectionTracingTests
     Assert.Equal("/already-safe", activity.GetTagItem("http.target") as string);
   }
 
-  // Teste para garantir que o callback ConfigureTracing mascara query parameters quando http.target é null
+  // Teste para garantir que o enricher não adiciona a tag legada http.target quando ela não existe
   [Fact]
-  public void BuildAspNetCoreEnricher_WhenHttpTargetIsNull_SetsToSafeTarget()
+  public void BuildAspNetCoreEnricher_WhenHttpTargetIsNull_DoesNotAddLegacyTag()
   {
     // Arrange
     var options = CreateOptions(globalDataSensitive: false, hideQuery: true, hideHeaders: false);
@@ -215,7 +215,45 @@ public class TooarkDependencyInjectionTracingTests
     enricher(activity, ctx.Request);
 
     // Assert
-    Assert.Equal("/safe", activity.GetTagItem("http.target") as string);
+    Assert.Null(activity.GetTagItem("http.target"));
+  }
+
+  // Teste para garantir que o enricher remove o atributo url.query (convenção semântica atual)
+  [Fact]
+  public void BuildAspNetCoreEnricher_RemovesUrlQueryTag_WhenHideQueryParameters()
+  {
+    // Arrange
+    var options = CreateOptions(globalDataSensitive: false, hideQuery: true, hideHeaders: false);
+
+    // Act
+    var enricher = TooarkDependencyInjection.BuildAspNetCoreEnricher(options);
+    using var activity = new Activity("test");
+    activity.SetTag("url.query", "?secret=1");
+    var ctx = new DefaultHttpContext();
+    ctx.Request.Path = "/safe";
+    enricher(activity, ctx.Request);
+
+    // Assert
+    Assert.Null(activity.GetTagItem("url.query"));
+  }
+
+  // Teste para garantir que o enricher mantém url.query quando HideQueryParameters está desabilitado
+  [Fact]
+  public void BuildAspNetCoreEnricher_KeepsUrlQueryTag_WhenHideQueryParametersDisabled()
+  {
+    // Arrange
+    var options = CreateOptions(globalDataSensitive: false, hideQuery: false, hideHeaders: false);
+
+    // Act
+    var enricher = TooarkDependencyInjection.BuildAspNetCoreEnricher(options);
+    using var activity = new Activity("test");
+    activity.SetTag("url.query", "?id=1");
+    var ctx = new DefaultHttpContext();
+    ctx.Request.Path = "/safe";
+    enricher(activity, ctx.Request);
+
+    // Assert
+    Assert.Equal("?id=1", activity.GetTagItem("url.query") as string);
   }
 
   // Teste para garantir que o callback ConfigureTracing mascara headers sensíveis
@@ -472,7 +510,7 @@ public class TooarkDependencyInjectionTracingTests
       otlpEndpoint: "http://localhost:4317",
       useConsoleExporterInDev: false
     );
-    options.Tracing.Otlp = new OtlpOptions
+    options.Tracing.Otlp = new OtlpOverrideOptions
     {
       Endpoint = "not-a-uri"
     };
@@ -539,9 +577,9 @@ public class TooarkDependencyInjectionTracingTests
     Assert.Equal("/orig?x=1", activity.GetTagItem("http.target") as string);
   }
 
-  // Teste para configurar o enricher quando o http.target é null
+  // Teste para garantir que o enricher não adiciona a tag legada http.target quando ela não existe
   [Fact]
-  public void BuildHttpClientEnricher_WhenCurrentTargetNull_SetsHttpTarget()
+  public void BuildHttpClientEnricher_WhenCurrentTargetNull_DoesNotAddLegacyTag()
   {
     // Arrange
     var options = CreateOptions(globalDataSensitive: false, hideQuery: true, hideHeaders: false);
@@ -553,7 +591,43 @@ public class TooarkDependencyInjectionTracingTests
     enricher(activity, req);
 
     // Assert
-    Assert.Equal("/orders", activity.GetTagItem("http.target") as string);
+    Assert.Null(activity.GetTagItem("http.target"));
+  }
+
+  // Teste para garantir que o enricher remove a query do atributo url.full (convenção semântica atual)
+  [Fact]
+  public void BuildHttpClientEnricher_StripsQueryFromUrlFull_WhenHideQueryParameters()
+  {
+    // Arrange
+    var options = CreateOptions(globalDataSensitive: false, hideQuery: true, hideHeaders: false);
+    using var activity = new Activity("test");
+    activity.SetTag("url.full", "https://example.com/orders?secret=1");
+
+    // Act
+    var enricher = TooarkDependencyInjection.BuildHttpClientEnricher(options);
+    var req = new HttpRequestMessage(HttpMethod.Get, "https://example.com/orders?secret=1");
+    enricher(activity, req);
+
+    // Assert
+    Assert.Equal("https://example.com/orders", activity.GetTagItem("url.full") as string);
+  }
+
+  // Teste para garantir que o enricher mantém url.full sem query inalterado
+  [Fact]
+  public void BuildHttpClientEnricher_KeepsUrlFull_WhenNoQueryPresent()
+  {
+    // Arrange
+    var options = CreateOptions(globalDataSensitive: false, hideQuery: true, hideHeaders: false);
+    using var activity = new Activity("test");
+    activity.SetTag("url.full", "https://example.com/orders");
+
+    // Act
+    var enricher = TooarkDependencyInjection.BuildHttpClientEnricher(options);
+    var req = new HttpRequestMessage(HttpMethod.Get, "https://example.com/orders");
+    enricher(activity, req);
+
+    // Assert
+    Assert.Equal("https://example.com/orders", activity.GetTagItem("url.full") as string);
   }
 
   // Teste para configurar o enricher quando o http.target contém query

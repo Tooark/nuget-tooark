@@ -22,10 +22,7 @@ public static partial class TooarkDependencyInjection
     Action<ObservabilityOptions>? configure = null
   )
   {
-    // Registra as opções do Observability a partir da configuração
-    services.Configure<ObservabilityOptions>(configuration.GetSection(ObservabilityOptions.Section));
-
-    // Adiciona OpenTelemetry
+    // Adiciona OpenTelemetry (registra as opções e aplica os overrides programáticos)
     AddTooarkOpenTelemetry(services, configuration, configure);
 
     return services;

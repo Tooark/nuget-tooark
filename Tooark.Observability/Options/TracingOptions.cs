@@ -67,7 +67,7 @@ public class TracingOptions
   /// Paths a serem ignorados no rastreamento de requisições HTTP.
   /// </summary>
   /// <remarks>
-  /// Padrão: ["/health", "/healthz", "/ready", "/metrics", "/favicon.ico"]
+  /// Padrão: ["/health", "/healthz", "/ready", "/traces", "/metrics", "/logs", "/favicon.ico"]
   /// </remarks>
   public string[] IgnorePaths { get; set; } =
   [
@@ -107,9 +107,9 @@ public class TracingOptions
   public DataSensitiveOptions DataSensitive { get; set; } = new();  
 
   /// <summary>
-  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para tracing.
+  /// Overrides de configuração do exportador OTLP para tracing. Valores não informados herdam do OTLP global.
   /// </summary>
-  public OtlpOptions? Otlp { get; set; }
+  public OtlpOverrideOptions? Otlp { get; set; }
 
   #endregion
 }

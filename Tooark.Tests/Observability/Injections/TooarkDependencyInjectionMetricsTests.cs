@@ -139,7 +139,7 @@ public class TooarkDependencyInjectionMetricsTests
       useConsoleExporterInDev: false,
       otlpEnabled: false
     );
-    options.Metrics.Otlp = new OtlpOptions
+    options.Metrics.Otlp = new OtlpOverrideOptions
     {
       Enabled = true,
       Endpoint = "http://localhost:4318",
@@ -156,6 +156,93 @@ public class TooarkDependencyInjectionMetricsTests
 
     // Assert
     Assert.NotNull(provider);
+  }
+
+  // Teste para ConfigureMetrics com métricas de processo desabilitadas.
+  [Fact]
+  public void ConfigureMetrics_WhenProcessMetricsDisabled_DoesNotAddProcessInstrumentation_AndBuilds()
+  {
+    // Arrange
+    var options = CreateOptions(
+      runtimeMetricsEnabled: false,
+      useConsoleExporterInDev: false,
+      otlpEnabled: false
+    );
+    options.Metrics.ProcessMetricsEnabled = false;
+    var rb = ResourceBuilder.CreateDefault().AddService("svc");
+    var builder = Sdk.CreateMeterProviderBuilder();
+
+    // Act
+    TooarkDependencyInjection.ConfigureMetrics(builder, options, rb, isDevelopment: false);
+    using var provider = builder.Build();
+
+    // Assert
+    Assert.NotNull(provider);
+  }
+
+  // Teste para ResolveMetricsExportInterval com valor explícito do usuário.
+  [Theory]
+  [InlineData(5000)]
+  [InlineData(30000)]
+  [InlineData(120000)]
+  public void ResolveMetricsExportInterval_WhenExplicitValue_ReturnsValue(int interval)
+  {
+    // Arrange
+    var metrics = new MetricsOptions { ExportIntervalMilliseconds = interval };
+    var otlp = new OtlpOptions { ServerlessOptimized = true };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveMetricsExportInterval(metrics, otlp);
+
+    // Assert
+    Assert.Equal(interval, resolved);
+  }
+
+  // Teste para ResolveMetricsExportInterval sem valor explícito e sem serverless.
+  [Fact]
+  public void ResolveMetricsExportInterval_WhenNullAndNotServerless_ReturnsDefault()
+  {
+    // Arrange
+    var metrics = new MetricsOptions();
+    var otlp = new OtlpOptions();
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveMetricsExportInterval(metrics, otlp);
+
+    // Assert
+    Assert.Equal(60000, resolved);
+  }
+
+  // Teste para ResolveMetricsExportInterval sem valor explícito e com serverless habilitado.
+  [Fact]
+  public void ResolveMetricsExportInterval_WhenNullAndServerless_ReturnsServerlessInterval()
+  {
+    // Arrange
+    var metrics = new MetricsOptions();
+    var otlp = new OtlpOptions { ServerlessOptimized = true };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveMetricsExportInterval(metrics, otlp);
+
+    // Assert
+    Assert.Equal(MetricsOptions.ServerlessExportIntervalMilliseconds, resolved);
+  }
+
+  // Teste para ResolveMetricsExportInterval com valor inválido (tratado como não informado).
+  [Theory]
+  [InlineData(0)]
+  [InlineData(-1)]
+  public void ResolveMetricsExportInterval_WhenInvalidValue_FallsBackToDefault(int interval)
+  {
+    // Arrange
+    var metrics = new MetricsOptions { ExportIntervalMilliseconds = interval };
+    var otlp = new OtlpOptions();
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveMetricsExportInterval(metrics, otlp);
+
+    // Assert
+    Assert.Equal(60000, resolved);
   }
 
   // Teste para configurar exportador de console em desenvolvimento

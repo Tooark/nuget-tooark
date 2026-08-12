@@ -165,9 +165,9 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.Contains(providers, p => p.GetType().FullName?.Contains("OpenTelemetry", StringComparison.OrdinalIgnoreCase) == true);
   }
 
-  // Teste para AddTooarkOpenTelemetry quando o delegate de configuração sobrescreve a decisão de registro, mas não o IOptions.
+  // Teste para AddTooarkOpenTelemetry quando o delegate de configuração sobrescreve a decisão de registro e o IOptions do container.
   [Fact]
-  public void AddTooarkOpenTelemetry_ConfigureDelegateOverridesRegistrationDecision_ButNotIOptions()
+  public void AddTooarkOpenTelemetry_ConfigureDelegateOverridesRegistrationDecision_AndIOptions()
   {
     // Arrange
     var services = new ServiceCollection();
@@ -192,8 +192,8 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     using var provider = services.BuildServiceProvider();
     var optionsFromContainer = provider.GetRequiredService<IOptions<ObservabilityOptions>>().Value;
 
-    // Assert
-    Assert.False(optionsFromContainer.Enabled);
+    // Assert: o PostConfigure aplica o delegate também ao IOptions do container
+    Assert.True(optionsFromContainer.Enabled);
     Assert.True(CountOpenTelemetryRegistrations(services) > 0);
   }
 
@@ -486,6 +486,30 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.False(attrs.ContainsKey(""));
   }
 
+  // Teste para ConfigureResource com chaves que normalizam para o mesmo valor (não deve lançar exceção).
+  [Fact]
+  public void ConfigureResource_WhenKeysNormalizeToSameValue_DoesNotThrow_LastWins()
+  {
+    // Arrange
+    var config = new ConfigurationBuilder().Build();
+    var options = new ObservabilityOptions
+    {
+      ResourceAttributes = new Dictionary<string, string>
+      {
+        ["My Key"] = "first",   // -> my.key
+        ["my.key"] = "second"   // -> my.key (colide com a anterior)
+      }
+    };
+
+    // Act
+    var rb = TooarkDependencyInjection.ConfigureResource(config, options);
+    var resource = rb.Build();
+    var attrs = resource.Attributes.ToDictionary(k => k.Key, v => v.Value);
+
+    // Assert
+    Assert.Equal("second", attrs["my.key"]);
+  }
+
   #endregion
 
   #region AddTooarkOpenTelemetry - ConfigureOtlpExporter  Methods
@@ -604,6 +628,60 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.Null(exporter.Headers);
   }
 
+  // Teste para ConfigureOtlpExporter com serverless: valores customizados prevalecem sobre os defaults serverless, mesmo iguais aos defaults padrão.
+  [Fact]
+  public void ConfigureOtlpExporter_WhenServerlessAndCustomBatchValues_KeepsCustomValues()
+  {
+    // Arrange
+    var exporter = new OtlpExporterOptions();
+    var opt = new OtlpOptions
+    {
+      Endpoint = "https://collector.example.com:4317",
+      ServerlessOptimized = true,
+      Batch = new OtlpBatchOptions
+      {
+        MaxQueueSize = 2048, // explícito, igual ao default padrão: deve ser mantido
+        ScheduledDelayMilliseconds = 5000
+      }
+    };
+
+    // Act
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+
+    // Assert
+    Assert.NotNull(exporter.BatchExportProcessorOptions);
+    Assert.Equal(2048, exporter.BatchExportProcessorOptions!.MaxQueueSize);
+    Assert.Equal(5000, exporter.BatchExportProcessorOptions.ScheduledDelayMilliseconds);
+    Assert.Equal(128, exporter.BatchExportProcessorOptions.MaxExportBatchSize); // não customizado: usa default serverless
+  }
+
+  // Teste para ConfigureOtlpExporter com serverless após ResolveOtlpOptions (o clone preserva a distinção entre custom e default).
+  [Fact]
+  public void ConfigureOtlpExporter_WhenServerlessThroughResolve_StillAppliesOptimizedBatch()
+  {
+    // Arrange
+    var exporter = new OtlpExporterOptions();
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "https://collector.example.com:4317",
+        ServerlessOptimized = true
+      }
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, null);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, resolved);
+
+    // Assert
+    Assert.NotNull(exporter.BatchExportProcessorOptions);
+    Assert.Equal(512, exporter.BatchExportProcessorOptions!.MaxQueueSize);
+    Assert.Equal(128, exporter.BatchExportProcessorOptions.MaxExportBatchSize);
+    Assert.Equal(1000, exporter.BatchExportProcessorOptions.ScheduledDelayMilliseconds);
+  }
+
   // Teste para ConfigureOtlpExporter com headers definidos.
   [Fact]
   public void ConfigureOtlpExporter_WhenSetHeaders()
@@ -702,11 +780,11 @@ public class TooarkDependencyInjectionOpenTelemetryTests
         }
       }
     };
-    var resourceOtlp = new OtlpOptions
+    var resourceOtlp = new OtlpOverrideOptions
     {
       Endpoint = "http://metrics-collector:4318",
       Protocol = "http",
-      Batch = new OtlpBatchOptions
+      Batch = new OtlpBatchOverrideOptions
       {
         ScheduledDelayMilliseconds = 1500
       }
@@ -743,13 +821,122 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, new OtlpOptions());
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, new OtlpOverrideOptions());
 
     // Assert
     Assert.True(resolved.Enabled);
     Assert.Equal("http://global-collector:4317", resolved.Endpoint);
     Assert.Equal("tenant-id=abc", resolved.Headers);
     Assert.True(resolved.ServerlessOptimized);
+  }
+
+  // Teste para desabilitar OTLP em um sinal específico mesmo com o global habilitado.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceDisablesOtlp_OverridesGlobalEnabled()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "http://global-collector:4317"
+      }
+    };
+    var resourceOtlp = new OtlpOverrideOptions
+    {
+      Enabled = false
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, resourceOtlp);
+
+    // Assert
+    Assert.False(resolved.Enabled);
+    Assert.Equal("http://global-collector:4317", resolved.Endpoint);
+  }
+
+  // Teste para override completo: todos os campos informados no sinal sobrescrevem o global.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceOverridesAllFields_AppliesAllOverrides()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = false,
+        Endpoint = "http://global-collector:4317",
+        Protocol = "grpc",
+        ExportProcessorType = "batch",
+        ServerlessOptimized = false,
+        Headers = "api-key=global",
+        Batch = new OtlpBatchOptions
+        {
+          MaxQueueSize = 4096,
+          MaxExportBatchSize = 1024,
+          ScheduledDelayMilliseconds = 9000,
+          ExporterTimeoutMilliseconds = 45000
+        }
+      }
+    };
+    var resourceOtlp = new OtlpOverrideOptions
+    {
+      Enabled = true,
+      Endpoint = "http://signal-collector:4318",
+      Protocol = "http",
+      ExportProcessorType = "simple",
+      ServerlessOptimized = true,
+      Headers = "api-key=signal",
+      Batch = new OtlpBatchOverrideOptions
+      {
+        MaxQueueSize = 256,
+        MaxExportBatchSize = 64,
+        ScheduledDelayMilliseconds = 750,
+        ExporterTimeoutMilliseconds = 15000
+      }
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, resourceOtlp);
+
+    // Assert
+    Assert.True(resolved.Enabled);
+    Assert.Equal("http://signal-collector:4318", resolved.Endpoint);
+    Assert.Equal("http", resolved.Protocol);
+    Assert.Equal("simple", resolved.ExportProcessorType);
+    Assert.True(resolved.ServerlessOptimized);
+    Assert.Equal("api-key=signal", resolved.Headers);
+    Assert.Equal(256, resolved.Batch.MaxQueueSize);
+    Assert.Equal(64, resolved.Batch.MaxExportBatchSize);
+    Assert.Equal(750, resolved.Batch.ScheduledDelayMilliseconds);
+    Assert.Equal(15000, resolved.Batch.ExporterTimeoutMilliseconds);
+  }
+
+  // Teste para voltar o protocolo ao default em um sinal específico quando o global usa outro valor.
+  [Fact]
+  public void ResolveOtlpOptions_WhenResourceOverridesProtocolToDefault_AppliesOverride()
+  {
+    // Arrange
+    var options = new ObservabilityOptions
+    {
+      Otlp = new OtlpOptions
+      {
+        Enabled = true,
+        Endpoint = "http://global-collector:4318",
+        Protocol = "http"
+      }
+    };
+    var resourceOtlp = new OtlpOverrideOptions
+    {
+      Protocol = "grpc"
+    };
+
+    // Act
+    var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, resourceOtlp);
+
+    // Assert
+    Assert.Equal("grpc", resolved.Protocol);
   }
 
   #endregion

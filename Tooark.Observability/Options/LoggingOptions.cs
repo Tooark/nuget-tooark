@@ -26,7 +26,7 @@ public class LoggingOptions
   public bool ParseStateValues { get; set; } = true;
 
   /// <summary>
-  /// Opções de configuração para exportador OTLP (OpenTelemetry Protocol) usado para logs.
+  /// Overrides de configuração do exportador OTLP para logs. Valores não informados herdam do OTLP global.
   /// </summary>
-  public OtlpOptions? Otlp { get; set; }
+  public OtlpOverrideOptions? Otlp { get; set; }
 }

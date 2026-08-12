@@ -89,9 +89,13 @@ public static partial class TooarkDependencyInjection
       ValidateOtlpEndpoint(effectiveOtlpOptions);
 
       // Configura OTLP exporter
-      builder.AddOtlpExporter(exporterOptions =>
+      builder.AddOtlpExporter((exporterOptions, readerOptions) =>
       {
         ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions);
+
+        // Métricas usam reader periódico (não o processador Batch): configura o intervalo de exportação
+        readerOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds =
+          ResolveMetricsExportInterval(options.Metrics, effectiveOtlpOptions);
       });
 
       hasOtlpExporter = true;
@@ -102,6 +106,26 @@ public static partial class TooarkDependencyInjection
     {
       builder.AddConsoleExporter();
     }
+  }
+
+  /// <summary>
+  /// Resolve o intervalo efetivo (em ms) de exportação de métricas.
+  /// </summary>
+  /// <param name="metrics">Opções de métricas.</param>
+  /// <param name="effectiveOtlp">Opções OTLP efetivas do sinal de métricas.</param>
+  /// <returns>Intervalo de exportação em milissegundos.</returns>
+  internal static int ResolveMetricsExportInterval(MetricsOptions metrics, OtlpOptions effectiveOtlp)
+  {
+    // Valor explícito do usuário tem prioridade (valores inválidos são ignorados)
+    if (metrics.ExportIntervalMilliseconds is int interval && interval > 0)
+    {
+      return interval;
+    }
+
+    // Em serverless, exporta com mais frequência para reduzir perda em scale-to-zero
+    return effectiveOtlp.ServerlessOptimized
+      ? MetricsOptions.ServerlessExportIntervalMilliseconds
+      : MetricsOptions.DefaultExportIntervalMilliseconds;
   }
 
   #endregion

@@ -6,15 +6,17 @@ Biblioteca de observabilidade para aplicações .NET, fornecendo integração si
 
 ### Classes de Configuração (Options)
 
-| Classe                 | Descrição                                                    |
-| ---------------------- | ------------------------------------------------------------ |
-| `ObservabilityOptions` | Configurações principais de Observability                    |
-| `TracingOptions`       | Configurações de rastreamento (tracing)                      |
-| `MetricsOptions`       | Configurações de métricas                                    |
-| `LoggingOptions`       | Configurações de logging                                     |
-| `OtlpOptions`          | Configurações do exportador OTLP                             |
-| `OtlpBatchOptions`     | Configurações do processador Batch (OTLP)                    |
-| `DataSensitiveOptions` | Configurações de sanitização de dados sensíveis para Tracing |
+| Classe                     | Descrição                                                               |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `ObservabilityOptions`     | Configurações principais de Observability                               |
+| `TracingOptions`           | Configurações de rastreamento (tracing)                                 |
+| `MetricsOptions`           | Configurações de métricas                                               |
+| `LoggingOptions`           | Configurações de logging                                                |
+| `OtlpOptions`              | Configurações do exportador OTLP                                        |
+| `OtlpBatchOptions`         | Configurações do processador Batch (OTLP)                               |
+| `OtlpOverrideOptions`      | Overrides do OTLP por sinal (Tracing/Metrics/Logging), herdam do global |
+| `OtlpBatchOverrideOptions` | Overrides do Batch por sinal, herdam do global                          |
+| `DataSensitiveOptions`     | Configurações de sanitização de dados sensíveis para Tracing            |
 
 ### Enumerações
 
@@ -139,6 +141,8 @@ Exemplo com **todas as opções disponíveis** no pacote:
 As configurações em `Observability:Otlp` funcionam como base para `Tracing`, `Metrics` e `Logging`.
 
 Se você definir `Tracing:Otlp`, `Metrics:Otlp` ou `Logging:Otlp`, apenas os campos informados naquele recurso sobrescrevem o OTLP global. Os demais continuam herdados do bloco principal.
+
+Como os overrides usam campos anuláveis (`OtlpOverrideOptions`), qualquer valor informado é aplicado — inclusive valores iguais aos defaults. Por exemplo, `"Tracing": { "Otlp": { "Enabled": false } }` desabilita o OTLP apenas para tracing, mesmo com o OTLP global habilitado.
 
 Exemplo: neste caso, `Tracing` reutiliza `Enabled`, `Headers`, `Batch` e demais campos do OTLP global, alterando apenas `Endpoint` e `Protocol`.
 
@@ -318,12 +322,14 @@ app.Run();
 
 ### MetricsOptions
 
-| Propriedade             | Tipo     | Padrão   | Descrição                         |
-| ----------------------- | -------- | -------- | --------------------------------- |
-| `Enabled`               | bool     | `true`   | Habilita métricas                 |
-| `RuntimeMetricsEnabled` | bool     | `true`   | Habilita métricas de runtime .NET |
-| `MeterName`             | string   | `Tooark` | Nome do Meter padrão              |
-| `AdditionalMeters`      | string[] | `[]`     | Meters adicionais a registrar     |
+| Propriedade                  | Tipo     | Padrão   | Descrição                                                     |
+| ---------------------------- | -------- | -------- | ------------------------------------------------------------- |
+| `Enabled`                    | bool     | `true`   | Habilita métricas                                             |
+| `ExportIntervalMilliseconds` | int?     | `null`   | Intervalo de export OTLP (null: 60000, ou 5000 em serverless) |
+| `RuntimeMetricsEnabled`      | bool     | `true`   | Habilita métricas de runtime .NET                             |
+| `ProcessMetricsEnabled`      | bool     | `true`   | Habilita métricas de processo                                 |
+| `MeterName`                  | string   | `Tooark` | Nome do Meter padrão                                          |
+| `AdditionalMeters`           | string[] | `[]`     | Meters adicionais a registrar                                 |
 
 ### LoggingOptions
 
@@ -336,15 +342,15 @@ app.Run();
 
 ### OtlpOptions
 
-| Propriedade           | Tipo             | Padrão   | Descrição                                       |
-| --------------------- | ---------------- | -------- | ----------------------------------------------- |
-| `Enabled`             | bool             | `false`  | Habilita exportador OTLP                        |
-| `Endpoint`            | string?          | `null`   | Endpoint do coletor (ex: http://localhost:4317) |
-| `Protocol`            | EProtocolOtlp    | `grpc`   | Protocolo: `grpc` ou `http`                     |
-| `ExportProcessorType` | EProcessorType   | `batch`  | Processador: `batch` ou `simple`                |
-| `ServerlessOptimized` | bool             | `false`  | Otimiza batch para ambientes serverless         |
-| `Headers`             | string?          | `null`   | Headers (formato: `key1=value1,key2=value2`)    |
-| `Batch`               | OtlpBatchOptions | defaults | Opções do batch                                 |
+| Propriedade           | Tipo             | Padrão   | Descrição                                         |
+| --------------------- | ---------------- | -------- | ------------------------------------------------- |
+| `Enabled`             | bool             | `false`  | Habilita exportador OTLP                          |
+| `Endpoint`            | string?          | `null`   | Endpoint do coletor (ex: `http://localhost:4317`) |
+| `Protocol`            | EProtocolOtlp    | `grpc`   | Protocolo: `grpc` ou `http`                       |
+| `ExportProcessorType` | EProcessorType   | `batch`  | Processador: `batch` ou `simple`                  |
+| `ServerlessOptimized` | bool             | `false`  | Otimiza batch para ambientes serverless           |
+| `Headers`             | string?          | `null`   | Headers (formato: `key1=value1,key2=value2`)      |
+| `Batch`               | OtlpBatchOptions | defaults | Opções do batch                                   |
 
 ### OtlpBatchOptions
 
@@ -355,6 +361,10 @@ app.Run();
 | `ScheduledDelayMilliseconds`  | int  | `5000`  | Intervalo entre envios em lote (ms)     |
 | `ExporterTimeoutMilliseconds` | int  | `30000` | Timeout do export (ms)                  |
 
+### OtlpOverrideOptions e OtlpBatchOverrideOptions
+
+Usadas em `Tracing:Otlp`, `Metrics:Otlp` e `Logging:Otlp`. Possuem os mesmos campos de `OtlpOptions` e `OtlpBatchOptions`, porém todos anuláveis: campos não informados (`null`) herdam o valor do OTLP global; campos informados sobrescrevem o global, mesmo quando iguais aos defaults (ex: `Enabled: false` desabilita o OTLP apenas naquele sinal).
+
 ---
 
 ## 🎯 Comportamento Padrão
@@ -363,15 +373,16 @@ app.Run();
 
 O OpenTelemetry usa Resource para identificar a origem dos dados de telemetria:
 
-| Atributo                 | Fonte                                                                     |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `service.name`           | `ServiceName` → `AssemblyName` → `"unknown_service"`                      |
-| `service.version`        | `ServiceVersion` → `AssemblyVersion` → `"unknown_version"`                |
-| `service.instance.id`    | `ServiceInstanceId` → `OTEL_SERVICE_INSTANCE_ID` → `Guid.NewGuid()`       |
-| `deployment.environment` | `ASPNETCORE_ENVIRONMENT` → `DOTNET_ENVIRONMENT` → `"unknown_environment"` |
-| `host.name`              | `Environment.MachineName`                                                 |
-| `process.pid`            | `Environment.ProcessId`                                                   |
-| `process.runtime.*`      | Informações do runtime .NET                                               |
+| Atributo                      | Fonte                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `service.name`                | `ServiceName` → `AssemblyName` → `"unknown_service"`                      |
+| `service.version`             | `ServiceVersion` → `AssemblyVersion` → `"unknown_version"`                |
+| `service.instance.id`         | `ServiceInstanceId` → `OTEL_SERVICE_INSTANCE_ID` → `Guid.NewGuid()`       |
+| `deployment.environment.name` | `ASPNETCORE_ENVIRONMENT` → `DOTNET_ENVIRONMENT` → `"unknown_environment"` |
+| `deployment.environment`      | Mesmo valor acima (chave legada, mantida para compatibilidade)            |
+| `host.name`                   | `Environment.MachineName`                                                 |
+| `process.pid`                 | `Environment.ProcessId`                                                   |
+| `process.runtime.*`           | Informações do runtime .NET                                               |
 
 ### Tracing
 
@@ -515,11 +526,16 @@ Containers serverless podem ser desligados a qualquer momento (scale-to-zero), c
 
 Otimiza automaticamente as configurações de batch para minimizar perda de dados:
 
-| Parâmetro                    | Valor Padrão | Valor Serverless | Impacto                               |
-| ---------------------------- | ------------ | ---------------- | ------------------------------------- |
-| `ScheduledDelayMilliseconds` | 5000ms       | 1000ms           | Flush a cada 1 segundo                |
-| `MaxExportBatchSize`         | 512          | 128              | Lotes menores, envios mais frequentes |
-| `MaxQueueSize`               | 2048         | 512              | Menos dados em risco de perda         |
+| Parâmetro                              | Valor Padrão | Valor Serverless | Impacto                                 |
+| -------------------------------------- | ------------ | ---------------- | --------------------------------------- |
+| `ScheduledDelayMilliseconds`           | 5000ms       | 1000ms           | Flush a cada 1 segundo                  |
+| `MaxExportBatchSize`                   | 512          | 128              | Lotes menores, envios mais frequentes   |
+| `MaxQueueSize`                         | 2048         | 512              | Menos dados em risco de perda           |
+| `Metrics.ExportIntervalMilliseconds`\* | 60000ms      | 5000ms           | Métricas exportadas com mais frequência |
+
+\* Métricas usam um reader periódico (não o processador Batch); o intervalo serverless só é aplicado quando `Metrics.ExportIntervalMilliseconds` não foi informado.
+
+Os valores serverless são aplicados apenas aos campos de batch **não customizados**: qualquer valor definido explicitamente pelo usuário é mantido, mesmo que seja igual ao default padrão.
 
 ### Recomendações por Ambiente
 
