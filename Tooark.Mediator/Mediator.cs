@@ -1,9 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Concurrent;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
-using Tooark.Mediator.Enums;
-using Tooark.Mediator.Handlers;
 using Tooark.Mediator.Options;
+using Tooark.Mediator.Wrappers;
 
 namespace Tooark.Mediator;
 
@@ -13,12 +12,33 @@ namespace Tooark.Mediator;
 /// <remarks>
 /// O mediador é responsável por enviar requisições para os manipuladores correspondentes e publicar
 /// notificações para os manipuladores de notificações registrados. Ele utiliza o <see cref="IServiceProvider"/>
-/// para resolver os manipuladores necessários para processar as mensagens.
+/// para resolver os manipuladores necessários para processar as mensagens. O despacho usa wrappers
+/// genéricos em cache estático: reflection ocorre apenas na primeira chamada de cada tipo de mensagem.
 /// </remarks>
 /// <param name="serviceProvider">O provedor de serviços para resolver os manipuladores.</param>
 /// <param name="options">As opções de configuração do mediador.</param>
 public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions options) : IMediator
 {
+  #region Private Static Fields
+
+  /// <summary>
+  /// Cache de wrappers de requisições por tipo de requisição/resposta.
+  /// </summary>
+  /// <remarks>
+  /// Estático porque o Mediator é registrado como transient: o cache precisa sobreviver às instâncias.
+  /// </remarks>
+  private static readonly ConcurrentDictionary<(Type RequestType, Type ResponseType), object> _requestWrappers = new();
+
+  /// <summary>
+  /// Cache de wrappers de notificações por tipo de notificação.
+  /// </summary>
+  /// <remarks>
+  /// Estático porque o Mediator é registrado como transient: o cache precisa sobreviver às instâncias.
+  /// </remarks>
+  private static readonly ConcurrentDictionary<Type, NotifyHandlerWrapper> _notifyWrappers = new();
+
+  #endregion
+
   #region Private Fields
 
   /// <summary>
@@ -54,23 +74,14 @@ public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions o
       throw new BadRequestException("Request.Null");
     }
 
-    // Obtém o tipo da requisição e constrói o tipo do manipulador correspondente.
-    var requestType = request.GetType();
-    var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
+    // Obtém (ou cria, apenas na primeira chamada do tipo) o wrapper tipado da requisição.
+    var wrapper = (RequestHandlerWrapper<TResponse>)_requestWrappers.GetOrAdd(
+      (request.GetType(), typeof(TResponse)),
+      static key => Activator.CreateInstance(typeof(RequestHandlerWrapperImpl<,>).MakeGenericType(key.RequestType, key.ResponseType))
+        ?? throw new InternalServerErrorException($"Handler.WrapperCreationFailed;{key.RequestType.FullName}"));
 
-    // Tenta resolver o manipulador do provedor de serviços. Se não encontrar, lança uma exceção.
-    var handler = _serviceProvider.GetService(handlerType)
-      ?? throw new InternalServerErrorException($"Handler.NotFound;{requestType.FullName}");
-
-    // Tenta obter o método HandleAsync do manipulador. Se não encontrar, lança uma exceção.
-    var handleMethod = handlerType.GetMethod(nameof(IRequestHandler<IRequest<TResponse>, TResponse>.HandleAsync))
-      ?? throw new InternalServerErrorException($"Handler.Method.NotFound;{handlerType.FullName}");
-
-    // Tenta invocar o método HandleAsync do manipulador com a requisição e o token de cancelamento. Se falhar, lança uma exceção.
-    var task = handleMethod.Invoke(handler, [request, cancellationToken])
-      ?? throw new InternalServerErrorException($"Handler.ExecutionFailed;{requestType.FullName}");
-
-    return await (Task<TResponse>)task;
+    // Despacha a requisição através do wrapper (chamada direta, sem reflection).
+    return await wrapper.HandleAsync(request, _serviceProvider, cancellationToken);
   }
 
   /// <inheritdoc/>
@@ -82,43 +93,14 @@ public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions o
       throw new BadRequestException("Notify.Null");
     }
 
-    // Obtém o tipo da notificação e constrói o tipo do manipulador de notificações correspondente.
-    var notifyType = notify.GetType();
-    var handlerType = typeof(INotifyHandler<>).MakeGenericType(notifyType);
+    // Obtém (ou cria, apenas na primeira chamada do tipo) o wrapper tipado da notificação.
+    var wrapper = _notifyWrappers.GetOrAdd(
+      notify.GetType(),
+      static type => (NotifyHandlerWrapper)(Activator.CreateInstance(typeof(NotifyHandlerWrapperImpl<>).MakeGenericType(type))
+        ?? throw new InternalServerErrorException($"Handler.WrapperCreationFailed;{type.FullName}")));
 
-    // Tenta resolver os manipuladores de notificações do provedor de serviços.
-    var handlers = _serviceProvider.GetServices(handlerType);
-
-    // Cria uma lista de tarefas para armazenar as tarefas de execução dos manipuladores de notificações.
-    var tasks = new List<Task>();
-
-    // Itera sobre os manipuladores de notificações encontrados.
-    foreach (var handler in handlers)
-    {
-      // Tenta obter o método HandleAsync do manipulador de notificações. Se não encontrar, lança uma exceção.
-      var handleMethod = handlerType.GetMethod(nameof(INotifyHandler<INotify>.HandleAsync))
-        ?? throw new InternalServerErrorException($"Handler.Method.NotFound;{handlerType.FullName}");
-
-      // Tenta invocar o método HandleAsync do manipulador de notificações com a notificação e o token de cancelamento. Se falhar, lança uma exceção.
-      var task = handleMethod.Invoke(handler, [notify, cancellationToken]) as Task
-        ?? throw new InternalServerErrorException($"Handler.ExecutionFailed;{notifyType.FullName}");
-
-      tasks.Add(task);
-    }
-
-    // Verifica se a estratégia de publicação de notificações é sequencial.
-    if (_options.NotifyPublishStrategy == ENotifyStrategy.Sequential)
-    {
-      // Itera sobre as tarefas de execução dos manipuladores de notificações.
-      foreach (var task in tasks)
-      {
-        await task;
-      }
-
-      return;
-    }
-
-    await Task.WhenAll(tasks);
+    // Publica a notificação através do wrapper conforme a estratégia configurada (chamada direta, sem reflection).
+    await wrapper.PublishAsync(notify, _serviceProvider, _options.NotifyPublishStrategy, cancellationToken);
   }
 
   #endregion

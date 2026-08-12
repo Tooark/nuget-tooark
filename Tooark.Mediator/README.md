@@ -5,13 +5,13 @@ Biblioteca com implementação de Mediator para projetos .NET, focada em CQRS/CQ
 ## Conteúdo
 
 - [Visão Geral](#visão-geral)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Componentes](#componentes)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+- [Instalação](#-instalação)
+- [Configuração](#️-configuração)
+- [Componentes](#-componentes)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuição](#-contribuição)
+- [Licença](#-licença)
 
 ## Visão Geral
 
@@ -52,6 +52,11 @@ builder.Services.AddTooarkMediator(options =>
 }, typeof(Program).Assembly);
 ```
 
+> **Recomendação**: informe sempre os assemblies explicitamente (ex: `typeof(Program).Assembly`).
+> Sem assemblies, o assembly chamador é escaneado como fallback — funciona para o caso comum,
+> mas a forma explícita é imune a refatorações que movam a chamada para outro projeto.
+> Classes genéricas abertas são ignoradas pelo scan (o dispatch não suporta open generics).
+
 ---
 
 ## 📦 Componentes
@@ -72,8 +77,17 @@ builder.Services.AddTooarkMediator(options =>
 
 ### Estratégias de publicação
 
-- `ENotifyStrategy.ParallelWhenAll`
-- `ENotifyStrategy.Sequential`
+- `ENotifyStrategy.ParallelWhenAll` (padrão): inicia todos os handlers e aguarda a conclusão de todos
+  com `Task.WhenAll`. Melhor latência quando os handlers são independentes.
+- `ENotifyStrategy.Sequential`: inicia cada handler somente após o anterior concluir, na ordem de
+  registro. Se um handler falhar, os seguintes não são executados (fail-fast). Use quando a ordem dos
+  efeitos colaterais importa ou os handlers compartilham recursos não thread-safe.
+
+### Desempenho do dispatch
+
+O despacho usa wrappers genéricos em cache estático: reflection ocorre apenas na primeira chamada de
+cada tipo de mensagem. As exceções lançadas pelos handlers chegam ao chamador diretamente (sem
+`TargetInvocationException`).
 
 ### Handlers suportados
 
@@ -157,11 +171,12 @@ await mediator.PublishAsync(new UserCreatedNotify(Guid.NewGuid()), cancellationT
 
 ## 📋 Dependências
 
-| Pacote                                                  | Versão | Descrição                             |
-| ------------------------------------------------------- | ------ | ------------------------------------- |
-| `Tooark.Exceptions`                                     | —      | Exceções (ex.: `BadRequestException`) |
-| `Tooark.Mediator.Abstractions`                          | —      | Contratos base do padrão Mediator     |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 8.x    | Abstrações de injeção de dependência  |
+| Pacote                                                  | Versão    | Descrição                             |
+| ------------------------------------------------------- | --------- | ------------------------------------- |
+| `Tooark.Exceptions`                                     | —         | Exceções (ex.: `BadRequestException`) |
+| `Tooark.Mediator.Abstractions`                          | —         | Contratos base do padrão Mediator     |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 8.x/10.x  | Abstrações de injeção de dependência  |
+| `Microsoft.Extensions.Options`                          | 8.x/10.x  | Padrão Options para `MediatorOptions` |
 
 ---
 

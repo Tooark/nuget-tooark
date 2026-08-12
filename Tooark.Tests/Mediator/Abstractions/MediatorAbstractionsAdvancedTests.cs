@@ -408,41 +408,45 @@ public class MediatorAbstractionsAdvancedTests
   #region Covariance tests
 
   [Fact]
-  public void IRequest_ShouldUseOutputCovariance()
+  public void IRequest_ShouldBeInvariant()
   {
     // Arrange
     var requestType = typeof(IRequest<>);
     var genericArg = requestType.GetGenericArguments()[0];
 
-    // Assert - Output covariance is indicated by 'out' keyword
-    Assert.True(genericArg.GenericParameterAttributes.HasFlag(
-      System.Reflection.GenericParameterAttributes.Covariant));
+    // Assert - Invariante por design: o dispatch resolve o handler pelo tipo de resposta do call site,
+    // então o uso covariante (referência de tipo-base) falharia em runtime; sem 'out', falha em compilação.
+    Assert.Equal(
+      System.Reflection.GenericParameterAttributes.None,
+      genericArg.GenericParameterAttributes & System.Reflection.GenericParameterAttributes.VarianceMask);
   }
 
   [Fact]
-  public void ICommand_ShouldUseOutputCovariance()
+  public void ICommand_ShouldBeInvariant()
   {
     // Arrange
     var commandType = typeof(ICommand<>);
     var genericArgs = commandType.GetGenericArguments();
 
-    // Assert
+    // Assert - Invariante por design (ver IRequest_ShouldBeInvariant)
     Assert.NotEmpty(genericArgs);
-    Assert.True(genericArgs[0].GenericParameterAttributes.HasFlag(
-      System.Reflection.GenericParameterAttributes.Covariant));
+    Assert.Equal(
+      System.Reflection.GenericParameterAttributes.None,
+      genericArgs[0].GenericParameterAttributes & System.Reflection.GenericParameterAttributes.VarianceMask);
   }
 
   [Fact]
-  public void IQuery_ShouldUseOutputCovariance()
+  public void IQuery_ShouldBeInvariant()
   {
     // Arrange
     var queryType = typeof(IQuery<>);
     var genericArgs = queryType.GetGenericArguments();
 
-    // Assert
+    // Assert - Invariante por design (ver IRequest_ShouldBeInvariant)
     Assert.NotEmpty(genericArgs);
-    Assert.True(genericArgs[0].GenericParameterAttributes.HasFlag(
-      System.Reflection.GenericParameterAttributes.Covariant));
+    Assert.Equal(
+      System.Reflection.GenericParameterAttributes.None,
+      genericArgs[0].GenericParameterAttributes & System.Reflection.GenericParameterAttributes.VarianceMask);
   }
 
   #endregion

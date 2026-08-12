@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
@@ -68,8 +69,72 @@ public class TooarkDependencyInjectionTests
     var provider = services.BuildServiceProvider();
     var mediator = provider.GetRequiredService<IMediator>();
 
-    // Assert
+    // Assert - O fallback escaneia o assembly chamador (este assembly de testes), registrando seus handlers
     Assert.NotNull(mediator);
+    Assert.NotNull(provider.GetService<IRequestHandler<PingRequest, string>>());
+    Assert.NotEmpty(provider.GetServices<INotifyHandler<TestNotification>>());
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldFallbackToCallingAssembly_WhenAssembliesArrayIsNull()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+
+    // Act - Array nulo deve se comportar como nenhum assembly informado (fallback para o chamador)
+    services.AddTooarkMediator((Assembly[])null!);
+
+    using var provider = services.BuildServiceProvider();
+
+    // Assert
+    Assert.NotNull(provider.GetService<IRequestHandler<PingRequest, string>>());
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldRegisterLoadableTypes_WhenAssemblyThrowsReflectionTypeLoadException()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+
+    // Assembly fake que falha parcialmente no carregamento: expõe um handler carregável e um tipo nulo
+    var assembly = new PartiallyLoadableAssembly([typeof(PingRequestHandler), null]);
+
+    // Act
+    services.AddTooarkMediator(assembly);
+
+    using var provider = services.BuildServiceProvider();
+
+    // Assert - O handler carregável foi registrado mesmo com a falha parcial do assembly
+    Assert.NotNull(provider.GetService<IRequestHandler<PingRequest, string>>());
+  }
+
+  /// <summary>
+  /// Assembly fake que simula falha parcial de carregamento de tipos (ReflectionTypeLoadException).
+  /// </summary>
+  private sealed class PartiallyLoadableAssembly(Type?[] types) : Assembly
+  {
+    public override Type[] GetTypes()
+    {
+      throw new ReflectionTypeLoadException(types, null);
+    }
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldSkipOpenGenericHandlers_WhenScanningAssembly()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+
+    // Act - O assembly contém OpenGenericNotifyHandler<T> (genérico aberto), que deve ser ignorado pelo scan
+    services.AddTooarkMediator(typeof(TooarkDependencyInjectionTests).Assembly);
+
+    // Assert - O handler genérico aberto não foi registrado pelo scan e o provider resolve sem exceção
+    // (a checagem é específica do handler: a infraestrutura do Options registra genéricos abertos legítimos)
+    Assert.DoesNotContain(services, service =>
+      service.ImplementationType == typeof(OpenGenericNotifyHandler<>));
+
+    using var provider = services.BuildServiceProvider();
+    Assert.NotEmpty(provider.GetServices<INotifyHandler<TestNotification>>());
   }
 
   [Fact]
@@ -153,6 +218,26 @@ public class TooarkDependencyInjectionTests
     var provider = services.BuildServiceProvider();
 
     // Assert
+    var options = provider.GetRequiredService<MediatorOptions>();
+    Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldComposeOptions_WhenCalledMultipleTimes()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var assembly = typeof(TooarkDependencyInjectionTests).Assembly;
+
+    // Act - Primeira chamada sem configuração, segunda configurando a estratégia (cenário de aplicação modular)
+    services.AddTooarkMediator(assembly);
+    services.AddTooarkMediator(
+      options => options.NotifyPublishStrategy = ENotifyStrategy.Sequential,
+      assembly);
+
+    using var provider = services.BuildServiceProvider();
+
+    // Assert - A configuração da segunda chamada não é descartada silenciosamente
     var options = provider.GetRequiredService<MediatorOptions>();
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
   }

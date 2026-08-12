@@ -9,5 +9,5 @@ namespace Tooark.Mediator.Abstractions;
 /// por processar a consulta e retornar os dados solicitados.
 /// </remarks>
 /// <typeparam name="TResponse">O tipo de resposta que a consulta retorna.</typeparam>
-public interface IQuery<out TResponse> : IRequest<TResponse>
+public interface IQuery<TResponse> : IRequest<TResponse>
 { }

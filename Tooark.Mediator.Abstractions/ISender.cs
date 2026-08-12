@@ -21,7 +21,6 @@ public interface ISender
   /// <returns>A resposta da requisição.</returns>
   /// <exception cref="BadRequestException">Lançada quando a requisição é nula.</exception>
   /// <exception cref="InternalServerErrorException">Lançada quando o manipulador da requisição não é encontrado.</exception>
-  /// <exception cref="InternalServerErrorException">Lançada quando o método HandleAsync do manipulador não é encontrado.</exception>
-  /// <exception cref="InternalServerErrorException">Lançada quando a execução do manipulador falha.</exception>
+  /// <exception cref="InternalServerErrorException">Lançada quando o manipulador retorna uma tarefa nula.</exception>
   Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
 }

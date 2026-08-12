@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
@@ -104,12 +103,15 @@ public class MediatorAdvancedTests
     await ParallelPublishProbe.WaitForFirstHandlerAsync();
     await Task.Delay(50, TestContext.Current.CancellationToken);
 
-    // Assert - A implementação atual invoca todos os handlers antes de aplicar a estratégia.
-    Assert.True(ParallelPublishProbe.SecondHandlerStarted);
+    // Assert - Sequencial: o segundo handler NÃO inicia enquanto o primeiro não concluir.
+    Assert.False(ParallelPublishProbe.SecondHandlerStarted);
 
-    // Cleanup
+    // Libera o primeiro handler e aguarda a publicação completar
     ParallelPublishProbe.ReleaseFirstHandler();
     await publishTask;
+
+    // Assert - Após a conclusão do primeiro, o segundo executa normalmente.
+    Assert.True(ParallelPublishProbe.SecondHandlerStarted);
   }
 
   [Fact]
@@ -160,12 +162,11 @@ public class MediatorAdvancedTests
     var provider = services.BuildServiceProvider();
     var mediator = provider.GetRequiredService<IMediator>();
 
-    // Act & Assert
-    var exception = await Assert.ThrowsAsync<TargetInvocationException>(
+    // Act & Assert - A exceção do handler chega diretamente ao chamador (sem TargetInvocationException)
+    var exception = await Assert.ThrowsAsync<InvalidOperationException>(
       () => mediator.SendAsync(new ExceptionThrowingRequest(), TestContext.Current.CancellationToken));
 
-    Assert.NotNull(exception.InnerException);
-    Assert.Contains("Handler intentionally threw an exception", exception.InnerException.Message);
+    Assert.Contains("Handler intentionally threw an exception", exception.Message);
   }
 
   [Fact]
@@ -179,12 +180,11 @@ public class MediatorAdvancedTests
     var provider = services.BuildServiceProvider();
     var mediator = provider.GetRequiredService<IMediator>();
 
-    // Act & Assert
-    var exception = await Assert.ThrowsAsync<TargetInvocationException>(
+    // Act & Assert - A exceção do handler chega diretamente ao chamador (sem TargetInvocationException)
+    var exception = await Assert.ThrowsAsync<InvalidOperationException>(
       () => mediator.PublishAsync(new ExceptionThrowingNotification(), TestContext.Current.CancellationToken));
 
-    Assert.NotNull(exception.InnerException);
-    Assert.Contains("Notification handler intentionally threw an exception", exception.InnerException.Message);
+    Assert.Contains("Notification handler intentionally threw an exception", exception.Message);
   }
 
   [Fact]
@@ -202,8 +202,8 @@ public class MediatorAdvancedTests
     var provider = services.BuildServiceProvider();
     var mediator = provider.GetRequiredService<IMediator>();
 
-    // Act & Assert
-    await Assert.ThrowsAsync<TargetInvocationException>(
+    // Act & Assert - A exceção do handler chega diretamente ao chamador (sem TargetInvocationException)
+    await Assert.ThrowsAsync<InvalidOperationException>(
       () => mediator.PublishAsync(new ExceptionThrowingNotification(), TestContext.Current.CancellationToken));
   }
 
@@ -291,8 +291,8 @@ public class MediatorAdvancedTests
     var provider = services.BuildServiceProvider();
     var mediator = provider.GetRequiredService<IMediator>();
 
-    // Act & Assert
-    await Assert.ThrowsAsync<TargetInvocationException>(
+    // Act & Assert - A exceção do handler chega diretamente ao chamador (sem TargetInvocationException)
+    await Assert.ThrowsAsync<InvalidOperationException>(
       () => mediator.PublishAsync(new ExceptionThrowingNotification(), TestContext.Current.CancellationToken));
   }
 

@@ -8,7 +8,7 @@ namespace Tooark.Mediator.Abstractions;
 /// e geralmente são manipulados por um único manipulador.
 /// </remarks>
 /// <typeparam name="TResponse">O tipo de resposta que o comando retorna.</typeparam>
-public interface ICommand<out TResponse> : IRequest<TResponse>
+public interface ICommand<TResponse> : IRequest<TResponse>
 { }
 
 /// <summary>

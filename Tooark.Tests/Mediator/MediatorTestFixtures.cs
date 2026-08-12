@@ -96,6 +96,18 @@ public static class TestNotificationCounter
 }
 
 /// <summary>
+/// Handler genérico aberto (deve ser ignorado pelo scan de registro, pois o dispatch não suporta open generics).
+/// </summary>
+/// <typeparam name="T">Parâmetro genérico aberto.</typeparam>
+public sealed class OpenGenericNotifyHandler<T> : INotifyHandler<TestNotification>
+{
+  public Task HandleAsync(TestNotification notification, CancellationToken cancellationToken = default)
+  {
+    return Task.CompletedTask;
+  }
+}
+
+/// <summary>
 /// Notificação que retorna tarefa nula (para testar erro).
 /// </summary>
 public sealed record NullTaskNotification : INotify;

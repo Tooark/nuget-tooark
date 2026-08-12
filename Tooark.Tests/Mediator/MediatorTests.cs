@@ -151,6 +151,29 @@ public class MediatorTests
   }
 
   [Fact]
+  public async Task Publish_ShouldThrowInternalServerErrorException_WhenHandlerReturnsNullTask_InSequentialStrategy()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    services.AddSingleton(new MediatorOptions
+    {
+      NotifyPublishStrategy = ENotifyStrategy.Sequential
+    });
+    services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
+    services.AddTransient<INotifyHandler<NullTaskNotification>, NullTaskNotificationHandler>();
+
+    var provider = services.BuildServiceProvider();
+    var mediator = provider.GetRequiredService<IMediator>();
+
+    // Act
+    var exception = await Assert.ThrowsAsync<InternalServerErrorException>(
+      () => mediator.PublishAsync(new NullTaskNotification(), TestContext.Current.CancellationToken));
+
+    // Assert
+    Assert.Contains("Handler.ExecutionFailed", exception.Message);
+  }
+
+  [Fact]
   public async Task Publish_ShouldRunHandlersInParallel_ByDefault()
   {
     // Arrange
@@ -200,12 +223,15 @@ public class MediatorTests
     await ParallelPublishProbe.WaitForFirstHandlerAsync();
     await Task.Delay(50, TestContext.Current.CancellationToken);
 
-    // Assert - A implementação atual invoca todos os handlers antes de aplicar a estratégia.
-    Assert.True(ParallelPublishProbe.SecondHandlerStarted);
+    // Assert - Sequencial: o segundo handler NÃO inicia enquanto o primeiro não concluir.
+    Assert.False(ParallelPublishProbe.SecondHandlerStarted);
 
-    // Cleanup
+    // Libera o primeiro handler e aguarda a publicação completar
     ParallelPublishProbe.ReleaseFirstHandler();
     await publishTask;
+
+    // Assert - Após a conclusão do primeiro, o segundo executa normalmente.
+    Assert.True(ParallelPublishProbe.SecondHandlerStarted);
   }
 
   private sealed record PingRequest(string Message) : IRequest<string>;
