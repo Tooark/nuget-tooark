@@ -1,8 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
 
@@ -23,10 +20,6 @@ public static partial class TooarkDependencyInjection
   {
     // Registra as opções do JWT a partir da configuração
     services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.Section));
-
-    // Registra um logger nulo como fallback caso logging não esteja configurado
-    services.TryAddSingleton<ILoggerFactory, NullLoggerFactory>();
-    services.TryAddSingleton(typeof(ILogger<>), typeof(Logger<>));
 
     // Registra o serviço de token JWT
     services.AddSingleton<IJwtTokenService, JwtTokenService>();

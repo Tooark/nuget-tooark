@@ -20,14 +20,19 @@ public class CryptographyService : ICryptographyService
   private readonly string _algorithm;
 
   /// <summary>
-  /// Segredo para criptografia.
+  /// Segredo para derivação da chave (usado quando SecretBase64 não é informado).
   /// </summary>
-  private readonly string _secret;
+  private readonly string? _secret;
 
   /// <summary>
   /// Chave AES binária opcional (quando fornecida em Base64 na configuração).
   /// </summary>
   private readonly byte[]? _aesKey;
+
+  /// <summary>
+  /// Tamanho da chave AES-256 em bytes.
+  /// </summary>
+  private const int AesKeySize = 32; // 256 bits
 
   /// <summary>
   /// Tamanho do vetor de inicialização (IV) para CBC.
@@ -53,7 +58,9 @@ public class CryptographyService : ICryptographyService
   /// </summary>
   /// <param name="options">Opções de configuração de criptografia.</param>
   /// <exception cref="InternalServerErrorException">Quando as opções não estão configuradas.</exception>
-  /// <exception cref="InternalServerErrorException">Quando o segredo de criptografia não está configurado.</exception>
+  /// <exception cref="InternalServerErrorException">Quando nem Secret nem SecretBase64 estão configurados.</exception>
+  /// <exception cref="InternalServerErrorException">Quando SecretBase64 não é um Base64 válido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando SecretBase64 não representa uma chave de 32 bytes (AES-256).</exception>
   public CryptographyService(IOptions<CryptographyOptions> options)
   {
     // Valida se as opções foram configuradas corretamente
@@ -61,13 +68,34 @@ public class CryptographyService : ICryptographyService
       ?? throw new InternalServerErrorException("Options.NotConfigured");
 
     _algorithm = _options.Algorithm;
-    _secret = _options.Secret
-      ?? throw new InternalServerErrorException("Options.Cryptography.SecretNotConfigured");
+    _secret = _options.Secret;
 
-    // Caso exista uma chave AES pronta em Base64, converte para byte[]
+    // SecretBase64 tem prioridade quando informado; validado no startup (fail-fast, nunca troca de chave silenciosamente)
     if (!string.IsNullOrWhiteSpace(_options.SecretBase64))
     {
-      _aesKey = Convert.FromBase64String(_options.SecretBase64);
+      byte[] keyBytes;
+
+      try
+      {
+        keyBytes = Convert.FromBase64String(_options.SecretBase64);
+      }
+      catch (FormatException)
+      {
+        throw new InternalServerErrorException("Options.Cryptography.SecretBase64Invalid");
+      }
+
+      // AES-256 exige chave de exatamente 32 bytes
+      if (keyBytes.Length != AesKeySize)
+      {
+        throw new InternalServerErrorException("Options.Cryptography.SecretBase64InvalidSize");
+      }
+
+      _aesKey = keyBytes;
+    }
+    else if (string.IsNullOrWhiteSpace(_secret))
+    {
+      // Exige ao menos uma das chaves: Secret ou SecretBase64
+      throw new InternalServerErrorException("Options.Cryptography.SecretNotConfigured");
     }
   }
 
@@ -86,6 +114,7 @@ public class CryptographyService : ICryptographyService
   /// <param name="plainText">Texto plano para criptografar.</param>
   /// <returns>Texto criptografado em Base64.</returns>
   /// <exception cref="BadRequestException">Quando o texto plano não é fornecido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando o algoritmo configurado é apenas para descriptografia (CBCUnsafe).</exception>
   public string Encrypt(string plainText)
   {
     // Valida o texto a criptografar
@@ -95,10 +124,12 @@ public class CryptographyService : ICryptographyService
     }
 
     // Seleciona o algoritmo de criptografia
+    // CBCZeroIv (CBCUnsafe) é apenas para leitura de dados legados: criptografar com IV zero seria inseguro
     return _algorithm switch
     {
       "CBC" => EncryptCbc(plainText),
       "GCM" => EncryptGcm(plainText),
+      "CBCZeroIv" => throw new InternalServerErrorException("Options.Cryptography.AlgorithmDecryptOnly;CBCUnsafe"),
       _ => EncryptGcm(plainText)
     };
   }
@@ -123,14 +154,27 @@ public class CryptographyService : ICryptographyService
       throw new BadRequestException("Cryptography.CipherTextNotProvided");
     }
 
-    // Seleciona o algoritmo de descriptografia,
-    return _algorithm switch
+    try
     {
-      "CBC" => DecryptCbc(cipherText),
-      "GCM" => DecryptGcm(cipherText),
-      "CBCZeroIv" => DecryptCbcWithZeroIv(cipherText),
-      _ => DecryptGcm(cipherText)
-    };
+      // Seleciona o algoritmo de descriptografia
+      return _algorithm switch
+      {
+        "CBC" => DecryptCbc(cipherText),
+        "GCM" => DecryptGcm(cipherText),
+        "CBCZeroIv" => DecryptCbcWithZeroIv(cipherText),
+        _ => DecryptGcm(cipherText)
+      };
+    }
+    catch (FormatException)
+    {
+      // Base64 inválido: uniformiza como texto criptografado inválido
+      throw new BadRequestException("Cryptography.InvalidCipherText");
+    }
+    catch (CryptographicException)
+    {
+      // Padding/tag inválidos: mensagem única evita distinção de erros (superfície de padding oracle)
+      throw new BadRequestException("Cryptography.InvalidCipherText");
+    }
   }
 
   #endregion
@@ -342,17 +386,13 @@ public class CryptographyService : ICryptographyService
   /// Obtém a chave simétrica a ser usada (AES-256).
   /// </summary>
   /// <remarks>
-  /// Se uma chave AES pronta em Base64 foi configurada, ela é utilizada.
-  /// Caso contrário, a chave é derivada a partir do segredo usando SHA256.
+  /// A chave Base64 (validada no construtor) tem prioridade; caso contrário,
+  /// a chave é derivada a partir do segredo usando SHA256. O construtor garante
+  /// que ao menos uma das duas fontes de chave está configurada.
   /// </remarks>
   private byte[] GetSymmetricKey()
   {
-    if (_aesKey is { Length: 32 })
-    {
-      return _aesKey;
-    }
-
-    return DeriveKey(_secret);
+    return _aesKey ?? DeriveKey(_secret!);
   }
 
   #endregion

@@ -367,8 +367,9 @@ public class CryptographyServiceTests
     bytes[^1] ^= 0xFF; // Flip bits in the last byte
     var tampered = Convert.ToBase64String(bytes);
 
-    // Act & Assert
-    Assert.ThrowsAny<Exception>(() => service.Decrypt(tampered));
+    // Act & Assert - dados adulterados retornam sempre a mesma exceção (sem distinção de causa)
+    var ex = Assert.Throws<BadRequestException>(() => service.Decrypt(tampered));
+    Assert.Contains("Cryptography.InvalidCipherText", ex.GetErrorMessages());
   }
 
   #endregion
@@ -452,8 +453,9 @@ public class CryptographyServiceTests
     bytes[^1] ^= 0xFF; // Flip bits in the last byte
     var tampered = Convert.ToBase64String(bytes);
 
-    // Act & Assert
-    Assert.ThrowsAny<Exception>(() => service.Decrypt(tampered));
+    // Act & Assert - dados adulterados retornam sempre a mesma exceção (sem distinção de causa)
+    var ex = Assert.Throws<BadRequestException>(() => service.Decrypt(tampered));
+    Assert.Contains("Cryptography.InvalidCipherText", ex.GetErrorMessages());
   }  
 
   #endregion
@@ -510,6 +512,19 @@ public class CryptographyServiceTests
     Assert.Contains("Cryptography.CipherTextNotProvided", ex.GetErrorMessages());
   }
 
+  // Testa que criptografar com CBCUnsafe lança exceção (modo apenas para descriptografia de dados legados)
+  [Fact]
+  public void Encrypt_CBCZeroIv_ShouldThrowInternalServerErrorException()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetCbcZeroIvOptions());
+    var service = new CryptographyService(options);
+
+    // Act & Assert - antes caía silenciosamente em GCM, quebrando o round-trip com o Decrypt legado
+    var ex = Assert.Throws<InternalServerErrorException>(() => service.Encrypt("any text"));
+    Assert.Contains("Options.Cryptography.AlgorithmDecryptOnly;CBCUnsafe", ex.GetErrorMessages());
+  }
+
   #endregion
 
   #region Decrypt Tests - Default Algorithm
@@ -561,18 +576,80 @@ public class CryptographyServiceTests
     Assert.Equal(plainText, decrypted);
   }
 
-  // Testa a criptografia e descriptografia com SecretBase64 de tamanho inválido (deve usar Secret)
+  // Testa que SecretBase64 de tamanho inválido falha no startup (nunca troca de chave silenciosamente)
   [Fact]
-  public void Encrypt_Decrypt_WithInvalidSizeBase64Key_ShouldFallbackToSecret()
+  public void Constructor_WithInvalidSizeBase64Key_ShouldThrowInternalServerErrorException()
   {
-    // Arrange - key size is not 32 bytes, should fallback to DeriveKey
+    // Arrange - chave de 16 bytes em vez dos 32 exigidos pelo AES-256
     var options = MEOptions.Options.Create(GetOptionsWithInvalidBase64Key());
+
+    // Act & Assert
+    var ex = Assert.Throws<InternalServerErrorException>(() => new CryptographyService(options));
+    Assert.Contains("Options.Cryptography.SecretBase64InvalidSize", ex.GetErrorMessages());
+  }
+
+  // Testa que SecretBase64 com Base64 inválido falha no startup
+  [Fact]
+  public void Constructor_WithMalformedBase64Key_ShouldThrowInternalServerErrorException()
+  {
+    // Arrange
+    var cryptoOptions = new CryptographyOptions
+    {
+      Algorithm = "GCM",
+      SecretBase64 = "not-valid-base64!!!"
+    };
+    var options = MEOptions.Options.Create(cryptoOptions);
+
+    // Act & Assert
+    var ex = Assert.Throws<InternalServerErrorException>(() => new CryptographyService(options));
+    Assert.Contains("Options.Cryptography.SecretBase64Invalid", ex.GetErrorMessages());
+  }
+
+  // Testa que SecretBase64 sozinho (sem Secret) é uma configuração válida
+  [Fact]
+  public void Encrypt_Decrypt_WithSecretBase64Only_ShouldWork()
+  {
+    // Arrange - apenas SecretBase64, sem Secret
+    var key = RandomNumberGenerator.GetBytes(32);
+    var cryptoOptions = new CryptographyOptions
+    {
+      Algorithm = "GCM",
+      SecretBase64 = Convert.ToBase64String(key)
+    };
+    var options = MEOptions.Options.Create(cryptoOptions);
     var service = new CryptographyService(options);
-    var plainText = "Hello with fallback!";
+    var plainText = "Hello with Base64-only key!";
 
     // Act
     var encrypted = service.Encrypt(plainText);
     var decrypted = service.Decrypt(encrypted);
+
+    // Assert
+    Assert.Equal(plainText, decrypted);
+  }
+
+  // Testa que SecretBase64 tem prioridade sobre Secret quando ambos são informados
+  [Fact]
+  public void Decrypt_WithBase64Priority_ShouldUseBase64Key()
+  {
+    // Arrange - dois serviços com o mesmo SecretBase64 e Secrets diferentes: devem interoperar
+    var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    var service1 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    {
+      Algorithm = "GCM",
+      Secret = "secret-one",
+      SecretBase64 = key
+    }));
+    var service2 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    {
+      Algorithm = "GCM",
+      Secret = "secret-two",
+      SecretBase64 = key
+    }));
+    var plainText = "Base64 key has priority!";
+
+    // Act
+    var decrypted = service2.Decrypt(service1.Encrypt(plainText));
 
     // Assert
     Assert.Equal(plainText, decrypted);
@@ -661,7 +738,7 @@ public class CryptographyServiceTests
     var cbcService = new CryptographyService(cbcOptions);
 
     // Act & Assert - should fail because formats are different
-    Assert.ThrowsAny<Exception>(() => cbcService.Decrypt(encrypted));
+    Assert.Throws<BadRequestException>(() => cbcService.Decrypt(encrypted));
   }
 
   // Testa a descriptografia de dados criptografados com CBC usando GCM (deve falhar)
@@ -678,7 +755,7 @@ public class CryptographyServiceTests
     var gcmService = new CryptographyService(gcmOptions);
 
     // Act & Assert - should fail because formats are different
-    Assert.ThrowsAny<Exception>(() => gcmService.Decrypt(encrypted));
+    Assert.Throws<BadRequestException>(() => gcmService.Decrypt(encrypted));
   }
 
   #endregion
@@ -707,16 +784,16 @@ public class CryptographyServiceTests
     var service2 = new CryptographyService(options2);
 
     // Act & Assert - should fail because secrets are different
-    Assert.ThrowsAny<Exception>(() => service2.Decrypt(encrypted));
+    Assert.Throws<BadRequestException>(() => service2.Decrypt(encrypted));
   }
 
   #endregion
 
   #region Invalid Base64 Tests
 
-  // Testa a descriptografia com uma string Base64 inválida
+  // Testa a descriptografia com uma string Base64 inválida (uniformizada como texto criptografado inválido)
   [Fact]
-  public void Decrypt_WithInvalidBase64_ShouldThrowException()
+  public void Decrypt_WithInvalidBase64_ShouldThrowBadRequestException()
   {
     // Arrange
     var options = MEOptions.Options.Create(GetGcmOptions());
@@ -724,7 +801,8 @@ public class CryptographyServiceTests
     var invalidBase64 = "not-valid-base64!!!";
 
     // Act & Assert
-    Assert.ThrowsAny<FormatException>(() => service.Decrypt(invalidBase64));
+    var ex = Assert.Throws<BadRequestException>(() => service.Decrypt(invalidBase64));
+    Assert.Contains("Cryptography.InvalidCipherText", ex.GetErrorMessages());
   }
 
   #endregion

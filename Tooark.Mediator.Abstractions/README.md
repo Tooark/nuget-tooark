@@ -5,12 +5,12 @@ Biblioteca com os contratos base do padrão Mediator para projetos .NET, utiliza
 ## Conteúdo
 
 - [Visão Geral](#visão-geral)
-- [Instalação](#instalação)
-- [Componentes](#componentes)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+- [Instalação](#-instalação)
+- [Componentes](#-componentes)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuição](#-contribuição)
+- [Licença](#-licença)
 
 ## Visão Geral
 

@@ -20,7 +20,7 @@ public class TooarkDependencyInjectionSecuritiesTests
       { $"{JwtOptions.Section}:Algorithm", "HS256" },
       { $"{JwtOptions.Section}:Issuer", "issuer-test" },
       { $"{JwtOptions.Section}:Audience", "audience-test" },
-      { $"{JwtOptions.Section}:Secret", "secret-test-with-minimum-length" },
+      { $"{JwtOptions.Section}:Secret", "secret-test-with-minimum-length!" },
       { $"{JwtOptions.Section}:ExpirationTime", "60" },
       // Configurações de Criptografia
       { $"{CryptographyOptions.Section}:Algorithm", "GCM" },
@@ -53,7 +53,7 @@ public class TooarkDependencyInjectionSecuritiesTests
       { $"{JwtOptions.Section}:Algorithm", "HS256" },
       { $"{JwtOptions.Section}:Issuer", "issuer-test" },
       { $"{JwtOptions.Section}:Audience", "audience-test" },
-      { $"{JwtOptions.Section}:Secret", "secret-test-with-minimum-length" },
+      { $"{JwtOptions.Section}:Secret", "secret-test-with-minimum-length!" },
       { $"{JwtOptions.Section}:ExpirationTime", "60" }
     };
 

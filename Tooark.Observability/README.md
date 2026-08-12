@@ -102,7 +102,9 @@ Exemplo com **todas as opções disponíveis** no pacote:
     },
     "Metrics": {
       "Enabled": true,
+      "ExportIntervalMilliseconds": 60000,
       "RuntimeMetricsEnabled": true,
+      "ProcessMetricsEnabled": true,
       "MeterName": "Tooark",
       "AdditionalMeters": ["MeuMeter", "OutroMeter"],
       "Otlp": {
@@ -314,11 +316,11 @@ app.Run();
 
 ### DataSensitiveOptions (Tracing)
 
-| Propriedade               | Tipo     | Padrão                     | Descrição                           |
-| ------------------------- | -------- | -------------------------- | ----------------------------------- |
-| `HideQueryParameters`     | bool     | `true`                     | Remove query string do http.target  |
-| `HideHeaders`             | bool     | `true`                     | Mascara headers sensíveis           |
-| `SensitiveRequestHeaders` | string[] | authorization, cookie, etc | Lista de headers a serem mascarados |
+| Propriedade               | Tipo     | Padrão                     | Descrição                                     |
+| ------------------------- | -------- | -------------------------- | --------------------------------------------- |
+| `HideQueryParameters`     | bool     | `true`                     | Remove a query string dos atributos dos spans |
+| `HideHeaders`             | bool     | `true`                     | Mascara headers sensíveis                     |
+| `SensitiveRequestHeaders` | string[] | authorization, cookie, etc | Lista de headers a serem mascarados           |
 
 ### MetricsOptions
 
@@ -398,7 +400,7 @@ Quando habilitado (`Tracing.Enabled = true`):
 
 Quando `DataSensitive = false` (padrão):
 
-- **Query Parameters**: removidos do atributo `http.target` (ex: `/api/users?token=xxx` → `/api/users`)
+- **Query Parameters**: removidos dos atributos das convenções semânticas atuais — `url.query` (ASP.NET Core) e `url.full` (HttpClient); o atributo legado `http.target` é reescrito quando presente com query (ex: `/api/users?token=xxx` → `/api/users`)
 - **Headers Sensíveis**: mascarados nos spans (Authorization, Cookie, API keys, etc.)
 
 ### Metrics
@@ -408,6 +410,8 @@ Quando habilitado (`Metrics.Enabled = true`):
 - **ASP.NET Core Instrumentation**: métricas de requisições HTTP de entrada
 - **HTTP Client Instrumentation**: métricas de chamadas HTTP de saída
 - **Runtime Instrumentation**: métricas do runtime .NET (GC, threads, etc.) quando `RuntimeMetricsEnabled = true`
+- **Process Instrumentation**: métricas de processo (CPU, memória) quando `ProcessMetricsEnabled = true`
+- **Intervalo de exportação**: métricas são exportadas via OTLP a cada `ExportIntervalMilliseconds` (padrão: 60s; 5s quando o OTLP efetivo tem `ServerlessOptimized` habilitado)
 
 ### Logging
 

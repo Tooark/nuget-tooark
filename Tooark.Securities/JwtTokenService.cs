@@ -1,9 +1,10 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Tooark.Exceptions;
 using Tooark.Securities.Dtos;
@@ -18,6 +19,15 @@ namespace Tooark.Securities;
 /// </summary>
 public class JwtTokenService : IJwtTokenService
 {
+  #region Private Static Properties
+
+  /// <summary>
+  /// Handler de tokens JWT (JsonWebTokenHandler, thread-safe e reutilizável).
+  /// </summary>
+  private static readonly JsonWebTokenHandler _tokenHandler = new();
+
+  #endregion
+
   #region Private Properties
 
   /// <summary>
@@ -63,17 +73,18 @@ public class JwtTokenService : IJwtTokenService
   /// Construtor do serviço de token JWT.
   /// </summary>
   /// <param name="jwtOptions">Opções de configuração do JWT.</param>
-  /// <param name="logger">Logger do serviço.</param>
+  /// <param name="logger">Logger do serviço. Opcional: quando não fornecido, usa um logger nulo interno,
+  /// sem registrar fallbacks globais de logging no container.</param>
   /// <exception cref="InternalServerErrorException">Quando as opções não estão configuradas.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave secreta não está configurada para algoritmos simétricos.</exception>
   /// <exception cref="InternalServerErrorException">Quando as chaves pública/privada não estão configuradas para algoritmos assimétricos.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave RSA tem tamanho inválido.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave ECDsa tem curva inválida.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave é inválida ou o algoritmo não é suportado.</exception>
-  public JwtTokenService(IOptions<JwtOptions> jwtOptions, ILogger<JwtTokenService> logger)
+  public JwtTokenService(IOptions<JwtOptions> jwtOptions, ILogger<JwtTokenService>? logger = null)
   {
-    // Configura o logger
-    _logger = logger;
+    // Configura o logger (fallback interno para NullLogger quando logging não está configurado)
+    _logger = logger ?? NullLogger<JwtTokenService>.Instance;
 
     // Valida se as opções foram configuradas corretamente
     _jwtOptions = jwtOptions.Value
@@ -87,6 +98,21 @@ public class JwtTokenService : IJwtTokenService
     {
       var secret = _jwtOptions.Secret ?? throw new InternalServerErrorException("Options.Jwt.SecretNotConfigured");
       var keyBytes = Encoding.UTF8.GetBytes(secret);
+
+      // RFC 7518: a chave HMAC deve ter ao menos o tamanho da saída do hash (HS256: 32, HS384: 48, HS512: 64 bytes)
+      var minKeyBytes = _algorithm switch
+      {
+        "HS384" => 48,
+        "HS512" => 64,
+        _ => 32
+      };
+
+      // Valida o tamanho mínimo no startup (secrets curtos tornam a chave HMAC forçável e falhariam em runtime com erro obscuro)
+      if (keyBytes.Length < minKeyBytes)
+      {
+        throw new InternalServerErrorException($"Options.Jwt.SecretTooShort;{minKeyBytes}");
+      }
+
       _createKey = new SymmetricSecurityKey(keyBytes);
       _validationKey = _createKey;
 
@@ -107,6 +133,12 @@ public class JwtTokenService : IJwtTokenService
         _validateToken = true;
       }
 
+      // Verifica se ao menos uma chave está configurada (fail-fast para todas as famílias assimétricas: RSA, PSS e ECDsa)
+      if (!_createToken && !_validateToken)
+      {
+        throw new InternalServerErrorException("Options.Jwt.KeysNotConfigured");
+      }
+
       // Carrega chaves pública e privada, caso não exista a privada, usa a pública
       var privateKeyBytes = _createToken ? Convert.FromBase64String(_jwtOptions.PrivateKey!) : null;
       var publicKeyBytes = _validateToken ? Convert.FromBase64String(_jwtOptions.PublicKey!) : null;
@@ -116,12 +148,6 @@ public class JwtTokenService : IJwtTokenService
       {
         try
         {
-          // Verifica se ao menos uma chave está configurada
-          if(!_createToken && !_validateToken)
-          {
-            throw new InternalServerErrorException("Options.Jwt.KeysNotConfigured");
-          }
-
           // Verifica se deve criar a chave de criação
           if (_createToken && privateKeyBytes != null)
           {
@@ -247,7 +273,6 @@ public class JwtTokenService : IJwtTokenService
     ? baseClaims
     : baseClaims.Concat(extraClaims);
 
-    var tokenHandler = new JwtSecurityTokenHandler();
     var tokenDescriptor = new SecurityTokenDescriptor
     {
       Expires = DateTime.UtcNow.AddMinutes(expiryTime),
@@ -272,11 +297,8 @@ public class JwtTokenService : IJwtTokenService
       tokenDescriptor.Issuer = _jwtOptions.Issuer;
     }
 
-    // Cria o token JWT
-    var token = tokenHandler.CreateToken(tokenDescriptor);
-
-    // Retorna o token como string
-    return tokenHandler.WriteToken(token);
+    // Cria e retorna o token JWT (JsonWebTokenHandler retorna a string diretamente)
+    return _tokenHandler.CreateToken(tokenDescriptor);
   }
 
   /// <summary>
@@ -293,9 +315,6 @@ public class JwtTokenService : IJwtTokenService
     {
       throw new InternalServerErrorException("Options.Jwt.KeyNotConfigured;PublicKey");
     }
-
-    // Configura o validador de token
-    var tokenHandler = new JwtSecurityTokenHandler();
 
     // Define issuer e audiences efetivos com base nas opções e parâmetros
     var effectiveIssuer = _jwtOptions.Issuer;
@@ -334,25 +353,36 @@ public class JwtTokenService : IJwtTokenService
         RequireAudience = audiences
       };
 
-      tokenHandler.ValidateToken(token, tokenParams, out SecurityToken validatedToken);
+      // Valida o token (a validação é CPU-bound e completa sincronamente)
+      var result = _tokenHandler.ValidateTokenAsync(token, tokenParams).GetAwaiter().GetResult();
 
-      var jwtToken = (JwtSecurityToken)validatedToken;
+      // Retorna os dados do usuário quando o token é válido
+      if (result.IsValid && result.SecurityToken is JsonWebToken jsonWebToken)
+      {
+        return new UserTokenDto(jsonWebToken);
+      }
 
-      return new UserTokenDto(jwtToken);
-    }
-    catch (SecurityTokenExpiredException)
-    {
-      return new UserTokenDto("Token.Expired");
-    }
-    catch (SecurityTokenInvalidSignatureException ex)
-    {
-      _logger.LogError("Invalid JWT signature detected.\nException: {exception}", ex);
+      // Mapeia a falha de validação para o erro correspondente (JsonWebTokenHandler reporta via resultado, não exceção)
+      switch (result.Exception)
+      {
+        case SecurityTokenExpiredException:
+          return new UserTokenDto("Token.Expired");
 
-      return new UserTokenDto("Token.InvalidSignature");
-    }
-    catch (ArgumentException)
-    {
-      return new UserTokenDto("Token.Invalid");
+        case SecurityTokenInvalidSignatureException signatureException:
+          _logger.LogError("Invalid JWT signature detected.\nException: {exception}", signatureException);
+
+          return new UserTokenDto("Token.InvalidSignature");
+
+        case SecurityTokenException:
+        case ArgumentException:
+          // Demais falhas de validação (audience/issuer inválidos, token malformado, etc.) são token inválido, não erro interno
+          return new UserTokenDto("Token.Invalid");
+
+        default:
+          _logger.LogError("Error validating JWT token.\nException: {exception}", result.Exception);
+
+          return new UserTokenDto("InternalServerError");
+      }
     }
     catch (Exception ex)
     {

@@ -74,6 +74,7 @@ builder.Services.AddTooarkMediator(options =>
 
 - `MediatorOptions`
   - `NotifyPublishStrategy` (padrão: `ENotifyStrategy.ParallelWhenAll`)
+  - Registrado via padrão Options: chamadas múltiplas de `AddTooarkMediator` compõem as configurações em ordem de registro
 
 ### Estratégias de publicação
 

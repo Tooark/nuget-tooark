@@ -1,4 +1,5 @@
 using Microsoft.IdentityModel.Tokens;
+using Tooark.Exceptions;
 
 namespace Tooark.Securities.Options;
 
@@ -19,9 +20,9 @@ public class JwtOptions
   #region Private Properties
 
   /// <summary>
-  /// Algoritmo de assinatura do token JWT (ex: HS, RS e PS).
+  /// Algoritmo de assinatura do token JWT. Padrão: ES256.
   /// </summary>
-  private string _algorithm = null!;
+  private string _algorithm = SecurityAlgorithms.EcdsaSha256;
 
   /// <summary>
   /// Chave private usada para assinar o token JWT.
@@ -38,10 +39,10 @@ public class JwtOptions
   #region Properties
 
   /// <summary>
-  /// Algoritmo de assinatura do token JWT.
+  /// Algoritmo de assinatura do token JWT. Padrão: "ES256".
   /// </summary>
   /// <remarks>
-  /// Valores válidos: 
+  /// Valores válidos (case insensitive):
   ///   - "HS256" que representa um algoritmo HmacSha256
   ///   - "HS384" que representa um algoritmo HmacSha384
   ///   - "HS512" que representa um algoritmo HmacSha512
@@ -51,7 +52,13 @@ public class JwtOptions
   ///   - "PS256" que representa um algoritmo RsaSsaPssSha256
   ///   - "PS384" que representa um algoritmo RsaSsaPssSha384
   ///   - "PS512" que representa um algoritmo RsaSsaPssSha512
+  ///   - "ES256" que representa um algoritmo EcdsaSha256
+  ///   - "ES384" que representa um algoritmo EcdsaSha384
+  ///   - "ES512" que representa um algoritmo EcdsaSha512
+  /// Valores desconhecidos lançam exceção: em configuração de segurança,
+  /// um algoritmo inválido nunca deve ser substituído silenciosamente por outro.
   /// </remarks>
+  /// <exception cref="InternalServerErrorException">Quando o valor não corresponde a um algoritmo suportado.</exception>
   public string Algorithm
   {
     get => _algorithm;
@@ -69,8 +76,8 @@ public class JwtOptions
       "ES256" => SecurityAlgorithms.EcdsaSha256,
       "ES384" => SecurityAlgorithms.EcdsaSha384,
       "ES512" => SecurityAlgorithms.EcdsaSha512,
-      _ => SecurityAlgorithms.EcdsaSha256
-    } ?? SecurityAlgorithms.EcdsaSha256;
+      _ => throw new InternalServerErrorException($"Options.Jwt.AlgorithmNotSupported;{value}")
+    };
   }
 
   /// <summary>
@@ -104,7 +111,6 @@ public class JwtOptions
       .Replace("\n", "")
       .Replace("\r", "")
       .Trim()
-      ?? _privateKey
       ?? "";
   }
 

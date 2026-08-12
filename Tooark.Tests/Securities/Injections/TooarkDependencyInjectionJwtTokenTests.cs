@@ -19,7 +19,7 @@ public class TooarkDependencyInjectionJwtTokenTests
       { $"{JwtOptions.Section}:Algorithm", "HS256" },
       { $"{JwtOptions.Section}:Issuer", "issuer-test" },
       { $"{JwtOptions.Section}:Audience", "audience-test" },
-      { $"{JwtOptions.Section}:Secret", "secret-test" },
+      { $"{JwtOptions.Section}:Secret", "secret-test-1234567890-ABCDEFGHIJ" },
       { $"{JwtOptions.Section}:ExpirationTime", "60" }
     };
 
@@ -39,7 +39,7 @@ public class TooarkDependencyInjectionJwtTokenTests
     Assert.Equal("HS256", options.Value.Algorithm);
     Assert.Equal("issuer-test", options.Value.Issuer);
     Assert.Equal("audience-test", options.Value.Audience);
-    Assert.Equal("secret-test", options.Value.Secret);
+    Assert.Equal("secret-test-1234567890-ABCDEFGHIJ", options.Value.Secret);
     Assert.Equal(60, options.Value.ExpirationTime);
   }
 }

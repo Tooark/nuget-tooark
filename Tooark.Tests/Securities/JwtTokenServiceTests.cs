@@ -1,5 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Moq;
 using Tooark.Exceptions;
 using Tooark.Securities;
@@ -224,6 +227,143 @@ public class JwtTokenServiceTests
     Assert.Equal("Token.Expired", result.ErrorToken);
   }
 
+  // Teste de validação com audience incorreta (token inválido, não erro interno)
+  [Fact]
+  public void Validate_WithWrongAudience_ShouldReturnTokenInvalid()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var token = service.Create(GetTokenDto());
+
+    // Act - valida exigindo um audience diferente do usado na criação
+    var result = service.Validate(token, "OutroAudience");
+
+    // Assert - antes caía no catch genérico e reportava InternalServerError
+    Assert.Equal("Token.Invalid", result.ErrorToken);
+  }
+
+  // Teste de validação de token assinado corretamente mas sem as claims esperadas
+  [Fact]
+  public void Validate_TokenWithoutExpectedClaims_ShouldReturnEmptyFields()
+  {
+    // Arrange - token válido (mesma chave/issuer/audience) porém sem as claims id/login/security
+    var symmetricOptions = GetSymmetricOptions();
+    var handler = new JwtSecurityTokenHandler();
+    var keyBytes = Encoding.UTF8.GetBytes(symmetricOptions.Secret!);
+    var descriptor = new SecurityTokenDescriptor
+    {
+      Expires = DateTime.UtcNow.AddMinutes(10),
+      SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), symmetricOptions.Algorithm),
+      Issuer = symmetricOptions.Issuer,
+      Audience = symmetricOptions.Audience
+    };
+    var token = handler.WriteToken(handler.CreateToken(descriptor));
+
+    var options = MEOptions.Options.Create(symmetricOptions);
+    var service = new JwtTokenService(options, GetMockLogger());
+
+    // Act
+    var result = service.Validate(token);
+
+    // Assert - antes lançava internamente e reportava InternalServerError; agora retorna campos vazios
+    Assert.Equal("", result.ErrorToken);
+    Assert.Equal("", result.Id);
+    Assert.Equal("", result.Login);
+    Assert.Equal("", result.Security);
+  }
+
+  // Teste de criação e validação sem logger fornecido (fallback interno para NullLogger)
+  [Fact]
+  public void Create_And_Validate_WithoutLogger_ShouldWork()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options);
+
+    // Act
+    var token = service.Create(GetTokenDto());
+    var result = service.Validate(token);
+
+    // Assert
+    Assert.Equal("", result.ErrorToken);
+    Assert.Equal("1", result.Id);
+  }
+
+  // Teste de construtor sem Algorithm configurado (usa o padrão ES256 e falha com erro claro, sem NullReferenceException)
+  [Fact]
+  public void Constructor_WithoutAlgorithm_ShouldFailFastWithClearError()
+  {
+    // Arrange - apenas Secret configurado, sem Algorithm (padrão ES256, assimétrico sem chaves)
+    var jwtOptions = new JwtOptions
+    {
+      Secret = "mysupersecretkey1234567890ABCDEF"
+    };
+    var options = MEOptions.Options.Create(jwtOptions);
+
+    // Act & Assert - antes: NullReferenceException; agora fail-fast no startup com erro de configuração
+    var ex = Assert.Throws<InternalServerErrorException>(() => new JwtTokenService(options, GetMockLogger()));
+    Assert.Contains("Options.Jwt.KeysNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste de construtor ECDsa sem nenhuma chave configurada (fail-fast igual ao RSA)
+  [Fact]
+  public void Constructor_AsymmetricES_WithoutKeys_ShouldThrowInternalServerErrorException()
+  {
+    // Arrange
+    var jwtOptions = new JwtOptions
+    {
+      Algorithm = "ES256"
+    };
+    var options = MEOptions.Options.Create(jwtOptions);
+
+    // Act & Assert - antes o construtor completava e a falha só aparecia no primeiro uso
+    var ex = Assert.Throws<InternalServerErrorException>(() => new JwtTokenService(options, GetMockLogger()));
+    Assert.Contains("Options.Jwt.KeysNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste de secret simétrico abaixo do mínimo da RFC 7518 (falha no startup, sem erro obscuro em runtime)
+  [Theory]
+  [InlineData("HS256", 31)]
+  [InlineData("HS384", 47)]
+  [InlineData("HS512", 63)]
+  public void Constructor_SymmetricWithShortSecret_ShouldThrowInternalServerErrorException(string algorithm, int secretLength)
+  {
+    // Arrange - secret um byte abaixo do mínimo exigido para o algoritmo
+    var jwtOptions = new JwtOptions
+    {
+      Algorithm = algorithm,
+      Secret = new string('x', secretLength)
+    };
+    var options = MEOptions.Options.Create(jwtOptions);
+
+    // Act & Assert
+    var ex = Assert.Throws<InternalServerErrorException>(() => new JwtTokenService(options, GetMockLogger()));
+    Assert.Contains(ex.GetErrorMessages(), message => message.StartsWith("Options.Jwt.SecretTooShort"));
+  }
+
+  // Teste de secret simétrico no tamanho mínimo exato da RFC 7518
+  [Theory]
+  [InlineData("HS256", 32)]
+  [InlineData("HS384", 48)]
+  [InlineData("HS512", 64)]
+  public void Constructor_SymmetricWithMinimumSecret_ShouldCreateInstance(string algorithm, int secretLength)
+  {
+    // Arrange
+    var jwtOptions = new JwtOptions
+    {
+      Algorithm = algorithm,
+      Secret = new string('x', secretLength)
+    };
+    var options = MEOptions.Options.Create(jwtOptions);
+
+    // Act
+    var service = new JwtTokenService(options, GetMockLogger());
+
+    // Assert
+    Assert.NotNull(service);
+  }
+
   // Teste de construtor com opções nulas
   [Fact]
   public void Constructor_WithNullOptions_ShouldThrowInternalServerErrorException()
@@ -385,7 +525,7 @@ public class JwtTokenServiceTests
     var optionsValidation = MEOptions.Options.Create(new JwtOptions
     {
       Algorithm = "HS256",
-      Secret = "anothersecretkey1234567890ABCDE",
+      Secret = "anothersecretkey1234567890ABCDEF",
       Issuer = "TestIssuer",
       Audience = "TestAudience",
       ExpirationTime = 10

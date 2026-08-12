@@ -49,13 +49,21 @@ public class CryptographyOptions
   /// <summary>
   /// Chave secreta para algoritmos simétricos.
   /// </summary>
+  /// <remarks>
+  /// É obrigatório informar <see cref="Secret"/> ou <see cref="SecretBase64"/>.
+  /// Quando ambos são informados, <see cref="SecretBase64"/> tem prioridade.
+  /// </remarks>
   public string? Secret { get; set; } = null;
 
   /// <summary>
   /// Chave secreta em Base64 para algoritmos simétricos.
   /// </summary>
   /// <remarks>
-  /// Se informada, será usada diretamente como chave simétrica.
+  /// Se informada, será usada diretamente como chave simétrica e deve representar
+  /// exatamente 32 bytes (AES-256); valores inválidos falham no startup.
+  /// É a opção recomendada: gere uma chave aleatória com
+  /// <c>Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))</c>.
+  /// Quando <see cref="Secret"/> também é informado, esta chave tem prioridade.
   /// </remarks>
   public string? SecretBase64 { get; set; } = null;
 

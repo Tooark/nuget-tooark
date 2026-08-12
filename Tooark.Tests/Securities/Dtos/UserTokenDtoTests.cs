@@ -181,11 +181,11 @@ public class UserTokenDtoTests
     Assert.Equal(0, dto.GetIntSecurity);
   }
 
-  // Teste: construtor deve lançar se alguma claim esperada estiver ausente
+  // Teste: claims ausentes resultam em valores vazios (sem lançar exceção)
   [Fact]
-  public void Constructor_MissingClaim_ThrowsInvalidOperationException()
+  public void Constructor_MissingClaims_ShouldUseEmptyValues()
   {
-    // Arrange: token sem claim "id"
+    // Arrange: token sem as claims "id" e "security"
     var claims = new[]
     {
       new Claim("login", "user")
@@ -194,7 +194,56 @@ public class UserTokenDtoTests
 
     var token = new JwtSecurityToken(claims: claims);
 
-    // Act & Assert
-    Assert.Throws<InvalidOperationException>(() => new UserTokenDto(token));
+    // Act - antes lançava InvalidOperationException, virando erro interno na validação
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal(string.Empty, dto.Id);
+    Assert.Equal("user", dto.Login);
+    Assert.Equal(string.Empty, dto.Security);
+    Assert.Equal(string.Empty, dto.ErrorToken);
+  }
+
+  // Teste: construtor com JsonWebToken (handler atual) extrai as claims
+  [Fact]
+  public void Constructor_WithJsonWebToken_ShouldExtractClaims()
+  {
+    // Arrange - constrói um token com as claims esperadas e o materializa como JsonWebToken
+    var claims = new[]
+    {
+      new Claim("id", "1"),
+      new Claim("login", "user"),
+      new Claim("security", "2")
+    };
+    var handler = new JwtSecurityTokenHandler();
+    var encoded = handler.WriteToken(new JwtSecurityToken(claims: claims));
+    var token = new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(encoded);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal("1", dto.Id);
+    Assert.Equal("user", dto.Login);
+    Assert.Equal("2", dto.Security);
+    Assert.Equal(string.Empty, dto.ErrorToken);
+  }
+
+  // Teste: construtor com JsonWebToken sem as claims esperadas usa valores vazios
+  [Fact]
+  public void Constructor_WithJsonWebToken_MissingClaims_ShouldUseEmptyValues()
+  {
+    // Arrange - token sem as claims id/login/security
+    var handler = new JwtSecurityTokenHandler();
+    var encoded = handler.WriteToken(new JwtSecurityToken(claims: [new Claim("login", "user")]));
+    var token = new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(encoded);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal(string.Empty, dto.Id);
+    Assert.Equal("user", dto.Login);
+    Assert.Equal(string.Empty, dto.Security);
   }
 }

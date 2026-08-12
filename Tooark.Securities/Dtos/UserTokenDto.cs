@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Tooark.Securities.Dtos;
 
@@ -9,11 +10,34 @@ public class UserTokenDto
 {
   #region Constructors
 
+  /// <summary>
+  /// Construtor a partir de um token JWT validado.
+  /// </summary>
+  /// <param name="token">Token JWT validado.</param>
+  /// <remarks>
+  /// Claims ausentes resultam em valores vazios, permitindo validar tokens
+  /// emitidos por outros fluxos sem gerar erro interno.
+  /// </remarks>
   public UserTokenDto(JwtSecurityToken token)
   {
-    Id = token.Claims.First(x => x.Type == "id").Value;
-    Login = token.Claims.First(x => x.Type == "login").Value;
-    Security = token.Claims.First(x => x.Type == "security").Value;
+    Id = token.Claims.FirstOrDefault(x => x.Type == "id")?.Value ?? string.Empty;
+    Login = token.Claims.FirstOrDefault(x => x.Type == "login")?.Value ?? string.Empty;
+    Security = token.Claims.FirstOrDefault(x => x.Type == "security")?.Value ?? string.Empty;
+  }
+
+  /// <summary>
+  /// Construtor a partir de um token JWT validado (JsonWebToken, handler atual).
+  /// </summary>
+  /// <param name="token">Token JWT validado.</param>
+  /// <remarks>
+  /// Claims ausentes resultam em valores vazios, permitindo validar tokens
+  /// emitidos por outros fluxos sem gerar erro interno.
+  /// </remarks>
+  public UserTokenDto(JsonWebToken token)
+  {
+    Id = token.Claims.FirstOrDefault(x => x.Type == "id")?.Value ?? string.Empty;
+    Login = token.Claims.FirstOrDefault(x => x.Type == "login")?.Value ?? string.Empty;
+    Security = token.Claims.FirstOrDefault(x => x.Type == "security")?.Value ?? string.Empty;
   }
 
   /// <summary>
