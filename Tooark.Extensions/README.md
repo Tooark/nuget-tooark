@@ -280,7 +280,7 @@ string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/tooark/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/tooark-cs/issues).
 
 ## Licença
 

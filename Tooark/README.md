@@ -40,65 +40,65 @@ services.AddTooarkService(configuration);
 
 ## Recursos disponíveis
 
-### [Tooark.Attributes](https://github.com/Tooark/tooark/blob/main/Tooark.Attributes/README.md)
+### [Tooark.Attributes](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Attributes/README.md)
 
 Descrição: Este pacote fornece atributos personalizados para uso em projetos .NET.
 
-### [Tooark.Dtos](https://github.com/Tooark/tooark/blob/main/Tooark.Dtos/README.md)
+### [Tooark.Dtos](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Dtos/README.md)
 
 Descrição: Este pacote contém objetos de transferência de dados (DTOs) para facilitar a comunicação entre camadas da aplicação.
 
-### [Tooark.Entities](https://github.com/Tooark/tooark/blob/main/Tooark.Entities/README.md)
+### [Tooark.Entities](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Entities/README.md)
 
 Descrição: Este pacote define as entidades do domínio utilizadas na aplicação.
 
-### [Tooark.Enums](https://github.com/Tooark/tooark/blob/main/Tooark.Enums/README.md)
+### [Tooark.Enums](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Enums/README.md)
 
 Descrição: Este pacote contém definições de enums utilizados em várias partes da aplicação.
 
-### [Tooark.Exceptions](https://github.com/Tooark/tooark/blob/main/Tooark.Exceptions/README.md)
+### [Tooark.Exceptions](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Exceptions/README.md)
 
 Descrição: Este pacote fornece exceções personalizadas para uso em projetos .NET.
 
-### [Tooark.Extensions](https://github.com/Tooark/tooark/blob/main/Tooark.Extensions/README.md)
+### [Tooark.Extensions](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/README.md)
 
 Descrição: Este pacote fornece métodos de extensão para tipos e classes comuns do .NET.
 
-### [Tooark.Notifications](https://github.com/Tooark/tooark/blob/main/Tooark.Notifications/README.md)
+### [Tooark.Notifications](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Notifications/README.md)
 
 Descrição: Este pacote oferece funcionalidades para gerenciamento de notificações e mensagens na aplicação.
 
-### [Tooark.Mediator.Abstractions](https://github.com/Tooark/tooark/blob/main/Tooark.Mediator.Abstractions/README.md)
+### [Tooark.Mediator.Abstractions](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Mediator.Abstractions/README.md)
 
 Descrição: Este pacote fornece contratos base do padrão Mediator para uso em projetos .NET.
 
-### [Tooark.Mediator](https://github.com/Tooark/tooark/blob/main/Tooark.Mediator/README.md)
+### [Tooark.Mediator](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Mediator/README.md)
 
 Descrição: Este pacote oferece uma implementação concreta do padrão Mediator, facilitando a comunicação entre componentes da aplicação.
 
-### [Tooark.Observability](https://github.com/Tooark/tooark/blob/main/Tooark.Observability/README.md)
+### [Tooark.Observability](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Observability/README.md)
 
 Descrição: Este pacote fornece ferramentas para monitoramento e observabilidade da aplicação.
 
-### [Tooark.Securities](https://github.com/Tooark/tooark/blob/main/Tooark.Securities/README.md)
+### [Tooark.Securities](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Securities/README.md)
 
 Descrição: Este pacote oferece funcionalidades para segurança, incluindo criptografia e autenticação.
 
-### [Tooark.Utils](https://github.com/Tooark/tooark/blob/main/Tooark.Utils/README.md)
+### [Tooark.Utils](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Utils/README.md)
 
 Descrição: Este pacote contém utilitários e funções auxiliares para diversas operações.
 
-### [Tooark.Validations](https://github.com/Tooark/tooark/blob/main/Tooark.Validations/README.md)
+### [Tooark.Validations](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Validations/README.md)
 
 Descrição: Este pacote fornece funcionalidades de validação para dados e entidades.
 
-### [Tooark.ValueObjects](https://github.com/Tooark/tooark/blob/main/Tooark.ValueObjects/README.md)
+### [Tooark.ValueObjects](https://github.com/Tooark/tooark-cs/blob/main/Tooark.ValueObjects/README.md)
 
 Descrição: Este pacote define objetos de valor utilizados na aplicação.
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/tooark/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/tooark-cs/issues).
 
 ## Licença
 

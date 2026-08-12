@@ -7,8 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageIcon>icon.jpg</PackageIcon>
-    <RepositoryUrl>https://github.com/Tooark/tooark</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/Tooark/tooark</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Tooark/tooark-cs</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Tooark/tooark-cs</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
