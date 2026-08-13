@@ -118,27 +118,27 @@ public sealed class EProtocolOtlp
   /// </summary>
   /// <returns>O protocolo OTLP do OpenTelemetry.</returns>
   public OtlpExportProtocol ToProtocol() => Protocol;
-  
+
   /// <summary>
   /// Conversão implícita de <see cref="EProtocolOtlp"/> para <see cref="int"/>.
   /// </summary>
   /// <param name="protocol">Instância de <see cref="EProtocolOtlp"/>.</param>
   /// <returns>Id do protocolo OTLP.</returns>
-  public static implicit operator int(EProtocolOtlp protocol) => protocol.Id;
+  public static implicit operator int(EProtocolOtlp protocol) => protocol?.Id ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EProtocolOtlp"/> para <see cref="string"/>.
   /// </summary>
   /// <param name="protocol">Instância de <see cref="EProtocolOtlp"/>.</param>
   /// <returns>Descrição do protocolo OTLP.</returns>
-  public static implicit operator string(EProtocolOtlp protocol) => protocol.Description;
+  public static implicit operator string(EProtocolOtlp protocol) => protocol?.Description ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EProtocolOtlp"/> para <see cref="OtlpExportProtocol"/>.
   /// </summary>
   /// <param name="protocol">Instância de <see cref="EProtocolOtlp"/>.</param>
   /// <returns>Protocolo OTLP do OpenTelemetry.</returns>
-  public static implicit operator OtlpExportProtocol(EProtocolOtlp protocol) => protocol.Protocol;
+  public static implicit operator OtlpExportProtocol(EProtocolOtlp protocol) => protocol?.Protocol ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="int"/> para <see cref="EProtocolOtlp"/>.

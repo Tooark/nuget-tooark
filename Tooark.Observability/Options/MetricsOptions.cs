@@ -62,7 +62,7 @@ public class MetricsOptions
   /// - "MyCompany.MyProduct"
   /// - "MyCompany.MyProduct.MyComponent"
   /// </remarks>
-  public string[] AdditionalMeters { get; set; } = [];  
+  public string[] AdditionalMeters { get; set; } = [];
 
   /// <summary>
   /// Overrides de configuração do exportador OTLP para métricas. Valores não informados herdam do OTLP global.

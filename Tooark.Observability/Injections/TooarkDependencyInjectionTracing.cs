@@ -169,7 +169,7 @@ public static partial class TooarkDependencyInjection
     return (activity, request) =>
     {
       // Se estiver configurado para tratar dados sensíveis, não adiciona nada
-      if (options.DataSensitive)
+      if (options.AllowSensitiveData)
       {
         return;
       }
@@ -231,7 +231,7 @@ public static partial class TooarkDependencyInjection
     return (activity, request) =>
     {
       // Se estiver configurado para tratar dados sensíveis, não adiciona nada
-      if (options.DataSensitive)
+      if (options.AllowSensitiveData)
       {
         return;
       }

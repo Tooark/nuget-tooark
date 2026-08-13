@@ -6,8 +6,13 @@ namespace Tooark.Observability.Options;
 public class DataSensitiveOptions
 {
   /// <summary>
-  /// Indica se os parâmetros de query devem ser removidos do atributo http.target.
+  /// Indica se os parâmetros de query devem ser removidos dos atributos de span. Padrão: true.
   /// </summary>
+  /// <remarks>
+  /// Remove o atributo url.query nas requisições ASP.NET Core e a query do atributo url.full nas
+  /// requisições HttpClient, conforme as convenções semânticas atuais do OpenTelemetry.
+  /// O atributo legado http.target é reescrito apenas quando já presente com query.
+  /// </remarks>
   public bool HideQueryParameters { get; set; } = true;
 
   /// <summary>

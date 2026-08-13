@@ -233,4 +233,25 @@ public class EProtocolOtlpTests
   }
 
   #endregion
+
+  #region Null Conversions
+
+  // Teste para verificar que a conversão implícita de instância nula falha com erro identificável.
+  [Fact]
+  public void EProtocolOtlp_ImplicitConversionFromNull_ShouldThrowInternalServerErrorException()
+  {
+    // Arrange - as propriedades de override são anuláveis por design, então a conversão de nulo é alcançável
+    EProtocolOtlp protocol = null!;
+
+    // Act & Assert - antes cada conversão estourava NullReferenceException
+    var toInt = Assert.Throws<InternalServerErrorException>(() => { int _ = protocol; });
+    var toString = Assert.Throws<InternalServerErrorException>(() => { string _ = protocol; });
+    var toProtocol = Assert.Throws<InternalServerErrorException>(() => { OtlpExportProtocol _ = protocol; });
+
+    Assert.Contains("Invalid.Parameter;null", toInt.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toString.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toProtocol.GetErrorMessages());
+  }
+
+  #endregion
 }

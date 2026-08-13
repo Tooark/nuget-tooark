@@ -44,7 +44,7 @@ public class TooarkDependencyInjectionTracingTests
   {
     return new ObservabilityOptions
     {
-      DataSensitive = globalDataSensitive,
+      AllowSensitiveData = globalDataSensitive,
       UseConsoleExporterInDevelopment = useConsoleExporterInDev,
       Otlp = new OtlpOptions
       {

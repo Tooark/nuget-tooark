@@ -56,7 +56,7 @@ Exemplo com **todas as opções disponíveis** no pacote:
     "ServiceVersion": "1.0.0",
     "ServiceInstanceId": "instancia-001",
     "UseConsoleExporterInDevelopment": true,
-    "DataSensitive": false,
+    "AllowSensitiveData": false,
     "ResourceAttributes": {
       "provider.name": "aws",
       "provider.region": "us-east-1",
@@ -299,7 +299,7 @@ app.Run();
 | `ServiceVersion`                  | string?                   | `null`  | Versão do serviço (inferida se não definida)    |
 | `ServiceInstanceId`               | string?                   | `null`  | ID único da instância (GUID se não definido)    |
 | `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Atributos adicionais para Resource              |
-| `DataSensitive`                   | bool                      | `false` | Permitir dados sensíveis sem sanitização global |
+| `AllowSensitiveData`              | bool                      | `false` | Permitir dados sensíveis sem sanitização global |
 | `UseConsoleExporterInDevelopment` | bool                      | `true`  | Usar Console exporter em Development            |
 
 ### TracingOptions
@@ -398,10 +398,12 @@ Quando habilitado (`Tracing.Enabled = true`):
 
 ### Sanitização de Dados Sensíveis
 
-Quando `DataSensitive = false` (padrão):
+Quando `AllowSensitiveData = false` (padrão):
 
 - **Query Parameters**: removidos dos atributos das convenções semânticas atuais — `url.query` (ASP.NET Core) e `url.full` (HttpClient); o atributo legado `http.target` é reescrito quando presente com query (ex: `/api/users?token=xxx` → `/api/users`)
 - **Headers Sensíveis**: mascarados nos spans (Authorization, Cookie, API keys, etc.)
+
+Com `AllowSensitiveData = true`, a sanitização é desligada globalmente e as opções granulares de `Tracing.DataSensitive` são ignoradas.
 
 ### Metrics
 

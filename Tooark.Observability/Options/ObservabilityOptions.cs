@@ -62,15 +62,16 @@ public class ObservabilityOptions
   ///   "tenant.id": "tenant-123"
   /// }
   /// </remarks>
-  public Dictionary<string, string> ResourceAttributes { get; set; } = [];  
+  public Dictionary<string, string> ResourceAttributes { get; set; } = [];
 
   /// <summary>
   /// Indica se dados sensíveis podem ser coletados e exibidos sem sanitização. Padrão: false (sanitiza).
   /// </summary>
   /// <remarks>
-  /// Quando true, não aplica mascaramento/remoção de dados sensíveis globalmente.
+  /// Quando true, desliga globalmente o mascaramento e a remoção de dados sensíveis, ignorando as
+  /// opções granulares de <see cref="TracingOptions.DataSensitive"/>.
   /// </remarks>
-  public bool DataSensitive { get; set; } = false;
+  public bool AllowSensitiveData { get; set; } = false;
 
   /// <summary>
   /// Indica se deve usar o Console exporter em ambiente de desenvolvimento. Padrão: true.
@@ -83,7 +84,7 @@ public class ObservabilityOptions
 
   #endregion
 
-  #region Sub-Options  
+  #region Sub-Options
 
   /// <summary>
   /// Opções de configuração para exportador OTLP.
@@ -107,7 +108,7 @@ public class ObservabilityOptions
 
   #endregion
 
-  #region Callbacks  
+  #region Callbacks
 
   /// <summary>
   /// Callback para configuração adicional do TracerProviderBuilder.

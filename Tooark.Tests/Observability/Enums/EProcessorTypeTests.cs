@@ -236,4 +236,25 @@ public class EProcessorTypeTests
   }
 
   #endregion
+
+  #region Null Conversions
+
+  // Teste para verificar que a conversão implícita de instância nula falha com erro identificável.
+  [Fact]
+  public void EProcessorType_ImplicitConversionFromNull_ShouldThrowInternalServerErrorException()
+  {
+    // Arrange - as propriedades de override são anuláveis por design, então a conversão de nulo é alcançável
+    EProcessorType type = null!;
+
+    // Act & Assert - antes cada conversão estourava NullReferenceException
+    var toInt = Assert.Throws<InternalServerErrorException>(() => { int _ = type; });
+    var toString = Assert.Throws<InternalServerErrorException>(() => { string _ = type; });
+    var toType = Assert.Throws<InternalServerErrorException>(() => { ExportProcessorType _ = type; });
+
+    Assert.Contains("Invalid.Parameter;null", toInt.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toString.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toType.GetErrorMessages());
+  }
+
+  #endregion
 }

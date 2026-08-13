@@ -124,27 +124,27 @@ public sealed class EProcessorType
   /// </summary>
   /// <returns>O tipo de processador OTLP do OpenTelemetry.</returns>
   public ExportProcessorType ToType() => Type;
-  
+
   /// <summary>
   /// Conversão implícita de <see cref="EProcessorType"/> para <see cref="int"/>.
   /// </summary>
   /// <param name="type">Instância de <see cref="EProcessorType"/>.</param>
   /// <returns>Id do tipo de processador OTLP.</returns>
-  public static implicit operator int(EProcessorType type) => type.Id;
+  public static implicit operator int(EProcessorType type) => type?.Id ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EProcessorType"/> para <see cref="string"/>.
   /// </summary>
   /// <param name="type">Instância de <see cref="EProcessorType"/>.</param>
   /// <returns>Descrição do tipo de processador OTLP.</returns>
-  public static implicit operator string(EProcessorType type) => type.Description;
+  public static implicit operator string(EProcessorType type) => type?.Description ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EProcessorType"/> para <see cref="ExportProcessorType"/>.
   /// </summary>
   /// <param name="type">Instância de <see cref="EProcessorType"/>.</param>
   /// <returns>Tipo de processador OTLP do OpenTelemetry.</returns>
-  public static implicit operator ExportProcessorType(EProcessorType type) => type.Type;
+  public static implicit operator ExportProcessorType(EProcessorType type) => type?.Type ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="int"/> para <see cref="EProcessorType"/>.

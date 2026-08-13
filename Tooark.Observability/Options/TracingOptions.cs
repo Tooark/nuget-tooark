@@ -62,7 +62,7 @@ public class TracingOptions
   /// - "/internal" -> com IgnorePaths = ["/metrics"], irá ignorar "/internal/metrics"
   /// </remarks>
   public string? IgnorePathPrefix { get; set; }
-  
+
   /// <summary>
   /// Paths a serem ignorados no rastreamento de requisições HTTP.
   /// </summary>
@@ -93,7 +93,7 @@ public class TracingOptions
   /// </summary>
   /// <remarks>
   /// Utilizado para adicionar outras fontes de tracing além da principal.
-  /// Exemplo: 
+  /// Exemplo:
   /// - "Tooark.MyComponent"
   /// - "orders-api"
   /// - "orders-api.billing"
@@ -104,7 +104,7 @@ public class TracingOptions
   /// <summary>
   /// Configura coleta e exibição de dados sensíveis granulares para Tracing.
   /// </summary>
-  public DataSensitiveOptions DataSensitive { get; set; } = new();  
+  public DataSensitiveOptions DataSensitive { get; set; } = new();
 
   /// <summary>
   /// Overrides de configuração do exportador OTLP para tracing. Valores não informados herdam do OTLP global.

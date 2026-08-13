@@ -36,7 +36,7 @@ public class ObservabilityOptionsTests
     Assert.Null(options.ServiceInstanceId);
     Assert.NotNull(options.ResourceAttributes);
     Assert.Empty(options.ResourceAttributes);
-    Assert.False(options.DataSensitive);
+    Assert.False(options.AllowSensitiveData);
     Assert.True(options.UseConsoleExporterInDevelopment);
   }
 
@@ -163,20 +163,20 @@ public class ObservabilityOptionsTests
     Assert.Equal("tenant-123", options.ResourceAttributes["tenant.id"]);
   }
 
-  // Teste para definir DataSensitive.
+  // Teste para definir AllowSensitiveData.
   [Theory]
   [InlineData(true)]
   [InlineData(false)]
-  public void ObservabilityOptions_ShouldSetDataSensitive(bool value)
+  public void ObservabilityOptions_ShouldSetAllowSensitiveData(bool value)
   {
     // Arrange
     ObservabilityOptions options = new();
 
     // Act
-    options.DataSensitive = value;
+    options.AllowSensitiveData = value;
 
     // Assert
-    Assert.Equal(value, options.DataSensitive);
+    Assert.Equal(value, options.AllowSensitiveData);
   }
 
   // Teste para definir UseConsoleExporterInDevelopment.
@@ -364,7 +364,7 @@ public class ObservabilityOptionsTests
         ["cloud.provider"] = "aws",
         ["cloud.region"] = "us-east-1"
       },
-      DataSensitive = false,
+      AllowSensitiveData = false,
       UseConsoleExporterInDevelopment = true,
       Otlp = new OtlpOptions
       {
@@ -392,7 +392,7 @@ public class ObservabilityOptionsTests
     Assert.Equal("1.0.0", options.ServiceVersion);
     Assert.Equal("instance-001", options.ServiceInstanceId);
     Assert.Equal(2, options.ResourceAttributes.Count);
-    Assert.False(options.DataSensitive);
+    Assert.False(options.AllowSensitiveData);
     Assert.True(options.UseConsoleExporterInDevelopment);
     Assert.True(options.Otlp.Enabled);
     Assert.True(options.Tracing.Enabled);

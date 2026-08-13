@@ -612,11 +612,11 @@ public class TooarkDependencyInjectionTests
 
   #endregion
 
-  #region AddTooarkObservability - DataSensitive Tests
+  #region AddTooarkObservability - AllowSensitiveData Tests
 
-  // Teste para adicionar observability com DataSensitive habilitado.
+  // Teste para adicionar observability com AllowSensitiveData habilitado.
   [Fact]
-  public void AddTooarkObservability_ShouldConfigureTracing_WithDataSensitiveEnabled()
+  public void AddTooarkObservability_ShouldConfigureTracing_WithAllowSensitiveDataEnabled()
   {
     // Arrange
     var services = new ServiceCollection();
@@ -624,7 +624,7 @@ public class TooarkDependencyInjectionTests
       .AddInMemoryCollection(new Dictionary<string, string?>
       {
         ["Observability:Enabled"] = "true",
-        ["Observability:DataSensitive"] = "true"
+        ["Observability:AllowSensitiveData"] = "true"
       })
       .Build();
 
@@ -853,7 +853,7 @@ public class TooarkDependencyInjectionTests
         ["Observability:ServiceName"] = "TestService",
         ["Observability:ServiceVersion"] = "1.0.0",
         ["Observability:ServiceInstanceId"] = "instance-001",
-        ["Observability:DataSensitive"] = "false",
+        ["Observability:AllowSensitiveData"] = "false",
         ["Observability:UseConsoleExporterInDevelopment"] = "true",
         ["Observability:ResourceAttributes:cloud.provider"] = "aws",
         ["Observability:Tracing:Enabled"] = "true",
