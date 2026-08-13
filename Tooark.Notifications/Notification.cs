@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using Tooark.Notifications.Messages;
 
 namespace Tooark.Notifications;
@@ -6,18 +7,28 @@ namespace Tooark.Notifications;
 /// <summary>
 /// Representa um objeto de notificações.
 /// </summary>
+/// <remarks>
+/// A criação e a limpeza de notificações são protegidas: apenas o próprio objeto decide o que notifica.
+/// A agregação de notificações já existentes (<see cref="AddNotifications(Notification)"/>) é pública,
+/// permitindo compor o resultado de validações de outros objetos.
+/// </remarks>
 public abstract class Notification
 {
   /// <summary>
   /// Lista privada de notificações.
   /// </summary>
-  private readonly IList<NotificationItem> _notifications;
+  private readonly List<NotificationItem> _notifications = [];
+
+  /// <summary>
+  /// Visão somente leitura da lista de notificações, reutilizada a cada acesso.
+  /// </summary>
+  private readonly ReadOnlyCollection<NotificationItem> _readOnlyNotifications;
 
 
   /// <summary>
   /// Construtor padrão da classe protegido para evitar instâncias diretas.
   /// </summary>
-  protected Notification() => _notifications = [];
+  protected Notification() => _readOnlyNotifications = _notifications.AsReadOnly();
 
 
   /// <summary>
@@ -25,7 +36,7 @@ public abstract class Notification
   /// </summary>
   /// <returns>Lista de notificações.</returns>
   [NotMapped]
-  public IReadOnlyCollection<NotificationItem> Notifications => _notifications.AsReadOnly();
+  public IReadOnlyCollection<NotificationItem> Notifications => _readOnlyNotifications;
 
 
   /// <summary>
@@ -38,49 +49,42 @@ public abstract class Notification
   /// Retornar o tamanho da lista de notificações.
   /// </summary>
   [NotMapped]
-  public long Count => _notifications.Count;
+  public int Count => _notifications.Count;
 
   /// <summary>
   /// Retorna a lista de códigos de erros das notificações.
   /// </summary>
   /// <returns>Lista de códigos de erros das notificações.</returns>
   [NotMapped]
-  public IReadOnlyList<string> Codes => _notifications.Select(x => x.Code).ToList().AsReadOnly();
+  public IReadOnlyList<string> Codes => [.. _notifications.Select(notification => notification.Code)];
 
   /// <summary>
   /// Retorna a lista de chaves das notificações.
   /// </summary>
   /// <returns>Lista de chaves das notificações.</returns>
   [NotMapped]
-  public IReadOnlyList<string> Keys => _notifications.Select(x => x.Key).ToList().AsReadOnly();
+  public IReadOnlyList<string> Keys => [.. _notifications.Select(notification => notification.Key)];
 
   /// <summary>
   /// Retorna a lista de mensagens das notificações.
   /// </summary>
   /// <returns>Lista de mensagens das notificações.</returns>
   [NotMapped]
-  public IReadOnlyList<string> Messages => _notifications.Select(x => x.Message).ToList().AsReadOnly();
+  public IReadOnlyList<string> Messages => [.. _notifications.Select(notification => notification.Message)];
 
 
   /// <summary>
-  /// Cria uma nova instância de NotificationItem.
+  /// Adiciona a notificação de argumento nulo à lista de notificações.
   /// </summary>
-  /// <param name="message">Mensagem da notificação.</param>
-  /// <param name="key">Chave da notificação. Padrão é nulo.</param>
-  /// <param name="code">Código de erro da notificação. Padrão é nulo.</param>
-  /// <returns>Instância de NotificationItem.</returns>
-  private static NotificationItem GetNotificationInstance(string message, string? key = null, string? code = null)
-  {
-    // Retorna uma nova instância de NotificationItem
-    return (NotificationItem)Activator.CreateInstance(typeof(NotificationItem), message, key, code)!;
-  }
+  private void AddNullArgumentNotification() =>
+    _notifications.Add(new NotificationItem(NotificationErrorMessages.NotificationIsNull));
 
 
   /// <summary>
-  /// Adiciona uma nova notificação à lista de notificações.
+  /// Adiciona um item de notificação à lista de notificações.
   /// </summary>
-  /// <param name="notification">Instância de notificação.</param>
-  public void AddNotification(NotificationItem notification)
+  /// <param name="notification">Instância de notificação. Nula gera a notificação 'Notifications.NotificationNull'.</param>
+  protected void AddNotification(NotificationItem notification)
   {
     // Verifica se a instância não é nula
     if (notification != null)
@@ -90,120 +94,121 @@ public abstract class Notification
     }
     else
     {
-      // Cria uma nova instância de NotificationItem
-      var newNotification = GetNotificationInstance(NotificationErrorMessages.NotificationIsNull);
-
-      // Adiciona a nova instância à lista de notificações
-      _notifications.Add(newNotification);
+      // Adiciona a notificação de argumento nulo à lista de notificações
+      AddNullArgumentNotification();
     }
   }
 
   /// <summary>
-  /// Adiciona uma coleção de notificações à lista de notificações.
+  /// Adiciona um item de notificação à lista de notificações, usando o nome do tipo como chave.
   /// </summary>
-  /// <param name="property">Propriedade que gerou a notificação.</param>
+  /// <param name="property">Tipo que gerou a notificação.</param>
   /// <param name="message">Mensagem da notificação.</param>
-  public void AddNotification(Type property, string message) =>
+  protected void AddNotification(Type property, string message) =>
     AddNotification(message, property?.Name ?? string.Empty);
 
   /// <summary>
-  /// Adiciona uma coleção de notificações à lista de notificações.
+  /// Adiciona um item de notificação à lista de notificações, usando o nome do tipo como chave.
   /// </summary>
-  /// <param name="property">Propriedade que gerou a notificação.</param>
+  /// <param name="property">Tipo que gerou a notificação.</param>
   /// <param name="message">Mensagem da notificação.</param>
   /// <param name="code">Código de erro da notificação.</param>
-  public void AddNotification(Type property, string message, string code) =>
+  protected void AddNotification(Type property, string message, string code) =>
     AddNotification(message, property?.Name ?? string.Empty, code);
 
   /// <summary>
-  /// Adiciona uma nova notificação à lista de notificações.
+  /// Adiciona um item de notificação à lista de notificações.
   /// </summary>
-  /// <param name="key">Chave da notificação.</param>
   /// <param name="message">Mensagem da notificação.</param>
-  public void AddNotification(string message, string key)
-  {
-    // Verifica se a mensagem é nula ou vazia
-    if (string.IsNullOrEmpty(message))
-    {
-      // Atribui a mensagem de message nula ou vazia
-      message = NotificationErrorMessages.MessageIsNullOrEmpty;
-    }
-
-    // Cria uma nova instância de NotificationItem
-    var notification = GetNotificationInstance(message, key);
-
-    // Adiciona a nova instância à lista de notificações
-    _notifications.Add(notification);
-  }
+  /// <param name="key">Chave da notificação.</param>
+  protected void AddNotification(string message, string key) =>
+    _notifications.Add(new NotificationItem(message, key));
 
   /// <summary>
-  /// Adiciona uma nova notificação à lista de notificações.
+  /// Adiciona um item de notificação à lista de notificações.
   /// </summary>
-  /// <param name="key">Chave da notificação.</param>
   /// <param name="message">Mensagem da notificação.</param>
+  /// <param name="key">Chave da notificação.</param>
   /// <param name="code">Código de erro da notificação.</param>
-  public void AddNotification(string message, string key, string code)
-  {
-    // Verifica se a mensagem é nula ou vazia
-    if (string.IsNullOrEmpty(message))
-    {
-      // Atribui a mensagem de message nula ou vazia
-      message = NotificationErrorMessages.MessageIsNullOrEmpty;
-    }
-
-    // Cria uma nova instância de NotificationItem
-    var notification = GetNotificationInstance(message, key, code);
-
-    // Adiciona a nova instância à lista de notificações
-    _notifications.Add(notification);
-  }
+  protected void AddNotification(string message, string key, string code) =>
+    _notifications.Add(new NotificationItem(message, key, code));
 
   /// <summary>
-  /// Adiciona uma coleção de notificações à lista de notificações.
+  /// Adiciona uma coleção de itens de notificação à lista de notificações.
   /// </summary>
-  /// <param name="notifications">Lista de notificações.</param>
-  public void AddNotifications(ICollection<NotificationItem> notifications)
+  /// <param name="notifications">Coleção de itens de notificação. Itens nulos são ignorados.</param>
+  protected void AddNotifications(ICollection<NotificationItem> notifications)
   {
+    // Verifica se a coleção é nula
+    if (notifications == null)
+    {
+      // Adiciona a notificação de argumento nulo à lista de notificações
+      AddNullArgumentNotification();
+
+      return;
+    }
+
     // Itera sobre a coleção de notificações
     foreach (var notification in notifications)
     {
-      // Adiciona a notificação à lista de notificações
-      _notifications.Add(notification);
+      // Ignora itens nulos para não invalidar a leitura das notificações
+      if (notification != null)
+      {
+        // Adiciona a notificação à lista de notificações
+        _notifications.Add(notification);
+      }
     }
   }
 
   /// <summary>
   /// Adiciona a lista de notificações de uma notificação à lista de notificações.
   /// </summary>
-  /// <param name="notification">Uma instancia de notificação.</param>
+  /// <param name="notification">Uma instancia de notificação. Nula gera a notificação 'Notifications.NotificationNull'.</param>
+  /// <remarks>Adicionar a própria instância não altera a lista de notificações.</remarks>
   public void AddNotifications(Notification notification)
   {
-    // Verifica se o notificável não é nulo
-    if (notification != null)
+    // Verifica se o notificável é nulo
+    if (notification == null)
     {
-      // Adiciona as notificações do notificável à lista de notificações
-      AddNotifications(notification.Notifications.ToList());
-    }
-    else
-    {
-      // Cria uma nova instância de NotificationItem
-      var newNotification = GetNotificationInstance(NotificationErrorMessages.NotificationIsNull);
+      // Adiciona a notificação de argumento nulo à lista de notificações
+      AddNullArgumentNotification();
 
-      // Adiciona a nova instância à lista de notificações
-      _notifications.Add(newNotification);
+      return;
+    }
+
+    // Adicionar a própria instância duplicaria as notificações e alteraria a lista durante a iteração
+    if (ReferenceEquals(this, notification))
+    {
+      return;
+    }
+
+    // Itera sobre as notificações do notificável
+    foreach (var item in notification._notifications)
+    {
+      // Adiciona a notificação à lista de notificações
+      _notifications.Add(item);
     }
   }
 
   /// <summary>
   /// Adiciona uma coleção de notificações à lista de notificações.
   /// </summary>
-  /// <param name="notifications">Coleção de notificações.</param>
+  /// <param name="notifications">Coleção de notificações. Itens nulos são ignorados.</param>
   public void AddNotifications(params Notification[] notifications)
   {
+    // Verifica se a coleção é nula
+    if (notifications == null)
+    {
+      // Adiciona a notificação de argumento nulo à lista de notificações
+      AddNullArgumentNotification();
+
+      return;
+    }
+
     // Itera sobre a coleção de notificações
     foreach (var notification in notifications)
     {
-      // Verifica se a notificação não é nula
+      // Ignora itens nulos para não gerar notificações de argumento nulo em lote
       if (notification != null)
       {
         // Adiciona o notificável à lista de notificações
@@ -215,7 +220,7 @@ public abstract class Notification
   /// <summary>
   /// Limpa a lista de notificações.
   /// </summary>
-  public void Clear()
+  protected void Clear()
   {
     // Limpa a lista de notificações
     _notifications.Clear();

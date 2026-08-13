@@ -19,7 +19,10 @@ public class TooarkExceptionTests
 
   // Classe de notificação de teste que herda de Notification.
   private class TestNotification : Notification
-  { }
+  {
+    // Expoe o mutador protegido para uso nos testes.
+    public new void AddNotification(NotificationItem notification) => base.AddNotification(notification);
+  }
 
   // Teste de unidade para o construtor com uma única mensagem.
   [Fact]

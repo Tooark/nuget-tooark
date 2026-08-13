@@ -19,6 +19,11 @@ public class ResponseDtoTests
   public class ResponseTest : Notification
   {
     public string Message { get; set; } = null!;
+
+    // Expõe os mutadores protegidos para uso nos testes.
+    public new void AddNotification(string message, string key) => base.AddNotification(message, key);
+
+    public new void AddNotification(string message, string key, string code) => base.AddNotification(message, key, code);
   }
 
 

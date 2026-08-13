@@ -6,6 +6,7 @@ Biblioteca para criação e gerenciamento de notificações e alertas, facilitan
 
 - [NotificationItem](#1-item-de-notificação)
 - [Notification](#2-notificação)
+- [NotificationErrorMessages](#3-mensagens-de-erro)
 
 ## Classes
 
@@ -14,73 +15,113 @@ As classes disponíveis são:
 ### 1. Item de Notificação
 
 **Funcionalidade:**
-Representa a estrutura de um item de notificação com código de erro, chave e mensagem.
+Representa a estrutura de um item de notificação com mensagem, chave e código de erro. Os valores são normalizados na construção e a instância é somente leitura.
 
 **Propriedades:**
 
-- `Code`: O código de erro da notificação.
-- `Key`: A chave da notificação.
 - `Message`: A mensagem da notificação.
+- `Key`: A chave da notificação.
+- `Code`: O código de erro da notificação.
 
 **Métodos:**
 
-- `NotificationItem(string message)`: Cria uma nova instância de `NotificationItem` com uma mensagem.
-- `NotificationItem(string message, string key)`: Cria uma nova instância de `NotificationItem` com uma chave e uma mensagem.
-- `NotificationItem(string message, string key, string code)`: Cria uma nova instância de `NotificationItem` com um código, uma chave e uma mensagem.
-- `ToString()`: Retorna a representação da instância de `NotificationItem` como uma string.
-- `string`: Converte implicitamente a instância de `NotificationItem` para uma string.
-- `NotificationItem`: Converte implicitamente uma string para uma instância de `NotificationItem`.
+- `NotificationItem(string message)`: Cria uma nova instância com a chave `Unknown` e o código `T.ERR`.
+- `NotificationItem(string message, string key)`: Cria uma nova instância com a chave informada e o código `T.ERR`.
+- `NotificationItem(string message, string key, string code)`: Cria uma nova instância com a chave e o código informados.
+- `ToString()`: Retorna a mensagem da notificação.
+- `string`: Converte implicitamente a instância de `NotificationItem` para uma string, retornando a mensagem. Instância nula retorna string vazia.
+- `NotificationItem`: Converte implicitamente uma string para uma instância de `NotificationItem`, com a chave `Unknown` e o código `T.ERR`.
+
+**Normalização dos valores:**
+
+| Parâmetro | Nulo, vazio ou em branco         | Demais valores                                                              |
+| --------- | -------------------------------- | --------------------------------------------------------------------------- |
+| `message` | `Notifications.MessageNullEmpty` | Espaços das extremidades removidos                                          |
+| `key`     | `Unknown`                        | Todos os espaços em branco removidos, incluindo tabulação e quebra de linha |
+| `code`    | `T.ERR`                          | Espaços das extremidades removidos                                          |
 
 [**Exemplo de Uso**](#item-de-notificação)
 
 ### 2. Notificação
 
 **Funcionalidade:**
-Representa uma classe abstrata que gerencia uma lista de notificações.
+Classe abstrata que gerencia a lista de notificações do objeto que a herda. É a base de `ValueObject`, `BaseEntity` e `Validation`.
+
+A criação e a limpeza de notificações são protegidas: apenas o próprio objeto decide o que notifica. A agregação de notificações já existentes é pública, permitindo compor o resultado da validação de outros objetos.
 
 **Propriedades:**
 
-- `Notifications`: Retorna a lista de notificações.
+- `Notifications`: Retorna a lista somente leitura de notificações.
 - `IsValid`: Retorna True se a lista de notificações estiver vazia.
-- `Count`: Retorna o tamanho da lista de notificações.
+- `Count`: Retorna a quantidade de notificações.
 - `Codes`: Retorna a lista de códigos de erros das notificações.
 - `Keys`: Retorna a lista de chaves das notificações.
 - `Messages`: Retorna a lista de mensagens das notificações.
 
-**Métodos:**
+**Métodos públicos:**
 
-- `AddNotification(NotificationItem notification)`: Adiciona item de notificação à lista de notificações com base em um item de notificação.
-- `AddNotification(Type property, string message)`: Adiciona item de notificação à lista de notificações com base em uma propriedade e uma mensagem.
-- `AddNotification(Type property, string message, string code)`: Adiciona item de notificação à lista de notificações com base em uma propriedade, uma mensagem e um código de erro.
-- `AddNotification(string message, string key)`: Adiciona item de notificação à lista de notificações com base em uma mensagem e uma chave.
-- `AddNotification(string message, string key, string code)`: Adiciona item de notificação à lista de notificações com base em uma mensagem, uma chave e um código de erro.
-- `AddNotifications(ICollection<NotificationItem> notifications)`: Adiciona uma coleção de notificações à lista de notificações com base em uma coleção de itens de notificação.
-- `AddNotifications(Notification notification)`: Adiciona a lista de notificações de uma notificação à lista de notificações com base em uma notificação.
-- `AddNotifications(params Notification[] notifications)`: Adiciona uma coleção de notificações à lista de notificações com base em uma coleção de notificações.
+- `AddNotifications(Notification notification)`: Adiciona as notificações de outra notificação à lista de notificações.
+- `AddNotifications(params Notification[] notifications)`: Adiciona as notificações de uma coleção de notificações à lista de notificações.
+
+**Métodos protegidos:**
+
+- `AddNotification(NotificationItem notification)`: Adiciona um item de notificação à lista de notificações.
+- `AddNotification(Type property, string message)`: Adiciona um item de notificação usando o nome do tipo como chave.
+- `AddNotification(Type property, string message, string code)`: Adiciona um item de notificação usando o nome do tipo como chave, com código de erro.
+- `AddNotification(string message, string key)`: Adiciona um item de notificação com mensagem e chave.
+- `AddNotification(string message, string key, string code)`: Adiciona um item de notificação com mensagem, chave e código de erro.
+- `AddNotifications(ICollection<NotificationItem> notifications)`: Adiciona uma coleção de itens de notificação à lista de notificações.
 - `Clear()`: Limpa a lista de notificações.
 
+**Tratamento de valores nulos:**
+
+| Situação                                                  | Comportamento                                           |
+| --------------------------------------------------------- | ------------------------------------------------------- |
+| Argumento nulo em `AddNotification` ou `AddNotifications` | Adiciona a notificação `Notifications.NotificationNull` |
+| Item nulo dentro de uma coleção                           | Ignorado, sem alterar a lista                           |
+| Adicionar a própria instância em `AddNotifications`       | Sem efeito, a lista não é alterada                      |
+
 [**Exemplo de Uso**](#notificação)
+
+### 3. Mensagens de Erro
+
+**Funcionalidade:**
+Classe estática `NotificationErrorMessages` com as mensagens geradas pela própria biblioteca. São chaves de tradução, e não textos finais.
+
+| Constante              | Valor                            | Quando ocorre                                                 |
+| ---------------------- | -------------------------------- | ------------------------------------------------------------- |
+| `MessageIsNullOrEmpty` | `Notifications.MessageNullEmpty` | Mensagem nula, vazia ou composta apenas por espaços em branco |
+| `NotificationIsNull`   | `Notifications.NotificationNull` | Notificação ou coleção recebida como argumento é nula         |
+| `MessageUnknown`       | `Notifications.MessageUnknown`   | Obsoleta. Substituída por `MessageIsNullOrEmpty`              |
 
 ## Exemplo de Uso
 
 ### Item de Notificação
 
 ```csharp
-// Exemplo de uso
+// Mensagem, com chave 'Unknown' e código 'T.ERR'
 var notification1 = new NotificationItem("Mensagem de exemplo");
+
+// Mensagem e chave, com código 'T.ERR'
 var notification2 = new NotificationItem("Mensagem de exemplo", "ChaveExemplo");
-var notification3 = new NotificationItem("Mensagem de exemplo", "ChaveExemplo", "T.ERR");
+
+// Mensagem, chave e código
+var notification3 = new NotificationItem("Mensagem de exemplo", "ChaveExemplo", "XPTO1");
+
+// A chave tem os espaços em branco removidos
+var notification4 = new NotificationItem("Mensagem de exemplo", "Chave Exemplo");
+var key = notification4.Key; // "ChaveExemplo"
 ```
 
 ### Notificação
 
 ```csharp
-// Exemplo de uso
+// A adição de notificações é protegida: só o próprio objeto notifica os seus erros
 public class MyNotification : Notification
 {
   public void NotifyError(string message)
   {
-    AddNotification(new NotificationItem("Error", message, "XPTO1"));
+    AddNotification(message, "Error", "XPTO1");
   }
 }
 
@@ -93,7 +134,17 @@ var count = myNotification.Count; // 1
 var codes = myNotification.Codes; // ["XPTO1"]
 var keys = myNotification.Keys; // ["Error"]
 var messages = myNotification.Messages; // ["Ocorreu um erro."]
-var notifications = myNotification.Notifications; // [NotificationItem("Error", "Ocorreu um erro.", "XPTO1")]
+var notifications = myNotification.Notifications; // [NotificationItem { Message = "Ocorreu um erro.", Key = "Error", Code = "XPTO1" }]
+```
+
+```csharp
+// A agregação é pública: notificações já existentes podem ser compostas de fora do objeto
+public class MyValidation : Notification
+{ }
+
+var validation = new MyValidation();
+
+validation.AddNotifications(myNotification, myOtherNotification);
 ```
 
 ## Contribuição

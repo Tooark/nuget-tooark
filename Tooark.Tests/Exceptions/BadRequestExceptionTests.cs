@@ -8,7 +8,10 @@ public class BadRequestExceptionTests
 {
   // Classe de teste para simular uma exceção de teste.
   public class TestException : Notification
-  { }
+  {
+    // Expoe o mutador protegido para uso nos testes.
+    public new void AddNotification(NotificationItem notification) => base.AddNotification(notification);
+  }
 
   // Teste para retornar a mensagem de erro correta com parâmetro de uma única mensagem.
   [Fact]

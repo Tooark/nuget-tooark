@@ -11,10 +11,4 @@
     <Description>Library for creating and managing notifications and alerts, facilitating communication and monitoring for .NET projects.</Description>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

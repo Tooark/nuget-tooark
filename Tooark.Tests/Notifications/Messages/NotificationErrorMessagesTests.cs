@@ -18,20 +18,6 @@ public class NotificationErrorMessagesTests
     Assert.Equal(expectedMessage, actualMessage);
   }
 
-  // Teste para as mensagens de erro quando a mensagem é desconhecida
-  [Fact]
-  public void MessageUnknown_ShouldReturnCorrectMessage()
-  {
-    // Arrange
-    var expectedMessage = "Notifications.MessageUnknown";
-
-    // Act
-    var actualMessage = NotificationErrorMessages.MessageUnknown;
-
-    // Assert
-    Assert.Equal(expectedMessage, actualMessage);
-  }
-
   // Teste para as mensagens de erro quando a notificação é nula
   [Fact]
   public void NotificationIsNull_ShouldReturnCorrectMessage()

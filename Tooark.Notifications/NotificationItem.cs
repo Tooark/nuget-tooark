@@ -1,29 +1,42 @@
-﻿using Tooark.Notifications.Messages;
+using Tooark.Notifications.Messages;
 
 namespace Tooark.Notifications;
 
 /// <summary>
 /// Representa a estrutura de um item de notificação.
 /// </summary>
-/// <param name="message">Mensagem da notificação.</param>
-/// <param name="key">Chave da notificação. Padronizado como 'Unknown'.</param>
-/// <param name="code">Código de erro da notificação. Padronizado como 'T.ERR'. T[ooark].ERR[or]</param>
-public class NotificationItem(string message, string key = "Unknown", string code = "T.ERR")
+/// <param name="message">Mensagem da notificação. Nula, vazia ou em branco assume 'Notifications.MessageNullEmpty'.</param>
+/// <param name="key">Chave da notificação. Espaços em branco são removidos. Nula, vazia ou em branco assume 'Unknown'.</param>
+/// <param name="code">Código de erro da notificação. Nulo, vazio ou em branco assume 'T.ERR'. T[ooark].ERR[or]</param>
+public class NotificationItem(string message, string key = NotificationItem.DefaultKey, string code = NotificationItem.DefaultCode)
 {
+  /// <summary>
+  /// Chave utilizada quando nenhuma chave válida é informada.
+  /// </summary>
+  internal const string DefaultKey = "Unknown";
+
+  /// <summary>
+  /// Código de erro utilizado quando nenhum código válido é informado.
+  /// </summary>
+  internal const string DefaultCode = "T.ERR";
+
+
   /// <summary>
   /// O código de erro privado da notificação.
   /// </summary>
-  private readonly string _code = string.IsNullOrWhiteSpace(code) ? "T.ERR" : code;
+  private readonly string _code = string.IsNullOrWhiteSpace(code) ? DefaultCode : code.Trim();
 
   /// <summary>
   /// A chave privada da notificação.
   /// </summary>
-  private readonly string _key = string.IsNullOrWhiteSpace(key) ? "Unknown" : key.Trim().Replace(" ", string.Empty);
+  private readonly string _key = SanitizeKey(key);
 
   /// <summary>
   /// A mensagem privada da notificação.
   /// </summary>
-  private readonly string _message = message?.Trim() ?? NotificationErrorMessages.MessageUnknown;
+  private readonly string _message = string.IsNullOrWhiteSpace(message) ?
+    NotificationErrorMessages.MessageIsNullOrEmpty :
+    message.Trim();
 
 
   /// <summary>
@@ -43,6 +56,17 @@ public class NotificationItem(string message, string key = "Unknown", string cod
 
 
   /// <summary>
+  /// Remove todos os espaços em branco da chave, incluindo tabulações e quebras de linha.
+  /// </summary>
+  /// <param name="key">Chave a ser tratada.</param>
+  /// <returns>Chave sem espaços em branco ou 'Unknown' quando não há conteúdo.</returns>
+  private static string SanitizeKey(string key) =>
+    string.IsNullOrWhiteSpace(key) ?
+      DefaultKey :
+      string.Concat(key.Where(character => !char.IsWhiteSpace(character)));
+
+
+  /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar a mensagem da notificação.
   /// </summary>
   /// <returns>Uma string que representa a notificação.</returns>
@@ -51,9 +75,9 @@ public class NotificationItem(string message, string key = "Unknown", string cod
   /// <summary>
   /// Define uma conversão implícita de uma notificação para uma string.
   /// </summary>
-  /// <param name="message">A notificação a ser convertida.</param>
-  /// <returns>A mensagem da notificação.</returns>
-  public static implicit operator string(NotificationItem message) => message._message;
+  /// <param name="notification">A notificação a ser convertida.</param>
+  /// <returns>A mensagem da notificação ou uma string vazia quando a notificação é nula.</returns>
+  public static implicit operator string(NotificationItem notification) => notification?._message ?? string.Empty;
 
   /// <summary>
   /// Define uma conversão implícita de uma string para uma notificação.

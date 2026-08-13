@@ -4,9 +4,23 @@ namespace Tooark.Tests.Notifications;
 
 public class NotificationTests
 {
-  // Cria uma classe de notificação para testes
+  // Cria uma classe de notificação para testes, expondo os mutadores protegidos
   public class TestNotification : Notification
-  { }
+  {
+    public new void AddNotification(NotificationItem notification) => base.AddNotification(notification);
+
+    public new void AddNotification(Type property, string message) => base.AddNotification(property, message);
+
+    public new void AddNotification(Type property, string message, string code) => base.AddNotification(property, message, code);
+
+    public new void AddNotification(string message, string key) => base.AddNotification(message, key);
+
+    public new void AddNotification(string message, string key, string code) => base.AddNotification(message, key, code);
+
+    public new void AddNotifications(ICollection<NotificationItem> notifications) => base.AddNotifications(notifications);
+
+    public new void Clear() => base.Clear();
+  }
 
   // Testa a adição de uma notificação com uma mensagem
   [Fact]
@@ -157,7 +171,7 @@ public class NotificationTests
     // Arrange
     var validNotification = new TestNotification();
     var invalidNotification = new TestNotification();
-    
+
 
     // Act
     invalidNotification.AddNotification("Tooark Message");
@@ -237,7 +251,7 @@ public class NotificationTests
     // Assert
     Assert.Equal(message, notification.Messages[0]);
     Assert.Single(notification.Messages);
-  }  
+  }
 
   // Testa o retorno da mensagem padrão ao adicionar notificação nula
   [Fact]
@@ -290,9 +304,27 @@ public class NotificationTests
     Assert.Equal("Notifications.MessageNullEmpty", notificationEmpty.Notifications.First().Message);
   }
 
-  // Testa a exceção ao adicionar notificação nula
+  // Testa o retorno da chave padrão ao adicionar notificação com tipo nulo
   [Fact]
-  public void Should_Throw_Exception_WhenAddingNullNotification()
+  public void Should_ReturnKeyDefault_WhenAddingNotificationWithNullProperty()
+  {
+    // Arrange
+    var notification = new TestNotification();
+    var notificationWithCode = new TestNotification();
+
+    // Act
+    notification.AddNotification((Type)null!, "Message 1");
+    notificationWithCode.AddNotification((Type)null!, "Message 2", "ERR");
+
+    // Assert
+    Assert.Equal("Unknown", notification.Keys[0]);
+    Assert.Equal("Unknown", notificationWithCode.Keys[0]);
+    Assert.Equal("ERR", notificationWithCode.Codes[0]);
+  }
+
+  // Testa o retorno da mensagem padrão ao adicionar uma notificação nula
+  [Fact]
+  public void Should_ReturnMessageDefaultNotificationNull_WhenAddingNullNotification()
   {
     // Arrange
     var notification = new TestNotification();
@@ -302,5 +334,120 @@ public class NotificationTests
 
     // Assert
     Assert.Equal("Notifications.NotificationNull", notification.Notifications.First().Message);
-  }  
+  }
+
+  // Testa o retorno da mensagem padrão ao adicionar uma coleção de itens nula
+  [Fact]
+  public void Should_ReturnMessageDefaultNotificationNull_WhenAddingNullNotificationItemCollection()
+  {
+    // Arrange - antes lançava NullReferenceException ao iterar a coleção
+    var notification = new TestNotification();
+
+    // Act
+    notification.AddNotifications((ICollection<NotificationItem>)null!);
+
+    // Assert
+    Assert.Single(notification.Notifications);
+    Assert.Equal("Notifications.NotificationNull", notification.Notifications.First().Message);
+  }
+
+  // Testa o retorno da mensagem padrão ao adicionar uma coleção de notificações nula
+  [Fact]
+  public void Should_ReturnMessageDefaultNotificationNull_WhenAddingNullNotificationArray()
+  {
+    // Arrange - antes lançava NullReferenceException ao iterar a coleção
+    var notification = new TestNotification();
+
+    // Act
+    notification.AddNotifications((Notification[])null!);
+
+    // Assert
+    Assert.Single(notification.Notifications);
+    Assert.Equal("Notifications.NotificationNull", notification.Notifications.First().Message);
+  }
+
+  // Testa que itens nulos dentro da coleção de itens são ignorados
+  [Fact]
+  public void Should_IgnoreNullItems_WhenAddingNotificationItemCollection()
+  {
+    // Arrange - antes o item nulo entrava na lista e quebrava a leitura das notificações
+    var notification = new TestNotification();
+    var listNotificationItem = new List<NotificationItem>
+    {
+      new("Message 1"),
+      null!,
+      new("Message 2")
+    };
+
+    // Act
+    notification.AddNotifications(listNotificationItem);
+
+    // Assert
+    Assert.Equal(2, notification.Count);
+    Assert.Equal(["Message 1", "Message 2"], notification.Messages);
+    Assert.Equal(["T.ERR", "T.ERR"], notification.Codes);
+  }
+
+  // Testa que notificações nulas dentro da coleção de notificações são ignoradas
+  [Fact]
+  public void Should_IgnoreNullItems_WhenAddingNotificationArray()
+  {
+    // Arrange
+    var notification1 = new TestNotification();
+    notification1.AddNotification("Message 1");
+    var notification = new TestNotification();
+
+    // Act
+    notification.AddNotifications(notification1, null!);
+
+    // Assert
+    Assert.Single(notification.Notifications);
+    Assert.Equal("Message 1", notification.Messages[0]);
+  }
+
+  // Testa que adicionar a própria instância não altera a lista de notificações
+  [Fact]
+  public void Should_NotChangeNotifications_WhenAddingItself()
+  {
+    // Arrange - a auto-adição duplicava as notificações da própria instância
+    var notification = new TestNotification();
+    notification.AddNotification("Message 1");
+
+    // Act
+    notification.AddNotifications(notification);
+
+    // Assert
+    Assert.Single(notification.Notifications);
+    Assert.Equal("Message 1", notification.Messages[0]);
+  }
+
+  // Testa o retorno da mensagem padrão ao adicionar notificação com mensagem em branco
+  [Fact]
+  public void Should_ReturnMessageDefaultMessageNullEmpty_WhenAddingNotificationWithWhiteSpaceMessage()
+  {
+    // Arrange - antes a mensagem em branco gerava uma notificação com mensagem vazia
+    var notification = new TestNotification();
+
+    // Act
+    notification.AddNotification("   ", "Key");
+
+    // Assert
+    Assert.Equal("Notifications.MessageNullEmpty", notification.Messages[0]);
+  }
+
+  // Testa que a lista de notificações não pode ser alterada externamente
+  [Fact]
+  public void Should_ReturnReadOnlyCollection_WhenAccessingNotifications()
+  {
+    // Arrange
+    var notification = new TestNotification();
+    notification.AddNotification("Message 1");
+
+    // Act
+    var notifications = notification.Notifications;
+
+    // Assert
+    Assert.Single(notifications);
+    Assert.Same(notifications, notification.Notifications);
+  }
 }
