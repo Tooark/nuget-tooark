@@ -18,8 +18,8 @@ public interface IRequest<TResponse>
 /// Define uma requisição que não retorna uma resposta.
 /// </summary>
 /// <remarks>
-/// Este é um atalho para requisições que não precisam retornar um valor, usando o tipo de resposta <see cref="Unit"/>.
+/// Este é um atalho para requisições que não precisam retornar um valor, usando o tipo de resposta <see cref="Unit"/>,
+/// que indica a ausência de resposta.
 /// </remarks>
-/// <typeparam>O tipo de resposta, que é <see cref="Unit"/> para indicar que não há resposta.</typeparam>
 public interface IRequest : IRequest<Unit>
 { }

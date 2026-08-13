@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
@@ -218,7 +219,7 @@ public class TooarkDependencyInjectionTests
     var provider = services.BuildServiceProvider();
 
     // Assert
-    var options = provider.GetRequiredService<MediatorOptions>();
+    var options = provider.GetRequiredService<IOptions<MediatorOptions>>().Value;
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
   }
 
@@ -238,8 +239,55 @@ public class TooarkDependencyInjectionTests
     using var provider = services.BuildServiceProvider();
 
     // Assert - A configuração da segunda chamada não é descartada silenciosamente
-    var options = provider.GetRequiredService<MediatorOptions>();
+    var options = provider.GetRequiredService<IOptions<MediatorOptions>>().Value;
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldThrow_WhenRequestHasMoreThanOneHandler()
+  {
+    // Arrange - duas implementações para a mesma requisição. O container resolveria apenas a última e as
+    // demais nunca executariam. A segunda implementação apenas ocupa o registro conflitante, sem ser resolvida.
+    var services = new ServiceCollection();
+    services.AddTransient(typeof(IRequestHandler<TestQuery, string>), typeof(TestQueryHandler));
+    services.AddTransient(typeof(IRequestHandler<TestQuery, string>), typeof(TestCommandHandler));
+
+    // Act & Assert - antes a aplicação subia normalmente e despachava para o manipulador errado
+    var exception = Assert.Throws<InternalServerErrorException>(
+      () => services.AddTooarkMediator(typeof(TooarkDependencyInjectionTests).Assembly));
+
+    Assert.Contains("Handler.Duplicated", exception.Message);
+    Assert.Contains(nameof(TestQueryHandler), exception.Message);
+    Assert.Contains(nameof(TestCommandHandler), exception.Message);
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldThrow_WhenRequestHandlerIsAlsoRegisteredByFactory()
+  {
+    // Arrange - registro por fábrica não expõe o tipo de implementação, mas continua sendo um segundo manipulador
+    var services = new ServiceCollection();
+    services.AddTransient(typeof(IRequestHandler<TestQuery, string>), typeof(TestQueryHandler));
+    services.AddTransient<IRequestHandler<TestQuery, string>>(_ => new TestQueryHandler());
+
+    // Act & Assert
+    var exception = Assert.Throws<InternalServerErrorException>(
+      () => services.AddTooarkMediator(typeof(TooarkDependencyInjectionTests).Assembly));
+
+    Assert.Contains("Handler.Duplicated", exception.Message);
+    Assert.Contains(nameof(TestQueryHandler), exception.Message);
+  }
+
+  [Fact]
+  public void AddTooarkMediator_ShouldNotThrow_WhenNotificationHasMoreThanOneHandler()
+  {
+    // Arrange - notificações admitem múltiplos manipuladores por contrato
+    var services = new ServiceCollection();
+
+    // Act
+    var exception = Record.Exception(() => services.AddTooarkMediator(typeof(TooarkDependencyInjectionTests).Assembly));
+
+    // Assert
+    Assert.Null(exception);
   }
 
   private sealed record TestQuery(string Value) : IQuery<string>;

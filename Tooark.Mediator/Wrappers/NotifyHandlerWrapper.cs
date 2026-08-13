@@ -62,11 +62,20 @@ internal sealed class NotifyHandlerWrapperImpl<TNotify> : NotifyHandlerWrapper
 
     foreach (var handler in handlers)
     {
-      // Invoca o manipulador diretamente. Uma tarefa nula indica implementação inválida do manipulador.
-      var task = handler.HandleAsync(typedNotify, cancellationToken)
-        ?? throw new InternalServerErrorException($"Handler.ExecutionFailed;{typeof(TNotify).FullName}");
+      try
+      {
+        // Invoca o manipulador diretamente. Uma tarefa nula indica implementação inválida do manipulador.
+        var task = handler.HandleAsync(typedNotify, cancellationToken)
+          ?? throw new InternalServerErrorException($"Handler.ExecutionFailed;{typeof(TNotify).FullName}");
 
-      tasks.Add(task);
+        tasks.Add(task);
+      }
+      catch (Exception exception)
+      {
+        // Falha ao iniciar o manipulador vira tarefa com falha: os demais continuam sendo iniciados e as
+        // tarefas já em execução seguem observadas pelo WhenAll, em vez de serem abandonadas.
+        tasks.Add(Task.FromException(exception));
+      }
     }
 
     await Task.WhenAll(tasks);

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
@@ -101,7 +102,7 @@ public class MediatorDependencyInjectionAdvancedTests
       typeof(MediatorDependencyInjectionAdvancedTests).Assembly);
 
     var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<MediatorOptions>();
+    var options = provider.GetRequiredService<IOptions<MediatorOptions>>().Value;
 
     // Assert
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
@@ -117,7 +118,7 @@ public class MediatorDependencyInjectionAdvancedTests
     services.AddTooarkMediator(typeof(MediatorDependencyInjectionAdvancedTests).Assembly);
 
     var provider = services.BuildServiceProvider();
-    var options = provider.GetRequiredService<MediatorOptions>();
+    var options = provider.GetRequiredService<IOptions<MediatorOptions>>().Value;
 
     // Assert
     Assert.Equal(ENotifyStrategy.ParallelWhenAll, options.NotifyPublishStrategy);

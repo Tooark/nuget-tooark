@@ -16,13 +16,18 @@ public readonly struct Unit : IEquatable<Unit>
   public static readonly Unit Value = new();
 
   /// <summary>
+  /// A tarefa concluída com o valor Unit, criada uma única vez.
+  /// </summary>
+  private static readonly Task<Unit> _task = System.Threading.Tasks.Task.FromResult(Value);
+
+  /// <summary>
   /// Retorna uma tarefa concluída com o valor Unit, útil para métodos assíncronos que não retornam um valor.
   /// </summary>
   /// <remarks>
   /// Esta propriedade é uma conveniência para evitar a necessidade de criar novas tarefas para cada chamada
   /// de métodos assíncronos que retornam Unit, permitindo o uso de uma tarefa pré-construída.
   /// </remarks>
-  public static Task<Unit> Task => System.Threading.Tasks.Task.FromResult(Value);
+  public static Task<Unit> Task => _task;
 
   /// <summary>
   /// Determina se o objeto especificado é igual à instância atual de Unit.

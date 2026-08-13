@@ -56,8 +56,8 @@ dotnet add package Tooark.Mediator.Abstractions
 ### Tipo utilitário
 
 - `Unit`
-  - `Unit.Value`
-  - `Unit.Task`
+  - `Unit.Value`: a única instância de `Unit`.
+  - `Unit.Task`: tarefa concluída com `Unit.Value`, criada uma única vez e reutilizada a cada acesso.
 
 ---
 

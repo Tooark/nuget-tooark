@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
@@ -84,13 +85,8 @@ public class MediatorAdvancedTests
     // Arrange
     ParallelPublishProbe.Reset();
 
-    var options = new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.Sequential
-    };
-
     var services = new ServiceCollection();
-    services.AddSingleton(options);
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.Sequential);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, BlockingProbeNotificationHandler>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, FastProbeNotificationHandler>();
@@ -120,13 +116,8 @@ public class MediatorAdvancedTests
     // Arrange
     ParallelPublishProbe.Reset();
 
-    var options = new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll
-    };
-
     var services = new ServiceCollection();
-    services.AddSingleton(options);
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, BlockingProbeNotificationHandler>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, FastProbeNotificationHandler>();
@@ -192,10 +183,7 @@ public class MediatorAdvancedTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton(new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll
-    });
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<ExceptionThrowingNotification>, ExceptionThrowingNotificationHandler>();
 
@@ -280,10 +268,7 @@ public class MediatorAdvancedTests
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton(new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll
-    });
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.ParallelWhenAll);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<ExceptionThrowingNotification>, ExceptionThrowingNotificationHandler>();
     services.AddTransient<INotifyHandler<ExceptionThrowingNotification>, ExceptionThrowingNotificationHandler>();
@@ -428,8 +413,8 @@ public class MediatorAdvancedTests
       NotifyPublishStrategy = ENotifyStrategy.Sequential
     };
 
-    // Act
-    var mediator = new global::Tooark.Mediator.Mediator(provider, options);
+    // Act - as opções são recebidas pelo padrão Options
+    var mediator = new global::Tooark.Mediator.Mediator(provider, Options.Create(options));
 
     // Assert
     Assert.NotNull(mediator);

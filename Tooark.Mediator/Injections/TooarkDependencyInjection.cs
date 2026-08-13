@@ -88,9 +88,6 @@ public static partial class TooarkDependencyInjection
     // Registra as opções do Mediator no padrão Options: chamadas múltiplas de AddTooarkMediator compõem as configurações (em ordem de registro)
     services.AddOptions<MediatorOptions>().Configure(configure);
 
-    // Registra o MediatorOptions resolvido do IOptions, preservando a injeção direta de MediatorOptions no construtor do Mediator
-    services.TryAddSingleton(serviceProvider => serviceProvider.GetRequiredService<IOptions<MediatorOptions>>().Value);
-
     // Registra o Mediator e suas interfaces (ISender e IPublisher) no container de injeção de dependência
     services.TryAddTransient<IMediator, Mediator>();
     services.TryAddTransient<ISender>(serviceProvider => serviceProvider.GetRequiredService<IMediator>());
@@ -105,7 +102,41 @@ public static partial class TooarkDependencyInjection
       RegisterHandlersFromAssembly(services, assembly);
     }
 
+    // Garante que cada requisição tenha um único manipulador registrado
+    EnsureSingleRequestHandler(services);
+
     return services;
+  }
+
+  /// <summary>
+  /// Valida que cada requisição tenha um único manipulador registrado.
+  /// </summary>
+  /// <remarks>
+  /// Uma requisição é processada por um único manipulador, resolvido do container no despacho. Com mais de um
+  /// manipulador registrado para a mesma requisição, o container devolve o último e os demais nunca executam —
+  /// silenciosamente. A validação cobre os manipuladores conhecidos no momento do registro.
+  /// </remarks>
+  /// <param name="services">Coleção de serviços.</param>
+  /// <exception cref="InternalServerErrorException">Lançada quando uma requisição tem mais de um manipulador registrado.</exception>
+  private static void EnsureSingleRequestHandler(IServiceCollection services)
+  {
+    // Agrupa os manipuladores de requisição registrados pelo tipo de serviço (requisição/resposta)
+    var duplicated = services
+      .Where(descriptor => descriptor.ServiceType.IsGenericType)
+      .Where(descriptor => descriptor.ServiceType.GetGenericTypeDefinition() == typeof(IRequestHandler<,>))
+      .GroupBy(descriptor => descriptor.ServiceType)
+      .FirstOrDefault(group => group.Select(descriptor => descriptor.ImplementationType).Distinct().Count() > 1);
+
+    // Verifica se existe requisição com mais de um manipulador registrado
+    if (duplicated != null)
+    {
+      // Relaciona os manipuladores em conflito para identificar a origem do problema
+      var implementations = string.Join(", ", duplicated
+        .Select(descriptor => descriptor.ImplementationType?.FullName)
+        .Where(name => name != null));
+
+      throw new InternalServerErrorException($"Handler.Duplicated;{duplicated.Key.FullName};{implementations}");
+    }
   }
 
   /// <summary>

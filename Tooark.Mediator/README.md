@@ -75,14 +75,24 @@ builder.Services.AddTooarkMediator(options =>
 - `MediatorOptions`
   - `NotifyPublishStrategy` (padrão: `ENotifyStrategy.ParallelWhenAll`)
   - Registrado via padrão Options: chamadas múltiplas de `AddTooarkMediator` compõem as configurações em ordem de registro
+  - O `Mediator` recebe `IOptions<MediatorOptions>`. Para configurar fora do `AddTooarkMediator`, use
+    `services.Configure<MediatorOptions>(...)` — registrar `MediatorOptions` diretamente no container não tem efeito
 
 ### Estratégias de publicação
 
 - `ENotifyStrategy.ParallelWhenAll` (padrão): inicia todos os handlers e aguarda a conclusão de todos
-  com `Task.WhenAll`. Melhor latência quando os handlers são independentes.
+  com `Task.WhenAll`. Melhor latência quando os handlers são independentes. Todos os handlers são
+  iniciados mesmo que algum falhe ao iniciar, e a primeira falha é propagada ao chamador.
 - `ENotifyStrategy.Sequential`: inicia cada handler somente após o anterior concluir, na ordem de
   registro. Se um handler falhar, os seguintes não são executados (fail-fast). Use quando a ordem dos
   efeitos colaterais importa ou os handlers compartilham recursos não thread-safe.
+
+### Validação no registro
+
+Uma requisição é processada por um único handler. Se o scan ou o registro manual resultar em mais de um
+handler para a mesma requisição, `AddTooarkMediator` lança `InternalServerErrorException` com o código
+`Handler.Duplicated`, identificando a requisição e os handlers em conflito. Notificações continuam
+aceitando quantos handlers forem registrados.
 
 ### Desempenho do dispatch
 

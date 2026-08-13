@@ -96,4 +96,17 @@ public class UnitTests
     // Assert
     Assert.Equal("()", result);
   }
+
+  [Fact]
+  public async Task Task_ShouldReturnSameInstance_OnEveryAccess()
+  {
+    // Act - antes cada acesso criava uma nova Task, contrariando a documentação do membro
+    var first = Unit.Task;
+    var second = Unit.Task;
+
+    // Assert
+    Assert.Same(first, second);
+    Assert.True(first.IsCompletedSuccessfully);
+    Assert.Equal(Unit.Value, await first);
+  }
 }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
@@ -151,14 +152,34 @@ public class MediatorTests
   }
 
   [Fact]
+  public async Task Publish_ShouldStartRemainingHandlers_WhenHandlerFailsToStart_InParallelStrategy()
+  {
+    // Arrange - o primeiro handler falha ao iniciar (tarefa nula) e o segundo precisa ser iniciado mesmo assim
+    TrackedNullTaskNotificationHandler.Executed = false;
+
+    var services = new ServiceCollection();
+    services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
+    services.AddTransient<INotifyHandler<NullTaskNotification>, NullTaskNotificationHandler>();
+    services.AddTransient<INotifyHandler<NullTaskNotification>, TrackedNullTaskNotificationHandler>();
+
+    var provider = services.BuildServiceProvider();
+    var mediator = provider.GetRequiredService<IMediator>();
+
+    // Act - antes a falha do primeiro abortava a iteração e abandonava os manipuladores já iniciados
+    var exception = await Assert.ThrowsAsync<InternalServerErrorException>(
+      () => mediator.PublishAsync(new NullTaskNotification(), TestContext.Current.CancellationToken));
+
+    // Assert - a falha continua chegando ao chamador e o segundo handler executou
+    Assert.Contains("Handler.ExecutionFailed", exception.Message);
+    Assert.True(TrackedNullTaskNotificationHandler.Executed);
+  }
+
+  [Fact]
   public async Task Publish_ShouldThrowInternalServerErrorException_WhenHandlerReturnsNullTask_InSequentialStrategy()
   {
     // Arrange
     var services = new ServiceCollection();
-    services.AddSingleton(new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.Sequential
-    });
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.Sequential);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<NullTaskNotification>, NullTaskNotificationHandler>();
 
@@ -207,10 +228,7 @@ public class MediatorTests
     ParallelPublishProbe.Reset();
 
     var services = new ServiceCollection();
-    services.AddSingleton(new MediatorOptions
-    {
-      NotifyPublishStrategy = ENotifyStrategy.Sequential
-    });
+    services.Configure<MediatorOptions>(options => options.NotifyPublishStrategy = ENotifyStrategy.Sequential);
     services.AddTransient<IMediator, global::Tooark.Mediator.Mediator>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, BlockingProbeNotificationHandler>();
     services.AddTransient<INotifyHandler<ParallelProbeNotification>, FastProbeNotificationHandler>();
@@ -298,6 +316,19 @@ public class MediatorTests
     public Task HandleAsync(NullTaskNotification notification, CancellationToken cancellationToken)
     {
       return null!;
+    }
+  }
+
+  // Registra a execução para verificar que a falha de um manipulador não impede os demais de iniciar
+  private sealed class TrackedNullTaskNotificationHandler : INotifyHandler<NullTaskNotification>
+  {
+    public static bool Executed { get; set; }
+
+    public Task HandleAsync(NullTaskNotification notification, CancellationToken cancellationToken)
+    {
+      Executed = true;
+
+      return Task.CompletedTask;
     }
   }
 

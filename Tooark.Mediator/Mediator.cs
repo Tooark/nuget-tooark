@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Options;
@@ -17,7 +18,7 @@ namespace Tooark.Mediator;
 /// </remarks>
 /// <param name="serviceProvider">O provedor de serviços para resolver os manipuladores.</param>
 /// <param name="options">As opções de configuração do mediador.</param>
-public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions options) : IMediator
+public sealed class Mediator(IServiceProvider serviceProvider, IOptions<MediatorOptions> options) : IMediator
 {
   #region Private Static Fields
 
@@ -49,7 +50,7 @@ public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions o
   /// <summary>
   /// As opções de configuração do mediador.
   /// </summary>
-  private readonly MediatorOptions _options = options;
+  private readonly MediatorOptions _options = options.Value;
 
   #endregion
 
@@ -58,7 +59,8 @@ public sealed class Mediator(IServiceProvider serviceProvider, MediatorOptions o
   /// <summary>
   /// Construtor do mediador que aceita apenas o provedor de serviços, usando as opções padrão.
   /// </summary>
-  public Mediator(IServiceProvider serviceProvider) : this(serviceProvider, new MediatorOptions())
+  /// <param name="serviceProvider">O provedor de serviços para resolver os manipuladores.</param>
+  public Mediator(IServiceProvider serviceProvider) : this(serviceProvider, Microsoft.Extensions.Options.Options.Create(new MediatorOptions()))
   { }
 
   #endregion
