@@ -50,7 +50,7 @@ dotnet add package Tooark.Mediator.Abstractions
 - `ISender`
   - `Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)`
 - `IPublisher`
-  - `Task PublishAsync(INotify notification, CancellationToken cancellationToken = default)`
+  - `Task PublishAsync(INotify notify, CancellationToken cancellationToken = default)`
 - `IMediator`: combina `ISender` e `IPublisher`.
 
 ### Tipo utilitário
@@ -105,9 +105,19 @@ using Tooark.Mediator.Abstractions;
 
 public sealed record DeactivateOrderCommand(Guid Id) : ICommand;
 
-public static Task<Unit> SuccessAsync()
+// ICommand é atalho para ICommand<Unit>: o envio retorna Task<Unit>
+public sealed class OrderMaintenanceService(ISender sender)
 {
-  return Unit.Task;
+  public Task<Unit> DeactivateAsync(Guid id, CancellationToken cancellationToken)
+  {
+    // Curto-circuito síncrono: Unit.Task reutiliza a tarefa pré-construída, sem nova alocação
+    if (id == Guid.Empty)
+    {
+      return Unit.Task;
+    }
+
+    return sender.SendAsync(new DeactivateOrderCommand(id), cancellationToken);
+  }
 }
 ```
 
@@ -117,7 +127,7 @@ public static Task<Unit> SuccessAsync()
 
 | Pacote              | Versão | Descrição                             |
 | ------------------- | ------ | ------------------------------------- |
-| `Tooark.Exceptions` | —      | Exceções (ex.: `BadRequestException`) |
+| `Tooark.Exceptions` | 4.x    | Exceções (ex.: `BadRequestException`) |
 
 ---
 
@@ -127,4 +137,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

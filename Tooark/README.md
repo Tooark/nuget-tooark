@@ -76,6 +76,10 @@ Descrição: Este pacote fornece contratos base do padrão Mediator para uso em 
 
 Descrição: Este pacote oferece uma implementação concreta do padrão Mediator, facilitando a comunicação entre componentes da aplicação.
 
+### [Tooark.Mediator.EntityFrameworkCore](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Mediator.EntityFrameworkCore/README.md)
+
+Descrição: Este pacote move a persistência do Entity Framework Core para o pipeline do Mediator, mantendo os handlers livres de SaveChanges.
+
 ### [Tooark.Observability](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Observability/README.md)
 
 Descrição: Este pacote fornece ferramentas para monitoramento e observabilidade da aplicação.

@@ -32,5 +32,6 @@
     <ProjectReference Include="..\Tooark.Observability\Tooark.Observability.csproj" />
     <ProjectReference Include="..\Tooark.Mediator.Abstractions\Tooark.Mediator.Abstractions.csproj" />
     <ProjectReference Include="..\Tooark.Mediator\Tooark.Mediator.csproj" />
+    <ProjectReference Include="..\Tooark.Mediator.EntityFrameworkCore\Tooark.Mediator.EntityFrameworkCore.csproj" />
   </ItemGroup>
 </Project>

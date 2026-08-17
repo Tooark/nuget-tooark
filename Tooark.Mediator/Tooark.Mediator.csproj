@@ -5,9 +5,9 @@
     <PackageId>Tooark.Mediator</PackageId>
     <Title>Tooark.Mediator</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, mediator, cqrs, cqs, .NET</PackageTags>
-    <Summary>Mediator para arquiteturas CQRS/CQS em .NET.</Summary>
-    <PackageDescription>Biblioteca para desacoplamento entre requests e handlers com padrão Mediator em aplicações .NET.</PackageDescription>
+    <PackageTags>tooark, toolkit, mediator, mediatr, cqrs, cqs, command, query, notification, pipeline, behaviors, .NET</PackageTags>
+    <Summary>Mediator for CQRS/CQS architectures in .NET.</Summary>
+    <PackageDescription>Library for decoupling requests and handlers with the Mediator pattern in .NET applications.</PackageDescription>
     <Description>Library for Mediator pattern supporting commands, queries and notifications in .NET projects.</Description>
   </PropertyGroup>
 

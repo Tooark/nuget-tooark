@@ -2,9 +2,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Mediator.Abstractions;
+using Tooark.Mediator.Behaviors;
 using Tooark.Mediator.Handlers;
 using Tooark.Mediator.Options;
 
@@ -56,6 +56,103 @@ public static partial class TooarkDependencyInjection
   {
     // Captura o assembly chamador no ponto de entrada para o fallback de scan
     return AddTooarkMediatorCore(services, configure, assemblies, Assembly.GetCallingAssembly());
+  }
+
+  /// <summary>
+  /// Adiciona um behavior ao pipeline de requisições do Mediator.
+  /// </summary>
+  /// <remarks>
+  /// Os behaviors são executados na ordem de registro: o primeiro registrado é o mais externo.
+  /// Por isso não são descobertos pelo scan de assemblies, cuja ordem não é garantida.
+  /// Aceita behaviors fechados (<c>ValidationBehavior&lt;CriarPedido, Guid&gt;</c>) e genéricos abertos
+  /// (<c>LoggingBehavior&lt;,&gt;</c>), que se aplicam a todas as requisições.
+  /// </remarks>
+  /// <typeparam name="TBehavior">O tipo do behavior a ser registrado.</typeparam>
+  /// <param name="services">Coleção de serviços.</param>
+  /// <returns>A coleção de serviços com o behavior adicionado.</returns>
+  public static IServiceCollection AddTooarkMediatorBehavior<TBehavior>(this IServiceCollection services)
+    where TBehavior : class
+  {
+    return AddTooarkMediatorBehavior(services, typeof(TBehavior));
+  }
+
+  /// <summary>
+  /// Adiciona um behavior ao pipeline de requisições do Mediator.
+  /// </summary>
+  /// <remarks>
+  /// Os behaviors são executados na ordem de registro: o primeiro registrado é o mais externo.
+  /// Por isso não são descobertos pelo scan de assemblies, cuja ordem não é garantida.
+  /// Aceita behaviors fechados (<c>ValidationBehavior&lt;CriarPedido, Guid&gt;</c>) e genéricos abertos
+  /// (<c>LoggingBehavior&lt;,&gt;</c>), que se aplicam a todas as requisições.
+  /// </remarks>
+  /// <param name="services">Coleção de serviços.</param>
+  /// <param name="behaviorType">O tipo do behavior a ser registrado.</param>
+  /// <returns>A coleção de serviços com o behavior adicionado.</returns>
+  /// <exception cref="InternalServerErrorException">Lançada quando o tipo não é um behavior de pipeline válido.</exception>
+  public static IServiceCollection AddTooarkMediatorBehavior(this IServiceCollection services, Type behaviorType)
+  {
+    // Verifica se a coleção de serviços é nula
+    if (services == null)
+    {
+      throw new InternalServerErrorException("Mediator.Null.Service");
+    }
+
+    // Verifica se o tipo do behavior é nulo
+    if (behaviorType == null)
+    {
+      throw new InternalServerErrorException("Mediator.Null.Behavior");
+    }
+
+    // Obtém as interfaces de behavior implementadas pelo tipo
+    var interfaces = behaviorType.GetInterfaces()
+      .Where(@interface => @interface.IsGenericType)
+      .Where(@interface => @interface.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
+      .ToList();
+
+    // Verifica se o tipo implementa algum behavior de pipeline
+    if (interfaces.Count == 0)
+    {
+      throw new InternalServerErrorException($"Behavior.NotSupported;{behaviorType.FullName}");
+    }
+
+    // Itera sobre as interfaces de behavior encontradas
+    foreach (var @interface in interfaces)
+    {
+      // Behavior genérico aberto é registrado pela definição genérica, para o container fechar no despacho
+      if (behaviorType.ContainsGenericParameters)
+      {
+        // O container substitui os parâmetros da interface pelos do tipo, o que exige correspondência direta
+        if (!MatchesOpenBehavior(behaviorType, @interface))
+        {
+          throw new InternalServerErrorException($"Behavior.NotSupported;{behaviorType.FullName}");
+        }
+
+        services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), behaviorType));
+
+        continue;
+      }
+
+      // Behavior fechado é registrado pela interface concreta que implementa
+      services.TryAddEnumerable(ServiceDescriptor.Transient(@interface, behaviorType));
+    }
+
+    return services;
+  }
+
+  /// <summary>
+  /// Verifica se um behavior genérico aberto pode ser fechado pelo container a partir da definição genérica.
+  /// </summary>
+  /// <param name="behaviorType">O tipo do behavior.</param>
+  /// <param name="interface">A interface de behavior implementada pelo tipo.</param>
+  /// <returns>True quando os parâmetros genéricos do tipo correspondem, em ordem, aos da interface.</returns>
+  private static bool MatchesOpenBehavior(Type behaviorType, Type @interface)
+  {
+    // Obtém os parâmetros genéricos do tipo e os argumentos genéricos da interface
+    var parameters = behaviorType.GetGenericArguments();
+    var arguments = @interface.GetGenericArguments();
+
+    // A definição genérica só pode ser fechada quando os parâmetros são os mesmos, na mesma ordem
+    return parameters.Length == arguments.Length && parameters.SequenceEqual(arguments);
   }
 
   /// <summary>

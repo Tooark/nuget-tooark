@@ -5,9 +5,9 @@
     <PackageId>Tooark.Mediator.Abstractions</PackageId>
     <Title>Tooark.Mediator.Abstractions</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, mediator, cqrs, cqs, .NET, abstractions</PackageTags>
-    <Summary>Contratos do Mediator para arquiteturas CQRS/CQS em .NET.</Summary>
-    <PackageDescription>Biblioteca de contratos para requests, commands, queries, notifications e IMediator em aplicações .NET.</PackageDescription>
+    <PackageTags>tooark, toolkit, mediator, mediatr, cqrs, cqs, command, query, notification, .NET, abstractions</PackageTags>
+    <Summary>Mediator contracts for CQRS/CQS architectures in .NET.</Summary>
+    <PackageDescription>Contracts library for requests, commands, queries, notifications and IMediator in .NET applications.</PackageDescription>
     <Description>Contracts library for mediator pattern supporting requests, commands, queries and notifications in .NET projects.</Description>
   </PropertyGroup>
 

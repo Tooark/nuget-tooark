@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Mediator.EntityFrameworkCore</PackageId>
+    <Title>Tooark.Mediator.EntityFrameworkCore</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, mediator, mediatr, cqrs, cqs, entityframeworkcore, unitofwork, pipeline, behaviors, .NET</PackageTags>
+    <Summary>Entity Framework Core unit of work for the Tooark.Mediator pipeline.</Summary>
+    <PackageDescription>Library that moves Entity Framework Core persistence into the Tooark.Mediator pipeline, keeping handlers free of SaveChanges.</PackageDescription>
+    <Description>Library that moves Entity Framework Core persistence into the Tooark.Mediator pipeline, keeping handlers free of SaveChanges.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+    <ProjectReference Include="..\Tooark.Mediator\Tooark.Mediator.csproj" />
+    <ProjectReference Include="..\Tooark.Mediator.Abstractions\Tooark.Mediator.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+</Project>
