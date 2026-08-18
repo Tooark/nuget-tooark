@@ -1,10 +1,14 @@
+using Tooark.Exceptions;
+
 namespace Tooark.Enums;
 
 /// <summary>
-/// Representa as ações que podem ser realizadas em uma permissão.
+/// Tipos de arquivo.
 /// </summary>
 public sealed class EFileType
 {
+  #region File Types
+
   /// <summary>
   /// Tipo de arquivo desconhecido. Seu id é 0 e seu tipo é "unknown".
   /// </summary>
@@ -30,17 +34,9 @@ public sealed class EFileType
   /// </summary>
   public static readonly EFileType Audio = new(4, "Audio");
 
+  #endregion
 
-  /// <summary>
-  /// Id do tipo.
-  /// </summary>
-  private int Id { get; }
-
-  /// <summary>
-  /// Descrição do tipo.
-  /// </summary>
-  private string Description { get; }
-
+  #region Constructor
 
   /// <summary>
   /// Construtor privado da classe.
@@ -53,14 +49,35 @@ public sealed class EFileType
     Id = id;
     Description = description;
   }
-  
+
+  #endregion
+
+  #region Private Properties
+
+  /// <summary>
+  /// Id do tipo.
+  /// </summary>
+  private int Id { get; }
+
+  /// <summary>
+  /// Descrição do tipo.
+  /// </summary>
+  private string Description { get; }
+
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Função que retorna um tipo a partir de sua descrição.
   /// </summary>
+  /// <remarks>
+  /// A caixa e os espaços das extremidades são normalizados. Descrição desconhecida resulta em
+  /// <see cref="Unknown"/>, que é o membro previsto para valores não reconhecidos.
+  /// </remarks>
   /// <param name="description">Descrição do tipo.</param>
   /// <returns>Uma instância de <see cref="EFileType"/>.</returns>
-  private static EFileType FromDescription(string description) => description?.ToLowerInvariant() switch
+  private static EFileType FromDescription(string description) => description?.Trim().ToLowerInvariant() switch
   {
     "document" => Document,
     "image" => Image,
@@ -83,6 +100,9 @@ public sealed class EFileType
     _ => Unknown
   };
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar a descrição do tipo.
@@ -99,16 +119,20 @@ public sealed class EFileType
   /// <summary>
   /// Conversão implícita de <see cref="EFileType"/> para <see cref="int"/>.
   /// </summary>
-  /// <param name="action">Instância de <see cref="EFileType"/>.</param>
+  /// <param name="fileType">Instância de <see cref="EFileType"/>.</param>
   /// <returns>Id do tipo.</returns>
-  public static implicit operator int(EFileType action) => action.Id;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator int(EFileType fileType) =>
+    fileType?.Id ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EFileType"/> para <see cref="string"/>.
   /// </summary>
-  /// <param name="action">Instância de <see cref="EFileType"/>.</param>
+  /// <param name="fileType">Instância de <see cref="EFileType"/>.</param>
   /// <returns>Descrição do tipo.</returns>
-  public static implicit operator string(EFileType action) => action.Description;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator string(EFileType fileType) =>
+    fileType?.Description ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="int"/> para <see cref="EFileType"/>.
@@ -123,4 +147,6 @@ public sealed class EFileType
   /// <param name="description">Descrição do tipo.</param>
   /// <returns>Uma instância de <see cref="EFileType"/>.</returns>
   public static implicit operator EFileType(string description) => FromDescription(description);
+
+  #endregion
 }

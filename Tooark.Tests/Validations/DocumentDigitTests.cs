@@ -146,13 +146,13 @@ public class DocumentDigitTests
     Assert.Equal(expected, validation.IsValid);
   }
 
-  // Teste para verificar que RG e CNH seguem apenas por formato.
+  // Teste para verificar RG com digito correto e RG informado sem digito.
   [Theory]
-  [InlineData("12.345.678-9")]
+  [InlineData("12.345.678-2")]
   [InlineData("12.345.678")]
   public void IsRg_ShouldNotAddNotification_WhenFormatIsValid(string value)
   {
-    // Act - RG não possui dígito verificador de padrão nacional
+    // Act - o dígito é opcional; informado, precisa conferir
     var validation = new Validation().IsRg(value, Property);
 
     // Assert
@@ -162,7 +162,7 @@ public class DocumentDigitTests
   // Teste para verificar o documento combinado de CPF ou RG.
   [Theory]
   [InlineData("529.982.247-25", true)]
-  [InlineData("12.345.678-9", true)]
+  [InlineData("12.345.678-2", true)]
   [InlineData("529.982.247-26", false)]
   public void IsCpfRg_ShouldValidateCpfCheckDigits_AndRgFormat(string value, bool expected)
   {
@@ -176,8 +176,8 @@ public class DocumentDigitTests
   // Teste para verificar o documento combinado de CPF, RG ou CNH.
   [Theory]
   [InlineData("529.982.247-25", true)]
-  [InlineData("12.345.678-9", true)]
-  [InlineData("12345678901", true)]
+  [InlineData("12.345.678-2", true)]
+  [InlineData("12345678900", true)]
   [InlineData("529.982.247-26", false)]
   public void IsCpfRgCnh_ShouldValidateCpfCheckDigits_AndOtherFormats(string value, bool expected)
   {

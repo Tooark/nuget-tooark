@@ -59,6 +59,22 @@ public partial class Validation
   /// <returns>True quando o valor é um CNPJ válido.</returns>
   private static bool IsValidCnpj(string value) =>
     HasFormat(value, RegexPattern.Cnpj) && DocumentDigit.IsCnpj(value);
+
+  /// <summary>
+  /// Verifica se o valor é um RG válido, por formato e por dígito verificador.
+  /// </summary>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <returns>True quando o valor é um RG válido.</returns>
+  private static bool IsValidRg(string value) =>
+    HasFormat(value, RegexPattern.Rg) && DocumentDigit.IsRg(value);
+
+  /// <summary>
+  /// Verifica se o valor é uma CNH válida, por formato e por dígitos verificadores.
+  /// </summary>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <returns>True quando o valor é uma CNH válida.</returns>
+  private static bool IsValidCnh(string value) =>
+    HasFormat(value, RegexPattern.Cnh) && DocumentDigit.IsCnh(value);
   #endregion
 
   #region IsCpf
@@ -100,7 +116,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsRg(string value, string property, string message) =>
-    Match(value, RegexPattern.Rg, property, message);
+    ValidateDocument(property, message, () => IsValidRg(value));
   #endregion
 
   #region IsCnh
@@ -121,7 +137,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCnh(string value, string property, string message) =>
-    Match(value, RegexPattern.Cnh, property, message);
+    ValidateDocument(property, message, () => IsValidCnh(value));
   #endregion
 
   #region IsCpfRg
@@ -142,7 +158,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpfRg(string value, string property, string message) =>
-    ValidateDocument(property, message, () => IsValidCpf(value) || HasFormat(value, RegexPattern.Rg));
+    ValidateDocument(property, message, () => IsValidCpf(value) || IsValidRg(value));
   #endregion
 
   #region IsCpfRgCnh
@@ -163,7 +179,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpfRgCnh(string value, string property, string message) =>
-    ValidateDocument(property, message, () => IsValidCpf(value) || HasFormat(value, RegexPattern.Rg) || HasFormat(value, RegexPattern.Cnh));
+    ValidateDocument(property, message, () => IsValidCpf(value) || IsValidRg(value) || IsValidCnh(value));
   #endregion
 
   #region IsCnpj

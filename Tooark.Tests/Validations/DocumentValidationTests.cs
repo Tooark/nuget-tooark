@@ -56,9 +56,9 @@ public class DocumentValidationTests
 
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
-  [InlineData("12.345.678-9")]
+  [InlineData("12.345.678-2")]
   [InlineData("12.345.678")]
-  [InlineData("12.345.678-x")]
+  [InlineData("10.000.006-x")]
   public void IsRg_ShouldNotAddNotification_WhenValueIsRg(string valueParam)
   {
     // Arrange
@@ -97,7 +97,7 @@ public class DocumentValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    string value = "12345678901";
+    string value = "12345678900";
 
     // Act
     validation.IsCnh(value, property);
@@ -125,9 +125,9 @@ public class DocumentValidationTests
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
   [InlineData("529.982.247-25")]
-  [InlineData("12.345.678-9")]
+  [InlineData("12.345.678-2")]
   [InlineData("12.345.678")]
-  [InlineData("12.345.678-x")]
+  [InlineData("10.000.006-x")]
   public void IsCpfRg_ShouldNotAddNotification_WhenValueIsCpfRg(string valueParam)
   {
     // Arrange
@@ -162,10 +162,10 @@ public class DocumentValidationTests
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
   [InlineData("529.982.247-25")]
-  [InlineData("12.345.678-9")]
+  [InlineData("12.345.678-2")]
   [InlineData("12.345.678")]
-  [InlineData("12.345.678-x")]
-  [InlineData("12345678901")]
+  [InlineData("10.000.006-x")]
+  [InlineData("12345678900")]
   public void IsCpfRgCnh_ShouldNotAddNotification_WhenValueIsCpfRgCnh(string valueParam)
   {
     // Arrange

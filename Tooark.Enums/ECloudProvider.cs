@@ -1,3 +1,5 @@
+using Tooark.Exceptions;
+
 namespace Tooark.Enums;
 
 /// <summary>
@@ -5,6 +7,8 @@ namespace Tooark.Enums;
 /// </summary>
 public sealed class ECloudProvider
 {
+  #region Cloud Providers
+
   /// <summary>
   /// Nenhum provedor de Cloud.
   /// </summary>
@@ -25,6 +29,9 @@ public sealed class ECloudProvider
   /// </summary>
   public static readonly ECloudProvider Microsoft = new(3, "Azure");
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Construtor privado da classe.
@@ -38,6 +45,9 @@ public sealed class ECloudProvider
     Description = description;
   }
 
+  #endregion
+
+  #region Private Properties
 
   /// <summary>
   /// Id do provedor de Cloud.
@@ -49,20 +59,27 @@ public sealed class ECloudProvider
   /// </summary>
   private string Description { get; }
 
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Função que retorna um provedor de Cloud a partir de sua descrição.
   /// </summary>
+  /// <remarks>
+  /// A caixa e os espaços das extremidades são normalizados, então "aws", "AWS" e " Aws " são o mesmo
+  /// provedor. Descrição desconhecida resulta em <see cref="None"/>.
+  /// </remarks>
   /// <param name="description">Descrição do provedor de Cloud.</param>
   /// <returns>Uma instância de <see cref="ECloudProvider"/>.</returns>
-  private static ECloudProvider FromDescription(string description) => description switch
+  private static ECloudProvider FromDescription(string description) => description?.Trim().ToUpperInvariant() switch
   {
-    "Amazon" => Amazon,
+    "AMAZON" => Amazon,
     "AWS" => Amazon,
-    "Google" => Google,
+    "GOOGLE" => Google,
     "GCP" => Google,
-    "Microsoft" => Microsoft,
-    "Azure" => Microsoft,
+    "MICROSOFT" => Microsoft,
+    "AZURE" => Microsoft,
     _ => None
   };
 
@@ -79,6 +96,9 @@ public sealed class ECloudProvider
     _ => None
   };
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar a descrição do provedor de Cloud.
@@ -92,20 +112,23 @@ public sealed class ECloudProvider
   /// <returns>O id do provedor de Cloud.</returns>
   public int ToInt() => Id;
 
-  
   /// <summary>
   /// Conversão implícita de <see cref="ECloudProvider"/> para <see cref="int"/>.
   /// </summary>
-  /// <param name="document">Instância de <see cref="ECloudProvider"/>.</param>
+  /// <param name="provider">Instância de <see cref="ECloudProvider"/>.</param>
   /// <returns>Id do provedor de Cloud.</returns>
-  public static implicit operator int(ECloudProvider document) => document.Id;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator int(ECloudProvider provider) =>
+    provider?.Id ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="ECloudProvider"/> para <see cref="string"/>.
   /// </summary>
-  /// <param name="document">Instância de <see cref="ECloudProvider"/>.</param>
+  /// <param name="provider">Instância de <see cref="ECloudProvider"/>.</param>
   /// <returns>Descrição do provedor de Cloud.</returns>
-  public static implicit operator string(ECloudProvider document) => document.Description;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator string(ECloudProvider provider) =>
+    provider?.Description ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="int"/> para <see cref="ECloudProvider"/>.
@@ -120,4 +143,6 @@ public sealed class ECloudProvider
   /// <param name="description">Descrição do provedor de Cloud.</param>
   /// <returns>Uma instância de <see cref="ECloudProvider"/>.</returns>
   public static implicit operator ECloudProvider(string description) => FromDescription(description);
+
+  #endregion
 }

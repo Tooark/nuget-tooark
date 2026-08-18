@@ -37,6 +37,16 @@ public static class DocumentDigit
   /// </summary>
   private const int WeightRange = 8;
 
+  /// <summary>
+  /// Quantidade de dígitos da CNH, incluindo os verificadores.
+  /// </summary>
+  private const int CnhLength = 11;
+
+  /// <summary>
+  /// Quantidade de caracteres do RG que antecedem o dígito verificador.
+  /// </summary>
+  private const int RgBaseLength = 8;
+
   #endregion
 
 
@@ -163,6 +173,124 @@ public static class DocumentDigit
     }
 
     return Remainder(sum);
+  }
+
+  #endregion
+
+
+  #region Cnh
+
+  /// <summary>
+  /// Verifica os dígitos verificadores de uma CNH.
+  /// </summary>
+  /// <remarks>
+  /// Segue o cálculo do registro nacional: o primeiro dígito usa pesos de 9 a 1 e o segundo, de 1 a 9,
+  /// ambos sobre os nove primeiros dígitos, com o resto do módulo 11 reduzido a zero quando chega a 10.
+  /// </remarks>
+  /// <param name="value">CNH a ser verificada, com ou sem formatação.</param>
+  /// <returns>True quando os dígitos verificadores conferem.</returns>
+  public static bool IsCnh(string? value)
+  {
+    // Mantém apenas os dígitos, descartando a formatação
+    var digits = OnlyDigits(value);
+
+    // Verifica a quantidade de dígitos
+    if (digits.Length != CnhLength)
+    {
+      return false;
+    }
+
+    // Registro composto apenas por zeros não é uma CNH válida
+    if (IsRepeated(digits) && digits[0] == '0')
+    {
+      return false;
+    }
+
+    var descending = 0;
+    var ascending = 0;
+
+    // Percorre a base aplicando os pesos decrescentes e crescentes na mesma passagem
+    for (var index = 0; index < CnhLength - 2; index++)
+    {
+      var digit = digits[index] - '0';
+
+      descending += digit * (9 - index);
+      ascending += digit * (1 + index);
+    }
+
+    // O resto do módulo 11 vira zero quando chega a 10
+    var first = descending % 11;
+    var second = ascending % 11;
+
+    first = first == 10 ? 0 : first;
+    second = second == 10 ? 0 : second;
+
+    // Compara com os dígitos informados
+    return digits[CnhLength - 2] - '0' == first && digits[CnhLength - 1] - '0' == second;
+  }
+
+  #endregion
+
+
+  #region Rg
+
+  /// <summary>
+  /// Verifica o dígito verificador de um RG.
+  /// </summary>
+  /// <remarks>
+  /// O RG não tem padrão nacional; o cálculo aqui é o da Secretaria de Segurança Pública de São Paulo,
+  /// que é o formato aceito pelo pacote. O dígito é opcional: um RG informado sem ele passa pela
+  /// verificação, e apenas um dígito informado e incorreto reprova o documento.
+  /// O dígito pode ser 'X', que representa o valor 10.
+  /// </remarks>
+  /// <param name="value">RG a ser verificado, com ou sem formatação.</param>
+  /// <returns>True quando o dígito verificador confere ou não foi informado.</returns>
+  public static bool IsRg(string? value)
+  {
+    // Mantém apenas os caracteres alfanuméricos, em caixa alta para normalizar o 'X'
+    var characters = OnlyLetterOrDigits(value);
+
+    // O RG tem oito dígitos de base, com o verificador opcional
+    if (characters.Length != RgBaseLength && characters.Length != RgBaseLength + 1)
+    {
+      return false;
+    }
+
+    // A base é sempre numérica
+    for (var index = 0; index < RgBaseLength; index++)
+    {
+      if (!char.IsAsciiDigit(characters[index]))
+      {
+        return false;
+      }
+    }
+
+    // Base composta apenas por zeros não é um RG válido
+    if (IsRepeated(characters[..RgBaseLength]) && characters[0] == '0')
+    {
+      return false;
+    }
+
+    // Sem o dígito verificador não há o que conferir
+    if (characters.Length == RgBaseLength)
+    {
+      return true;
+    }
+
+    var sum = 0;
+
+    // Os pesos crescem de 2 a 9, da esquerda para a direita
+    for (var index = 0; index < RgBaseLength; index++)
+    {
+      sum += (characters[index] - '0') * (MinWeight + index);
+    }
+
+    // O dígito 10 é representado pela letra X
+    var digit = (11 - (sum % 11)) % 11;
+
+    return digit == 10 ?
+      characters[RgBaseLength] == 'X' :
+      characters[RgBaseLength] - '0' == digit;
   }
 
   #endregion

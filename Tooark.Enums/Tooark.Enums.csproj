@@ -5,19 +5,14 @@
     <PackageId>Tooark.Enums</PackageId>
     <Title>Tooark.Enums</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, enums, validation, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, enums, enumeration, document, cpf, cnpj, cnh, rg, validation, .NET</PackageTags>
     <Summary>Management of validated enumerators for .NET projects.</Summary>
     <PackageDescription>Package for creating validated enumerators for .NET applications.</PackageDescription>
     <Description>Library that provides validated enumerated types, allowing standardization for .NET projects. Includes methods for conversion and validation of enumerated values.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
     <ProjectReference Include="..\Tooark.Validations\Tooark.Validations.csproj" />
   </ItemGroup>
 

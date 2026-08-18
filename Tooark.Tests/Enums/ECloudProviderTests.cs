@@ -1,4 +1,5 @@
 using Tooark.Enums;
+using Tooark.Exceptions;
 
 namespace Tooark.Tests.Enums;
 
@@ -141,5 +142,52 @@ public class ECloudProviderTests
 
     // Assert
     Assert.Equal(cloudProvider, ECloudProvider.None);
+  }
+
+  // Teste para garantir que a descricao nao diferencia caixa nem espacos.
+  [Theory]
+  [InlineData("aws")]
+  [InlineData("AWS")]
+  [InlineData("Aws")]
+  [InlineData("  aws  ")]
+  [InlineData("amazon")]
+  [InlineData("AMAZON")]
+  public void ECloudProvider_ShouldBeAmazon_WhenDescriptionVariesInCase(string description)
+  {
+    // Arrange & Act
+    ECloudProvider cloudProvider = description;
+
+    // Assert
+    Assert.Equal(ECloudProvider.Amazon, cloudProvider);
+  }
+
+  // Teste para garantir que as demais descricoes tambem ignoram a caixa.
+  [Theory]
+  [InlineData("gcp", "GCP")]
+  [InlineData("google", "GCP")]
+  [InlineData("azure", "Azure")]
+  [InlineData("microsoft", "Azure")]
+  public void ECloudProvider_ShouldResolve_WhenDescriptionIsLowercase(string description, string expected)
+  {
+    // Arrange & Act
+    ECloudProvider cloudProvider = description;
+
+    // Assert
+    Assert.Equal(expected, cloudProvider.ToString());
+  }
+
+  // Teste para garantir que a conversao de instancia nula falha com erro claro.
+  [Fact]
+  public void ECloudProvider_ShouldThrow_WhenInstanceIsNull()
+  {
+    // Arrange
+    ECloudProvider cloudProvider = null!;
+
+    // Act & Assert
+    var toInt = Assert.Throws<InternalServerErrorException>(() => (int)cloudProvider);
+    var toString = Assert.Throws<InternalServerErrorException>(() => (string)cloudProvider);
+
+    Assert.Contains("Invalid.Parameter;null", toInt.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toString.GetErrorMessages());
   }
 }

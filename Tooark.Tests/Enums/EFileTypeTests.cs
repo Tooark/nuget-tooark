@@ -1,4 +1,5 @@
 using Tooark.Enums;
+using Tooark.Exceptions;
 
 namespace Tooark.Tests.Enums;
 
@@ -160,5 +161,35 @@ public class EFileTypeTests
 
     // Assert
     Assert.Equal(EFileType.Unknown, fileType);
+  }
+
+  // Teste para garantir que a descricao nao diferencia caixa nem espacos.
+  [Theory]
+  [InlineData("image")]
+  [InlineData("IMAGE")]
+  [InlineData("Image")]
+  [InlineData("  image  ")]
+  public void EFileType_ShouldBeImage_WhenDescriptionVariesInCase(string description)
+  {
+    // Arrange & Act
+    EFileType fileType = description;
+
+    // Assert
+    Assert.Equal(EFileType.Image, fileType);
+  }
+
+  // Teste para garantir que a conversao de instancia nula falha com erro claro.
+  [Fact]
+  public void EFileType_ShouldThrow_WhenInstanceIsNull()
+  {
+    // Arrange
+    EFileType fileType = null!;
+
+    // Act & Assert
+    var toInt = Assert.Throws<InternalServerErrorException>(() => (int)fileType);
+    var toString = Assert.Throws<InternalServerErrorException>(() => (string)fileType);
+
+    Assert.Contains("Invalid.Parameter;null", toInt.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toString.GetErrorMessages());
   }
 }

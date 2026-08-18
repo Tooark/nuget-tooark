@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations.Documents;
 using Tooark.Validations.Patterns;
 
@@ -8,6 +9,8 @@ namespace Tooark.Enums;
 /// </summary>
 public sealed class EDocumentType
 {
+  #region Document Types
+
   /// <summary>
   /// Documento do tipo "None".
   /// </summary>
@@ -48,6 +51,9 @@ public sealed class EDocumentType
   /// </summary>
   public static readonly EDocumentType CPF_RG_CNH = new(7, "CPF_RG_CNH", RegexPattern.CpfRgCnh, value => ValidateCpf(value) || ValidateRg(value) || ValidateCnh(value));
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Construtor privado da classe.
@@ -65,6 +71,9 @@ public sealed class EDocumentType
     Validator = validator;
   }
 
+  #endregion
+
+  #region Private Properties
 
   /// <summary>
   /// Id do tipo de documento.
@@ -86,13 +95,20 @@ public sealed class EDocumentType
   /// </summary>
   private Func<string, bool> Validator { get; }
 
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Função que retorna um tipo de documento a partir de sua descrição.
   /// </summary>
+  /// <remarks>
+  /// A caixa e os espaços das extremidades são normalizados. Descrição desconhecida resulta em
+  /// <see cref="None"/>.
+  /// </remarks>
   /// <param name="description">Descrição do tipo de documento.</param>
   /// <returns>Uma instância de <see cref="EDocumentType"/>.</returns>
-  private static EDocumentType FromDescription(string description) => description?.ToUpperInvariant() switch
+  private static EDocumentType FromDescription(string description) => description?.Trim().ToUpperInvariant() switch
   {
     "CPF" => CPF,
     "RG" => RG,
@@ -121,6 +137,9 @@ public sealed class EDocumentType
     _ => None
   };
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar a descrição do tipo de documento.
@@ -141,25 +160,33 @@ public sealed class EDocumentType
   public string ToRegex() => PatternRegex;
 
   /// <summary>
-  /// Método que retorna a função de validação do tipo de documento.
+  /// Função que verifica os dígitos verificadores do tipo de documento.
   /// </summary>
+  /// <remarks>
+  /// Verifica apenas o conteúdo: a formatação é responsabilidade de <see cref="ToRegex"/>, e uma validação
+  /// completa aplica os dois, como fazem o value object Document e o atributo de validação. A função aceita
+  /// o valor com ou sem máscara e nunca lança para entrada inválida.
+  /// </remarks>
   /// <returns>A função de validação do tipo de documento.</returns>
   public Func<string, bool> IsValid => Validator;
-
 
   /// <summary>
   /// Conversão implícita de <see cref="EDocumentType"/> para <see cref="int"/>.
   /// </summary>
   /// <param name="document">Instância de <see cref="EDocumentType"/>.</param>
   /// <returns>Id do tipo de documento.</returns>
-  public static implicit operator int(EDocumentType document) => document.Id;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator int(EDocumentType document) =>
+    document?.Id ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="EDocumentType"/> para <see cref="string"/>.
   /// </summary>
   /// <param name="document">Instância de <see cref="EDocumentType"/>.</param>
   /// <returns>Descrição do tipo de documento.</returns>
-  public static implicit operator string(EDocumentType document) => document.Description;
+  /// <exception cref="InternalServerErrorException">Lançada quando a instância é nula.</exception>
+  public static implicit operator string(EDocumentType document) =>
+    document?.Description ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de <see cref="int"/> para <see cref="EDocumentType"/>.
@@ -175,117 +202,37 @@ public sealed class EDocumentType
   /// <returns>Uma instância de <see cref="EDocumentType"/>.</returns>
   public static implicit operator EDocumentType(string description) => FromDescription(description);
 
+  #endregion
+
+  #region Validates
 
   /// <summary>
   /// Método que valida um número de CNH.
   /// </summary>
   /// <param name="value">O número da CNH a ser validado.</param>
-  /// <returns>Verdadeiro se o número da CNH for válido</returns>
-  private static bool ValidateCnh(string value)
-  {
-    // Verifica se o número da CNH tem 11 caracteres e se é diferente de 0
-    if (value.Length != 11 || long.Parse(value) == 0)
-    {
-      return false;
-    }
-
-    // Cria as variáveis para o cálculo
-    int multi1 = 9;
-    int multi2 = 1;
-    int sum1 = 0;
-    int sum2 = 0;
-
-    // Percorre os 9 primeiros dígitos da CNH
-    for (int i = 0; i < 9; i++)
-    {
-      // Pega o dígito da iteração
-      var digit = int.Parse(value[i].ToString());
-
-      // Calcula a soma dos dígitos
-      sum1 += digit * multi1;
-      sum2 += digit * multi2;
-
-      // Atualiza os multiplicadores
-      multi1--;
-      multi2++;
-    }
-
-    // Calcula os dígitos verificadores
-    var digit1 = sum1 % 11;
-    var digit2 = sum2 % 11;
-
-    // Verifica se os dígitos verificadores são 10
-    digit1 = digit1 == 10 ? 0 : digit1;
-    digit2 = digit2 == 10 ? 0 : digit2;
-
-    // Verifica se os dígitos verificadores são iguais aos dígitos da CNH
-    return $"{digit1}{digit2}" == value[9..];
-  }
+  /// <returns>True se o número da CNH for válido.</returns>
+  private static bool ValidateCnh(string value) => DocumentDigit.IsCnh(value);
 
   /// <summary>
   /// Método que valida um número de CPF.
   /// </summary>
   /// <param name="value">O número do CPF a ser validado.</param>
-  /// <returns>True se o número do CPF for válido</returns>
+  /// <returns>True se o número do CPF for válido.</returns>
   private static bool ValidateCpf(string value) => DocumentDigit.IsCpf(value);
 
   /// <summary>
   /// Método que valida um número de RG.
   /// </summary>
   /// <param name="value">O número do RG a ser validado.</param>
-  /// <returns>True se o número do RG for válido</returns>
-  private static bool ValidateRg(string value)
-  {
-    // Remove os caracteres especiais do RG
-    value = value.Trim().Replace(".", "").Replace("-", "");
-
-    // Verifica se o número do RG tem 8 ou 9 caracteres e se é diferente de 0
-    if ((value.Length != 8 && value.Length != 9) || long.Parse(value[..8]) == 0)
-    {
-      return false;
-    }
-
-    // Se o número do RG for 8 caracteres, então é um RG sem dígito verificador
-    if (value.Length == 8)
-    {
-      return true;
-    }
-
-    // Cria as variáveis para o cálculo
-    int multi = 2;
-    int sum = 0;
-
-    // Calcula a soma dos dígitos com os multiplicadores
-    for (int i = 0; i < 8; i++)
-    {
-      // Pega o dígito da iteração
-      var dig = int.Parse(value[i].ToString());
-
-      // Calcula a soma dos dígitos
-      sum += dig * multi;
-
-      // Atualiza os multiplicadores
-      multi++;
-    }
-
-    // Calcula o dígito verificador
-    var digit = sum % 11;
-    digit = (11 - digit) % 11;
-
-    // Verifica se o dígito verificador é 10
-    if (digit == 10)
-    {
-      return value[8] == 'X' || value[8] == 'x';
-    }
-
-    // Verifica se os dígitos verificadores são iguais aos dígitos do RG
-    return $"{digit}" == value[8..];
-  }
+  /// <returns>True se o número do RG for válido.</returns>
+  private static bool ValidateRg(string value) => DocumentDigit.IsRg(value);
 
   /// <summary>
   /// Método que valida um número de CNPJ.
   /// </summary>
   /// <param name="value">O número do CNPJ a ser validado.</param>
-  /// <returns>True se o número do CNPJ for válido</returns>
+  /// <returns>True se o número do CNPJ for válido.</returns>
   private static bool ValidateCnpj(string value) => DocumentDigit.IsCnpj(value);
+
+  #endregion
 }

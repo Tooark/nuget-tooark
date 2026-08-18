@@ -1,4 +1,5 @@
 using Tooark.Enums;
+using Tooark.Exceptions;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Tests.Enums;
@@ -204,5 +205,73 @@ public class EDocumentTypeTests
 
     // Assert
     Assert.Equal(documentType, EDocumentType.None);
+  }
+
+  // Teste para garantir que a conversao de instancia nula falha com erro claro.
+  [Fact]
+  public void EDocumentType_ShouldThrow_WhenInstanceIsNull()
+  {
+    // Arrange
+    EDocumentType documentType = null!;
+
+    // Act & Assert
+    var toInt = Assert.Throws<InternalServerErrorException>(() => (int)documentType);
+    var toString = Assert.Throws<InternalServerErrorException>(() => (string)documentType);
+
+    Assert.Contains("Invalid.Parameter;null", toInt.GetErrorMessages());
+    Assert.Contains("Invalid.Parameter;null", toString.GetErrorMessages());
+  }
+
+  // Teste para garantir que a descricao nao diferencia caixa nem espacos.
+  [Theory]
+  [InlineData("cpf")]
+  [InlineData("CPF")]
+  [InlineData("  Cpf  ")]
+  public void EDocumentType_ShouldBeCpf_WhenDescriptionVariesInCase(string description)
+  {
+    // Arrange & Act
+    EDocumentType documentType = description;
+
+    // Assert
+    Assert.Equal(EDocumentType.CPF, documentType);
+  }
+
+  // Teste para garantir que IsValid nao lanca com entrada invalida.
+  [Theory]
+  [InlineData(null)]
+  [InlineData("")]
+  [InlineData("ABCDEFGHIJK")]
+  [InlineData("AB.CDE.FGH")]
+  [InlineData("nao e documento")]
+  public void EDocumentType_IsValid_ShouldNotThrow_WhenValueIsInvalid(string? value)
+  {
+    // Act & Assert - antes estourava FormatException e NullReferenceException
+    Assert.False(EDocumentType.CNH.IsValid(value!));
+    Assert.False(EDocumentType.RG.IsValid(value!));
+    Assert.False(EDocumentType.CPF.IsValid(value!));
+    Assert.False(EDocumentType.CNPJ.IsValid(value!));
+  }
+
+  // Teste para garantir que CNH e RG conferem o digito verificador.
+  [Theory]
+  [InlineData("02650306461", true)]
+  [InlineData("12345678900", true)]
+  [InlineData("12345678901", false)]
+  public void EDocumentType_Cnh_ShouldValidateCheckDigits(string value, bool expected)
+  {
+    // Act & Assert
+    Assert.Equal(expected, EDocumentType.CNH.IsValid(value));
+  }
+
+  // Teste para garantir que o RG confere o digito quando informado.
+  [Theory]
+  [InlineData("12.345.678-2", true)]
+  [InlineData("12.345.678", true)]
+  [InlineData("10.000.006-X", true)]
+  [InlineData("12.345.678-9", false)]
+  public void EDocumentType_Rg_ShouldValidateCheckDigit(string value, bool expected)
+  {
+    // Act & Assert
+    Assert.Equal(expected, EDocumentType.RG.IsValid(value));
   }
 }
