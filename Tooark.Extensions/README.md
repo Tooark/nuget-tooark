@@ -273,10 +273,18 @@ string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 
 ## Dependências
 
-- [Microsoft.AspNetCore.Mvc.Core](https://www.nuget.org/packages/Microsoft.AspNetCore.Mvc.Core/)
-- [Microsoft.Extensions.Caching.Memory](https://www.nuget.org/packages/Microsoft.Extensions.Caching.Memory/)
-- [Microsoft.Extensions.Localization](https://www.nuget.org/packages/Microsoft.Extensions.Localization/)
-- [Tooark.Utils](../Tooark.Utils/README.md)
+| Dependencia                                                                  | Versao   | Uso                                                    |
+| ---------------------------------------------------------------------------- | -------- | ------------------------------------------------------ |
+| [`Tooark.Utils`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Utils) | 4.x      | Normalizacao e idioma                                  |
+| `Microsoft.AspNetCore.App` (framework compartilhado)                         | 8.x/10.x | `ModelStateDictionary`, cache em memoria e localizacao |
+
+O pacote nao traz dependencias NuGet do ASP.NET Core: os tipos vem do **framework compartilhado**
+(`FrameworkReference`), o mesmo que a aplicacao ja usa. Antes, os pacotes avulsos da linha 2.x eram
+referenciados e arrastavam uma arvore transitiva grande.
+
+> **Requisito**: por declarar o framework compartilhado, quem consome o pacote passa a exigir o runtime do
+> ASP.NET Core instalado, inclusive em aplicacoes de console ou worker. A compilacao e a execucao funcionam
+> normalmente; o que muda e o pre-requisito de runtime, registrado no `runtimeconfig.json` da aplicacao.
 
 ## Contribuição
 
@@ -284,4 +292,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

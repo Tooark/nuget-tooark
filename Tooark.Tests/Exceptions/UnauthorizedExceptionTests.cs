@@ -103,4 +103,23 @@ public class UnauthorizedExceptionTest
     Assert.Equal(expectedMessage, exception.GetNotifications().FirstOrDefault()?.Message);
     Assert.Equal(HttpStatusCode.Unauthorized, exception.GetStatusCode());
   }
+
+  // Teste para garantir que a excecao interna e preservada.
+  [Fact]
+  public void UnauthorizedException_ShouldPreserveInnerException()
+  {
+    // Arrange
+    var causa = new InvalidOperationException("Causa raiz");
+    var message = "Falha ao processar";
+
+    // Act
+    var exception = new UnauthorizedException(message, causa);
+
+    // Assert
+    Assert.Same(causa, exception.InnerException);
+    Assert.Equal(message, exception.Message);
+    Assert.Single(exception.GetErrorMessages());
+    Assert.Equal(message, exception.GetErrorMessages()[0]);
+    Assert.Equal(HttpStatusCode.Unauthorized, exception.GetStatusCode());
+  }
 }

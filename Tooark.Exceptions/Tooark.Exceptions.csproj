@@ -5,7 +5,7 @@
     <PackageId>Tooark.Exceptions</PackageId>
     <Title>Tooark.Exceptions</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, exception, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, exception, exceptions, error handling, http status, notification, .NET</PackageTags>
     <Summary>Management of exceptions for .NET projects.</Summary>
     <PackageDescription>Package for creating exceptions for .NET applications.</PackageDescription>
     <Description>Library that provides exceptions for .NET projects, allowing standardization for error handling. Includes methods for creating and managing exceptions.</Description>
@@ -13,10 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tooark.Notifications\Tooark.Notifications.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" />
   </ItemGroup>
 
 </Project>

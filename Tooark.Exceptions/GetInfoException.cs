@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Tooark.Notifications;
 
 namespace Tooark.Exceptions;
@@ -13,6 +13,13 @@ public class GetInfoException : TooarkException
   /// </summary>
   /// <param name="message">A mensagem de erro associada à exceção.</param>
   public GetInfoException(string message) : base(message) { }
+
+  /// <summary>
+  /// Construtor da exceção com mensagem única e exceção interna.
+  /// </summary>
+  /// <param name="message">A mensagem de erro associada à exceção.</param>
+  /// <param name="innerException">A exceção que originou esta exceção, preservada para diagnóstico.</param>
+  public GetInfoException(string message, Exception innerException) : base(message, innerException) { }
 
   /// <summary>
   /// Construtor padrão da exceção com lista de mensagens.
@@ -35,8 +42,8 @@ public class GetInfoException : TooarkException
 
 
   /// <summary>
-  /// Função virtual para obter o status code da exceção.
+  /// Obtém o código de status HTTP associado à exceção.
   /// </summary>
-  /// <returns>Status code da exceção. Padronizado para 400 (BadRequest).</returns>
+  /// <returns>O código de status HTTP 400 (Bad Request).</returns>
   public override HttpStatusCode GetStatusCode() => HttpStatusCode.BadRequest;
 }
