@@ -167,7 +167,7 @@ public class RegexPatternTests
   // Teste de padrão de IPv6.
   [Theory]
   [InlineData("2001:0db8:85a3:0000:0000:8a2e:0370:7334", true)]
-  [InlineData("2001:db8:85a3::8a2e:370:7334", false)]
+  [InlineData("2001:db8:85a3::8a2e:370:7334", true)]
   public void TestIpv6Pattern(string input, bool expected)
   {
     // Arrange & Act

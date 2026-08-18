@@ -61,7 +61,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation AreEquals(object value, object comparer, string property, string message) =>
-    Validate(value, comparer, property, message, (v, c) => !v.Equals(c));
+    Validate(value, comparer, property, message, (v, c) => !Equals(v, c));
   #endregion
 
   #region AreNotEquals
@@ -84,7 +84,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation AreNotEquals(object value, object comparer, string property, string message) =>
-    Validate(value, comparer, property, message, (v, c) => v.Equals(c));
+    Validate(value, comparer, property, message, (v, c) => Equals(v, c));
   #endregion
 
   #region IsNull

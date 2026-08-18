@@ -1,3 +1,4 @@
+using Tooark.Validations.Documents;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Enums;
@@ -226,49 +227,7 @@ public sealed class EDocumentType
   /// </summary>
   /// <param name="value">O número do CPF a ser validado.</param>
   /// <returns>True se o número do CPF for válido</returns>
-  private static bool ValidateCpf(string value)
-  {
-    // Remove os caracteres especiais do CPF
-    value = value.Trim().Replace(".", "").Replace("-", "");
-
-    // Verifica se o número do CPF tem 11 caracteres e se é diferente de 0
-    if (value.Length != 11 || long.Parse(value) == 0)
-    {
-      return false;
-    }
-
-    // Cria as variáveis para o cálculo
-    int multi1 = 10;
-    int multi2 = 11;
-    int sum1 = 0;
-    int sum2 = 0;
-
-    // Calcula a soma dos dígitos com os multiplicadores
-    for (int i = 0; i < 9; i++)
-    {
-      // Pega o dígito da iteração
-      var digit = int.Parse(value[i].ToString());
-
-      // Calcula a soma dos dígitos
-      sum1 += digit * multi1;
-      sum2 += digit * multi2;
-
-      // Atualiza os multiplicadores
-      multi1--;
-      multi2--;
-    }
-
-    // Calcula o primeiro dígito verificador
-    var digit1 = sum1 % 11;
-    digit1 = digit1 < 2 ? 0 : 11 - digit1;
-
-    // Calcula o segundo dígito verificador
-    var digit2 = (sum2 + digit1 * multi2) % 11;
-    digit2 = digit2 < 2 ? 0 : 11 - digit2;
-
-    // Verifica se os dígitos verificadores são iguais aos dígitos do CPF
-    return $"{digit1}{digit2}" == value[9..];
-  }
+  private static bool ValidateCpf(string value) => DocumentDigit.IsCpf(value);
 
   /// <summary>
   /// Método que valida um número de RG.
@@ -328,47 +287,5 @@ public sealed class EDocumentType
   /// </summary>
   /// <param name="value">O número do CNPJ a ser validado.</param>
   /// <returns>True se o número do CNPJ for válido</returns>
-  private static bool ValidateCnpj(string value)
-  {
-    // Remove os caracteres especiais do CNPJ
-    value = value.Trim().Replace(".", "").Replace("/", "").Replace("-", "");
-
-    // Verifica se o número do CNPJ tem 18 caracteres e se é diferente de 0
-    if (value.Length != 14 || long.Parse(value) == 0)
-    {
-      return false;
-    }
-
-    // Cria as variáveis para o cálculo
-    int multi1 = 5;
-    int multi2 = 6;
-    int sum1 = 0;
-    int sum2 = 0;
-
-    // Percorre os 13 primeiros dígitos do CNPJ
-    for (int i = 0; i < 13; i++)
-    {
-       // Pega o dígito da iteração
-      var digit = int.Parse(value[i].ToString());
-
-      // Calcula a soma dos dígitos
-      sum1 = i < 12 ? sum1 + digit * multi1 : sum1;
-      sum2 += digit * multi2;
-
-      // Atualiza os multiplicadores
-      multi1 = multi1 <= 2 ? 9 : multi1 - 1;
-      multi2 = multi2 <= 2 ? 9 : multi2 - 1;
-    }
-
-    // Calcula os dígitos verificadores
-    var digit1 = sum1 % 11;
-    var digit2 = sum2 % 11;
-
-    // Verifica se os dígitos são menores que 2
-    digit1 = digit1 < 2 ? 0 : 11 - digit1;
-    digit2 = digit2 < 2 ? 0 : 11 - digit2;
-
-    // Verifica se os dígitos verificadores são iguais aos dígitos do CNPJ
-    return $"{digit1}{digit2}" == value[12..];
-  }
+  private static bool ValidateCnpj(string value) => DocumentDigit.IsCnpj(value);
 }

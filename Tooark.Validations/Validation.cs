@@ -9,10 +9,10 @@ public partial class Validation : Notification
 {
   #region Default Validation
   /// <summary>
-  /// Juntar mais de uma notificação
+  /// Agrega as notificações das validações informadas que estiverem inválidas.
   /// </summary>
-  /// <param name="notifications"></param>
-  /// <returns></returns>
+  /// <param name="notifications">Notificações a serem agregadas. Coleção e itens nulos são ignorados.</param>
+  /// <returns>Validação.</returns>
   public Validation Join(params Notification[] notifications)
   {
     // Se a lista de notificações for nula, retorna a instância atual
@@ -24,12 +24,14 @@ public partial class Validation : Notification
     // Percorre a lista de notificações
     foreach (var notification in notifications)
     {
-      // Se a notificação for inválida, adiciona a notificação
-      if (!notification.IsValid)
+      // Se a notificação for válida ou nula, não há o que agregar
+      if (notification == null || notification.IsValid)
       {
-        // Adiciona a notificação
-        AddNotifications(notification);
+        continue;
       }
+
+      // Adiciona a notificação
+      AddNotifications(notification);
     }
 
     // Retorna a instância atual

@@ -4,7 +4,7 @@ using Tooark.Validations.Patterns;
 namespace Tooark.Validations;
 
 /// <summary>
-/// Classe de validação de Protocol.
+/// Classe de validação de link de vídeo.
 /// </summary>
 public partial class Validation
 {

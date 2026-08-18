@@ -28,7 +28,7 @@ public class DocumentValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    string value = "123.456.789-00";
+    string value = "529.982.247-25";
 
     // Act
     validation.IsCpf(value, property);
@@ -124,7 +124,7 @@ public class DocumentValidationTests
 
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
-  [InlineData("123.456.789-00")]
+  [InlineData("529.982.247-25")]
   [InlineData("12.345.678-9")]
   [InlineData("12.345.678")]
   [InlineData("12.345.678-x")]
@@ -161,7 +161,7 @@ public class DocumentValidationTests
 
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
-  [InlineData("123.456.789-00")]
+  [InlineData("529.982.247-25")]
   [InlineData("12.345.678-9")]
   [InlineData("12.345.678")]
   [InlineData("12.345.678-x")]
@@ -204,7 +204,7 @@ public class DocumentValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    string value = "12.345.678/0001-01";
+    string value = "11.222.333/0001-81";
 
     // Act
     validation.IsCnpj(value, property);
@@ -232,8 +232,8 @@ public class DocumentValidationTests
 
   // Teste para validar se o valor corresponde ao padrão e não cria notificação, com valor que corresponde
   [Theory]
-  [InlineData("123.456.789-00")]
-  [InlineData("12.345.678/0001-01")]
+  [InlineData("529.982.247-25")]
+  [InlineData("11.222.333/0001-81")]
   public void IsCpfCnpj_ShouldNotAddNotification_WhenValueIsCpfCnpj(string valueParam)
   {
     // Arrange

@@ -34,12 +34,12 @@ public static class RegexPattern
   /// <summary>
   /// Padrão de CNPJ.
   /// </summary>
-  public readonly static string Cnpj = @"^[0-9]{2}\.[0-9]{3}\.[0-9]{3}\/[0-9]{4}-\d{2}$";
+  public readonly static string Cnpj = @"^[A-Za-z0-9]{2}\.[A-Za-z0-9]{3}\.[A-Za-z0-9]{3}\/[A-Za-z0-9]{4}-\d{2}$";
 
   /// <summary>
   /// Padrão de CPF ou CNPJ.
   /// </summary>
-  public readonly static string CpfCnpj = @"^(\d{3}\.\d{3}\.\d{3}-\d{2}|[0-9]{2}\.[0-9]{3}\.[0-9]{3}\/[0-9]{4}-\d{2})$";
+  public readonly static string CpfCnpj = @"^(\d{3}\.\d{3}\.\d{3}-\d{2}|[A-Za-z0-9]{2}\.[A-Za-z0-9]{3}\.[A-Za-z0-9]{3}\/[A-Za-z0-9]{4}-\d{2})$";
   #endregion
 
   #region Email
@@ -56,11 +56,6 @@ public static class RegexPattern
 
   #region Network
   /// <summary>
-  /// Padrão de IP.
-  /// </summary>
-  public readonly static string Ip = @"^((([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5]))|(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}))$";
-
-  /// <summary>
   /// Padrão de IPv4.
   /// </summary>
   public readonly static string Ipv4 = @"^([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])\.([01]?\d\d?|2[0-4]\d|25[0-5])$";
@@ -68,7 +63,13 @@ public static class RegexPattern
   /// <summary>
   /// Padrão de IPv6.
   /// </summary>
-  public readonly static string Ipv6 = @"^([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}$";
+  public readonly static string Ipv6 = @"^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(:[0-9a-fA-F]{1,4}){1,6}|:((:[0-9a-fA-F]{1,4}){1,7}|:))$";
+
+  /// <summary>
+  /// Padrão de IP, aceitando IPv4 e IPv6.
+  /// </summary>
+  /// <remarks>Declarado após IPv4 e IPv6 porque é composto a partir deles na inicialização.</remarks>
+  public readonly static string Ip = $"^({Ipv4[1..^1]}|{Ipv6[1..^1]})$";
 
   /// <summary>
   /// Padrão de MAC Address.
@@ -137,7 +138,7 @@ public static class RegexPattern
   /// <summary>
   /// Padrão de URL.
   /// </summary>
-  public readonly static string Url = @"^((s)?ftp|http(s)?|imap|pop3|smtp|ws(s)?):\/\/(www\.)?[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(\/[a-zA-Z0-9\-\/]*)?";
+  public readonly static string Url = @"^((s)?ftp|http(s)?|imap|pop3|smtp|ws(s)?):\/\/(www\.)?[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,6}(\/[a-zA-Z0-9\-\/]*)?(\?[^\s]*)?(#[^\s]*)?$";
 
   /// <summary>
   /// Padrão de FTP.
@@ -188,7 +189,7 @@ public static class RegexPattern
   /// Padrão de SMTP.
   /// </summary>
   public readonly static string Smtp = @"^smtp:\/\/.*";
-  
+
   /// <summary>
   /// Padrão de Protocolo para Enviar Email.
   /// </summary>
@@ -203,7 +204,7 @@ public static class RegexPattern
   /// Padrão de Web Socket Seguro.
   /// </summary>
   public readonly static string Wss = @"^wss:\/\/.*";
-  
+
   /// <summary>
   /// Padrão de Protocolo Web Socket.
   /// </summary>

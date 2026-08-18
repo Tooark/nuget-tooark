@@ -28,8 +28,9 @@ public partial class Validation
   /// <returns>Validação.</returns>
   private Validation Validate(string value, int comparer, string property, string message, Func<string, int, bool> condition)
   {
+    // Valor nulo é tratado como vazio: a validação de tamanho reprova o valor em vez de lançar.
     // Se a condição for verdadeira, adicione a notificação.
-    if (condition(value, comparer))
+    if (condition(value ?? string.Empty, comparer))
     {
       // Adiciona a notificação.
       AddNotification(message, property, "T.VLD.STR1");
@@ -72,8 +73,9 @@ public partial class Validation
   /// <returns>Validação.</returns>
   private Validation ValidateList(string value, string[] list, string property, string message, Func<string, string[], bool> condition)
   {
+    // Lista nula é tratada como vazia: nenhum valor está contido nela, em vez de lançar.
     // Se a condição for verdadeira, adicione a notificação.
-    if (condition(value, list))
+    if (condition(value ?? string.Empty, list ?? []))
     {
       // Adiciona a notificação.
       AddNotification(message, property, "T.VLD.STR3");
@@ -335,7 +337,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation Contains(string value, string comparer, string property, string message) =>
-    Validate(value, comparer, property, message, (v, c) => !v.Contains(c));
+    Validate(value, comparer, property, message, (v, c) => !(v ?? string.Empty).Contains(c ?? string.Empty));
 
   /// <summary>
   /// Verifica se contém o valor na lista. Com mensagem padrão.
@@ -379,7 +381,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation NotContains(string value, string comparer, string property, string message) =>
-    Validate(value, comparer, property, message, (v, c) => v.Contains(c));
+    Validate(value, comparer, property, message, (v, c) => (v ?? string.Empty).Contains(c ?? string.Empty));
 
   /// <summary>
   /// Verifica se não contém o valor na lista. Com mensagem padrão.
@@ -462,7 +464,7 @@ public partial class Validation
   /// <param name="property">Nome da propriedade.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsNullOrEmpty(string? value, string property, string message) 
+  public Validation IsNullOrEmpty(string? value, string property, string message)
   {
     // Se a condição for verdadeira, adicione a notificação.
     if (!string.IsNullOrEmpty(value))
@@ -493,7 +495,7 @@ public partial class Validation
   /// <param name="property">Nome da propriedade.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsNotNullOrEmpty(string? value, string property, string message) 
+  public Validation IsNotNullOrEmpty(string? value, string property, string message)
   {
     // Se a condição for verdadeira, adicione a notificação.
     if (string.IsNullOrEmpty(value))
@@ -524,7 +526,7 @@ public partial class Validation
   /// <param name="property">Nome da propriedade.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsNullOrWhiteSpace(string? value, string property, string message) 
+  public Validation IsNullOrWhiteSpace(string? value, string property, string message)
   {
     // Se a condição for verdadeira, adicione a notificação.
     if (!string.IsNullOrWhiteSpace(value))
@@ -555,7 +557,7 @@ public partial class Validation
   /// <param name="property">Nome da propriedade.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsNotNullOrWhiteSpace(string? value, string property, string message) 
+  public Validation IsNotNullOrWhiteSpace(string? value, string property, string message)
   {
     // Se a condição for verdadeira, adicione a notificação.
     if (string.IsNullOrWhiteSpace(value))

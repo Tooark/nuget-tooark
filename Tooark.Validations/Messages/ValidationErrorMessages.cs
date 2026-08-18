@@ -1,5 +1,12 @@
 namespace Tooark.Validations.Messages;
 
+/// <summary>
+/// Classe com as mensagens de erro geradas pelas validações.
+/// </summary>
+/// <remarks>
+/// Cada método devolve uma chave de tradução, e não o texto final, no formato
+/// <c>Validation.{Regra};{Propriedade}</c>. A propriedade tem os espaços em branco removidos.
+/// </remarks>
 public static class ValidationErrorMessages
 {
   /// <summary>

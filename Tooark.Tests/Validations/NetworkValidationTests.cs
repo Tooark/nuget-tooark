@@ -86,8 +86,6 @@ public class NetworkValidationTests
   [Theory]
   [InlineData(null)]
   [InlineData("")]
-  [InlineData("::1")]
-  [InlineData("2001:db8:85a3::8a2e:370:7334")]
   [InlineData("x:x:x:x:x:x:x:x")]
   [InlineData("x:x:x:x:x:x:x:x:x")]
   public void IsIpv6_ShouldAddNotification_WhenValueNotIsIpv6(string? valueParam)

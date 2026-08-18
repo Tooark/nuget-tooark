@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using Tooark.Validations.Messages;
 
 namespace Tooark.Validations;
@@ -8,17 +9,62 @@ namespace Tooark.Validations;
 /// </summary>
 public partial class Validation
 {
+  #region Constants
+  /// <summary>
+  /// Tempo limite padrão para validação por expressão regular. Em milissegundos.
+  /// </summary>
+  internal const int DefaultTimeout = 300;
+  #endregion
+
+  #region Private Static Fields
+  /// <summary>
+  /// Cache de expressões regulares por padrão, opções e tempo limite.
+  /// </summary>
+  private static readonly ConcurrentDictionary<(string Pattern, RegexOptions Options, int Timeout), Regex> _regexCache = new();
+  #endregion
+
   #region Validates
   /// <summary>
-  /// Função para validar condição de correspondência.
+  /// Verifica se o valor corresponde ao padrão.
   /// </summary>
-  /// <remarks>value: Valor a ser validado.</remarks>
-  /// <remarks>pattern: Padrão a ser comparado.</remarks>
-  /// <remarks>options: Opções de regex para Case Sensitive.</remarks>
-  /// <remarks>timeout: Tempo limite para validação. Em milissegundos.</remarks>
-  /// <returns>Função de validação.</returns>
-  private readonly Func<string, string, RegexOptions, int, bool> MatchFunc = (value, pattern, options, timeout) =>
-    Regex.IsMatch(value ?? "", pattern, options, TimeSpan.FromMilliseconds(timeout));
+  /// <remarks>
+  /// O tempo limite protege contra padrões suscetíveis a backtracking excessivo. Ao ser atingido, o valor
+  /// é tratado como não correspondente: uma validação reprova a entrada, não interrompe o fluxo com exceção.
+  /// </remarks>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <param name="pattern">Padrão a ser comparado.</param>
+  /// <param name="options">Opções de regex para Case Sensitive.</param>
+  /// <param name="timeout">Tempo limite para validação. Em milissegundos.</param>
+  /// <returns>True quando o valor corresponde ao padrão.</returns>
+  private static bool MatchFunc(string value, string pattern, RegexOptions options, int timeout)
+  {
+    try
+    {
+      return GetRegex(pattern, options, timeout).IsMatch(value ?? "");
+    }
+    catch (RegexMatchTimeoutException)
+    {
+      // Entrada patológica não corresponde ao padrão
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Obtém a expressão regular do cache, criando-a na primeira ocorrência de cada combinação.
+  /// </summary>
+  /// <remarks>
+  /// O cache interno do <see cref="Regex"/> estático guarda apenas 15 combinações, enquanto o pacote
+  /// oferece dezenas de padrões: em uso real as entradas se expulsam entre si e o padrão é recompilado a
+  /// cada validação. O cache próprio elimina a recompilação e vale também para padrões da aplicação.
+  /// </remarks>
+  /// <param name="pattern">Padrão a ser comparado.</param>
+  /// <param name="options">Opções de regex para Case Sensitive.</param>
+  /// <param name="timeout">Tempo limite para validação. Em milissegundos.</param>
+  /// <returns>Expressão regular correspondente à combinação.</returns>
+  private static Regex GetRegex(string pattern, RegexOptions options, int timeout) =>
+    _regexCache.GetOrAdd(
+      (pattern, options, timeout),
+      static key => new Regex(key.Pattern, key.Options, TimeSpan.FromMilliseconds(key.Timeout)));
 
   /// <summary>
   /// Função para validar condição.
@@ -80,7 +126,7 @@ public partial class Validation
     string property,
     string message,
     RegexOptions options = RegexOptions.None,
-    int timeout = 300
+    int timeout = DefaultTimeout
   ) => Validate(property, message, () => !MatchFunc(value, pattern, options, timeout));
   #endregion
 
@@ -122,7 +168,7 @@ public partial class Validation
     string property,
     string message,
     RegexOptions options = RegexOptions.None,
-    int timeout = 300
+    int timeout = DefaultTimeout
   ) => Validate(property, message, () => MatchFunc(value, pattern, options, timeout));
   #endregion
 }

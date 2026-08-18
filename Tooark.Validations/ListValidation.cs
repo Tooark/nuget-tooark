@@ -20,8 +20,9 @@ public partial class Validation
   /// <returns>Validação.</returns>
   private Validation Validate<T>(T[] list, int comparer, string property, string message, Func<T[], int, bool> condition) where T : IConvertible
   {
+    // Lista nula é tratada como vazia: a validação de tamanho reprova a lista em vez de lançar.
     // Se a condição for verdadeira, adicione a notificação.
-    if (condition(list, comparer))
+    if (condition(list ?? [], comparer))
     {
       // Adiciona a notificação.
       AddNotification(message, property, "T.VLD.LST1");
@@ -43,8 +44,9 @@ public partial class Validation
   /// <returns>Validação.</returns>
   private Validation ValidateList<T>(T[] list, T[] comparer, string property, string message, Func<T[], T[], bool> condition) where T : IConvertible
   {
+    // Listas nulas são tratadas como vazias, mantendo a comparação sem lançar.
     // Se a condição for verdadeira, adicione a notificação.
-    if (condition(list, comparer))
+    if (condition(list ?? [], comparer ?? []))
     {
       // Adiciona a notificação.
       AddNotification(message, property, "T.VLD.LST2");
@@ -178,7 +180,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation AreEquals<T>(T[] list, T[] comparer, string property, string message) where T : IConvertible =>
-    ValidateList(list, comparer, property, message, (v, c) => !v.Equals(c));
+    ValidateList(list, comparer, property, message, (v, c) => !v.SequenceEqual(c));
   #endregion
 
   #region AreNotEquals
@@ -203,7 +205,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation AreNotEquals<T>(T[] list, T[] comparer, string property, string message) where T : IConvertible =>
-    ValidateList(list, comparer, property, message, (v, c) => v.Equals(c));
+    ValidateList(list, comparer, property, message, (v, c) => v.SequenceEqual(c));
   #endregion
 
   #region IsNull

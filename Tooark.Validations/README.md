@@ -13,15 +13,33 @@ Biblioteca para validação de tipos e padrões, fornecendo métodos para garant
 - [Validação de Float](#7-float)
 - [Validação de Guid](#8-guid)
 - [Validação de Int](#9-int)
-- [Validação de Listas](#10-listas)
-- [Validação de Long](#11-long)
-- [Validação de Rede (Network)](#12-rede-network)
-- [Validação de Objeto](#13-objeto)
-- [Validação de Protocolo](#14-protocolo)
-- [Validação de Regex](#15-regex)
-- [Validação de String](#16-string)
-- [Validação de TimeSpan](#17-timespan)
-- [Validação de Tipo](#18-tipos)
+- [Validação de Link de Vídeo](#10-link-de-vídeo)
+- [Validação de Listas](#11-listas)
+- [Validação de Long](#12-long)
+- [Validação de Rede (Network)](#13-rede-network)
+- [Validação de Objeto](#14-objeto)
+- [Validação de Protocolo](#15-protocolo)
+- [Validação de Regex](#16-regex)
+- [Validação de String](#17-string)
+- [Validação de TimeSpan](#18-timespan)
+- [Validação de Tipo](#19-tipos)
+- [Exemplos de Uso](#exemplos-de-uso)
+- [Métodos Disponíveis](#métodos-disponíveis)
+- [Mensagens de Erro](#mensagens-de-erro)
+- [Códigos de Erro](#códigos-de-erro)
+- [Dependências](#dependências)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
+
+## Instalação
+
+```bash
+dotnet add package Tooark.Validations
+```
+
+O pacote não tem configuração: `Validation` é usada por composição, criando uma instância e encadeando as
+verificações, ou por herança, em classes que já derivam de `Notification` — como as entidades e os value
+objects do Tooark.
 
 ## Validações
 
@@ -55,13 +73,24 @@ Validações para documentos.
 
 **Tipos de Documentos:**
 
-- `CPF`
-- `RG`
-- `CNH`
-- `CPF ou RG`
-- `CPF, RG ou CNH`
-- `CNPJ`
-- `CPF ou CNPJ`
+| Documento        | Validação                                |
+| ---------------- | ---------------------------------------- |
+| `CPF`            | Formato e dígitos verificadores          |
+| `CNPJ`           | Formato e dígitos verificadores          |
+| `RG`             | Apenas formato                           |
+| `CNH`            | Apenas formato                           |
+| `CPF ou RG`      | CPF com dígitos, ou RG por formato       |
+| `CPF, RG ou CNH` | CPF com dígitos, ou RG e CNH por formato |
+| `CPF ou CNPJ`    | Ambos com dígitos verificadores          |
+
+CPF e CNPJ são validados por formato **e** por dígitos verificadores. Sequências de um único caractere repetido (`111.111.111-11`, `00.000.000/0000-00`) satisfazem o módulo 11 e são rejeitadas por regra própria. RG e CNH não possuem dígito verificador de padrão nacional e seguem apenas por formato.
+
+**CNPJ alfanumérico:**
+O cálculo segue o material publicado pelo Serpro, vigente desde julho de 2026: os doze primeiros caracteres admitem letras e dígitos, e os dois verificadores permanecem numéricos. O valor de cada caractere é o código ASCII menos 48 — dígitos mantêm o próprio valor e letras assumem de 17 (`A`) a 42 (`Z`) —, com pesos de 2 a 9 distribuídos da direita para a esquerda, recomeçando após o oitavo caractere. Como os dígitos preservam o valor, o mesmo cálculo atende aos CNPJ numéricos anteriores.
+
+A caixa das letras é normalizada antes do cálculo, então `12.abc.345/01DE-35` e `12.ABC.345/01DE-35` são o mesmo CNPJ.
+
+A verificação também está disponível fora da validação, por `DocumentDigit.IsCpf` e `DocumentDigit.IsCnpj`.
 
 [**Exemplo de Uso**](#documentos)
 
@@ -100,21 +129,40 @@ Validações para valores inteiros.
 
 [**Exemplo de Uso**](#int)
 
-### 10. Listas
+### 10. Link de Vídeo
+
+**Funcionalidade:**
+Validações para links de vídeo, pelo formato da URL.
+
+**Plataformas:**
+
+| Método                   | Aceita                        |
+| ------------------------ | ----------------------------- |
+| `IsLinkVideo`            | YouTube, Vimeo ou Dailymotion |
+| `IsLinkVideoYouTube`     | Apenas YouTube                |
+| `IsLinkVideoVimeo`       | Apenas Vimeo                  |
+| `IsLinkVideoDailymotion` | Apenas Dailymotion            |
+
+A validação é de **formato da URL**, não de existência do vídeo: um link bem formado de um vídeo removido
+continua sendo aprovado.
+
+[**Exemplo de Uso**](#link-de-vídeo)
+
+### 11. Listas
 
 **Funcionalidade:**
 Validações para listas.
 
 [**Exemplo de Uso**](#listas)
 
-### 11. Long
+### 12. Long
 
 **Funcionalidade:**
 Validações para valores long.
 
 [**Exemplo de Uso**](#long)
 
-### 12. Rede (Network)
+### 13. Rede (Network)
 
 **Funcionalidade:**
 Validações para endereços de rede.
@@ -123,19 +171,19 @@ Validações para endereços de rede.
 
 - `IP`
 - `IPv4`
-- `IPv6`
+- `IPv6` — aceita a forma completa e as formas comprimidas (`::1`, `2001:db8::1`)
 - `MacAddress`
 
 [**Exemplo de Uso**](#rede-network)
 
-### 13. Objeto
+### 14. Objeto
 
 **Funcionalidade:**
 Validações para objetos.
 
 [**Exemplo de Uso**](#objeto)
 
-### 14. Protocolo
+### 15. Protocolo
 
 **Funcionalidade:**
 Validações para protocolos.
@@ -160,28 +208,28 @@ Validações para protocolos.
 
 [**Exemplo de Uso**](#protocolo)
 
-### 15. Regex
+### 16. Regex
 
 **Funcionalidade:**
 Validações para expressões regulares.
 
 [**Exemplo de Uso**](#regex)
 
-### 16. String
+### 17. String
 
 **Funcionalidade:**
 Validações para strings.
 
 [**Exemplo de Uso**](#string)
 
-### 17. TimeSpan
+### 18. TimeSpan
 
 **Funcionalidade:**
 Validações para valores de tempo.
 
 [**Exemplo de Uso**](#timespan)
 
-### 18. Tipos
+### 19. Tipos
 
 **Funcionalidade:**
 Validações para tipos de string.
@@ -402,7 +450,7 @@ using Tooark.Validations;
 
 int value = 10;
 string property = "Int";
-var validation = new Validation()    
+var validation = new Validation()
     .IsGreater(value, Comparer, property, "O valor deve ser maior que o valor comparado.")
     .IsGreaterOrEquals(value, Comparer, property, "O valor deve ser maior ou igual que o valor comparado.")
     .IsLower(value, Comparer, property, "O valor deve ser menor que o valor comparado.")
@@ -421,6 +469,19 @@ var validation = new Validation()
     .NotAll(value, int[], property, "Nenhum valor da lista deve ser igual o valor.")
     .IsNull(value, property, "O valor deve ser nulo.")
     .IsNotNull(value, property, "O valor não deve ser nulo.");
+```
+
+### Link de Vídeo
+
+```csharp
+using Tooark.Validations;
+
+string property = "Video";
+var validation = new Validation()
+    .IsLinkVideo(Value, property, "Tem que ser um link de vídeo válido.")
+    .IsLinkVideoYouTube(Value, property, "Tem que ser um link do YouTube.")
+    .IsLinkVideoVimeo(Value, property, "Tem que ser um link do Vimeo.")
+    .IsLinkVideoDailymotion(Value, property, "Tem que ser um link do Dailymotion.");
 ```
 
 ### Listas
@@ -650,6 +711,10 @@ A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validaç
 - `IsLetterLower` Validação de apenas letras minúsculas.
 - `IsLetterNumeric` Validação de letras e números.
 - `IsLetterUpper` Validação de apenas letras maiúsculas.
+- `IsLinkVideo`: Validação de link de vídeo do YouTube, Vimeo ou Dailymotion.
+- `IsLinkVideoDailymotion`: Validação de link de vídeo do Dailymotion.
+- `IsLinkVideoVimeo`: Validação de link de vídeo do Vimeo.
+- `IsLinkVideoYouTube`: Validação de link de vídeo do YouTube.
 - `IsLower`: Validação de valor menor ou tamanho da lista menor.
 - `IsLowerOrEquals`: Validação de valor menor ou igual ou tamanho da lista menor ou igual.
 - `IsMacAddress`: Validação de endereço MAC.
@@ -659,6 +724,7 @@ A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validaç
 - `IsNotEmpty`: Validação se não é vazia.
 - `IsNotMax`: Validação de valor não máximo.
 - `IsNotMin`: Validação de valor não mínimo.
+- `IsNotNull`: Validação se não é nulo.
 - `IsNotNullOrEmpty`: Validação se não é nulo ou vazio.
 - `IsNotNullOrWhiteSpace`: Validação se não é nulo, vazio ou espaço em branco.
 - `IsNull`: Validação se é nulo.
@@ -687,28 +753,53 @@ A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validaç
 
 Para uma lista completa de métodos e suas descrições, consulte a documentação XML gerada com a biblioteca.
 
+## Mensagens de Erro
+
+A classe estática `ValidationErrorMessages` reúne as mensagens padrão das validações. Cada método devolve uma
+**chave de tradução**, e não o texto final, no formato `Validation.{Regra};{Propriedade}` — a propriedade tem
+os espaços em branco removidos.
+
+```csharp
+ValidationErrorMessages.BooleanIsFalse("Ativo");   // "Validation.IsNotFalse;Ativo"
+```
+
+As sobrecargas sem o parâmetro `message` usam essas chaves; as sobrecargas com `message` usam o texto que
+você informar, sem passar por elas.
+
+## Códigos de Erro
+
+Cada notificação carrega um código que identifica a família da validação. Os códigos em uso:
+
+| Família        | Códigos                     |
+| -------------- | --------------------------- |
+| Booleano       | `T.VLD.BOO1`, `T.VLD.BOO2`  |
+| Datas          | `T.VLD.DTT1`, `T.VLD.DTT2`  |
+| Decimal        | `T.VLD.DEC1`, `T.VLD.DEC2`  |
+| Documentos     | `T.VLD.DOC1`                |
+| Double         | `T.VLD.DBL1`, `T.VLD.DBL2`  |
+| Float          | `T.VLD.FLT1`, `T.VLD.FLT2`  |
+| Guid           | `T.VLD.GUI1` a `T.VLD.GUI4` |
+| Int            | `T.VLD.INT1`, `T.VLD.INT2`  |
+| Listas         | `T.VLD.LST1` a `T.VLD.LST6` |
+| Long           | `T.VLD.LNG1`, `T.VLD.LNG2`  |
+| Objeto         | `T.VLD.OBJ1`                |
+| Regex          | `T.VLD.RGX1`                |
+| String         | `T.VLD.STR1` a `T.VLD.STR7` |
+| TimeSpan       | `T.VLD.TMS1`, `T.VLD.TMS2`  |
+| Validação nula | `T.VLD.NUL1`                |
+
+Duas observações importantes para quem filtra notificações por código:
+
+- **As validações baseadas em expressão regular compartilham o `T.VLD.RGX1`**: Email, Rede, Protocolo, Tipos,
+  Link de Vídeo, e também `IsRg` e `IsCnh`, que são validações apenas de formato.
+- **`T.VLD.DOC1` cobre somente os documentos com dígito verificador**: `IsCpf`, `IsCnpj`, `IsCpfCnpj`,
+  `IsCpfRg` e `IsCpfRgCnh`. Na v3.3.4 essas validações usavam `T.VLD.RGX1`.
+
 ## Dependências
 
-- [Tooark.Notifications](../Tooark.Notifications/README.md)
-
-## Códigos de Erro para notificações
-
-Os códigos de erro para notificações são:
-
-- `Boolean`: `T.VLD.BOO`
-- `Datas`: `T.VLD.DTT`
-- `Decimal`: `T.VLD.DEC`
-- `Double`: `T.VLD.DBL`
-- `Float`: `T.VLD.FLT`
-- `Guid`: `T.VLD.GUI`
-- `Int`: `T.VLD.INT`
-- `Listas`: `T.VLD.LST`
-- `Long`: `T.VLD.LNG`
-- `Objeto`: `T.VLD.OBJ`
-- `Regex`: `T.VLD.RGX`
-- `String`: `T.VLD.STR`
-- `TimeSpan`: `T.VLD.TMS`
-- `Validação`: `T.VLD.NUL`
+| Dependência                                                                                  | Versão | Uso                                  |
+| -------------------------------------------------------------------------------------------- | ------ | ------------------------------------ |
+| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x    | `Notification`, base de `Validation` |
 
 ## Contribuição
 
@@ -716,4 +807,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

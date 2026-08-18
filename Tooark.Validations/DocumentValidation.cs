@@ -1,4 +1,6 @@
-﻿using Tooark.Validations.Messages;
+﻿using System.Text.RegularExpressions;
+using Tooark.Validations.Documents;
+using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Validations;
@@ -6,8 +8,59 @@ namespace Tooark.Validations;
 /// <summary>
 /// Classe de validação de Documento.
 /// </summary>
+/// <remarks>
+/// CPF e CNPJ são validados por formato e por dígitos verificadores. RG e CNH não possuem dígito
+/// verificador de padrão nacional e são validados apenas por formato.
+/// </remarks>
 public partial class Validation
 {
+  #region Validates
+  /// <summary>
+  /// Função para validar documento.
+  /// </summary>
+  /// <param name="property">Propriedade a ser validada.</param>
+  /// <param name="message">Mensagem de erro.</param>
+  /// <param name="isValid">Condição de validade do documento.</param>
+  /// <returns>Validação.</returns>
+  private Validation ValidateDocument(string property, string message, Func<bool> isValid)
+  {
+    // Se o documento não for válido, adiciona a notificação.
+    if (!isValid())
+    {
+      // Adiciona a notificação.
+      AddNotification(message, property, "T.VLD.DOC1");
+    }
+
+    // Retorna uma validação.
+    return this;
+  }
+
+  /// <summary>
+  /// Verifica se o valor corresponde ao padrão informado.
+  /// </summary>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <param name="pattern">Padrão a ser comparado.</param>
+  /// <returns>True quando o valor corresponde ao padrão.</returns>
+  private static bool HasFormat(string value, string pattern) =>
+    MatchFunc(value, pattern, RegexOptions.None, DefaultTimeout);
+
+  /// <summary>
+  /// Verifica se o valor é um CPF válido, por formato e por dígitos verificadores.
+  /// </summary>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <returns>True quando o valor é um CPF válido.</returns>
+  private static bool IsValidCpf(string value) =>
+    HasFormat(value, RegexPattern.Cpf) && DocumentDigit.IsCpf(value);
+
+  /// <summary>
+  /// Verifica se o valor é um CNPJ válido, por formato e por dígitos verificadores.
+  /// </summary>
+  /// <param name="value">Valor a ser validado.</param>
+  /// <returns>True quando o valor é um CNPJ válido.</returns>
+  private static bool IsValidCnpj(string value) =>
+    HasFormat(value, RegexPattern.Cnpj) && DocumentDigit.IsCnpj(value);
+  #endregion
+
   #region IsCpf
   /// <summary>
   /// Verifica se o valor corresponde ao formato de CPF. Com mensagem padrão.
@@ -26,7 +79,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpf(string value, string property, string message) =>
-    Match(value, RegexPattern.Cpf, property, message);
+    ValidateDocument(property, message, () => IsValidCpf(value));
   #endregion
 
   #region IsRg
@@ -89,7 +142,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpfRg(string value, string property, string message) =>
-    Match(value, RegexPattern.CpfRg, property, message);
+    ValidateDocument(property, message, () => IsValidCpf(value) || HasFormat(value, RegexPattern.Rg));
   #endregion
 
   #region IsCpfRgCnh
@@ -110,7 +163,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpfRgCnh(string value, string property, string message) =>
-    Match(value, RegexPattern.CpfRgCnh, property, message);
+    ValidateDocument(property, message, () => IsValidCpf(value) || HasFormat(value, RegexPattern.Rg) || HasFormat(value, RegexPattern.Cnh));
   #endregion
 
   #region IsCnpj
@@ -131,7 +184,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCnpj(string value, string property, string message) =>
-    Match(value, RegexPattern.Cnpj, property, message);
+    ValidateDocument(property, message, () => IsValidCnpj(value));
   #endregion
 
   #region IsCpfCnpj
@@ -152,6 +205,6 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
   public Validation IsCpfCnpj(string value, string property, string message) =>
-    Match(value, RegexPattern.CpfCnpj, property, message);
+    ValidateDocument(property, message, () => IsValidCpf(value) || IsValidCnpj(value));
   #endregion
 }
