@@ -18,6 +18,14 @@ Biblioteca de segurança para aplicações .NET, fornecendo serviços de **cript
 | `IJwtTokenService`     | Contrato para manipulação de tokens JWT        |
 | `ICryptographyService` | Contrato para criptografia/descriptografia AES |
 
+| Membro                           | Descrição                                                      |
+| -------------------------------- | -------------------------------------------------------------- |
+| `IJwtTokenService.Create`        | Cria o token. Síncrono: o handler não expõe criação assíncrona |
+| `IJwtTokenService.ValidateAsync` | Valida o token. Caminho direto ao handler, que é assíncrono    |
+| `IJwtTokenService.Validate`      | Valida o token. Encapsulamento síncrono de `ValidateAsync`     |
+| `ICryptographyService.Encrypt`   | Criptografa. Síncrono: AES em memória, sem operação de I/O     |
+| `ICryptographyService.Decrypt`   | Descriptografa. Síncrono, pelo mesmo motivo                    |
+
 ### DTOs
 
 | Classe         | Descrição                                         |
@@ -104,6 +112,49 @@ Ou com chave AES pronta em Base64 (**recomendado** — a chave é usada diretame
   }
 }
 ```
+
+#### Propriedades de `JwtOptions`
+
+| Propriedade      | Tipo      | Padrão  | Descrição                                                     |
+| ---------------- | --------- | ------- | ------------------------------------------------------------- |
+| `Algorithm`      | string    | `ES256` | Algoritmo de assinatura. Valores desconhecidos lançam exceção |
+| `Secret`         | string?   | `null`  | Chave para algoritmos simétricos (HS256/384/512)              |
+| `PrivateKey`     | string?   | `null`  | Chave privada Base64 (PKCS#8) para assinatura                 |
+| `PublicKey`      | string?   | `null`  | Chave pública Base64 (SPKI) para validação                    |
+| `Issuer`         | string?   | `null`  | Emissor aceito na validação e gravado no token                |
+| `Issuers`        | string[]? | `null`  | Emissores adicionais aceitos na validação                     |
+| `Audience`       | string?   | `null`  | Destinatário aceito na validação e gravado no token           |
+| `Audiences`      | string[]? | `null`  | Destinatários adicionais aceitos na validação                 |
+| `ExpirationTime` | int       | `5`     | Expiração do token em **minutos**                             |
+
+> `Issuer`/`Issuers` e `Audience`/`Audiences` se somam: informar qualquer um deles liga a validação do
+> respectivo campo. Quando nenhum é informado, a validação daquele campo é desligada. O parâmetro
+> `audience` de `Create` e `Validate`/`ValidateAsync` tem prioridade sobre a configuração.
+>
+> `PrivateKey` e `PublicKey` aceitam tanto o Base64 puro quanto o PEM completo: os delimitadores
+> `-----BEGIN/END ... KEY-----` e as quebras de linha são removidos ao atribuir.
+
+Exemplo com múltiplos emissores e destinatários:
+
+```json
+{
+  "Jwt": {
+    "Algorithm": "ES256",
+    "PublicKey": "sua-chave-publica-em-base64",
+    "Issuers": ["api-legada", "api-nova"],
+    "Audiences": ["app-web", "app-mobile"],
+    "ExpirationTime": 60
+  }
+}
+```
+
+#### Propriedades de `CryptographyOptions`
+
+| Propriedade    | Tipo    | Padrão | Descrição                                                   |
+| -------------- | ------- | ------ | ----------------------------------------------------------- |
+| `Algorithm`    | string  | `GCM`  | Modo AES-256: `GCM`, `CBC` ou `CBCUnsafe` (somente decrypt) |
+| `Secret`       | string? | `null` | Chave derivada via SHA256 (compatibilidade)                 |
+| `SecretBase64` | string? | `null` | Chave AES de 32 bytes usada diretamente (**recomendado**)   |
 
 > É obrigatório informar `Secret` **ou** `SecretBase64`. Quando ambos são informados, `SecretBase64` tem
 > prioridade. O `SecretBase64` deve representar exatamente 32 bytes (AES-256) — valores inválidos falham
@@ -289,6 +340,28 @@ public class AuthController : ControllerBase
 
 #### Validando um Token
 
+O handler da Microsoft.IdentityModel expõe a validação apenas de forma assíncrona, então `ValidateAsync` é o
+caminho direto e `Validate` é o encapsulamento síncrono. Em código que já é assíncrono, prefira `ValidateAsync`:
+
+```csharp
+[HttpGet("validate")]
+public async Task<IActionResult> ValidateTokenAsync([FromHeader] string authorization)
+{
+    var token = authorization.Replace("Bearer ", "");
+
+    var result = await _jwtService.ValidateAsync(token);
+
+    if (!string.IsNullOrEmpty(result.ErrorToken))
+    {
+        return Unauthorized(new { Error = result.ErrorToken });
+    }
+
+    return Ok(new { UserId = result.Id, Login = result.Login });
+}
+```
+
+Em código síncrono, a sobrecarga bloqueante entrega o mesmo resultado:
+
 ```csharp
 [HttpGet("validate")]
 public IActionResult ValidateToken([FromHeader] string authorization)
@@ -446,7 +519,7 @@ openssl pkcs8 -topk8 -nocrypt -in ec_private.pem -out ec_private_pkcs8.pem
 
 | Pacote                                          | Versão   | Descrição                             |
 | ----------------------------------------------- | -------- | ------------------------------------- |
-| `Tooark.Exceptions`                             | —        | Exceções (ex.: `BadRequestException`) |
+| `Tooark.Exceptions`                             | 4.x      | Exceções (ex.: `BadRequestException`) |
 | `Microsoft.AspNetCore.Authentication.JwtBearer` | 8.x/10.x | Autenticação JWT para ASP.NET Core    |
 
 ---
@@ -506,4 +579,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

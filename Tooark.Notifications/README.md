@@ -92,7 +92,6 @@ Classe estática `NotificationErrorMessages` com as mensagens geradas pela próp
 | ---------------------- | -------------------------------- | ------------------------------------------------------------- |
 | `MessageIsNullOrEmpty` | `Notifications.MessageNullEmpty` | Mensagem nula, vazia ou composta apenas por espaços em branco |
 | `NotificationIsNull`   | `Notifications.NotificationNull` | Notificação ou coleção recebida como argumento é nula         |
-| `MessageUnknown`       | `Notifications.MessageUnknown`   | Obsoleta. Substituída por `MessageIsNullOrEmpty`              |
 
 ## Exemplo de Uso
 
@@ -153,4 +152,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

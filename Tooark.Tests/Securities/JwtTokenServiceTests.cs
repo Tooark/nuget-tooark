@@ -821,4 +821,110 @@ public class JwtTokenServiceTests
     // Assert
     Assert.Equal("", result.ErrorToken);
   }
+
+  // Teste de validação assíncrona de token JWT válido
+  [Fact]
+  public async Task ValidateAsync_ValidToken_Should_Succeed()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var token = service.Create(GetTokenDto());
+
+    // Act
+    var result = await service.ValidateAsync(token);
+
+    // Assert
+    Assert.Equal("", result.ErrorToken);
+    Assert.Equal("1", result.Id);
+    Assert.Equal("user", result.Login);
+    Assert.Equal("1", result.Security);
+  }
+
+  // Teste de validação assíncrona com token expirado
+  [Fact]
+  public async Task ValidateAsync_ExpiredToken_Should_Return_ExpiredError()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+
+    // Act
+    var result = await service.ValidateAsync(JwtTokenExpired);
+
+    // Assert
+    Assert.Equal("Token.Expired", result.ErrorToken);
+  }
+
+  // Teste de validação assíncrona com token de assinatura inválida
+  [Fact]
+  public async Task ValidateAsync_MalformedToken_Should_Return_TokenInvalidSignature()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+
+    // Act
+    var result = await service.ValidateAsync(MalformedToken);
+
+    // Assert
+    Assert.Equal("Token.InvalidSignature", result.ErrorToken);
+  }
+
+  // Teste de validação assíncrona com audience incorreta
+  [Fact]
+  public async Task ValidateAsync_WithWrongAudience_Should_Return_TokenInvalid()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var token = service.Create(GetTokenDto());
+
+    // Act
+    var result = await service.ValidateAsync(token, "OutroAudience");
+
+    // Assert
+    Assert.Equal("Token.Invalid", result.ErrorToken);
+  }
+
+  // Teste de validação assíncrona sem chave pública configurada
+  [Fact]
+  public async Task ValidateAsync_WithoutPublicKey_Should_Throw_InternalServerErrorException()
+  {
+    // Arrange
+    using var rsa = RSA.Create(2048);
+
+    var jwtOptions = new JwtOptions
+    {
+      Algorithm = "RS256",
+      PrivateKey = Convert.ToBase64String(rsa.ExportPkcs8PrivateKey())
+    };
+
+    var options = MEOptions.Options.Create(jwtOptions);
+    var service = new JwtTokenService(options, GetMockLogger());
+
+    // Act & Assert
+    var ex = await Assert.ThrowsAsync<InternalServerErrorException>(() => service.ValidateAsync("any.token.here"));
+    Assert.Contains("Options.Jwt.KeyNotConfigured;PublicKey", ex.GetErrorMessages());
+  }
+
+  // Teste de paridade entre a validação síncrona e a assíncrona
+  [Fact]
+  public async Task Validate_And_ValidateAsync_Should_Return_SameResult()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetAsymmetricESOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var token = service.Create(GetTokenDto());
+
+    // Act
+    var syncResult = service.Validate(token);
+    var asyncResult = await service.ValidateAsync(token);
+
+    // Assert
+    Assert.Equal(syncResult.ErrorToken, asyncResult.ErrorToken);
+    Assert.Equal(syncResult.Id, asyncResult.Id);
+    Assert.Equal(syncResult.Login, asyncResult.Login);
+    Assert.Equal(syncResult.Security, asyncResult.Security);
+  }
 }

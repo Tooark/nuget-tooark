@@ -30,7 +30,11 @@ Biblioteca de observabilidade para aplicações .NET, fornecendo integração si
 | Método                     | Descrição                                          |
 | -------------------------- | -------------------------------------------------- |
 | `AddTooarkOpenTelemetry()` | Configura OpenTelemetry com traces, metrics e logs |
-| `AddTooarkObservability()` | Configura Observability + OpenTelemetry            |
+| `AddTooarkObservability()` | Alias de `AddTooarkOpenTelemetry()`                |
+
+Ambos recebem `IConfiguration` e uma `Action<ObservabilityOptions>` opcional, e produzem exatamente o mesmo
+registro — `AddTooarkObservability` delega para `AddTooarkOpenTelemetry`. Use o que ficar mais legível no seu
+`Program.cs`.
 
 ---
 
@@ -301,6 +305,19 @@ app.Run();
 | `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Atributos adicionais para Resource              |
 | `AllowSensitiveData`              | bool                      | `false` | Permitir dados sensíveis sem sanitização global |
 | `UseConsoleExporterInDevelopment` | bool                      | `true`  | Usar Console exporter em Development            |
+| `Tracing`                         | TracingOptions            | (novo)  | Configurações de rastreamento                   |
+| `Metrics`                         | MetricsOptions            | (novo)  | Configurações de métricas                       |
+| `Logging`                         | LoggingOptions            | (novo)  | Configurações de logging                        |
+| `Otlp`                            | OtlpOptions               | (novo)  | Configurações do exportador OTLP                |
+
+Além das opções vinculáveis por `appsettings.json`, `ObservabilityOptions` expõe três callbacks que só podem
+ser definidos programaticamente, pela sobrecarga com `Action<ObservabilityOptions>`:
+
+| Callback           | Tipo                                  | Uso                                             |
+| ------------------ | ------------------------------------- | ----------------------------------------------- |
+| `ConfigureTracing` | `Action<TracerProviderBuilder>?`      | Instrumentações e processadores extras de trace |
+| `ConfigureMetrics` | `Action<MeterProviderBuilder>?`       | Instrumentações e readers extras de métricas    |
+| `ConfigureLogging` | `Action<OpenTelemetryLoggerOptions>?` | Ajustes extras do logging OpenTelemetry         |
 
 ### TracingOptions
 
@@ -712,4 +729,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

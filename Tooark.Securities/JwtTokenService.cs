@@ -248,14 +248,7 @@ public class JwtTokenService : IJwtTokenService
 
   #region Methods
 
-  /// <summary>
-  /// Cria um token JWT.
-  /// </summary>
-  /// <param name="data">Dados para incluir no token.</param>
-  /// <param name="audience">Destinatário do token. Parâmetro opcional que sobrescreve o destinatário padrão do Options.</param>
-  /// <param name="extraClaims">Claims adicionais para incluir no token. Parâmetro opcional para incluir claims extras no token.</param>
-  /// <returns>Token JWT.</returns>
-  /// <exception cref="InternalServerErrorException">Quando a criação do token não está configurada.</exception>
+  /// <inheritdoc/>
   public string Create(JwtTokenDto data, string? audience = null, IEnumerable<Claim>? extraClaims = null)
   {
     // Valida se pode criar o token
@@ -301,14 +294,8 @@ public class JwtTokenService : IJwtTokenService
     return _tokenHandler.CreateToken(tokenDescriptor);
   }
 
-  /// <summary>
-  /// Valida um token JWT.
-  /// </summary>
-  /// <param name="token">Token JWT a ser validado.</param>
-  /// <param name="audience">Destinatário do token. Parâmetro opcional que sobrescreve o destinatário padrão do Options.</param>
-  /// <returns>Resultado da validação do token.</returns>
-  /// <exception cref="InternalServerErrorException">Quando a validação do token não está configurada.</exception>
-  public UserTokenDto Validate(string token, string? audience = null)
+  /// <inheritdoc/>
+  public async Task<UserTokenDto> ValidateAsync(string token, string? audience = null)
   {
     // Valida se pode validar o token
     if (!_validateToken || _validationKey == null)
@@ -316,6 +303,42 @@ public class JwtTokenService : IJwtTokenService
       throw new InternalServerErrorException("Options.Jwt.KeyNotConfigured;PublicKey");
     }
 
+    try
+    {
+      // Valida o token: o handler expõe a validação apenas de forma assíncrona
+      var result = await _tokenHandler
+        .ValidateTokenAsync(token, BuildValidationParameters(audience))
+        .ConfigureAwait(false);
+
+      return MapValidationResult(result);
+    }
+    catch (Exception ex)
+    {
+      _logger.LogError("Error validating JWT token.\nException: {exception}", ex);
+
+      return new UserTokenDto("InternalServerError");
+    }
+  }
+
+  /// <inheritdoc/>
+  public UserTokenDto Validate(string token, string? audience = null)
+  {
+    // Espera bloqueante sobre o caminho assíncrono: com chave de assinatura estática a validação é CPU-bound
+    // e a tarefa já vem concluída. Em fluxos assíncronos, prefira ValidateAsync.
+    return ValidateAsync(token, audience).GetAwaiter().GetResult();
+  }
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Monta os parâmetros de validação do token a partir das opções e do destinatário informado.
+  /// </summary>
+  /// <param name="audience">Destinatário do token que sobrescreve o destinatário padrão do Options.</param>
+  /// <returns>Parâmetros de validação do token.</returns>
+  private TokenValidationParameters BuildValidationParameters(string? audience)
+  {
     // Define issuer e audiences efetivos com base nas opções e parâmetros
     var effectiveIssuer = _jwtOptions.Issuer;
     var effectiveIssuers = _jwtOptions.Issuers;
@@ -332,63 +355,59 @@ public class JwtTokenService : IJwtTokenService
     var issuers = !string.IsNullOrWhiteSpace(effectiveIssuer) || effectiveIssuers?.Length > 0;
     var audiences = !string.IsNullOrWhiteSpace(effectiveAudience) || effectiveAudiences?.Length > 0;
 
-    try
+    return new TokenValidationParameters
     {
-      var tokenParams = new TokenValidationParameters
-      {
-        ClockSkew = TimeSpan.Zero,
-        IssuerSigningKey = _validationKey,
-        RequireExpirationTime = true,
-        RequireSignedTokens = true,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true,
-        // Issuer
-        ValidIssuer = effectiveIssuer,
-        ValidIssuers = effectiveIssuers,
-        // Audience
-        ValidAudience = effectiveAudience,
-        ValidAudiences = effectiveAudiences,
-        ValidateIssuer = issuers,
-        ValidateAudience = audiences,
-        RequireAudience = audiences
-      };
+      ClockSkew = TimeSpan.Zero,
+      IssuerSigningKey = _validationKey,
+      RequireExpirationTime = true,
+      RequireSignedTokens = true,
+      ValidateIssuerSigningKey = true,
+      ValidateLifetime = true,
+      // Issuer
+      ValidIssuer = effectiveIssuer,
+      ValidIssuers = effectiveIssuers,
+      // Audience
+      ValidAudience = effectiveAudience,
+      ValidAudiences = effectiveAudiences,
+      ValidateIssuer = issuers,
+      ValidateAudience = audiences,
+      RequireAudience = audiences
+    };
+  }
 
-      // Valida o token (a validação é CPU-bound e completa sincronamente)
-      var result = _tokenHandler.ValidateTokenAsync(token, tokenParams).GetAwaiter().GetResult();
-
-      // Retorna os dados do usuário quando o token é válido
-      if (result.IsValid && result.SecurityToken is JsonWebToken jsonWebToken)
-      {
-        return new UserTokenDto(jsonWebToken);
-      }
-
-      // Mapeia a falha de validação para o erro correspondente (JsonWebTokenHandler reporta via resultado, não exceção)
-      switch (result.Exception)
-      {
-        case SecurityTokenExpiredException:
-          return new UserTokenDto("Token.Expired");
-
-        case SecurityTokenInvalidSignatureException signatureException:
-          _logger.LogError("Invalid JWT signature detected.\nException: {exception}", signatureException);
-
-          return new UserTokenDto("Token.InvalidSignature");
-
-        case SecurityTokenException:
-        case ArgumentException:
-          // Demais falhas de validação (audience/issuer inválidos, token malformado, etc.) são token inválido, não erro interno
-          return new UserTokenDto("Token.Invalid");
-
-        default:
-          _logger.LogError("Error validating JWT token.\nException: {exception}", result.Exception);
-
-          return new UserTokenDto("InternalServerError");
-      }
+  /// <summary>
+  /// Converte o resultado da validação do handler nos dados do usuário ou no erro correspondente.
+  /// </summary>
+  /// <param name="result">Resultado devolvido pelo handler de tokens.</param>
+  /// <returns>Dados do usuário quando o token é válido, ou o erro correspondente à falha.</returns>
+  private UserTokenDto MapValidationResult(TokenValidationResult result)
+  {
+    // Retorna os dados do usuário quando o token é válido
+    if (result.IsValid && result.SecurityToken is JsonWebToken jsonWebToken)
+    {
+      return new UserTokenDto(jsonWebToken);
     }
-    catch (Exception ex)
-    {
-      _logger.LogError("Error validating JWT token.\nException: {exception}", ex);
 
-      return new UserTokenDto("InternalServerError");
+    // Mapeia a falha de validação para o erro correspondente (JsonWebTokenHandler reporta via resultado, não exceção)
+    switch (result.Exception)
+    {
+      case SecurityTokenExpiredException:
+        return new UserTokenDto("Token.Expired");
+
+      case SecurityTokenInvalidSignatureException signatureException:
+        _logger.LogError("Invalid JWT signature detected.\nException: {exception}", signatureException);
+
+        return new UserTokenDto("Token.InvalidSignature");
+
+      case SecurityTokenException:
+      case ArgumentException:
+        // Demais falhas de validação (audience/issuer inválidos, token malformado, etc.) são token inválido, não erro interno
+        return new UserTokenDto("Token.Invalid");
+
+      default:
+        _logger.LogError("Error validating JWT token.\nException: {exception}", result.Exception);
+
+        return new UserTokenDto("InternalServerError");
     }
   }
 
