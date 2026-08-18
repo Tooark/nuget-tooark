@@ -8,6 +8,8 @@ namespace Tooark.Exceptions;
 /// </summary>
 public class PayloadTooLargeException : TooarkException
 {
+  #region Constructors
+
   /// <summary>
   /// Construtor padrão da exceção com mensagem única.
   /// </summary>
@@ -40,10 +42,15 @@ public class PayloadTooLargeException : TooarkException
   /// <param name="args">Parâmetros para substituição nos placeholders.</param>
   public PayloadTooLargeException(string messageFormat, params object[] args) : base(messageFormat, args) { }
 
+  #endregion
+
+  #region Methods
 
   /// <summary>
   /// Obtém o código de status HTTP associado à exceção.
   /// </summary>
   /// <returns>O código de status HTTP 413 (Payload Too Large).</returns>
   public override HttpStatusCode GetStatusCode() => HttpStatusCode.RequestEntityTooLarge;
+
+  #endregion
 }

@@ -14,6 +14,8 @@ namespace Tooark.Notifications;
 /// </remarks>
 public abstract class Notification
 {
+  #region Private Fields
+
   /// <summary>
   /// Lista privada de notificações.
   /// </summary>
@@ -24,12 +26,18 @@ public abstract class Notification
   /// </summary>
   private readonly ReadOnlyCollection<NotificationItem> _readOnlyNotifications;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Construtor padrão da classe protegido para evitar instâncias diretas.
   /// </summary>
   protected Notification() => _readOnlyNotifications = _notifications.AsReadOnly();
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Retorna a lista de notificações.
@@ -37,7 +45,6 @@ public abstract class Notification
   /// <returns>Lista de notificações.</returns>
   [NotMapped]
   public IReadOnlyCollection<NotificationItem> Notifications => _readOnlyNotifications;
-
 
   /// <summary>
   /// Retorna True se a lista de notificações estiver vazia por nenhum erro ter gerado notificação.
@@ -72,6 +79,9 @@ public abstract class Notification
   [NotMapped]
   public IReadOnlyList<string> Messages => [.. _notifications.Select(notification => notification.Message)];
 
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Adiciona a notificação de argumento nulo à lista de notificações.
@@ -79,6 +89,9 @@ public abstract class Notification
   private void AddNullArgumentNotification() =>
     _notifications.Add(new NotificationItem(NotificationErrorMessages.NotificationIsNull));
 
+  #endregion
+
+  #region Protected Methods
 
   /// <summary>
   /// Adiciona um item de notificação à lista de notificações.
@@ -161,6 +174,19 @@ public abstract class Notification
   }
 
   /// <summary>
+  /// Limpa a lista de notificações.
+  /// </summary>
+  protected void Clear()
+  {
+    // Limpa a lista de notificações
+    _notifications.Clear();
+  }
+
+  #endregion
+
+  #region Methods
+
+  /// <summary>
   /// Adiciona a lista de notificações de uma notificação à lista de notificações.
   /// </summary>
   /// <param name="notification">Uma instancia de notificação. Nula gera a notificação 'Notifications.NotificationNull'.</param>
@@ -217,12 +243,5 @@ public abstract class Notification
     }
   }
 
-  /// <summary>
-  /// Limpa a lista de notificações.
-  /// </summary>
-  protected void Clear()
-  {
-    // Limpa a lista de notificações
-    _notifications.Clear();
-  }
+  #endregion
 }

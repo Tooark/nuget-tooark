@@ -15,6 +15,8 @@ namespace Tooark.Mediator.Injections;
 /// </summary>
 public static partial class TooarkDependencyInjection
 {
+  #region Methods
+
   /// <summary>
   /// Adiciona os serviços do Mediator ao container de injeção de dependência, escaneando os assemblies fornecidos para registrar os handlers.
   /// </summary>
@@ -138,6 +140,10 @@ public static partial class TooarkDependencyInjection
 
     return services;
   }
+
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Verifica se um behavior genérico aberto pode ser fechado pelo container a partir da definição genérica.
@@ -287,4 +293,6 @@ public static partial class TooarkDependencyInjection
       }
     }
   }
+
+  #endregion
 }

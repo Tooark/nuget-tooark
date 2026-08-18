@@ -10,6 +10,8 @@ namespace Tooark.Notifications;
 /// <param name="code">Código de erro da notificação. Nulo, vazio ou em branco assume 'T.ERR'. T[ooark].ERR[or]</param>
 public class NotificationItem(string message, string key = NotificationItem.DefaultKey, string code = NotificationItem.DefaultCode)
 {
+  #region Constants
+
   /// <summary>
   /// Chave utilizada quando nenhuma chave válida é informada.
   /// </summary>
@@ -20,6 +22,9 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
   /// </summary>
   internal const string DefaultCode = "T.ERR";
 
+  #endregion
+
+  #region Private Fields
 
   /// <summary>
   /// O código de erro privado da notificação.
@@ -38,6 +43,9 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
     NotificationErrorMessages.MessageIsNullOrEmpty :
     message.Trim();
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// O código de erro da notificação.
@@ -54,6 +62,9 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
   /// </summary>
   public string Message { get => _message; }
 
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Remove todos os espaços em branco da chave, incluindo tabulações e quebras de linha.
@@ -65,6 +76,9 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
       DefaultKey :
       string.Concat(key.Where(character => !char.IsWhiteSpace(character)));
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar a mensagem da notificação.
@@ -85,4 +99,6 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
   /// <param name="message">A mensagem da notificação.</param>
   /// <returns>Uma nova instância de <see cref="NotificationItem"/> com a chave 'Unknown'.</returns>
   public static implicit operator NotificationItem(string message) => new(message);
+
+  #endregion
 }

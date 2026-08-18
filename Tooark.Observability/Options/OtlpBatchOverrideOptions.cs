@@ -10,6 +10,8 @@ namespace Tooark.Observability.Options;
 /// </remarks>
 public class OtlpBatchOverrideOptions
 {
+  #region Properties
+
   /// <summary>
   /// Tamanho máximo da fila interna de itens aguardando exportação. Null herda do global.
   /// </summary>
@@ -29,4 +31,6 @@ public class OtlpBatchOverrideOptions
   /// Tamanho máximo (em itens) de cada lote enviado. Null herda do global.
   /// </summary>
   public int? MaxExportBatchSize { get; set; }
+
+  #endregion
 }

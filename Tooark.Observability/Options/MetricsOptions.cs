@@ -19,6 +19,8 @@ public class MetricsOptions
 
   #endregion
 
+  #region Properties
+
   /// <summary>
   /// Indica se a coleta de métricas está habilitada. Padrão: true.
   /// </summary>
@@ -68,4 +70,6 @@ public class MetricsOptions
   /// Overrides de configuração do exportador OTLP para métricas. Valores não informados herdam do OTLP global.
   /// </summary>
   public OtlpOverrideOptions? Otlp { get; set; }
+
+  #endregion
 }

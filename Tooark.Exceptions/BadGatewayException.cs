@@ -8,6 +8,8 @@ namespace Tooark.Exceptions;
 /// </summary>
 public class BadGatewayException : TooarkException
 {
+  #region Constructors
+
   /// <summary>
   /// Construtor padrão da exceção com mensagem única.
   /// </summary>
@@ -40,10 +42,15 @@ public class BadGatewayException : TooarkException
   /// <param name="args">Parâmetros para substituição nos placeholders.</param>
   public BadGatewayException(string messageFormat, params object[] args) : base(messageFormat, args) { }
 
+  #endregion
+
+  #region Methods
 
   /// <summary>
   /// Obtém o código de status HTTP associado à exceção.
   /// </summary>
   /// <returns>O código de status HTTP 502 (Bad Gateway).</returns>
   public override HttpStatusCode GetStatusCode() => HttpStatusCode.BadGateway;
+
+  #endregion
 }

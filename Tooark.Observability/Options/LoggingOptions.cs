@@ -5,6 +5,8 @@ namespace Tooark.Observability.Options;
 /// </summary>
 public class LoggingOptions
 {
+  #region Properties
+
   /// <summary>
   /// Indica se o logging OpenTelemetry está habilitado. Padrão: true.
   /// </summary>
@@ -29,4 +31,6 @@ public class LoggingOptions
   /// Overrides de configuração do exportador OTLP para logs. Valores não informados herdam do OTLP global.
   /// </summary>
   public OtlpOverrideOptions? Otlp { get; set; }
+
+  #endregion
 }

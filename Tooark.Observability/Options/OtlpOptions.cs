@@ -26,6 +26,8 @@ public class OtlpOptions
 
   #endregion
 
+  #region Properties
+
   /// <summary>
   /// Indica se o exportador OTLP está habilitado. Padrão: false.
   /// </summary>
@@ -87,4 +89,6 @@ public class OtlpOptions
   /// Exemplo: "authorization=Bearer token123,tenant.id=tenant-123"
   /// </remarks>
   public string? Headers { get; set; }
+
+  #endregion
 }

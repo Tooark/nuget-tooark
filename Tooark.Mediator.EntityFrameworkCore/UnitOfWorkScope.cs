@@ -12,10 +12,16 @@ namespace Tooark.Mediator.EntityFrameworkCore;
 /// </remarks>
 internal sealed class UnitOfWorkScope
 {
+  #region Private Fields
+
   /// <summary>
   /// Profundidade atual de comandos em processamento no escopo.
   /// </summary>
   private int _depth;
+
+  #endregion
+
+  #region Methods
 
   /// <summary>
   /// Entra em um nível de processamento.
@@ -33,4 +39,6 @@ internal sealed class UnitOfWorkScope
   {
     _depth--;
   }
+
+  #endregion
 }

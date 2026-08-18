@@ -13,6 +13,8 @@ namespace Tooark.Observability.Options;
 /// </remarks>
 public class OtlpOverrideOptions
 {
+  #region Properties
+
   /// <summary>
   /// Indica se o exportador OTLP está habilitado para o sinal. Null herda do global.
   /// </summary>
@@ -50,4 +52,6 @@ public class OtlpOverrideOptions
   /// Formato: "key1=value1,key2=value2"
   /// </remarks>
   public string? Headers { get; set; }
+
+  #endregion
 }

@@ -10,15 +10,25 @@ namespace Tooark.Mediator.Abstractions;
 /// </remarks>
 public readonly struct Unit : IEquatable<Unit>
 {
+  #region Fields
+
   /// <summary>
   /// A única instância de Unit, representando o valor vazio.
   /// </summary>
   public static readonly Unit Value = new();
 
+  #endregion
+
+  #region Private Static Fields
+
   /// <summary>
   /// A tarefa concluída com o valor Unit, criada uma única vez.
   /// </summary>
   private static readonly Task<Unit> _task = System.Threading.Tasks.Task.FromResult(Value);
+
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Retorna uma tarefa concluída com o valor Unit, útil para métodos assíncronos que não retornam um valor.
@@ -28,6 +38,10 @@ public readonly struct Unit : IEquatable<Unit>
   /// de métodos assíncronos que retornam Unit, permitindo o uso de uma tarefa pré-construída.
   /// </remarks>
   public static Task<Unit> Task => _task;
+
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Determina se o objeto especificado é igual à instância atual de Unit.
@@ -88,4 +102,6 @@ public readonly struct Unit : IEquatable<Unit>
   {
     return "()";
   }
+
+  #endregion
 }

@@ -5,6 +5,8 @@ namespace Tooark.Observability.Options;
 /// </summary>
 public class DataSensitiveOptions
 {
+  #region Properties
+
   /// <summary>
   /// Indica se os parâmetros de query devem ser removidos dos atributos de span. Padrão: true.
   /// </summary>
@@ -40,4 +42,6 @@ public class DataSensitiveOptions
     "x-google-oauth-access-token",
     "x-azure-access-token"
   ];
+
+  #endregion
 }

@@ -9,6 +9,8 @@ namespace Tooark.Validations.Messages;
 /// </remarks>
 public static class ValidationErrorMessages
 {
+  #region Private Methods
+
   /// <summary>
   /// Normaliza a propriedade.
   /// </summary>
@@ -19,6 +21,9 @@ public static class ValidationErrorMessages
   /// <returns>Propriedade normalizada.</returns>
   private static string PropertyNormalize(string property) => property.Trim().Replace(" ", "");
 
+  #endregion
+
+  #region Methods
 
   /// <summary>
   /// Mensagem de erro para validação se o boolean é falso.
@@ -342,6 +347,9 @@ public static class ValidationErrorMessages
   /// <returns>Mensagem de erro.</returns>
   public static string IsValid(string property, string type) => $"Validation.IsNotValid;{PropertyNormalize(property)};{type}";
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Formatação de CPF.
@@ -384,4 +392,6 @@ public static class ValidationErrorMessages
   /// </summary>
   /// <returns>Formato do CPF e CNPJ.</returns>
   public static string CpfCnpjFormatter => "xxx.xxx.xxx-xx | xx.xxx.xxx/xxxx-xx";
+
+  #endregion
 }
