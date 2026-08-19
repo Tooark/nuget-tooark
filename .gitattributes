@@ -1,0 +1,18 @@
+# Fim de linha do repositório.
+#
+# O repositório estava misto: 361 arquivos com LF e 48 com CRLF, sem regra que explicasse a
+# diferença. Qualquer ferramenta que reescrevesse um arquivo CRLF produzia um diff de arquivo
+# inteiro, escondendo a alteração real dentro do ruído.
+#
+# Regra geral: o Git guarda tudo com LF e entrega LF no working tree, em qualquer sistema
+# operacional. As exceções abaixo são arquivos que outra ferramenta reescreve com CRLF, onde
+# forçar LF só produziria idas e voltas.
+
+* text=auto eol=lf
+
+# O Visual Studio reescreve a solução com CRLF.
+*.sln text eol=crlf
+
+# Binários: o Git não deve converter nada.
+*.jpg binary
+*.png binary
