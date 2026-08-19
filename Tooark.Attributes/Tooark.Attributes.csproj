@@ -5,7 +5,7 @@
     <PackageId>Tooark.Attributes</PackageId>
     <Title>Tooark.Attributes</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>tooark, toolkit, attributes, validation, dataannotations, email, url, password, document, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, attributes, validation, dataannotations, .NET</PackageTags>
     <Summary>Management of attribute validators for .NET projects.</Summary>
     <PackageDescription>Package for creating attribute validators for .NET applications.</PackageDescription>
     <Description>Library for creating attribute validators for properties or fields, ensuring data integrity and compliance for .NET projects.</Description>

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
 using Tooark.Validations.Patterns;
@@ -68,21 +67,25 @@ public class PasswordValidationAttribute(
     // Cada critério vira uma verificação antecipada, ancorada uma única vez no início
     var pattern = new StringBuilder("^");
 
+    // Letras minúsculas
     if (lowercase)
     {
       pattern.Append(RegexPattern.PassLower[1..]);
     }
 
+    // Letras maiúsculas
     if (uppercase)
     {
       pattern.Append(RegexPattern.PassUpper[1..]);
     }
 
+    // Dígitos numéricos
     if (number)
     {
       pattern.Append(RegexPattern.PassNumber[1..]);
     }
 
+    // Símbolos especiais
     if (symbol)
     {
       pattern.Append(RegexPattern.PassSymbol[1..]);

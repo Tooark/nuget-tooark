@@ -113,10 +113,10 @@ Todos os atributos herdam de `TooarkValidationAttribute` e compartilham as regra
 
 Sem configuração, a mensagem é uma chave de tradução no formato `Chave;Campo`:
 
-| Situação | Mensagem |
-| --- | --- |
-| Campo não informado | `Field.Required;{campo}` |
-| Valor não corresponde à regra | `Field.Invalid;{campo}` |
+| Situação                      | Mensagem                 |
+| ----------------------------- | ------------------------ |
+| Campo não informado           | `Field.Required;{campo}` |
+| Valor não corresponde à regra | `Field.Invalid;{campo}`  |
 
 Se você configurar `ErrorMessage` ou `ErrorMessageResourceName` no atributo, **essa mensagem é usada no lugar da chave**.
 
