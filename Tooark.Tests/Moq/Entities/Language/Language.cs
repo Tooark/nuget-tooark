@@ -19,3 +19,10 @@ public class MLanguageOnlyName
 {
   public string Name { get; set; } = null!;
 }
+
+public class MLanguageNonStringProperty
+{
+  public string LanguageCode { get; set; } = null!;
+  public int Name { get; set; }
+  public string? Title { get; set; }
+}

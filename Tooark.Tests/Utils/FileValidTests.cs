@@ -266,4 +266,55 @@ public class FileValidTests
     // Assert
     Assert.False(result);
   }
+
+  // Teste de extensões personalizadas informadas com e sem o ponto inicial
+  [Theory]
+  [InlineData("pdf", true)]
+  [InlineData(".pdf", true)]
+  [InlineData("PDF", true)]
+  [InlineData(".PDF", true)]
+  [InlineData(" pdf ", true)]
+  [InlineData("txt", false)]
+  public void IsCustom_ShouldAcceptExtensionsWithOrWithoutDot(string extension, bool expected)
+  {
+    // Arrange
+    var fileMock = new Mock<IFormFile>();
+    fileMock.Setup(f => f.Length).Returns(1024);
+    fileMock.Setup(f => f.FileName).Returns("test.pdf");
+
+    // Act
+    var result = FileValid.IsCustom(fileMock.Object, 2048, [extension]);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
+
+  // Teste de extensões personalizadas com entradas vazias, que caem nas extensões padrão
+  [Theory]
+  [InlineData("test.pdf", true)]
+  [InlineData("test.exe", false)]
+  public void IsCustom_ShouldUseDefaultExtensions_WhenExtensionsAreEmpty(string fileName, bool expected)
+  {
+    // Arrange
+    var fileMock = new Mock<IFormFile>();
+    fileMock.Setup(f => f.Length).Returns(1024);
+    fileMock.Setup(f => f.FileName).Returns(fileName);
+
+    // Act
+    var result = FileValid.IsCustom(fileMock.Object, 2048, ["", "   ", "."]);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
+
+  // Teste de arquivo nulo
+  [Fact]
+  public void IsCustom_ShouldReturnFalse_WhenFileIsNull()
+  {
+    // Arrange & Act
+    var result = FileValid.IsCustom(null, 2048, [".pdf"]);
+
+    // Assert
+    Assert.False(result);
+  }
 }

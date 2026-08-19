@@ -61,7 +61,7 @@ public class GenerateStringTests
     Assert.Equal(8, result.Length);
   }
 
-  // Testa se Password lança ArgumentException quando todos os tipos de caracteres estão desativados
+  // Testa se Password aplica os critérios padrão quando todos os tipos de caracteres estão desativados
   [Fact]
   public void Password_ShouldReturnString_WhenAllCharacterTypesDisabled()
   {
@@ -138,4 +138,79 @@ public class GenerateStringTests
     // Assert
     Assert.Equal(256, result.Length);
   }
+
+  // Testa se Hexadecimal gera uma string com o comprimento exato quando o tamanho é ímpar
+  [Theory]
+  [InlineData(3)]
+  [InlineData(7)]
+  [InlineData(15)]
+  [InlineData(127)]
+  public void Hexadecimal_ShouldReturnStringWithExactLength_WhenSizeIsOdd(int expected)
+  {
+    // Arrange & Act
+    var result = GenerateString.Hexadecimal(expected);
+
+    // Assert
+    Assert.Equal(expected, result.Length);
+  }
+
+  // Testa se Hexadecimal gera apenas caracteres hexadecimais
+  [Fact]
+  public void Hexadecimal_ShouldReturnOnlyHexadecimalCharacters()
+  {
+    // Arrange & Act
+    var result = GenerateString.Hexadecimal(64);
+
+    // Assert
+    Assert.All(result, character => Assert.Contains(character, "0123456789ABCDEF"));
+  }
+
+  // Testa se Password contém ao menos um caractere de cada tipo ativado
+  [Fact]
+  public void Password_ShouldContainEveryEnabledCharacterType()
+  {
+    // Arrange & Act
+    var result = GenerateString.Password(16);
+
+    // Assert
+    Assert.Contains(result, char.IsUpper);
+    Assert.Contains(result, char.IsLower);
+    Assert.Contains(result, char.IsDigit);
+    Assert.Contains(result, character => "@#$%&*_".Contains(character));
+  }
+
+  // Testa se Password respeita os tipos de caractere desativados
+  [Fact]
+  public void Password_ShouldNotContainDisabledCharacterTypes()
+  {
+    // Arrange & Act
+    var result = GenerateString.Password(16, upper: true, lower: false, number: false, special: false);
+
+    // Assert
+    Assert.All(result, character => Assert.True(char.IsUpper(character)));
+  }
+
+  // Testa se Password não repete a mesma sequência de tipos de caractere
+  [Fact]
+  public void Password_ShouldNotRepeatTypeSequence()
+  {
+    // Arrange
+    var sequences = new HashSet<string>();
+
+    // Act
+    for (int i = 0; i < 200; i++)
+    {
+      // Mapeia cada posição para o tipo de caractere gerado
+      sequences.Add(new string([.. GenerateString.Password(12).Select(TypeOf)]));
+    }
+
+    // Assert
+    Assert.True(sequences.Count > 1, "O embaralhamento dos tipos de caractere não variou entre as gerações.");
+  }
+
+  // Retorna o tipo de caractere de uma posição da senha.
+  private static char TypeOf(char character) =>
+    char.IsUpper(character) ? 'U' :
+    char.IsLower(character) ? 'L' :
+    char.IsDigit(character) ? 'N' : 'S';
 }

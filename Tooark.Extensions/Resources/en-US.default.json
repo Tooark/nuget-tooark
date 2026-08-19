@@ -28,6 +28,7 @@
   "Field.Invalid": "Field {0} is invalid",
   "Field.Required": "Field {0} is required",
   "Field.RequiredList": "At least one item is required in the list {0}",
+  "File.SizeExceeded": "File exceeds the maximum size of {0} bytes.",
   "Forbidden": "Not authorized",
   "IdentifierEmpty": "The identifier is empty.",
   "InternalServerError": "Internal server error",

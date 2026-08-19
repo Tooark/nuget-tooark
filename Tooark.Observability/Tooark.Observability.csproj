@@ -5,7 +5,7 @@
     <PackageId>Tooark.Observability</PackageId>
     <Title>Tooark.Observability</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, observability, opentelemetry, tracing, metrics, logging, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, observability, opentelemetry, tracing, metrics, logging, .NET</PackageTags>
     <Summary>OpenTelemetry-based observability for .NET applications with easy configuration.</Summary>
     <PackageDescription>Package providing OpenTelemetry-based observability (traces, metrics, logs) with sensible defaults and easy configuration via appsettings for .NET applications.</PackageDescription>
     <Description>Library for managing OpenTelemetry observability with predefined configurations for traces, metrics, and logs, ensuring consistent telemetry collection for .NET projects.</Description>

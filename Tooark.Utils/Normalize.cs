@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Tooark.Utils;
 
@@ -21,9 +20,9 @@ public static class Normalize
 }
 
 /// <summary>
-/// Classe interna estática parcial que fornece métodos para normalização de strings.
+/// Classe interna estática que fornece métodos para normalização de strings.
 /// </summary>
-internal static partial class InternalNormalize
+internal static class InternalNormalize
 {
   /// <summary>
   /// Normaliza um valor removendo espaços, convertendo para maiúscula e substituindo caracteres especiais.
@@ -98,17 +97,14 @@ internal static partial class InternalNormalize
         case 'œ': // Ligadura oe
           normalizedValue.Append("OE");
           continue;
-        case 'ø': // O com barra
-        case 'Ø': // O com barra maiúsculo
+        case 'ø': // O com barra, e o maiúsculo 'Ø'
           normalizedValue.Append('O');
           continue;
-        case 'đ': // D com barra
-        case 'Ð': // D com barra maiúsculo
-        case 'ð': // Eth islandês
+        case 'đ': // D com barra, e o maiúsculo 'Đ'
+        case 'ð': // Eth islandês, e o maiúsculo 'Ð'
           normalizedValue.Append('D');
           continue;
-        case 'ł': // L com barra
-        case 'Ł': // L com barra maiúsculo
+        case 'ł': // L com barra, e o maiúsculo 'Ł'
           normalizedValue.Append('L');
           continue;
         case 'þ': // Thorn islandês

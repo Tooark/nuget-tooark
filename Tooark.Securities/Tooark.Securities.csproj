@@ -5,7 +5,7 @@
     <PackageId>Tooark.Securities</PackageId>
     <Title>Tooark.Securities</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, security, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, security, cryptography, token, .NET</PackageTags>
     <Summary>Management of predefined and validated Security Objects for .NET projects.</Summary>
     <PackageDescription>Package for managing predefined and validated Security Objects for .NET applications.</PackageDescription>
     <Description>Library managing predefined and validated Security Objects, ensuring data integrity and consistency for .NET projects.</Description>

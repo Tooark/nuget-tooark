@@ -5,17 +5,11 @@
     <PackageId>Tooark.Utils</PackageId>
     <Title>Tooark.Utils</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, utils, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, utils, helpers, culture, localization, globalization, normalize, .NET</PackageTags>
     <Summary>Management of general utility functions for .NET projects.</Summary>
     <PackageDescription>General utility package for .NET applications.</PackageDescription>
     <Description>A library of general utility functions that aid development, including methods for manipulating strings, dates, collections, and more.</Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />

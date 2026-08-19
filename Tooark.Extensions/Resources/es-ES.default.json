@@ -28,6 +28,7 @@
   "Field.Invalid": "El campo {0} no es válido",
   "Field.Required": "El campo {0} es obligatorio",
   "Field.RequiredList": "Se requiere al menos un elemento en la lista {0}",
+  "File.SizeExceeded": "El archivo supera el tamaño máximo de {0} bytes.",
   "Forbidden": "No autorizado",
   "IdentifierEmpty": "El identificador está vacío.",
   "InternalServerError": "Error interno del servidor",

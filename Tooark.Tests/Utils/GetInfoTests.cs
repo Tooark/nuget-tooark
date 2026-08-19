@@ -556,4 +556,85 @@ public class GetInfoTests
     // Assert
     Assert.Equal("NotFound.Property;Person", exception.Message);
   }
+
+  // Testa se retorna string vazia quando a lista é nula
+  [Fact]
+  public void Name_ShouldReturnEmpty_WhenListIsNull()
+  {
+    // Arrange & Act
+    var result = GetInfo.Name<MLanguage>(null);
+
+    // Assert
+    Assert.Equal(string.Empty, result);
+  }
+
+  // Testa se retorna string vazia quando a lista está vazia
+  [Fact]
+  public void Name_ShouldReturnEmpty_WhenListIsEmpty()
+  {
+    // Arrange & Act
+    var result = GetInfo.Name<MLanguage>([]);
+
+    // Assert
+    Assert.Equal(string.Empty, result);
+  }
+
+  // Testa se a validação das propriedades acontece mesmo com a lista nula
+  [Fact]
+  public void Name_ShouldThrow_WhenListIsNullAndPropertyMissing()
+  {
+    // Arrange & Act & Assert
+    var exception = Assert.Throws<GetInfoException>(() => GetInfo.Name<MLanguageOnlyLanguageCode>(null));
+
+    // Assert
+    Assert.Equal("NotFound.Property;Name", exception.Message);
+  }
+
+  // Testa se o nome da propriedade personalizada é obrigatório
+  [Theory]
+  [InlineData("")]
+  [InlineData("   ")]
+  public void Custom_ShouldThrow_WhenPropertyNameIsEmpty(string property)
+  {
+    // Arrange & Act & Assert
+    var exception = Assert.Throws<GetInfoException>(() => GetInfo.Custom(_testItems, property));
+
+    // Assert
+    Assert.Equal("NotFound.Property;null", exception.Message);
+  }
+
+  // Testa se lê propriedades que não são string
+  [Fact]
+  public void Custom_ShouldReadNonStringProperty()
+  {
+    // Arrange
+    List<MLanguageNonStringProperty> list =
+    [
+      new() { LanguageCode = "en-US", Name = 10 },
+      new() { LanguageCode = "pt-BR", Name = 20 }
+    ];
+
+    // Act
+    var result = GetInfo.Custom(list, "Name", "pt-BR");
+
+    // Assert
+    Assert.Equal("20", result);
+  }
+
+  // Testa se retorna string vazia quando o valor da propriedade é nulo
+  [Fact]
+  public void Custom_ShouldReturnEmpty_WhenPropertyValueIsNull()
+  {
+    // Arrange
+    List<MLanguageNonStringProperty> list =
+    [
+      new() { LanguageCode = "pt-BR", Name = 1, Title = null }
+    ];
+
+    // Act
+    var result = GetInfo.Custom(list, "Title", "pt-BR");
+
+    // Assert
+    Assert.Equal(string.Empty, result);
+  }
 }

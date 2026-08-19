@@ -5,7 +5,7 @@
     <PackageId>Tooark.Notifications</PackageId>
     <Title>Tooark.Notifications</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, notifications, alerts, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, notifications, alerts, .NET</PackageTags>
     <Summary>Management of notifications and alerts for .NET projects.</Summary>
     <PackageDescription>Package for creating and managing notifications and alerts for .NET applications.</PackageDescription>
     <Description>Library for creating and managing notifications and alerts, facilitating communication and monitoring for .NET projects.</Description>
