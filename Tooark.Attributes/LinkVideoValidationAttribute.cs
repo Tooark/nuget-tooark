@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
+using Tooark.Attributes.Messages;
+using Tooark.Exceptions;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -8,65 +9,64 @@ namespace Tooark.Attributes;
 /// Atributo de validação de link de vídeo.
 /// </summary>
 /// <remarks>
-/// O link de vídeo é validado utilizando uma expressão regular.
+/// O link é aceito quando corresponde a algum dos provedores habilitados.
+/// Valor ausente é reportado como campo obrigatório.
+/// Desabilitar os três provedores é erro de configuração: nenhum link poderia ser aceito, então o
+/// atributo lança em vez de reprovar todo valor em silêncio.
 /// </remarks>
-/// <param name="propertyName">Nome da propriedade. Padrão: "Link".</param>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Link".</param>
 /// <param name="youtube">Permite link do YouTube. Padrão: true.</param>
 /// <param name="vimeo">Permite link do Vimeo. Padrão: true.</param>
 /// <param name="dailymotion">Permite link do Dailymotion. Padrão: true.</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public partial class LinkVideoValidationAttribute(
+public class LinkVideoValidationAttribute(
   string propertyName = "Link",
   bool youtube = true,
   bool vimeo = true,
   bool dailymotion = true
-) : ValidationAttribute
+) : TooarkValidationAttribute(propertyName)
 {
-  private readonly bool _youtube = youtube;
-  private readonly bool _vimeo = vimeo;
-  private readonly bool _dailymotion = dailymotion;
-  private readonly string _propertyName = propertyName;
+  #region Private Fields
 
   /// <summary>
-  /// Sobrescreve o método de validação para verificar se o valor é um Link de Vídeo válido.
+  /// Indica se o link do YouTube é aceito.
   /// </summary>
-  /// <param name="value">O objeto a ser validada.</param>
-  /// <returns>Retornar verdadeiro se o valor for um Link de Vídeo válido.</returns>
-  public override bool IsValid(object? value)
+  private readonly bool _youtube = youtube;
+
+  /// <summary>
+  /// Indica se o link do Vimeo é aceito.
+  /// </summary>
+  private readonly bool _vimeo = vimeo;
+
+  /// <summary>
+  /// Indica se o link do Dailymotion é aceito.
+  /// </summary>
+  private readonly bool _dailymotion = dailymotion;
+
+  #endregion
+
+  #region Methods
+
+  /// <summary>
+  /// Verifica se o valor é um link de vídeo válido em algum dos provedores habilitados.
+  /// </summary>
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o valor é um link de vídeo válido.</returns>
+  /// <exception cref="InternalServerErrorException">Se nenhum provedor estiver habilitado.</exception>
+  protected override bool IsSatisfied(string value)
   {
-    // Defina a mensagem de erro padrão.
-    string errorMessage = $"Field.Invalid;{_propertyName}";
-
-    // Converta o valor para uma string.
-    string? link = value as string;
-
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(link))
+    // Sem provedor habilitado nenhum link poderia ser aceito, o que torna o atributo inútil em silêncio
+    if (!_youtube && !_vimeo && !_dailymotion)
     {
-      // Defina a mensagem de erro de campo obrigatório.
-      errorMessage = $"Field.Required;{_propertyName}";
-    }
-    else
-    {
-      // Método de validação de expressão regular.
-      static bool RegexValidation(string link, string pattern) => Regex.IsMatch(link, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(300));
-
-      // Verifique se o valor é um link válido.
-      if (
-        (_youtube && RegexValidation(link, RegexPattern.YouTube)) ||
-        (_vimeo && RegexValidation(link, RegexPattern.Vimeo)) ||
-        (_dailymotion && RegexValidation(link, RegexPattern.Dailymotion))
-      )
-      {
-        // Retorne verdadeiro se o valor for um Link de Vídeo válido.
-        return true;
-      }
+      throw new InternalServerErrorException($"{AttributeErrorMessages.LinkVideoNoProvider};{PropertyName}");
     }
 
-    // Defina a mensagem de erro.
-    ErrorMessage = errorMessage;
-
-    // Retorne falso se o valor não for um Link de Vídeo válido.
-    return false;
+    // Verifica o link contra os provedores habilitados
+    return
+      (_youtube && Matches(value, RegexPattern.YouTube)) ||
+      (_vimeo && Matches(value, RegexPattern.Vimeo)) ||
+      (_dailymotion && Matches(value, RegexPattern.Dailymotion));
   }
+
+  #endregion
 }

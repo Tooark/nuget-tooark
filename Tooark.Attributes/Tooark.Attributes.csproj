@@ -5,20 +5,15 @@
     <PackageId>Tooark.Attributes</PackageId>
     <Title>Tooark.Attributes</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, attributes, validation, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, attributes, validation, dataannotations, email, url, password, document, .NET</PackageTags>
     <Summary>Management of attribute validators for .NET projects.</Summary>
     <PackageDescription>Package for creating attribute validators for .NET applications.</PackageDescription>
     <Description>Library for creating attribute validators for properties or fields, ensuring data integrity and compliance for .NET projects.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Tooark.Enums\Tooark.Enums.csproj" />
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
     <ProjectReference Include="..\Tooark.Validations\Tooark.Validations.csproj" />
   </ItemGroup>
 

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Text;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -8,116 +9,90 @@ namespace Tooark.Attributes;
 /// Atributo de validação de senha com critérios específicos de complexidade.
 /// </summary>
 /// <remarks>
-/// A senha é validada verificando se ela atende aos critérios de complexidade especificados.
+/// Os critérios são aplicados exatamente como configurados. Desabilitar todos significa exigir apenas o
+/// comprimento mínimo, que é uma política legítima — senhas longas sem regra de composição. Valor ausente
+/// é reportado como campo obrigatório.
 /// </remarks>
 /// <param name="lowercase">Exige carácter minúsculo. Padrão: true.</param>
 /// <param name="uppercase">Exige carácter maiúsculo. Padrão: true.</param>
 /// <param name="number">Exige carácter numérico. Padrão: true.</param>
 /// <param name="symbol">Exige carácter especial. Padrão: true.</param>
-/// <param name="length">Tamanho mínimo da senha. Padrão: 8.</param>
+/// <param name="length">Comprimento mínimo da senha. Padrão: 8. Valor não positivo assume 1.</param>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Password".</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
 public class PasswordValidationAttribute(
   bool lowercase = true,
   bool uppercase = true,
   bool number = true,
   bool symbol = true,
-  int length = 8
-) : ValidationAttribute
+  int length = 8,
+  string propertyName = "Password"
+) : TooarkValidationAttribute(propertyName)
 {
-  /// <summary>
-  /// Sobrescreve o método de validação para verificar se a senha atende aos critérios de complexidade.
-  /// </summary>
-  /// <param name="value">O objeto a ser validado.</param>
-  /// <returns>Retornar verdadeiro se o valor for uma senha válida.</returns>
-  public override bool IsValid(object? value)
-  {
-    // Converta o valor para uma string.
-    string? password = value?.ToString();
-
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(password))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Required;Password";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Define a expressão regular para validação da senha
-    string regexPassword = MountRegex(lowercase, uppercase, number, symbol, length);
-
-    // Verifique se o valor é um password válido.
-    if (!Regex.IsMatch(password, regexPassword, RegexOptions.None, TimeSpan.FromMilliseconds(300)))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Invalid;Password";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Retorne verdadeiro.
-    return true;
-  }
+  #region Private Fields
 
   /// <summary>
-  /// Monta a expressão regular da senha.
+  /// Expressão regular montada a partir dos critérios configurados.
   /// </summary>
-  /// <param name="lowercase">Exige carácter minúsculo. Padrão: true.</param>
-  /// <param name="uppercase">Exige carácter maiúsculo. Padrão: true.</param>
-  /// <param name="number">Exige carácter numérico. Padrão: true.</param>
-  /// <param name="symbol">Exige carácter especial. Padrão: true.</param>
-  /// <param name="length">Tamanho mínimo da senha. Padrão: 8.</param>
+  private readonly string _pattern = MountRegex(lowercase, uppercase, number, symbol, length);
+
+  #endregion
+
+  #region Methods
+
+  /// <summary>
+  /// Verifica se o valor atende aos critérios de complexidade configurados.
+  /// </summary>
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o valor atende aos critérios.</returns>
+  protected override bool IsSatisfied(string value) => Matches(value, _pattern);
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Monta a expressão regular da senha a partir dos critérios configurados.
+  /// </summary>
+  /// <param name="lowercase">Exige carácter minúsculo.</param>
+  /// <param name="uppercase">Exige carácter maiúsculo.</param>
+  /// <param name="number">Exige carácter numérico.</param>
+  /// <param name="symbol">Exige carácter especial.</param>
+  /// <param name="length">Comprimento mínimo da senha.</param>
   /// <returns>Expressão regular da senha.</returns>
-  private static string MountRegex(bool lowercase = true, bool uppercase = true, bool number = true, bool symbol = true, int length = 8)
+  private static string MountRegex(bool lowercase, bool uppercase, bool number, bool symbol, int length)
   {
-    // Define a expressão regular para validação da senha.
-    string regexPassword = null!;
+    // Comprimento não positivo nao teria sentido em uma expressão regular
+    var minimum = length > 0 ? length : 1;
 
-    // Define o tamanho mínimo da senha.
-    length = length < 8 ? 8 : length;
+    // Cada critério vira uma verificação antecipada, ancorada uma única vez no início
+    var pattern = new StringBuilder("^");
 
-    // Se a senha deve conter carácter minúsculo.
     if (lowercase)
     {
-      regexPassword += RegexPattern.PassLower;
+      pattern.Append(RegexPattern.PassLower[1..]);
     }
 
-    // Se a senha deve conter carácter maiúsculo.
     if (uppercase)
     {
-      regexPassword += RegexPattern.PassUpper;
+      pattern.Append(RegexPattern.PassUpper[1..]);
     }
 
-    // Se a senha deve conter carácter numérico.
     if (number)
     {
-      regexPassword += RegexPattern.PassNumber;
+      pattern.Append(RegexPattern.PassNumber[1..]);
     }
 
-    // Se a senha deve conter carácter especial.
     if (symbol)
     {
-      regexPassword += RegexPattern.PassSymbol;
+      pattern.Append(RegexPattern.PassSymbol[1..]);
     }
 
-    // Verifica se não foi definido critérios de complexidade.
-    if (string.IsNullOrEmpty(regexPassword))
-    {
-      // Utiliza o padrão de complexidade.
-      regexPassword = RegexPattern.PassComplex;
+    // Sem nenhum critério, resta apenas a exigência de comprimento
+    pattern.Append(CultureInfo.InvariantCulture, $".{{{minimum},}}");
 
-      // Define o tamanho mínimo da senha.
-      regexPassword = regexPassword.Replace(".{8,}", $".{{{length},}}");
-    }
-    else
-    {
-      // Define o tamanho mínimo da senha.
-      regexPassword += ".{" + length + ",}";
-    }
-
-    // Retorna a expressão regular da senha.
-    return regexPassword;
+    return pattern.ToString();
   }
+
+  #endregion
 }

@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -9,42 +8,20 @@ namespace Tooark.Attributes;
 /// </summary>
 /// <remarks>
 /// O código postal é validado utilizando uma expressão regular.
+/// Valor ausente é reportado como campo obrigatório.
 /// </remarks>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "ZipCode".</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public partial class ZipCodeValidationAttribute : ValidationAttribute
+public class ZipCodeValidationAttribute(string propertyName = "ZipCode") : TooarkValidationAttribute(propertyName)
 {
+  #region Methods
 
   /// <summary>
-  /// Sobrescreve o método de validação para verificar se o valor é um código postal válido.
+  /// Verifica se o valor é um código postal válido.
   /// </summary>
-  /// <param name="value">O objeto a ser validado.</param>
-  /// <returns>Retornar verdadeiro se o valor for um código postal válido.</returns>
-  public override bool IsValid(object? value)
-  {
-    // Converta o valor para uma string.
-    string? zipCode = value?.ToString();
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o valor é um código postal válido.</returns>
+  protected override bool IsSatisfied(string value) => Matches(value, RegexPattern.ZipCode);
 
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(zipCode))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Required;ZipCode";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Verifique se o valor é um código postal válido.
-    if (!Regex.IsMatch(zipCode, RegexPattern.ZipCode, RegexOptions.None, TimeSpan.FromMilliseconds(300)))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Invalid;ZipCode";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Retorne verdadeiro.
-    return true;
-  }
+  #endregion
 }

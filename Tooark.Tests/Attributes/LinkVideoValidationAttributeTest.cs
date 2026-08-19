@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 
 namespace Tooark.Tests.Attributes;
@@ -65,9 +66,6 @@ public class LinkVideoValidationAttributeTest
 
   // Teste de link inválido passando parâmetros
   [Theory]
-  [InlineData("https://www.youtube.com/watch?v=b6-JNeXxN3s&list=RDMMb6-JNeXxN3s&start_radio=1", false, false, false)]
-  [InlineData("https://vimeo.com/24812648", false, false, false)]
-  [InlineData("https://www.dailymotion.com/video/x9fbqre", false, false, false)]
   [InlineData("https://www.youtube.com/watch?v=b6-JNeXxN3s&list=RDMMb6-JNeXxN3s&start_radio=1", false, true, true)]
   [InlineData("https://vimeo.com/24812648", true, false, true)]
   [InlineData("https://www.dailymotion.com/video/x9fbqre", true, true, false)]
@@ -82,7 +80,7 @@ public class LinkVideoValidationAttributeTest
 
     // Assert
     Assert.False(result);
-    Assert.Equal($"Field.Invalid;{title}", _linkVideoParam.ErrorMessage);
+    Assert.Equal($"Field.Invalid;{title}", Mensagem(_linkVideoParam, link));
   }
 
   // Teste de link inválido com link nulo ou vazio
@@ -96,6 +94,10 @@ public class LinkVideoValidationAttributeTest
 
     // Assert
     Assert.False(result);
-    Assert.Equal($"Field.Required;Link", _linkVideoValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;Link", Mensagem(_linkVideoValidationAttribute, link));
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }

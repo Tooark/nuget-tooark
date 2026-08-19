@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 
 namespace Tooark.Tests.Attributes;
@@ -69,7 +70,7 @@ public class EmailValidationTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Invalid;Email", _emailValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Invalid;Email", Mensagem(_emailValidationAttribute, email));
   }
 
   // Teste de email nulo ou vazio
@@ -83,6 +84,10 @@ public class EmailValidationTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Required;Email", _emailValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;Email", Mensagem(_emailValidationAttribute, email));
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }

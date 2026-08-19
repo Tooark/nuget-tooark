@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 
 namespace Tooark.Tests.Attributes;
@@ -46,7 +47,7 @@ public class UrlValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Invalid;Url", _urlValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Invalid;Url", Mensagem(_urlValidationAttribute, document));
   }
 
   // Teste de url nulo ou vazio
@@ -60,6 +61,10 @@ public class UrlValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Required;Url", _urlValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;Url", Mensagem(_urlValidationAttribute, document));
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }

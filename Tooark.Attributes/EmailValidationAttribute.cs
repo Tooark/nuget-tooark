@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -9,42 +8,21 @@ namespace Tooark.Attributes;
 /// </summary>
 /// <remarks>
 /// O endereço de email é validado utilizando uma expressão regular.
+/// Valor ausente é reportado como campo obrigatório: para tornar o campo opcional, aplique o atributo
+/// apenas quando houver valor, ou valide o campo fora do atributo.
 /// </remarks>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Email".</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public partial class EmailValidationAttribute : ValidationAttribute
+public class EmailValidationAttribute(string propertyName = "Email") : TooarkValidationAttribute(propertyName)
 {
+  #region Methods
 
   /// <summary>
-  /// Sobrescreve o método de validação para verificar se o valor é um email válido.
+  /// Verifica se o valor é um email válido.
   /// </summary>
-  /// <param name="value">O objeto a ser validado.</param>
-  /// <returns>Retornar verdadeiro se o valor for um email válido.</returns>
-  public override bool IsValid(object? value)
-  {
-    // Converta o valor para uma string.
-    string? email = value?.ToString();
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o valor é um email válido.</returns>
+  protected override bool IsSatisfied(string value) => Matches(value, RegexPattern.Email);
 
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(email))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Required;Email";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Verifique se o valor é um email válido.
-    if (!Regex.IsMatch(email, RegexPattern.Email, RegexOptions.None, TimeSpan.FromMilliseconds(300)))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Invalid;Email";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Retorne verdadeiro.
-    return true;
-  }
+  #endregion
 }

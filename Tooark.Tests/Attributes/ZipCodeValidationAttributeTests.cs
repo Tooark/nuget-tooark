@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 
 namespace Tooark.Tests.Attributes;
@@ -40,7 +41,7 @@ public class ZipCodeValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Invalid;ZipCode", _zipCodeValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Invalid;ZipCode", Mensagem(_zipCodeValidationAttribute, code));
   }
 
   // Teste de código postal nulo ou vazio
@@ -54,6 +55,10 @@ public class ZipCodeValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Required;ZipCode", _zipCodeValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;ZipCode", Mensagem(_zipCodeValidationAttribute, code));
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }

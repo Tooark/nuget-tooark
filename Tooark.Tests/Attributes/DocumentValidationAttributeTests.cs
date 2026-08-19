@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 using Tooark.Enums;
 
@@ -61,7 +62,7 @@ public class DocumentValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Invalid;Document", _documentValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Invalid;Document", Mensagem(_documentValidationAttribute, document));
   }
 
   // Teste de documento nulo ou vazio
@@ -79,6 +80,10 @@ public class DocumentValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Required;Document", _documentValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;Document", Mensagem(_documentValidationAttribute, document));
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }

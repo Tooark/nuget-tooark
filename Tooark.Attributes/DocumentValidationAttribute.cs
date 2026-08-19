@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
+using Tooark.Attributes.Messages;
 using Tooark.Enums;
+using Tooark.Exceptions;
 
 namespace Tooark.Attributes;
 
@@ -9,72 +10,81 @@ namespace Tooark.Attributes;
 /// </summary>
 /// <remarks>
 /// O documento é validado pelo formato, com expressão regular, e pelos dígitos verificadores.
-/// O tipo é recebido como texto porque argumento de atributo aceita apenas constante: um parâmetro
-/// do tipo <see cref="EDocumentType"/> impediria o atributo de ser aplicado (CS0181).
-/// Valores aceitos, sem diferenciar caixa: CPF, RG, CNH, CNPJ, CPF_CNPJ, CPF_RG e CPF_RG_CNH.
-/// Um valor não reconhecido resulta em <see cref="EDocumentType.None"/>, que aceita qualquer documento.
+/// <para>
+/// O tipo é recebido como texto porque argumento de atributo aceita apenas constante: um parâmetro do tipo
+/// <see cref="EDocumentType"/> impediria o atributo de ser aplicado (CS0181). Valores aceitos, sem
+/// diferenciar caixa: CPF, RG, CNH, CNPJ, CPF_CNPJ, CPF_RG, CPF_RG_CNH e None.
+/// </para>
+/// <para>
+/// Um valor não reconhecido é erro de configuração e faz o atributo lançar. Antes ele virava
+/// <see cref="EDocumentType.None"/>, que aceita qualquer documento: um erro de digitação no tipo
+/// desligava a validação inteira sem aviso.
+/// </para>
 /// </remarks>
 /// <param name="type">Tipo de documento a ser validado.</param>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Document".</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public partial class DocumentValidationAttribute(string type) : ValidationAttribute
+public class DocumentValidationAttribute(string type, string propertyName = "Document") : TooarkValidationAttribute(propertyName)
 {
-  /// <summary>
-  /// Tipo de documento resolvido a partir do texto informado no atributo.
-  /// </summary>
-  private readonly EDocumentType _type = type;
+  #region Private Fields
 
   /// <summary>
-  /// Sobrescreve o método de validação para verificar se o valor é um documento válido.
+  /// Tipo de documento informado no atributo.
   /// </summary>
-  /// <param name="value">O objeto a ser validado.</param>
-  /// <returns>Retornar verdadeiro se o valor for um documento válido.</returns>
-  public override bool IsValid(object? value)
+  private readonly string _type = type;
+
+  /// <summary>
+  /// Tipo de documento já resolvido, reaproveitado entre as validações.
+  /// </summary>
+  private EDocumentType? _resolved;
+
+  #endregion
+
+  #region Methods
+
+  /// <summary>
+  /// Verifica se o valor é um documento válido no formato e nos dígitos verificadores.
+  /// </summary>
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o documento é válido.</returns>
+  /// <exception cref="InternalServerErrorException">Se o tipo de documento informado não for reconhecido.</exception>
+  protected override bool IsSatisfied(string value)
   {
-    // Converta o valor para uma string.
-    string? document = value?.ToString();
+    // Resolve o tipo na primeira validação: resolver no construtor faria a exceção ser engolida pelo
+    // framework de validação, que descartaria o atributo e deixaria o campo sem validação alguma
+    var documentType = _resolved ??= Resolve(_type);
 
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(document))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Required;Document";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Verifique se o valor é um document válido, por formato e por dígitos verificadores.
-    if (!HasFormat(document) || !_type.IsValid(document))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Invalid;Document";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Retorne verdadeiro.
-    return true;
+    // Confere o formato e, em seguida, os dígitos verificadores
+    return Matches(value, documentType.ToRegex()) && documentType.IsValid(value);
   }
 
+  #endregion
+
+  #region Private Methods
+
   /// <summary>
-  /// Verifica se o documento corresponde ao formato do tipo configurado.
+  /// Resolve o tipo de documento a partir do texto informado no atributo.
   /// </summary>
-  /// <remarks>
-  /// O tempo limite protege contra entradas patológicas; atingi-lo significa que o valor não corresponde
-  /// ao padrão, e não uma exceção subindo de um atributo de validação.
-  /// </remarks>
-  /// <param name="document">Documento a ser verificado.</param>
-  /// <returns>Verdadeiro quando o documento corresponde ao formato.</returns>
-  private bool HasFormat(string document)
+  /// <param name="type">Tipo de documento informado.</param>
+  /// <returns>O tipo de documento correspondente.</returns>
+  /// <exception cref="InternalServerErrorException">Se o tipo informado não for reconhecido.</exception>
+  private static EDocumentType Resolve(string type)
   {
-    try
+    // A conversão implícita devolve None tanto para "None" quanto para um valor desconhecido
+    EDocumentType resolved = type;
+
+    // O tipo normalizado é o que de fato foi considerado, e é ele que a mensagem deve mostrar
+    var normalized = type?.Trim() ?? string.Empty;
+
+    // Só é None legítimo quando foi isso que o consumidor pediu
+    if (ReferenceEquals(resolved, EDocumentType.None) &&
+        !"None".Equals(normalized, StringComparison.OrdinalIgnoreCase))
     {
-      return Regex.IsMatch(document, _type.ToRegex(), RegexOptions.None, TimeSpan.FromMilliseconds(300));
+      throw new InternalServerErrorException($"{AttributeErrorMessages.DocumentTypeUnknown};{normalized}");
     }
-    catch (RegexMatchTimeoutException)
-    {
-      return false;
-    }
+
+    return resolved;
   }
+
+  #endregion
 }

@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -8,51 +7,26 @@ namespace Tooark.Attributes;
 /// Atributo de validação de URL.
 /// </summary>
 /// <remarks>
-/// A URL é validada utilizando uma expressão regular.
+/// A URL é aceita nos protocolos de email (envio e recebimento), FTP, HTTP e WebSocket.
+/// Valor ausente é reportado como campo obrigatório.
 /// </remarks>
+/// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Url".</param>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public partial class UrlValidationAttribute : ValidationAttribute
+public class UrlValidationAttribute(string propertyName = "Url") : TooarkValidationAttribute(propertyName)
 {
+  #region Methods
+
   /// <summary>
-  /// Sobrescreve o método de validação para verificar se o valor é uma URL válida.
+  /// Verifica se o valor é uma URL válida em algum dos protocolos aceitos.
   /// </summary>
-  /// <param name="value">O objeto a ser validada.</param>
-  /// <returns>Retornar verdadeiro se o valor for uma URL válida.</returns>
-  public override bool IsValid(object? value)
-  {
-    // Converta o valor para uma string.
-    string? url = value?.ToString();
+  /// <param name="value">O valor a ser verificado.</param>
+  /// <returns>Verdadeiro quando o valor é uma URL válida.</returns>
+  protected override bool IsSatisfied(string value) =>
+    Matches(value, RegexPattern.ProtocolEmailReceiver) ||
+    Matches(value, RegexPattern.ProtocolEmailSender) ||
+    Matches(value, RegexPattern.ProtocolFtp) ||
+    Matches(value, RegexPattern.ProtocolHttp) ||
+    Matches(value, RegexPattern.ProtocolWebSocket);
 
-    // Método de validação de expressão regular.
-    static bool RegexValidation(string url, string pattern) => Regex.IsMatch(url, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(300));
-
-    // Verifique se o valor é nulo.
-    if (string.IsNullOrEmpty(url))
-    {
-      // Defina a mensagem de erro padrão.
-      ErrorMessage = "Field.Required;Url";
-
-      // Retorne falso.
-      return false;
-    }
-
-    // Verifique se o valor é um url válida.
-    if (
-      RegexValidation(url, RegexPattern.ProtocolEmailReceiver) ||
-      RegexValidation(url, RegexPattern.ProtocolEmailSender) ||
-      RegexValidation(url, RegexPattern.ProtocolFtp) ||
-      RegexValidation(url, RegexPattern.ProtocolHttp) ||
-      RegexValidation(url, RegexPattern.ProtocolWebSocket)
-    )
-    {
-      // Retorne verdadeiro.
-      return true;
-    }
-
-    // Defina a mensagem de erro padrão.
-    ErrorMessage = "Field.Invalid;Url";
-
-    // Retorne falso.
-    return false;
-  }
+  #endregion
 }

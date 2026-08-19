@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Tooark.Attributes;
 
 namespace Tooark.Tests.Attributes;
@@ -46,7 +47,7 @@ public class PasswordValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Invalid;Password", _passwordValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Invalid;Password", Mensagem(_passwordValidationAttribute, password));
   }
 
   // Teste de senha nula ou vazia
@@ -60,7 +61,7 @@ public class PasswordValidationAttributeTests
 
     // Assert
     Assert.False(result);
-    Assert.Equal("Field.Required;Password", _passwordValidationAttribute.ErrorMessage);
+    Assert.Equal("Field.Required;Password", Mensagem(_passwordValidationAttribute, password));
   }
 
   // Teste de senha válida com senha válida para os parâmetros de validação
@@ -83,6 +84,7 @@ public class PasswordValidationAttributeTests
   [InlineData("Senha@12", false, false, false, false, 8)]
   [InlineData("Senha@123", true, true, true, true, 9)]
   [InlineData("Senha@12", true, true, true, true, 7)]
+  [InlineData("Senha@1", true, true, true, true, 7)]
   public void IsValid_ShouldBeValid_WhenGivenParam(string? password, bool lower, bool upper, bool number, bool symbol, int length)
   {
     // Arrange
@@ -113,7 +115,6 @@ public class PasswordValidationAttributeTests
   [InlineData("Senha123", false, false, false, true, 8)]
   [InlineData("", false, false, false, false, 8)]
   [InlineData("Senha@12", true, true, true, true, 9)]
-  [InlineData("Senha@1", true, true, true, true, 7)]
   public void IsValid_ShouldBeInvalid_WhenGivenParam(string? password, bool lower, bool upper, bool number, bool symbol, int length)
   {
     // Arrange
@@ -125,4 +126,8 @@ public class PasswordValidationAttributeTests
     // Assert
     Assert.False(result);
   }
+
+  // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
+  private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
+    atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
 }
