@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tooark\Tooark.csproj" />
+    <ProjectReference Include="..\Tooark.AspNetCore\Tooark.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

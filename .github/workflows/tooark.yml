@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 env:
   VERSION: 0.0.0
-  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.5
+  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.7
 
 jobs:
   build-and-deploy:
@@ -84,6 +84,7 @@ jobs:
           dotnet pack Tooark.Exceptions/Tooark.Exceptions.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Utils/Tooark.Utils.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Extensions/Tooark.Extensions.csproj --configuration Release /p:NoWarn="1591"
+          dotnet pack Tooark.AspNetCore/Tooark.AspNetCore.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Dtos/Tooark.Dtos.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Entities/Tooark.Entities.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.ValueObjects/Tooark.ValueObjects.csproj --configuration Release /p:NoWarn="1591"
@@ -154,6 +155,9 @@ jobs:
 
       - name: Publish Tooark.Extensions to NuGet
         run: dotnet nuget push Tooark.Extensions/bin/Release/Tooark.Extensions.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+
+      - name: Publish Tooark.AspNetCore to NuGet
+        run: dotnet nuget push Tooark.AspNetCore/bin/Release/Tooark.AspNetCore.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
 
       - name: Publish Tooark.Dtos to NuGet
         run: dotnet nuget push Tooark.Dtos/bin/Release/Tooark.Dtos.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json

@@ -11,9 +11,9 @@ public static class Normalize
   /// <summary>
   /// Normaliza um valor removendo espaços, convertendo para maiúscula e substituindo caracteres especiais.
   /// </summary>
-  /// <param name="value">O valor a ser normalizado.</param>
+  /// <param name="value">O valor a ser normalizado. Valor nulo resulta em string vazia.</param>
   /// <returns>Uma string contendo o valor normalizado.</returns>
-  public static string Value(string value)
+  public static string Value(string? value)
   {
     return InternalNormalize.Value(value);
   }
@@ -27,9 +27,9 @@ internal static class InternalNormalize
   /// <summary>
   /// Normaliza um valor removendo espaços, convertendo para maiúscula e substituindo caracteres especiais.
   /// </summary>
-  /// <param name="value">O valor a ser normalizado.</param>
+  /// <param name="value">O valor a ser normalizado. Valor nulo resulta em string vazia.</param>
   /// <returns>Uma string contendo o valor normalizado.</returns>
-  internal static string Value(string value)
+  internal static string Value(string? value)
   {
     // Verifica se o valor é nulo
     if (value == null)

@@ -16,16 +16,13 @@ public static class TooarkJsonStringLocalizerDependencyInjection
   /// <returns>A coleção de serviços com o serviço de localização de recursos adicionado.</returns>
   public static IServiceCollection AddJsonStringLocalizer(this IServiceCollection services)
   {
-    // Adiciona o serviço de cache distribuído
-    services.AddDistributedMemoryCache();
-
     // Adiciona a pasta de recursos
     services.AddLocalization(options => options.ResourcesPath = "Resources");
 
     // Adiciona o serviço de localização de recurso padrão
     services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();
 
-    // Adiciona o serviço de localização de recursos com cache distribuído e opções de configuração
+    // Adiciona o serviço de localização de recursos
     services.AddTransient<IStringLocalizer>(provider =>
     {
       // Obtenção do serviço de localização de recurso

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace Tooark.Extensions;
+namespace Tooark.AspNetCore.Extensions;
 
 /// <summary>
 /// Método de extensão para a classe ModelStateDictionary.

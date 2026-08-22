@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.AspNetCore</PackageId>
+    <Title>Tooark.AspNetCore</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, aspnetcore, mvc, modelstate, filters, middlewares, .NET</PackageTags>
+    <Summary>ASP.NET Core integration for Tooark.</Summary>
+    <PackageDescription>Package with the ASP.NET Core specific pieces of Tooark for .NET applications.</PackageDescription>
+    <Description>Library that concentrates everything in Tooark that depends on ASP.NET Core, keeping the other packages free of the shared framework requirement.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Extensions\Tooark.Extensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

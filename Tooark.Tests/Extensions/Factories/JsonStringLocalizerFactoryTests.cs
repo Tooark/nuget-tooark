@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
-using Moq;
 using Tooark.Extensions;
 using Tooark.Extensions.Factories;
 
@@ -12,8 +10,7 @@ public class JsonStringLocalizerFactoryTests
   public void Create_WithTypeResourceSource_ReturnsJsonStringLocalizer()
   {
     // Arrange
-    Mock<IDistributedCache> distributedCacheMock = new();
-    JsonStringLocalizerFactory factory = new(distributedCacheMock.Object);
+    JsonStringLocalizerFactory factory = new();
     var resourceSource = typeof(JsonStringLocalizerFactoryTests);
 
     // Act
@@ -29,8 +26,7 @@ public class JsonStringLocalizerFactoryTests
   public void Create_WithBaseNameAndLocation_ReturnsJsonStringLocalizer()
   {
     // Arrange
-    Mock<IDistributedCache> distributedCacheMock = new();
-    JsonStringLocalizerFactory factory = new(distributedCacheMock.Object);
+    JsonStringLocalizerFactory factory = new();
     var baseName = "BaseName";
     var location = "Location";
 

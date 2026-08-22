@@ -1,25 +1,44 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Caching.Distributed;
+using System.Collections.Concurrent;
+using System.Text.Json;
 using Microsoft.Extensions.Localization;
 using Tooark.Utils;
 
 namespace Tooark.Extensions;
 
 /// <summary>
-/// Método de extensão para StringLocalizer que utiliza cache distribuído e traduções em arquivos JSON.
+/// Método de extensão para StringLocalizer que utiliza traduções em arquivos JSON.
 /// </summary>
-/// <param name="distributedCache">Cache distribuído.</param>
-public class JsonStringLocalizerExtension(IDistributedCache distributedCache) : IStringLocalizer
+/// <remarks>
+/// A chave pode trazer parâmetros no formato <c>Chave;parametro1;parametro2</c>. Os parâmetros substituem
+/// os marcadores <c>{0}</c>, <c>{1}</c> e assim por diante do texto traduzido, e são eles próprios
+/// traduzidos quando correspondem a uma chave existente.
+/// <para>
+/// As traduções de cada idioma são lidas do disco uma única vez por processo e ficam em memória, indexadas
+/// por chave. Como consequência, arquivos de tradução alterados em disco só passam a valer no próximo
+/// início do processo.
+/// </para>
+/// </remarks>
+public class JsonStringLocalizerExtension : IStringLocalizer
 {
+  #region Private Fields
+
   /// <summary>
   /// Localizador interno de strings JSON.
   /// </summary>
-  private readonly InternalJsonStringLocalizer _internalLocalizer = new(distributedCache);
+  private readonly InternalJsonStringLocalizer _internalLocalizer = new();
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém a string localizada.
   /// </summary>
+  /// <param name="name">Chave da string, com os parâmetros separados por ponto e vírgula.</param>
+  /// <returns>
+  /// A string localizada. Quando a chave não existe, <see cref="LocalizedString.ResourceNotFound"/> é
+  /// verdadeiro e o valor é o texto recebido, inalterado.
+  /// </returns>
   public LocalizedString this[string name]
   {
     get
@@ -30,34 +49,46 @@ public class JsonStringLocalizerExtension(IDistributedCache distributedCache) : 
         return new LocalizedString(string.Empty, string.Empty, true);
       }
 
-      // Obtém a string localizada
-      string value = _internalLocalizer.GetLocalizedString(name);
+      // Obtém a string localizada e se a chave foi encontrada
+      var (value, found) = _internalLocalizer.GetLocalizedString(name);
 
-      // Retorna a string localizada ou o nome fornecido para busca
-      return new LocalizedString(name, value ?? name, value == null);
+      // Retorna a string localizada, sinalizando quando a chave não existe
+      return new LocalizedString(name, value, !found);
     }
   }
 
   /// <summary>
   /// Obtém a string localizada formatada com os argumentos fornecidos.
   /// </summary>
+  /// <param name="name">Chave da string.</param>
+  /// <param name="arguments">Parâmetros da string.</param>
+  /// <returns>A string localizada com os parâmetros substituídos.</returns>
   public LocalizedString this[string name, params object[] arguments]
   {
     get
     {
-      // Converte os argumentos em uma string
-      string parameters = string.Join(";", arguments);
+      // Verifica se a chave é nula ou vazia
+      if (string.IsNullOrEmpty(name))
+      {
+        return new LocalizedString(string.Empty, string.Empty, true);
+      }
 
-      // Adiciona os argumentos ao nome da string
-      name = string.Join(";", name, parameters);
+      // Junta a chave e os parâmetros no mesmo formato aceito pela indexação por chave
+      var composed = arguments is { Length: > 0 } ?
+        string.Join(";", new[] { name }.Concat(arguments.Select(argument => argument?.ToString() ?? string.Empty))) :
+        name;
 
-      // Obtém a string localizada
-      string value = this[name];
+      // Obtém a string localizada e se a chave foi encontrada
+      var (value, found) = _internalLocalizer.GetLocalizedString(composed);
 
-      // Retorna a string localizada ou o nome fornecido para busca
-      return new LocalizedString(name, value ?? name, value == null);
+      // Retorna a string localizada, sinalizando quando a chave não existe
+      return new LocalizedString(composed, value, !found);
     }
   }
+
+  #endregion
+
+  #region Methods
 
   /// <summary>
   /// Obtém todas as strings localizadas.
@@ -68,111 +99,63 @@ public class JsonStringLocalizerExtension(IDistributedCache distributedCache) : 
   {
     return _internalLocalizer.GetAllStrings(includeParentCultures);
   }
+
+  #endregion
 }
 
 /// <summary>
-/// Método interno de extensão para StringLocalizer que utiliza cache distribuído e traduções em arquivos JSON.
+/// Método interno de extensão para StringLocalizer que utiliza traduções em arquivos JSON.
 /// </summary>
 internal class InternalJsonStringLocalizer
 {
-  /// <summary>
-  /// Cache distribuído.
-  /// </summary>
-  private readonly IDistributedCache _distributedCache;
+  #region Private Static Fields
 
   /// <summary>
-  /// Traduções carregadas.
+  /// Traduções já carregadas do disco, por idioma, compartilhadas por todas as instâncias.
   /// </summary>
-  private readonly Dictionary<string, JsonDocument> _translations = [];
+  /// <remarks>
+  /// O localizador é registrado como transitório, então uma instância nova é criada a cada resolução.
+  /// Sem este cache, os arquivos JSON seriam lidos e interpretados de novo em cada uma delas. A busca por
+  /// chave é uma consulta a dicionário, e por isso não há uma segunda camada de cache na frente dela.
+  /// </remarks>
+  private static readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> Translations = new();
 
+  #endregion
 
-  /// <summary>
-  /// Construtor da classe.
-  /// </summary>
-  /// <param name="distributedCache">Cache distribuído.</param>
-  internal InternalJsonStringLocalizer(IDistributedCache distributedCache)
-  {
-    // Inicializa as variáveis
-    _distributedCache = distributedCache;
-
-    // Carrega as traduções
-    LoadTranslations(Language.Default);
-    LoadTranslations(Language.Current);
-  }
-
+  #region Internal Methods
 
   /// <summary>
   /// Obtém a string localizada.
   /// </summary>
-  /// <param name="keyParameter">Chave da string localizada.</param>
+  /// <param name="keyParameter">Chave da string localizada, com os parâmetros separados por ponto e vírgula.</param>
   /// <param name="cultureSelect">Código de idioma selecionado. Parâmetro opcional.</param>
-  /// <returns>String localizada.</returns>
-  internal string GetLocalizedString(string keyParameter, string? cultureSelect = null)
+  /// <returns>A string localizada e se a chave foi encontrada.</returns>
+  internal (string Value, bool Found) GetLocalizedString(string keyParameter, string? cultureSelect = null)
   {
-    // Verifica se a chave contém parâmetros
+    // Separa a chave dos parâmetros
     var listInfo = keyParameter.Split(';');
 
-    // Obtém o código de idioma selecionado ou o código de idioma padrão
-    string culture = GetCulture(cultureSelect);
+    // Obtém o código de idioma selecionado ou o código de idioma atual
+    var culture = cultureSelect ?? Language.Current;
 
-    // Verifica se o arquivo existe
-    if (_translations.TryGetValue(culture, out var jsonDocument))
+    // Busca o texto da chave, ainda sem os parâmetros substituídos
+    var (template, found) = GetTemplate(listInfo[0], culture);
+
+    // Chave inexistente devolve o texto recebido inteiro, como faz o localizador do próprio framework:
+    // truncar no ponto e vírgula descartaria parte de uma mensagem que não seja uma chave do Tooark
+    if (!found)
     {
-      // Declara a chave do cache e o valor do cache para o cache distribuído
-      string cacheKey = GetCacheKey(culture, listInfo[0]);
-
-      // Verifica se a string localizada está no cache
-      string? value = _distributedCache.GetString(cacheKey);
-
-      // Se a string localizada não estiver no cache, obtenha-a do documento JSON
-      if (string.IsNullOrEmpty(value))
-      {
-        // Obtém o valor da propriedade do documento JSON
-        value = GetJsonValueFromDocument(listInfo[0], jsonDocument);
-
-        // Verifica se a string não foi encontrada e a cultura não é a padrão
-        if (string.IsNullOrEmpty(value) && culture != Language.Default)
-        {
-          // Tenta encontrar a string na cultura padrão
-          value = GetLocalizedString(keyParameter, Language.Default);
-        }
-        else
-        {
-          // Se a string não for encontrada, retorna a chave
-          value = string.IsNullOrEmpty(value) ? listInfo[0] : value;
-        }
-      }
-
-      // Define cache com a string localizada
-      _distributedCache.SetString(cacheKey, value);
-
-      // Substitui a key com a string localizada
-      listInfo[0] = value;
-
-      // Substitui os parâmetros da string localizada
-      ReplaceParametersInList(listInfo, jsonDocument);
+      return (keyParameter, false);
     }
 
-    // Retorna a string encontrada
-    return ReplaceParameters(listInfo);
-  }
+    // Substitui a chave pelo texto traduzido
+    listInfo[0] = template;
 
-  /// <summary>
-  /// Substitui os parâmetros da string localizada.
-  /// </summary>
-  /// <param name="listInfo">Lista de strings localizadas.</param>
-  /// <param name="jsonDocument">Documento JSON.</param>
-  private static void ReplaceParametersInList(string[] listInfo, JsonDocument jsonDocument)
-  {
-    // Itera sobre os parâmetros da string localizada
-    for (int i = 1; i < listInfo.Length; i++)
-    {
-      // Substitui parâmetros da string pelas strings localizadas
-      var param = GetJsonValueFromDocument(listInfo[i], jsonDocument);
+    // Traduz os parâmetros que também são chaves
+    ReplaceParametersInList(listInfo, culture);
 
-      // Substitui o parâmetro se ele não for nulo ou vazio
-      listInfo[i] = string.IsNullOrEmpty(param) ? listInfo[i] : param;
-    }
+    // Retorna o texto com os parâmetros substituídos
+    return (ReplaceParameters(listInfo), true);
   }
 
   /// <summary>
@@ -185,61 +168,100 @@ internal class InternalJsonStringLocalizer
     // Obtém o código de idioma atual
     string culture = includeParentCultures ? Language.Default : Language.Current;
 
-    // Verifica se o arquivo existe
-    if (_translations.TryGetValue(culture, out var jsonDocument))
+    // Retorna todas as strings localizadas do idioma
+    foreach (var translation in GetTranslations(culture))
     {
-      // Retorna todas as strings localizadas
-      foreach (var property in jsonDocument.RootElement.EnumerateObject())
+      // Retorna a string localizada
+      yield return new LocalizedString(translation.Key, translation.Value, false);
+    }
+  }
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Obtém o texto traduzido da chave, sem substituir os parâmetros.
+  /// </summary>
+  /// <param name="key">Chave da string localizada.</param>
+  /// <param name="culture">Código de idioma.</param>
+  /// <returns>O texto traduzido e se a chave foi encontrada.</returns>
+  private static (string Template, bool Found) GetTemplate(string key, string culture)
+  {
+    // Busca o texto no idioma solicitado
+    if (GetTranslations(culture).TryGetValue(key, out var value))
+    {
+      return (value, true);
+    }
+
+    // Sem tradução no idioma solicitado, tenta o idioma padrão da aplicação
+    if (culture != Language.Default && GetTranslations(Language.Default).TryGetValue(key, out var fallback))
+    {
+      return (fallback, true);
+    }
+
+    // Chave inexistente devolve a própria chave
+    return (key, false);
+  }
+
+  /// <summary>
+  /// Traduz os parâmetros que também correspondem a uma chave.
+  /// </summary>
+  /// <param name="listInfo">Chave, já traduzida, seguida dos parâmetros.</param>
+  /// <param name="culture">Código de idioma.</param>
+  private static void ReplaceParametersInList(string[] listInfo, string culture)
+  {
+    // Itera sobre os parâmetros da string localizada
+    for (int i = 1; i < listInfo.Length; i++)
+    {
+      // Busca o parâmetro como se fosse uma chave
+      var (translated, found) = GetTemplate(listInfo[i], culture);
+
+      // Substitui o parâmetro apenas quando ele corresponde a uma chave existente
+      if (found)
       {
-        // Retorna a string localizada
-        yield return new LocalizedString(property.Name, property.Value.GetString()!, false);
+        listInfo[i] = translated;
       }
     }
   }
 
-
   /// <summary>
-  /// Obtém o código de idioma selecionado ou o código de idioma padrão.
-  /// </summary>
-  /// <param name="cultureSelect">Código de idioma selecionado. Parâmetro opcional.</param>
-  /// <returns>Código de idioma selecionado ou o código de idioma padrão.</returns>
-  private static string GetCulture(string? cultureSelect)
-  {
-    // Retorna o código de idioma selecionado ou o código de idioma padrão
-    return cultureSelect ?? Language.Current;
-  }
-
-  /// <summary>
-  /// Carrega as traduções do arquivo JSON.
+  /// Obtém as traduções do idioma, carregando os arquivos apenas na primeira vez.
   /// </summary>
   /// <param name="culture">Código de idioma.</param>
-  public void LoadTranslations(string culture)
+  /// <returns>Traduções do idioma, indexadas por chave.</returns>
+  private static IReadOnlyDictionary<string, string> GetTranslations(string culture)
   {
-    // Definir caminho para arquivos JSON
-    string defaultFilePath = GetFilePath(culture, true);
-    string additionalFilePath = GetFilePath(culture, false);
-
-    // Verifica se o arquivo padrão, adicional ou em stream existe
-    if (!_translations.TryGetValue(culture, out _))
-    {
-      // Lendo texto do arquivo JSON padrão
-      var defaultJson = ReadJsonFile(defaultFilePath);
-      var additionalJson = !string.IsNullOrEmpty(additionalFilePath) ? ReadJsonFile(additionalFilePath) : null;
-
-      // Mesclando os dois JSONs, dando prioridade ao JSON adicional
-      var combinedJson = MergeJson(defaultJson, additionalJson);
-
-      // Adiciona as traduções ao dicionário
-      _translations[culture] = combinedJson;
-    }
+    // Reaproveita as traduções já carregadas, ou carrega os arquivos do idioma
+    return Translations.GetOrAdd(culture, LoadTranslations);
   }
 
   /// <summary>
-  /// Obtém o caminho do arquivo JSON padrão.
+  /// Carrega as traduções dos arquivos JSON do idioma.
+  /// </summary>
+  /// <remarks>
+  /// O arquivo <c>{idioma}.json</c> do consumidor tem prioridade sobre o <c>{idioma}.default.json</c>
+  /// distribuído com o pacote, chave a chave.
+  /// </remarks>
+  /// <param name="culture">Código de idioma.</param>
+  /// <returns>Traduções do idioma, indexadas por chave.</returns>
+  private static IReadOnlyDictionary<string, string> LoadTranslations(string culture)
+  {
+    // O arquivo do consumidor é lido por último, sobrescrevendo o que veio do pacote
+    var translations = new Dictionary<string, string>(StringComparer.Ordinal);
+
+    ReadJsonFile(GetFilePath(culture, true), translations);
+    ReadJsonFile(GetFilePath(culture, false), translations);
+
+    return translations;
+  }
+
+  /// <summary>
+  /// Obtém o caminho do arquivo JSON do idioma.
   /// </summary>
   /// <param name="culture">Código de idioma.</param>
   /// <param name="defaultFile">Indica se é o arquivo JSON padrão.</param>
-  /// <returns>Caminho do arquivo JSON padrão.</returns>
+  /// <returns>Caminho do arquivo JSON.</returns>
   private static string GetFilePath(string culture, bool defaultFile = true)
   {
     // Define o complemento do arquivo JSON
@@ -253,128 +275,44 @@ internal class InternalJsonStringLocalizer
   }
 
   /// <summary>
-  /// Verifica se o arquivo existe.
+  /// Lê o arquivo JSON e acrescenta as traduções ao dicionário.
   /// </summary>
   /// <param name="filePath">Caminho do arquivo JSON.</param>
-  /// <returns>Verdadeiro se o arquivo existir.</returns>
-  private static bool FileExists(string filePath)
-  {
-    // Retorna verdadeiro se o arquivo existir
-    return File.Exists(filePath);
-  }
-
-  /// <summary>
-  /// Lê o arquivo JSON.
-  /// </summary>
-  /// <param name="filePath">Caminho do arquivo JSON.</param>
-  /// <returns>Documento JSON.</returns>
-  private static JsonDocument ReadJsonFile(string filePath)
+  /// <param name="translations">Dicionário que recebe as traduções.</param>
+  private static void ReadJsonFile(string filePath, Dictionary<string, string> translations)
   {
     // Verifica se o arquivo existe
-    if (!FileExists(filePath))
+    if (!File.Exists(filePath))
     {
-      // Retorna nulo se o arquivo não existir
-      return JsonDocument.Parse("{}");
+      // Sem arquivo não há o que acrescentar
+      return;
     }
 
-    // Lendo texto do arquivo JSON
-    using var additionalResourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-    // Reseta a posição do stream para garantir que ele seja lido do início
-    if (additionalResourceStream.CanSeek)
+    try
     {
-      // Reseta a posição do stream para garantir que ele seja lido do início
-      additionalResourceStream.Seek(0, SeekOrigin.Begin);
-    }
+      // Lê e interpreta o arquivo JSON
+      using var document = JsonDocument.Parse(File.ReadAllText(filePath));
 
-    // Lendo texto do arquivo JSON
-    using var streamReader = new StreamReader(additionalResourceStream);
-
-    // Retorna o arquivo JSON
-    return JsonDocument.Parse(streamReader.ReadToEnd());
-  }
-
-  /// <summary>
-  /// Mescla os JSONs.
-  /// </summary>
-  /// <param name="defaultJson">JSON padrão.</param>
-  /// <param name="additionalJson">JSON adicional.</param>
-  /// <returns>Documento JSON mesclado.</returns>
-  private static JsonDocument MergeJson(JsonDocument defaultJson, JsonDocument? additionalJson)
-  {
-    // Se o JSON adicional for nulo, retorne o JSON padrão
-    if (additionalJson == null)
-    {
-      // Retorna o JSON padrão
-      return defaultJson;
-    }
-
-    // Cria um novo dicionário para mesclar os JSONs
-    var merged = new Dictionary<string, JsonElement>();
-
-    // Adiciona todas as propriedades do JSON padrão ao dicionário
-    foreach (var property in defaultJson.RootElement.EnumerateObject())
-    {
-      // Adiciona propriedade ao dicionário
-      merged[property.Name] = property.Value;
-    }
-
-    // Se o JSON adicional não for nulo, adicione todas as propriedades do JSON adicional ao dicionário
-    if (additionalJson != null)
-    {
-      // Adiciona todas as propriedades do JSON adicional ao dicionário
-      foreach (var property in additionalJson.RootElement.EnumerateObject())
+      // Indexa cada tradução pela chave
+      foreach (var property in document.RootElement.EnumerateObject())
       {
-        // Adiciona propriedade ao dicionário
-        merged[property.Name] = property.Value;
+        // Apenas valores de texto são traduções
+        if (property.Value.ValueKind == JsonValueKind.String)
+        {
+          translations[property.Name] = property.Value.GetString()!;
+        }
       }
     }
-
-    // Serializa o dicionário mesclado em um JSON
-    var mergedJson = JsonSerializer.Serialize(merged);
-
-    // Retorna o JSON mesclado
-    return JsonDocument.Parse(mergedJson);
-  }
-
-  /// <summary>
-  /// Obtém a chave do cache.
-  /// </summary>
-  /// <param name="culture">Código de idioma.</param>
-  /// <param name="key">Chave da string localizada.</param>
-  /// <returns>Chave do cache.</returns>
-  private static string GetCacheKey(string culture, string key)
-  {
-    // Retorna a chave do cache
-    return $"locale_{culture}_{key}";
-  }
-
-  /// <summary>
-  /// Obtém o valor da propriedade do documento JSON.
-  /// </summary>
-  /// <param name="propertyName">Propriedade a buscar no documento JSON.</param>
-  /// <param name="jsonDocument">Documento JSON.</param>
-  /// <returns>Valor da propriedade do documento JSON.</returns>
-  private static string GetJsonValueFromDocument(string propertyName, JsonDocument jsonDocument)
-  {
-    // Valor localizado
-    string? value = null;
-
-    // Tentar obter a propriedade do documento JSON
-    if (jsonDocument.RootElement.TryGetProperty(propertyName, out var jsonElement))
+    catch (JsonException)
     {
-      // Atribui o valor da propriedade ao valor localizado
-      value = jsonElement.GetString();
+      // Arquivo de tradução malformado não pode derrubar a aplicação: o idioma fica sem essas traduções
     }
-
-    // Retorna a propriedade se ela não for encontrada
-    return value ?? string.Empty;
   }
 
   /// <summary>
   /// Substitui os parâmetros da string localizada.
   /// </summary>
-  /// <param name="keyAndParameters">Chave e parâmetros da string localizada.</param>
+  /// <param name="keyAndParameters">Texto traduzido seguido dos parâmetros.</param>
   /// <returns>String localizada com os parâmetros substituídos.</returns>
   private static string ReplaceParameters(string[] keyAndParameters)
   {
@@ -393,7 +331,9 @@ internal class InternalJsonStringLocalizer
     catch (FormatException)
     {
       // Se houver um erro de formatação, retorna a string original sem formatação
-      return string.Join(";", keyAndParameters ?? []);
+      return string.Join(";", keyAndParameters);
     }
   }
+
+  #endregion
 }

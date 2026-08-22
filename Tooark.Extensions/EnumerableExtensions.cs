@@ -39,6 +39,8 @@ public static class EnumerableExtensions
 /// </summary>
 internal static class InternalEnumerableExtensions
 {
+  #region Private Static Fields
+
   /// <summary>
   /// Método de seleção.
   /// </summary>
@@ -57,6 +59,47 @@ internal static class InternalEnumerableExtensions
       m.Name == "FirstOrDefault" &&
       m.GetParameters().Length == 1 &&
       m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+  #endregion
+
+  #region Internal Methods
+
+  /// <summary>
+  /// Ordena uma sequência de objetos por uma propriedade.
+  /// </summary>
+  /// <typeparam name="T">Tipo do objeto a ser ordenado.</typeparam>
+  /// <param name="source">Sequência de objetos a ser ordenada.</param>
+  /// <param name="sortProperty">Propriedade a ser utilizada para ordenar.</param>
+  /// <param name="ascending">Indica se a ordenação é ascendente.</param>
+  /// <returns>Retorna a sequência de objetos ordenados.</returns>
+  internal static IEnumerable<T> OrderByProperty<T>(this IEnumerable<T> source, string sortProperty, bool ascending = true)
+  {
+    // Verifica se a propriedade existe no tipo de objeto
+    if (!PropertyExists<T>(sortProperty))
+    {
+      // Retorna a sequência de objetos se a propriedade não existir no tipo de objeto
+      return source;
+    }
+
+    // Quebra a string para verificar se existe a propriedade ou campo
+    var properties = sortProperty.Split('.');
+
+    // Cria uma expressão de parâmetro
+    ParameterExpression parameterExpression = Expression.Parameter(typeof(T), "Param_0");
+
+    // Monta a expressão de propriedade para ordenação
+    Expression propertyExpression = BuildExpression(parameterExpression, properties);
+
+    // Cria uma expressão lambda para a propriedade
+    var lambda = Expression.Lambda<Func<T, object>>(Expression.Convert(propertyExpression, typeof(object)), parameterExpression);
+
+    // Retorna a sequência de objetos ordenada, ascendente ou descendente
+    return ascending ? source.OrderBy(lambda.Compile()) : source.OrderByDescending(lambda.Compile());
+  }
+
+  #endregion
+
+  #region Private Methods
 
   /// <summary>
   /// Expressão de igualdade com nulo.
@@ -130,41 +173,6 @@ internal static class InternalEnumerableExtensions
       expression
     );
   }
-
-
-  /// <summary>
-  /// Ordena uma sequência de objetos por uma propriedade.
-  /// </summary>
-  /// <typeparam name="T">Tipo do objeto a ser ordenado.</typeparam>
-  /// <param name="source">Sequência de objetos a ser ordenada.</param>
-  /// <param name="sortProperty">Propriedade a ser utilizada para ordenar.</param>
-  /// <param name="ascending">Indica se a ordenação é ascendente.</param>
-  /// <returns>Retorna a sequência de objetos ordenados.</returns>
-  internal static IEnumerable<T> OrderByProperty<T>(this IEnumerable<T> source, string sortProperty, bool ascending = true)
-  {
-    // Verifica se a propriedade existe no tipo de objeto
-    if (!PropertyExists<T>(sortProperty))
-    {
-      // Retorna a sequência de objetos se a propriedade não existir no tipo de objeto
-      return source;
-    }
-
-    // Quebra a string para verificar se existe a propriedade ou campo
-    var properties = sortProperty.Split('.');
-
-    // Cria uma expressão de parâmetro
-    ParameterExpression parameterExpression = Expression.Parameter(typeof(T), "Param_0");
-
-    // Monta a expressão de propriedade para ordenação
-    Expression propertyExpression = BuildExpression(parameterExpression, properties);
-
-    // Cria uma expressão lambda para a propriedade
-    var lambda = Expression.Lambda<Func<T, object>>(Expression.Convert(propertyExpression, typeof(object)), parameterExpression);
-
-    // Retorna a sequência de objetos ordenada, ascendente ou descendente
-    return ascending ? source.OrderBy(lambda.Compile()) : source.OrderByDescending(lambda.Compile());
-  }
-
 
   /// <summary>
   /// Monta a expressão de propriedade para ordenação.
@@ -244,7 +252,7 @@ internal static class InternalEnumerableExtensions
   /// </summary>
   /// <param name="type">Tipo a ser verificado.</param>
   /// <returns>Retorna verdadeiro se o tipo for uma coleção.</returns>
-  public static bool IsCollectionType(Type type) => type.IsGenericType && new[]
+  private static bool IsCollectionType(Type type) => type.IsGenericType && new[]
     {
       typeof(IList<>),              // IList<T> é uma interface que representa uma lista de objetos do tipo T que pode ser acessada por índice.
       typeof(IReadOnlyList<>),      // IReadOnlyList<T> é uma interface que representa uma lista somente leitura de objetos do tipo T.
@@ -259,7 +267,7 @@ internal static class InternalEnumerableExtensions
   /// <typeparam name="T">Tipo do objeto a ser ordenado.</typeparam>
   /// <param name="sortProperty">Propriedade a ser utilizada para ordenar.</param>
   /// <returns>Retorna verdadeiro se a propriedade existir no tipo de objeto.</returns>
-  public static bool PropertyExists<T>(string sortProperty)
+  private static bool PropertyExists<T>(string sortProperty)
   {
     // Retorna falso se a propriedade for nula ou vazia
     if (string.IsNullOrEmpty(sortProperty))
@@ -308,7 +316,7 @@ internal static class InternalEnumerableExtensions
   /// <param name="type">Tipo do objeto verificado.</param>
   /// <param name="property">Propriedade a ser verificada.</param>
   /// <returns>Retorna o tipo da propriedade do objeto.</returns>
-  public static Type? PropertyType(Type type, string property)
+  private static Type? PropertyType(Type type, string property)
   {
     // Retorna o tipo da propriedade do objeto
     return type.GetProperty(property, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.PropertyType;
@@ -320,7 +328,7 @@ internal static class InternalEnumerableExtensions
   /// <param name="type">Tipo do objeto verificado.</param>
   /// <param name="field">Campo a ser verificado.</param>
   /// <returns>Retorna o tipo do campo do objeto.</returns>
-  public static Type? FieldType(Type type, string field)
+  private static Type? FieldType(Type type, string field)
   {
     // Retorna o tipo do campo do objeto
     return type.GetField(field, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase)?.FieldType;
@@ -374,4 +382,6 @@ internal static class InternalEnumerableExtensions
       _ => Expression.Constant(Activator.CreateInstance(type), type)
     };
   }
+
+  #endregion
 }

@@ -5,7 +5,7 @@
     <PackageId>Tooark.Extensions</PackageId>
     <Title>Tooark.Extensions</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, extensions, utilities, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, extensions, utilities, localization, i18n, stringlocalizer, string, slug, enumerable, .NET</PackageTags>
     <Summary>Management of extensions and utilities for .NET projects.</Summary>
     <PackageDescription>Package for managing extensions and utilities for .NET applications.</PackageDescription>
     <Description>Library for managing extensions and utilities, facilitating the development and maintenance of .NET projects.</Description>
@@ -24,8 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- ModelStateDictionary vem do framework compartilhado, que tambem fornece o cache em memoria e a localizacao -->
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Extensions.Localization" />
   </ItemGroup>
 
 </Project>

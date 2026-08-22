@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tooark.Mediator", "Tooark.M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tooark.Mediator.EntityFrameworkCore", "Tooark.Mediator.EntityFrameworkCore\Tooark.Mediator.EntityFrameworkCore.csproj", "{3A9E99E9-C0A6-4B26-B7C1-3E612FC27746}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tooark.AspNetCore", "Tooark.AspNetCore\Tooark.AspNetCore.csproj", "{63BEB574-8010-45B8-964F-4B5B597DE8AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{3A9E99E9-C0A6-4B26-B7C1-3E612FC27746}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A9E99E9-C0A6-4B26-B7C1-3E612FC27746}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A9E99E9-C0A6-4B26-B7C1-3E612FC27746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63BEB574-8010-45B8-964F-4B5B597DE8AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63BEB574-8010-45B8-964F-4B5B597DE8AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63BEB574-8010-45B8-964F-4B5B597DE8AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63BEB574-8010-45B8-964F-4B5B597DE8AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

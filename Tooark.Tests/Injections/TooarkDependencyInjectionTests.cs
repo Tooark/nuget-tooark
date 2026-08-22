@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
@@ -88,8 +87,6 @@ public class TooarkDependencyInjectionTests
   {
     // Arrange
     var services = new ServiceCollection();
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    services.AddSingleton(mockDistributedCache.Object);
 
     // Act
     services.AddTooarkService();

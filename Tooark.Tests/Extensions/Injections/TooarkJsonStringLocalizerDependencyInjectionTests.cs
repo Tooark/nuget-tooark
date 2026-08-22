@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Moq;
@@ -28,14 +27,12 @@ public class TooarkJsonStringLocalizerDependencyInjectionTests
     Assert.NotNull(localizer);
   }
 
-  // Teste para verificar se o método AddJsonStringLocalizer adiciona os serviços corretamente com o uso de um mock.
+  // Teste para verificar se o método AddJsonStringLocalizer adiciona os serviços corretamente sem nenhum registro previo.
   [Fact]
   public void AddJsonStringLocalizer_ShouldRegisterServices_WithMock()
   {
     // Arrange
     var services = new ServiceCollection();
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    services.AddSingleton(mockDistributedCache.Object);
 
     // Act
     services.AddJsonStringLocalizer();

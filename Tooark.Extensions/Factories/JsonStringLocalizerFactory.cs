@@ -1,4 +1,3 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Localization;
 
 namespace Tooark.Extensions.Factories;
@@ -8,23 +7,20 @@ namespace Tooark.Extensions.Factories;
 /// </summary>
 /// <remarks>
 /// A fábrica é responsável por criar instâncias de <see cref="JsonStringLocalizerExtension"/>.
+/// Os dois métodos ignoram os argumentos: o localizador resolve as traduções pelo idioma do fluxo de
+/// execução, e não pelo tipo ou pelo caminho do recurso.
 /// </remarks>
-/// <param name="distributedCache">Cache distribuído para armazenar as traduções.</param>
 /// <seealso cref="IStringLocalizerFactory"/>
-public class JsonStringLocalizerFactory(IDistributedCache distributedCache) : IStringLocalizerFactory
+public class JsonStringLocalizerFactory : IStringLocalizerFactory
 {
-  /// <summary>
-  /// Cache distribuído para armazenar as traduções.
-  /// </summary>
-  private readonly IDistributedCache _distributedCache = distributedCache;
-
+  #region Methods
 
   /// <summary>
   /// Cria uma instância de <see cref="JsonStringLocalizerExtension"/>.
   /// </summary>
-  /// <param name="resourceSource">Parâmetro não utilizado.</param>	
+  /// <param name="resourceSource">Parâmetro não utilizado.</param>
   /// <returns>Instância de <see cref="IStringLocalizer"/>.</returns>
-  public IStringLocalizer Create(Type resourceSource) => new JsonStringLocalizerExtension(_distributedCache);
+  public IStringLocalizer Create(Type resourceSource) => new JsonStringLocalizerExtension();
 
   /// <summary>
   /// Cria uma instância de <see cref="JsonStringLocalizerExtension"/>.
@@ -32,5 +28,7 @@ public class JsonStringLocalizerFactory(IDistributedCache distributedCache) : IS
   /// <param name="baseName">Parâmetro não utilizado.</param>
   /// <param name="location">Parâmetro não utilizado.</param>
   /// <returns>Instância de <see cref="IStringLocalizer"/>.</returns>
-  public IStringLocalizer Create(string baseName, string location) => new JsonStringLocalizerExtension(_distributedCache);
+  public IStringLocalizer Create(string baseName, string location) => new JsonStringLocalizerExtension();
+
+  #endregion
 }

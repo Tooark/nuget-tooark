@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Tooark.Extensions;
+using Tooark.AspNetCore.Extensions;
 
-namespace Tooark.Tests.Extensions;
+namespace Tooark.Tests.AspNetCore.Extensions;
 
 public class ModelStateExtensionTests
 {

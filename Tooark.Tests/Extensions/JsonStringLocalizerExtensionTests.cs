@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using Tooark.Extensions;
 using Tooark.Utils;
@@ -22,8 +21,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "a";
     string localizedValue = "Olá";
 
@@ -40,8 +38,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "b;Tooark";
     string localizedValue = "Olá, Tooark";
 
@@ -58,8 +55,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "c;Package;Nuget;Tooark";
     string localizedValue = "Olá, Package Nuget Tooark";
 
@@ -76,8 +72,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "custom";
     string expectedValue = key.Split(';')[0];
 
@@ -94,10 +89,9 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "custom;Tooark";
-    string expectedValue = key.Split(';')[0];
+    string expectedValue = key;
 
     // Act
     var result = localizer[key];
@@ -112,8 +106,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "b";
     string[] parameters = ["Tooark"];
     string localizedValue = "Olá, Tooark";
@@ -131,8 +124,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "c";
     string[] parameters = ["Package", "Nuget", "Tooark"];
     string localizedValue = "Olá, Package Nuget Tooark";
@@ -150,8 +142,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     var expectedName = "a";
     var expectedValue = "Olá";
 
@@ -170,8 +161,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     var expectedName = "z";
     var expectedValue = "Default";
 
@@ -190,8 +180,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "z";
     string localizedValue = "Default";
 
@@ -208,8 +197,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "c";
     string[] parameters = ["Tooark"];
     string expectedValue = "Olá, {0} {1} {2};Tooark";
@@ -229,8 +217,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("pt-BR");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
 
     // Act
     var result = localizer[key!];
@@ -245,8 +232,7 @@ public class JsonStringLocalizerExtensionTests
   {
     // Arrange
     Language.SetCulture("es-ES");
-    var mockDistributedCache = new Mock<IDistributedCache>();
-    var localizer = new JsonStringLocalizerExtension(mockDistributedCache.Object);
+    var localizer = new JsonStringLocalizerExtension();
     string key = "custom";
 
     // Act

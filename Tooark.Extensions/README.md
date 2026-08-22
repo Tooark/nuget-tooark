@@ -1,6 +1,12 @@
 # Tooark.Extensions
 
-Biblioteca gerenciar extensões e utilitários, facilitando o desenvolvimento e a manutenção de projetos .NET.
+Biblioteca para gerenciar extensões e utilitários, facilitando o desenvolvimento e a manutenção de projetos .NET.
+
+## Instalação
+
+```bash
+dotnet add package Tooark.Extensions
+```
 
 ## Configuração
 
@@ -31,6 +37,7 @@ services.AddTooarkExtensions();
 - [AddJsonStringLocalizer](#2-configuração-do-jsonstringlocalizer-extensão-localiza-string-dentro-de-json)
 - [JsonStringLocalizerExtensions](#3-extensão-localiza-string-dentro-de-json-extensão-para-istringlocalizer)
 - [StringExtensions](#4-extensões-de-string)
+- [Catálogo de mensagens](#catálogo-de-mensagens)
 
 ## Extensões
 
@@ -264,27 +271,56 @@ string value = "hello-world";
 string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 ```
 
-## Arquivos de Recursos Multiculturais
+## Catálogo de mensagens
 
-- [en-US.default.json](./Resources/en-US.default.json)
-- [es-ES.default.json](./Resources/es-ES.default.json)
-- [pt-BR.default.json](./Resources/pt-BR.default.json)
-- [pt-PT.default.json](./Resources/pt-PT.default.json)
+Os arquivos de recurso cobrem **todas as mensagens emitidas pelos pacotes Tooark**: validações, atributos,
+exceções, notificações, mediador, unidade de trabalho, criptografia, JWT, observabilidade, enumeradores e
+utilitários. São 134 chaves, com o mesmo conjunto nos três idiomas.
+
+| Idioma    | Arquivo                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
+| Inglês    | [en-US.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/en-US.default.json) |
+| Espanhol  | [es-ES.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/es-ES.default.json) |
+| Português | [pt-BR.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/pt-BR.default.json) |
+
+O idioma padrão da aplicação é o `en-US`, e é para ele que a busca cai quando o idioma atual não tem
+tradução para a chave. Um idioma sem arquivo próprio — o `pt-PT`, por exemplo, que deixou de ser
+distribuído nesta versão — funciona pelo mesmo caminho, respondendo em inglês.
+
+### Formato das chaves
+
+A chave pode trazer parâmetros separados por ponto e vírgula, no formato `Chave;parametro1;parametro2`.
+Os parâmetros substituem os marcadores `{0}`, `{1}` e assim por diante, e são eles próprios traduzidos
+quando correspondem a uma chave existente:
+
+```csharp
+localizer["Field.Required;Email"]        // pt-BR: "O campo E-mail é obrigatório"
+localizer["Validation.IsBetween;Idade;18;65"]  // pt-BR: "O valor da propriedade Idade está entre 18 e 65."
+```
+
+Quando a chave não existe, `LocalizedString.ResourceNotFound` é verdadeiro e `Value` traz o texto recebido
+inalterado — mesmo comportamento do `ResourceManagerStringLocalizer` do framework. Isso permite passar pelo
+localizador um texto que não é chave do Tooark, como as mensagens que o model binding do ASP.NET Core gera,
+sem que ele seja alterado.
+
+### Sobrescrevendo ou acrescentando traduções
+
+Coloque um arquivo `Resources/{idioma}.json` na saída da sua aplicação. Ele é mesclado sobre o
+`{idioma}.default.json` distribuído com o pacote, **chave a chave**: você sobrescreve apenas o que quiser e
+pode acrescentar chaves próprias. Os arquivos são lidos uma vez por idioma, no primeiro uso.
 
 ## Dependências
 
-| Dependencia                                                                  | Versao   | Uso                                                    |
-| ---------------------------------------------------------------------------- | -------- | ------------------------------------------------------ |
-| [`Tooark.Utils`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Utils) | 4.x      | Normalizacao e idioma                                  |
-| `Microsoft.AspNetCore.App` (framework compartilhado)                         | 8.x/10.x | `ModelStateDictionary`, cache em memoria e localizacao |
+| Dependência                                                                  | Versão   | Uso                                          |
+| ---------------------------------------------------------------------------- | -------- | -------------------------------------------- |
+| [`Tooark.Utils`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Utils) | 4.x      | Normalização e idioma                        |
+| `Microsoft.Extensions.Localization`                                          | 8.x/10.x | `IStringLocalizer` e o registro no container |
 
-O pacote nao traz dependencias NuGet do ASP.NET Core: os tipos vem do **framework compartilhado**
-(`FrameworkReference`), o mesmo que a aplicacao ja usa. Antes, os pacotes avulsos da linha 2.x eram
-referenciados e arrastavam uma arvore transitiva grande.
-
-> **Requisito**: por declarar o framework compartilhado, quem consome o pacote passa a exigir o runtime do
-> ASP.NET Core instalado, inclusive em aplicacoes de console ou worker. A compilacao e a execucao funcionam
-> normalmente; o que muda e o pre-requisito de runtime, registrado no `runtimeconfig.json` da aplicacao.
+> **O pacote não exige o runtime do ASP.NET Core.** Até a v3 ele declarava o framework compartilhado por
+> causa do `ModelStateExtension`, e esse requisito se propagava para o `Tooark.Dtos`, o `Tooark.ValueObjects`,
+> o `Tooark.Entities` e o agregador. Na v4 o `ModelStateExtension` passou para o
+> [Tooark.AspNetCore](https://github.com/Tooark/tooark-cs/tree/main/Tooark.AspNetCore), e este pacote voltou a
+> ser de uso geral: funciona em console, worker e função serverless sem o runtime do ASP.NET Core instalado.
 
 ## Contribuição
 

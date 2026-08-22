@@ -66,7 +66,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função SnakeToPascalCase converte SnakeCase para PascalCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("_", "")]
   [InlineData("_a", "A")]
   [InlineData("a_", "A")]
@@ -94,7 +94,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função SnakeToCamelCase converte SnakeCase para CamelCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("_", "")]
   [InlineData("_a", "a")]
   [InlineData("a_", "a")]
@@ -122,7 +122,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função SnakeToKebabCase converte SnakeCase para KebabCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("_", "")]
   [InlineData("_a", "a")]
   [InlineData("a_", "a")]
@@ -150,7 +150,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função PascalToSnakeCase converte PascalCase para SnakeCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("", "")]
   [InlineData("A", "a")]
   [InlineData("Snake", "snake")]
@@ -169,7 +169,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função CamelToSnakeCase converte CamelCase para SnakeCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("", "")]
   [InlineData("snake", "snake")]
   [InlineData("SNAKE", "s_n_a_k_e")]
@@ -187,7 +187,7 @@ public class StringExtensionsTests
 
   // Teste para verificar se a função KebabToSnakeCase converte KebabCase para SnakeCase
   [Theory]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   [InlineData("", "")]
   [InlineData("snake-", "snake")]
   [InlineData("-s-n-a-k-e-", "s_n_a_k_e")]
@@ -256,11 +256,11 @@ public class StringExtensionsTests
   [InlineData("Rock & Roll", "rock-and-roll")]
   [InlineData("C# & C++", "c-and-c")]
   [InlineData("", "")]
-  [InlineData(null, null)]
+  [InlineData(null, "")]
   public void ToSlug_ShouldConvertStringToSlug(string? input, string? expected)
   {
     // Arrange & Act
-    var result = input?.ToSlug();
+    var result = input.ToSlug();
 
     // Assert
     Assert.Equal(expected, result);

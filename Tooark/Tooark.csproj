@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
     <ProjectReference Include="..\Tooark.Utils\Tooark.Utils.csproj" />
     <ProjectReference Include="..\Tooark.Extensions\Tooark.Extensions.csproj" />
+    <ProjectReference Include="..\Tooark.AspNetCore\Tooark.AspNetCore.csproj" />
     <ProjectReference Include="..\Tooark.Dtos\Tooark.Dtos.csproj" />
     <ProjectReference Include="..\Tooark.Entities\Tooark.Entities.csproj" />
     <ProjectReference Include="..\Tooark.ValueObjects\Tooark.ValueObjects.csproj" />
