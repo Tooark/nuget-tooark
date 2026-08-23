@@ -43,7 +43,7 @@ public class ZipCodeTests
 
     // Assert
     Assert.False(letterNumeric.IsValid);
-    Assert.Null(letterNumeric.Value);
+    Assert.Equal(string.Empty, letterNumeric.Value);
   }
 
   // Testa se o método ToString retorna um Código Postal

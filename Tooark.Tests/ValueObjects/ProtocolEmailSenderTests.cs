@@ -40,7 +40,7 @@ public class ProtocolEmailSenderTests
 
     // Assert
     Assert.False(protocolEmailSender.IsValid);
-    Assert.Null(protocolEmailSender.Value);
+    Assert.Equal(string.Empty, protocolEmailSender.Value);
   }
 
   // Testa se o método ToString retorna o protocolo EmailSender

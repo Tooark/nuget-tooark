@@ -37,7 +37,7 @@ public class LetterTests
 
     // Assert
     Assert.False(letter.IsValid);
-    Assert.Null(letter.Value);
+    Assert.Equal(string.Empty, letter.Value);
   }
 
   // Testa se o método ToString retorna uma string de letras

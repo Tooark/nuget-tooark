@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
 
@@ -8,10 +9,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Title : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do título.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Title com o valor especificado.
@@ -32,6 +39,9 @@ public sealed class Title : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do título.
@@ -43,6 +53,9 @@ public sealed class Title : ValueObject
   /// </summary>
   public string Normalized => _value.ToNormalize();
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do título.
@@ -55,7 +68,8 @@ public sealed class Title : ValueObject
   /// </summary>
   /// <param name="title">O objeto Title a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Title.</returns>
-  public static implicit operator string(Title title) => title._value;
+  public static implicit operator string(Title title) =>
+    title?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Title.
@@ -63,4 +77,6 @@ public sealed class Title : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Title.</param>
   /// <returns>Um objeto Title criado a partir da string fornecida.</returns>
   public static implicit operator Title(string value) => new(value);
+
+  #endregion
 }

@@ -41,7 +41,7 @@ public class KeywordTests
 
     // Assert
     Assert.False(keyword.IsValid);
-    Assert.Null(keyword.Value);
+    Assert.Equal(string.Empty, keyword.Value);
     Assert.Equal("", keyword.Normalized);
   }
 

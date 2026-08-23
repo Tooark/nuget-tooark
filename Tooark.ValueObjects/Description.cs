@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
 
@@ -8,10 +9,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Description : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado da descrição.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Description com o valor especificado.
@@ -32,6 +39,9 @@ public sealed class Description : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor da descrição.
@@ -43,6 +53,9 @@ public sealed class Description : ValueObject
   /// </summary>
   public string Normalized => _value.ToNormalize();
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor da descrição.
@@ -55,7 +68,8 @@ public sealed class Description : ValueObject
   /// </summary>
   /// <param name="description">O objeto Description a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Description.</returns>
-  public static implicit operator string(Description description) => description._value;
+  public static implicit operator string(Description description) =>
+    description?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Description.
@@ -63,4 +77,6 @@ public sealed class Description : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Description.</param>
   /// <returns>Um objeto Description criado a partir da string fornecida.</returns>
   public static implicit operator Description(string value) => new(value);
+
+  #endregion
 }

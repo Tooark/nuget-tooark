@@ -69,7 +69,7 @@ public class EmailTests
 
     // Assert
     Assert.False(email.IsValid);
-    Assert.Null(email.Value);
+    Assert.Equal(string.Empty, email.Value);
   }
 
   // Testa se o método ToString retorna o endereço de email

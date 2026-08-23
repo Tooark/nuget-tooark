@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
 
@@ -8,10 +9,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Keyword : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado da palavra-chave.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Keyword com o valor especificado.
@@ -32,6 +39,9 @@ public sealed class Keyword : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor da palavra-chave.
@@ -43,6 +53,9 @@ public sealed class Keyword : ValueObject
   /// </summary>
   public string Normalized => _value.ToNormalize();
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor da palavra-chave.
@@ -55,7 +68,8 @@ public sealed class Keyword : ValueObject
   /// </summary>
   /// <param name="keyword">O objeto Keyword a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Keyword.</returns>
-  public static implicit operator string(Keyword keyword) => keyword._value;
+  public static implicit operator string(Keyword keyword) =>
+    keyword?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Keyword.
@@ -63,4 +77,6 @@ public sealed class Keyword : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Keyword.</param>
   /// <returns>Um objeto Keyword criado a partir da string fornecida.</returns>
   public static implicit operator Keyword(string value) => new(value);
+
+  #endregion
 }

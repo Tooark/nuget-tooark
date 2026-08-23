@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Letter : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado da string de letras.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Letter com o valor especificado.
@@ -31,12 +38,18 @@ public sealed class Letter : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor da string de letras.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor da string de letras.
@@ -47,9 +60,10 @@ public sealed class Letter : ValueObject
   /// <summary>
   /// Define uma conversão implícita de um objeto Letter para uma string.
   /// </summary>
-  /// <param name="email">O objeto Letter a ser convertido.</param>
+  /// <param name="letter">O objeto Letter a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Letter.</returns>
-  public static implicit operator string(Letter email) => email._value;
+  public static implicit operator string(Letter letter) =>
+    letter?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Letter.
@@ -57,4 +71,6 @@ public sealed class Letter : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Letter.</param>
   /// <returns>Um objeto Letter criado a partir da string fornecida.</returns>
   public static implicit operator Letter(string value) => new(value);
+
+  #endregion
 }

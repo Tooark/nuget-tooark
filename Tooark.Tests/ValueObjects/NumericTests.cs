@@ -36,7 +36,7 @@ public class NumericTests
 
     // Assert
     Assert.False(numeric.IsValid);
-    Assert.Null(numeric.Value);
+    Assert.Equal(string.Empty, numeric.Value);
   }
 
   // Testa se o método ToString retorna uma string de números

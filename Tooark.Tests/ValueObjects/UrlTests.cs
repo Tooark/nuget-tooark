@@ -40,7 +40,7 @@ public class UrlTests
 
     // Assert
     Assert.False(url.IsValid);
-    Assert.Null(url.Value);
+    Assert.Equal(string.Empty, url.Value);
   }
 
   // Testa se o método ToString retorna a URL

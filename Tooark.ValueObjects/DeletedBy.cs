@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class DeletedBy : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do Guid do Deletado Por.
   /// </summary>
   private readonly Guid _value = Guid.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe DeletedBy com o valor especificado.
@@ -31,19 +38,26 @@ public sealed class DeletedBy : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do Guid do Deletado Por.
   /// </summary>
   public Guid Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Define uma conversão implícita de um objeto DeletedBy para uma Guid.
   /// </summary>
   /// <param name="deletedBy">O objeto DeletedBy a ser convertido.</param>
   /// <returns>Uma Guid que representa o valor do DeletedBy.</returns>
-  public static implicit operator Guid(DeletedBy deletedBy) => deletedBy._value;
+  public static implicit operator Guid(DeletedBy deletedBy) =>
+    deletedBy?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma Guid para um objeto DeletedBy.
@@ -51,4 +65,6 @@ public sealed class DeletedBy : ValueObject
   /// <param name="value">A Guid a ser convertida em um objeto DeletedBy.</param>
   /// <returns>Um objeto DeletedBy criado a partir do Guid fornecida.</returns>
   public static implicit operator DeletedBy(Guid value) => new(value);
+
+  #endregion
 }

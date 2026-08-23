@@ -41,7 +41,7 @@ public class DescriptionTests
 
     // Assert
     Assert.False(description.IsValid);
-    Assert.Null(description.Value);
+    Assert.Equal(string.Empty, description.Value);
     Assert.Equal("", description.Normalized);
   }
 

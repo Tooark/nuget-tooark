@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
 
@@ -8,10 +9,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Name : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do nome.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Name com o valor especificado.
@@ -32,6 +39,9 @@ public sealed class Name : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do nome.
@@ -43,6 +53,9 @@ public sealed class Name : ValueObject
   /// </summary>
   public string Normalized => _value.ToNormalize();
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do nome.
@@ -55,7 +68,8 @@ public sealed class Name : ValueObject
   /// </summary>
   /// <param name="name">O objeto Name a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Name.</returns>
-  public static implicit operator string(Name name) => name._value;
+  public static implicit operator string(Name name) =>
+    name?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Name.
@@ -63,4 +77,6 @@ public sealed class Name : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Name.</param>
   /// <returns>Um objeto Name criado a partir da string fornecida.</returns>
   public static implicit operator Name(string value) => new(value);
+
+  #endregion
 }

@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,11 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class LanguageCode : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Código do idioma privado.
   /// </summary>
-  private readonly string _code = null!;
+  private readonly string _code = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe LanguageCode com o valor especificado.
@@ -32,12 +38,18 @@ public sealed class LanguageCode : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o código do idioma.
   /// </summary>
   public string Code { get => _code; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do código do idioma.
@@ -50,7 +62,8 @@ public sealed class LanguageCode : ValueObject
   /// </summary>
   /// <param name="languageCode">O objeto LanguageCode a ser convertido.</param>
   /// <returns>Uma string que representa o valor do código do idioma.</returns>
-  public static implicit operator string(LanguageCode languageCode) => languageCode._code;
+  public static implicit operator string(LanguageCode languageCode) =>
+    languageCode?._code ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto LanguageCode.
@@ -58,4 +71,6 @@ public sealed class LanguageCode : ValueObject
   /// <param name="value">A string a ser convertida em um objeto LanguageCode.</param>
   /// <returns>Um objeto LanguageCode criado a partir da string fornecida.</returns>
   public static implicit operator LanguageCode(string value) => new(value);
+
+  #endregion
 }

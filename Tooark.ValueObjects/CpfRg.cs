@@ -1,4 +1,5 @@
 using Tooark.Enums;
+using Tooark.Exceptions;
 
 namespace Tooark.ValueObjects;
 
@@ -7,11 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class CpfRg : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do número do CPF ou RG.
   /// </summary>
-  private readonly string _number = null!;
+  private readonly string _number = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe CpfRg com o número.
@@ -33,12 +39,18 @@ public sealed class CpfRg : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor do número do CPF ou RG.
   /// </summary>
   public string Number { get => _number; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do CPF ou RG.
@@ -51,7 +63,8 @@ public sealed class CpfRg : ValueObject
   /// </summary>
   /// <param name="document">O objeto CpfRg a ser convertido.</param>
   /// <returns>Uma string que representa o valor do CPF ou RG.</returns>
-  public static implicit operator string(CpfRg document) => document._number;
+  public static implicit operator string(CpfRg document) =>
+    document?._number ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto CpfRg.
@@ -59,4 +72,6 @@ public sealed class CpfRg : ValueObject
   /// <param name="value">A string a ser convertida em um objeto CpfRg.</param>
   /// <returns>Um objeto CpfRg criado a partir da string fornecida.</returns>
   public static implicit operator CpfRg(string value) => new(value);
+
+  #endregion
 }

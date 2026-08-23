@@ -5,7 +5,7 @@
     <PackageId>Tooark.ValueObjects</PackageId>
     <Title>Tooark.ValueObjects</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, value objects, validation, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, value objects, validation, document, .NET</PackageTags>
     <Summary>Management of predefined and validated Value Objects for .NET projects.</Summary>
     <PackageDescription>Package for managing predefined and validated Value Objects for .NET applications.</PackageDescription>
     <Description>Library managing predefined and validated Value Objects, ensuring data integrity and consistency for .NET projects.</Description>
@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tooark.Enums\Tooark.Enums.csproj" />
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
     <ProjectReference Include="..\Tooark.Extensions\Tooark.Extensions.csproj" />
     <ProjectReference Include="..\Tooark.Notifications\Tooark.Notifications.csproj" />
     <ProjectReference Include="..\Tooark.Validations\Tooark.Validations.csproj" />

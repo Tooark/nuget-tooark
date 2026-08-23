@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,11 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public class Url : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado da URL.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Url com o valor especificado.
@@ -32,12 +38,18 @@ public class Url : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor da URL.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor da URL.
@@ -50,7 +62,8 @@ public class Url : ValueObject
   /// </summary>
   /// <param name="url">O objeto Url a ser convertido.</param>
   /// <returns>Uma string que representa o valor da URL.</returns>
-  public static implicit operator string(Url url) => url._value;
+  public static implicit operator string(Url url) =>
+    url?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Url.
@@ -58,4 +71,6 @@ public class Url : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Url.</param>
   /// <returns>Um objeto Url criado a partir da string fornecida.</returns>
   public static implicit operator Url(string value) => new(value);
+
+  #endregion
 }

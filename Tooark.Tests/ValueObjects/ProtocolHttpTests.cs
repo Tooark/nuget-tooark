@@ -40,7 +40,7 @@ public class ProtocolHttpTests
 
     // Assert
     Assert.False(protocolHttp.IsValid);
-    Assert.Null(protocolHttp.Value);
+    Assert.Equal(string.Empty, protocolHttp.Value);
   }
 
   // Testa se o método ToString retorna o protocolo HTTP

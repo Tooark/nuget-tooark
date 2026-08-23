@@ -41,7 +41,7 @@ public class NameTests
 
     // Assert
     Assert.False(name.IsValid);
-    Assert.Null(name.Value);
+    Assert.Equal(string.Empty, name.Value);
     Assert.Equal("", name.Normalized);
   }
 

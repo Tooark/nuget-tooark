@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class CreatedBy : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do Guid do Criado Por.
   /// </summary>
   private readonly Guid _value = Guid.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe CreatedBy com o valor especificado.
@@ -31,19 +38,26 @@ public sealed class CreatedBy : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do Guid do Criado Por.
   /// </summary>
   public Guid Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Define uma conversão implícita de um objeto CreatedBy para uma Guid.
   /// </summary>
   /// <param name="createdBy">O objeto CreatedBy a ser convertido.</param>
   /// <returns>Uma Guid que representa o valor do CreatedBy.</returns>
-  public static implicit operator Guid(CreatedBy createdBy) => createdBy._value;
+  public static implicit operator Guid(CreatedBy createdBy) =>
+    createdBy?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma Guid para um objeto CreatedBy.
@@ -51,4 +65,6 @@ public sealed class CreatedBy : ValueObject
   /// <param name="value">A Guid a ser convertida em um objeto CreatedBy.</param>
   /// <returns>Um objeto CreatedBy criado a partir do Guid fornecida.</returns>
   public static implicit operator CreatedBy(Guid value) => new(value);
+
+  #endregion
 }

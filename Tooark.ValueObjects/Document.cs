@@ -1,4 +1,5 @@
 using Tooark.Enums;
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -8,16 +9,21 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class Document : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do número do documento.
   /// </summary>
-  private readonly string _number = null!;
+  private readonly string _number = string.Empty;
 
   /// <summary>
   /// Valor privado do tipo do documento.
   /// </summary>
-  private readonly EDocumentType _type = null!;
+  private readonly EDocumentType _type = EDocumentType.None;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Document com o número e o tipo especificados.
@@ -52,6 +58,9 @@ public sealed class Document : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor do número do documento.
@@ -63,6 +72,9 @@ public sealed class Document : ValueObject
   /// </summary>
   public EDocumentType Type { get => _type; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do documento.
@@ -75,7 +87,8 @@ public sealed class Document : ValueObject
   /// </summary>
   /// <param name="document">O objeto Document a ser convertido.</param>
   /// <returns>Uma string que representa o valor do documento.</returns>
-  public static implicit operator string(Document document) => document._number;
+  public static implicit operator string(Document document) =>
+    document?._number ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Document.
@@ -83,4 +96,6 @@ public sealed class Document : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Document.</param>
   /// <returns>Um objeto Document criado a partir da string fornecida.</returns>
   public static implicit operator Document(string value) => new(value);
+
+  #endregion
 }

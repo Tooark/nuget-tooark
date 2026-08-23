@@ -58,7 +58,7 @@ public class LanguageCodeTests
 
     // Assert
     Assert.False(languageCode.IsValid);
-    Assert.Null(languageCode.Code);
+    Assert.Equal(string.Empty, languageCode.Code);
   }
 
   // Testa se o método ToString retorna o código do idioma

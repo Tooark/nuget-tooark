@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Attributes;
@@ -24,7 +22,7 @@ public class PasswordValidationAttribute(
   bool uppercase = true,
   bool number = true,
   bool symbol = true,
-  int length = 8,
+  int length = PasswordPattern.DefaultLength,
   string propertyName = "Password"
 ) : TooarkValidationAttribute(propertyName)
 {
@@ -33,7 +31,7 @@ public class PasswordValidationAttribute(
   /// <summary>
   /// Expressão regular montada a partir dos critérios configurados.
   /// </summary>
-  private readonly string _pattern = MountRegex(lowercase, uppercase, number, symbol, length);
+  private readonly string _pattern = PasswordPattern.Mount(lowercase, uppercase, number, symbol, length);
 
   #endregion
 
@@ -45,57 +43,6 @@ public class PasswordValidationAttribute(
   /// <param name="value">O valor a ser verificado.</param>
   /// <returns>Verdadeiro quando o valor atende aos critérios.</returns>
   protected override bool IsSatisfied(string value) => Matches(value, _pattern);
-
-  #endregion
-
-  #region Private Methods
-
-  /// <summary>
-  /// Monta a expressão regular da senha a partir dos critérios configurados.
-  /// </summary>
-  /// <param name="lowercase">Exige carácter minúsculo.</param>
-  /// <param name="uppercase">Exige carácter maiúsculo.</param>
-  /// <param name="number">Exige carácter numérico.</param>
-  /// <param name="symbol">Exige carácter especial.</param>
-  /// <param name="length">Comprimento mínimo da senha.</param>
-  /// <returns>Expressão regular da senha.</returns>
-  private static string MountRegex(bool lowercase, bool uppercase, bool number, bool symbol, int length)
-  {
-    // Comprimento não positivo nao teria sentido em uma expressão regular
-    var minimum = length > 0 ? length : 1;
-
-    // Cada critério vira uma verificação antecipada, ancorada uma única vez no início
-    var pattern = new StringBuilder("^");
-
-    // Letras minúsculas
-    if (lowercase)
-    {
-      pattern.Append(RegexPattern.PassLower[1..]);
-    }
-
-    // Letras maiúsculas
-    if (uppercase)
-    {
-      pattern.Append(RegexPattern.PassUpper[1..]);
-    }
-
-    // Dígitos numéricos
-    if (number)
-    {
-      pattern.Append(RegexPattern.PassNumber[1..]);
-    }
-
-    // Símbolos especiais
-    if (symbol)
-    {
-      pattern.Append(RegexPattern.PassSymbol[1..]);
-    }
-
-    // Sem nenhum critério, resta apenas a exigência de comprimento
-    pattern.Append(CultureInfo.InvariantCulture, $".{{{minimum},}}");
-
-    return pattern.ToString();
-  }
 
   #endregion
 }

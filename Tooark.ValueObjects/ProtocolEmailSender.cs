@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,11 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class ProtocolEmailSender : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do protocolo de Envio de Email.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe ProtocolEmailSender com o valor especificado.
@@ -32,12 +38,18 @@ public sealed class ProtocolEmailSender : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor do protocolo de Envio de Email.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do protocolo de Envio de Email.
@@ -50,7 +62,8 @@ public sealed class ProtocolEmailSender : ValueObject
   /// </summary>
   /// <param name="protocol">O objeto ProtocolEmailSender a ser convertido.</param>
   /// <returns>Uma string que representa o valor do protocolo de envio de email.</returns>
-  public static implicit operator string(ProtocolEmailSender protocol) => protocol._value;
+  public static implicit operator string(ProtocolEmailSender protocol) =>
+    protocol?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto ProtocolEmailSender.
@@ -58,4 +71,6 @@ public sealed class ProtocolEmailSender : ValueObject
   /// <param name="value">A string a ser convertida em um objeto ProtocolEmailSender.</param>
   /// <returns>Um objeto ProtocolEmailSender criado a partir da string fornecida.</returns>
   public static implicit operator ProtocolEmailSender(string value) => new(value);
+
+  #endregion
 }

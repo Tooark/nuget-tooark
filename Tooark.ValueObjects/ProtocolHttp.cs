@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,11 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class ProtocolHttp : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do protocolo HTTP.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe ProtocolHttp com o valor especificado.
@@ -32,12 +38,18 @@ public sealed class ProtocolHttp : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor do protocolo HTTP.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do protocolo HTTP.
@@ -50,7 +62,8 @@ public sealed class ProtocolHttp : ValueObject
   /// </summary>
   /// <param name="protocol">O objeto ProtocolHttp a ser convertido.</param>
   /// <returns>Uma string que representa o valor do protocolo HTTP.</returns>
-  public static implicit operator string(ProtocolHttp protocol) => protocol._value;
+  public static implicit operator string(ProtocolHttp protocol) =>
+    protocol?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto ProtocolHttp.
@@ -58,4 +71,6 @@ public sealed class ProtocolHttp : ValueObject
   /// <param name="value">A string a ser convertida em um objeto ProtocolHttp.</param>
   /// <returns>Um objeto ProtocolHttp criado a partir da string fornecida.</returns>
   public static implicit operator ProtocolHttp(string value) => new(value);
+
+  #endregion
 }

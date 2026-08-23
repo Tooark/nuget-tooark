@@ -52,7 +52,7 @@ public class EmailDomainTests
 
     // Assert
     Assert.False(domain.IsValid);
-    Assert.Null(domain.Value);
+    Assert.Equal(string.Empty, domain.Value);
   }
 
   // Testa se o método ToString retorna o domínio de email

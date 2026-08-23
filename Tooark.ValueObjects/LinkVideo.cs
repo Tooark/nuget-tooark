@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using Tooark.Validations;
+using Tooark.Exceptions;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.ValueObjects;
@@ -9,11 +9,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class LinkVideo : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// O link privado do vídeo.
   /// </summary>
-  private readonly string _link = null!;
+  private readonly string _link = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe LinkVideo com os parâmetros especificados.
@@ -48,12 +53,18 @@ public sealed class LinkVideo : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o link do vídeo.
   /// </summary>
   public string Link { get => _link; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do link.
@@ -66,7 +77,8 @@ public sealed class LinkVideo : ValueObject
   /// </summary>
   /// <param name="linkVideo">O objeto LinkVideo a ser convertido.</param>
   /// <returns>Uma string que representa o valor do link.</returns>
-  public static implicit operator string(LinkVideo linkVideo) => linkVideo._link;
+  public static implicit operator string(LinkVideo linkVideo) =>
+    linkVideo?._link ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto LinkVideo.
@@ -74,4 +86,6 @@ public sealed class LinkVideo : ValueObject
   /// <param name="link">A string a ser convertida em um objeto LinkVideo.</param>
   /// <returns>O objeto LinkVideo criado a partir da string fornecida.</returns>
   public static implicit operator LinkVideo(string link) => new(link);
+
+  #endregion
 }

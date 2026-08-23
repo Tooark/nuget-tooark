@@ -49,7 +49,7 @@ public class PasswordTests
 
     // Assert
     Assert.False(password.IsValid);
-    Assert.Null(password.Value);
+    Assert.Equal(string.Empty, password.Value);
   }
 
   // Testa se a senha é válida a partir de uma senha válida para os parâmetros de validação
@@ -85,6 +85,35 @@ public class PasswordTests
     Assert.Equal(expectedValue, password.Value);
   }
 
+  // Testa se o comprimento informado é respeitado, e não elevado para oito
+  [Theory]
+  [InlineData("aB3@", 4, true)]
+  [InlineData("aB3", 4, false)]
+  [InlineData("Senha@1", 7, true)]
+  [InlineData("Senha@", 7, false)]
+  public void Password_ShouldHonorConfiguredLength(string value, int length, bool expected)
+  {
+    // Arrange & Act
+    Password password = new(value, length: length);
+
+    // Assert
+    Assert.Equal(expected, password.IsValid);
+  }
+
+  // Testa se a senha sem critérios de complexidade exige apenas o comprimento
+  [Theory]
+  [InlineData("abcdefgh", 8, true)]
+  [InlineData("abcdefg", 8, false)]
+  [InlineData("frase longa sem simbolo", 20, true)]
+  public void Password_ShouldRequireOnlyLength_WhenNoCriteria(string value, int length, bool expected)
+  {
+    // Arrange & Act
+    Password password = new(value, false, false, false, false, length);
+
+    // Assert
+    Assert.Equal(expected, password.IsValid);
+  }
+
   // Testa se a senha é inválida a partir de uma senha inválida para os parâmetros de validação
   [Theory]
   [InlineData("!@#$!@#$", true, true, true, false, 8)] // Só permite não ter carácter especial
@@ -102,8 +131,7 @@ public class PasswordTests
   [InlineData("Senha!@#", false, false, true, false, 8)] // Só permite não ter minúscula e maiúscula e carácter especial
   [InlineData("Senha123", false, false, false, true, 8)] // Só permite não ter minúscula e maiúscula e número
   [InlineData("", false, false, false, false, 8)] // Todos os parâmetros desativados, considera regra padrão
-  [InlineData("Senha@12", true, true, true, true, 9)] // Tamanho maior que o padrão
-  [InlineData("Senha@1", true, true, true, true, 7)] // Tamanho menor que o padrão, considera tamanho padrão
+  [InlineData("Senha@12", true, true, true, true, 9)] // Tamanho maior que o informado
   public void Password_ShouldBeInvalid_WhenGivenParams(string value, bool lower, bool upper, bool number, bool symbol, int length)
   {
     // Arrange & Act
@@ -111,39 +139,42 @@ public class PasswordTests
 
     // Assert
     Assert.False(password.IsValid);
-    Assert.Null(password.Value);
+    Assert.Equal(string.Empty, password.Value);
   }
 
-// Testa se o método ToString retorna o código do idioma
+  // Testa se a senha não vaza em ToString, interpolação ou concatenação
   [Fact]
-  public void Password_ShouldReturnCorrectStringRepresentation()
+  public void Password_ShouldNotLeakValueInText()
   {
     // Arrange
     var passwordValue = "Senha@12";
-    var expectedCode = passwordValue;
     var password = new Password(passwordValue);
 
     // Act
-    var passwordString = password.ToString();
+    var texto = password.ToString();
+    var interpolado = $"{password}";
+    var concatenado = "senha: " + password;
 
     // Assert
-    Assert.Equal(expectedCode, passwordString);
+    Assert.Equal(Password.Mask, texto);
+    Assert.Equal(Password.Mask, interpolado);
+    Assert.DoesNotContain(passwordValue, concatenado, StringComparison.Ordinal);
+
+    // O valor continua acessível para quem o pede explicitamente
+    Assert.Equal(passwordValue, password.Value);
   }
 
-  // Testa se o endereço de password está sendo convertido para string implicitamente
+  // Testa se a senha inválida não devolve a máscara, que sugeriria haver um valor
   [Fact]
-  public void Password_ShouldConvertToStringImplicitly()
+  public void Password_ShouldReturnEmpty_WhenInvalid()
   {
-    // Arrange
-    var passwordValue = "Senha@12";
-    var expectedCode = passwordValue;
-    var password = new Password(passwordValue);
-
-    // Act
-    string passwordString = password;
+    // Arrange & Act
+    var password = new Password("fraca");
 
     // Assert
-    Assert.Equal(expectedCode, passwordString);
+    Assert.False(password.IsValid);
+    Assert.Equal(string.Empty, password.ToString());
+    Assert.Equal(string.Empty, password.Value);
   }
 
   // Testa se o endereço de password está sendo convertido de string implicitamente

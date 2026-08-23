@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -21,10 +22,16 @@ public sealed class Email : ValueObject
 
   #endregion
 
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do email.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe Email com o valor especificado.
@@ -47,11 +54,19 @@ public sealed class Email : ValueObject
   }
 
 
+  #endregion
+
+  #region Properties
+
   /// <summary>
   /// Obtém o valor do email.
   /// </summary>
   public string Value { get => _value; }
 
+
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do email.
@@ -64,7 +79,8 @@ public sealed class Email : ValueObject
   /// </summary>
   /// <param name="email">O objeto Email a ser convertido.</param>
   /// <returns>Uma string que representa o valor do Email.</returns>
-  public static implicit operator string(Email email) => email._value;
+  public static implicit operator string(Email email) =>
+    email?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto Email.
@@ -72,4 +88,6 @@ public sealed class Email : ValueObject
   /// <param name="value">A string a ser convertida em um objeto Email.</param>
   /// <returns>Um objeto Email criado a partir da string fornecida.</returns>
   public static implicit operator Email(string value) => new(value);
+
+  #endregion
 }

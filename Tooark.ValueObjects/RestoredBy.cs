@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class RestoredBy : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do Guid do Restaurado Por.
   /// </summary>
   private readonly Guid _value = Guid.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe RestoredBy com o valor especificado.
@@ -31,19 +38,26 @@ public sealed class RestoredBy : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do Guid do Restaurado Por.
   /// </summary>
   public Guid Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Define uma conversão implícita de um objeto RestoredBy para uma Guid.
   /// </summary>
   /// <param name="restoredBy">O objeto RestoredBy a ser convertido.</param>
   /// <returns>Uma Guid que representa o valor do RestoredBy.</returns>
-  public static implicit operator Guid(RestoredBy restoredBy) => restoredBy._value;
+  public static implicit operator Guid(RestoredBy restoredBy) =>
+    restoredBy?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma Guid para um objeto RestoredBy.
@@ -51,4 +65,6 @@ public sealed class RestoredBy : ValueObject
   /// <param name="value">A Guid a ser convertida em um objeto RestoredBy.</param>
   /// <returns>Um objeto RestoredBy criado a partir do Guid fornecida.</returns>
   public static implicit operator RestoredBy(Guid value) => new(value);
+
+  #endregion
 }

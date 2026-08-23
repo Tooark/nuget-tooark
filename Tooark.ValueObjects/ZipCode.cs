@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public class ZipCode : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do código postal.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe ZipCode com o valor especificado.
@@ -31,12 +38,18 @@ public class ZipCode : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do código postal.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do código postal.
@@ -47,9 +60,10 @@ public class ZipCode : ValueObject
   /// <summary>
   /// Define uma conversão implícita de um objeto ZipCode para uma string.
   /// </summary>
-  /// <param name="email">O objeto ZipCode a ser convertido.</param>
+  /// <param name="zipCode">O objeto ZipCode a ser convertido.</param>
   /// <returns>Uma string que representa o valor do ZipCode.</returns>
-  public static implicit operator string(ZipCode email) => email._value;
+  public static implicit operator string(ZipCode zipCode) =>
+    zipCode?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto ZipCode.
@@ -57,4 +71,6 @@ public class ZipCode : ValueObject
   /// <param name="value">A string a ser convertida em um objeto ZipCode.</param>
   /// <returns>Um objeto ZipCode criado a partir da string fornecida.</returns>
   public static implicit operator ZipCode(string value) => new(value);
+
+  #endregion
 }

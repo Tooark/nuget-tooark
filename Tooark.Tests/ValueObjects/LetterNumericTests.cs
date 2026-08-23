@@ -37,7 +37,7 @@ public class LetterNumericNumericTests
 
     // Assert
     Assert.False(letterNumeric.IsValid);
-    Assert.Null(letterNumeric.Value);
+    Assert.Equal(string.Empty, letterNumeric.Value);
   }
 
   // Testa se o método ToString retorna uma string de letras e números

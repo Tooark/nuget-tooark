@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -11,10 +12,16 @@ namespace Tooark.ValueObjects;
 /// </remarks>
 public class DelimitedString : ValueObject
 {
+  #region Constants
+
   /// <summary>
   /// Delimitador padrão utilizado para separar os valores.
   /// </summary>
   private const char DefaultDelimiter = ';';
+
+  #endregion
+
+  #region Private Fields
 
   /// <summary>
   /// Valor privado da string delimitada.
@@ -26,12 +33,15 @@ public class DelimitedString : ValueObject
   /// </summary>
   private readonly string[] _values = [];
 
+  #endregion
+
+  #region Constructors
 
   /// <summary>
   /// Inicializa uma nova instância da classe DelimitedString com o valor especificado.
   /// </summary>
   /// <param name="value">O valor da string delimitada por ponto e vírgula a ser validada.</param>
-  public DelimitedString(string value)
+  public DelimitedString(string? value)
   {
     // Adiciona as notificações de validação da string delimitada
     AddNotifications(new Validation()
@@ -42,7 +52,7 @@ public class DelimitedString : ValueObject
     if (IsValid)
     {
       // Define o valor e a lista de valores da string delimitada
-      _value = value.Trim();
+      _value = value!.Trim();
       _values = [.. _value.Split(DefaultDelimiter, StringSplitOptions.RemoveEmptyEntries).Select(v => v.Trim())];
     }
   }
@@ -51,19 +61,19 @@ public class DelimitedString : ValueObject
   /// Inicializa uma nova instância da classe DelimitedString com os valores especificados.
   /// </summary>
   /// <param name="values">Os valores a serem concatenados na string delimitada.</param>
-  public DelimitedString(params string[] values)
+  public DelimitedString(params string[]? values)
   {
     // Adiciona as notificações de validação da array de strings
     AddNotifications(new Validation()
-      .IsGreater(values.Length, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
+      .IsGreater(values?.Length ?? 0, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
     );
 
     // Verifica se é válido então não existe notificação
     if (IsValid)
     {
-      // Define o valor e a lista de valores da string delimitada
-      _value = string.Join(DefaultDelimiter, values);
-      _values = values;
+      // Define o valor e a lista de valores da string delimitada, copiando o que veio do chamador
+      _value = string.Join(DefaultDelimiter, values!);
+      _values = [.. values!];
     }
   }
 
@@ -71,22 +81,25 @@ public class DelimitedString : ValueObject
   /// Inicializa uma nova instância da classe DelimitedString com os valores especificados.
   /// </summary>
   /// <param name="values">Os valores a serem concatenados na string delimitada.</param>
-  public DelimitedString(List<string> values)
+  public DelimitedString(List<string>? values)
   {
     // Adiciona as notificações de validação da lista de strings
     AddNotifications(new Validation()
-      .IsGreater(values.Count, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
+      .IsGreater(values?.Count ?? 0, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
     );
 
     // Verifica se é válido então não existe notificação
     if (IsValid)
     {
       // Define o valor e a lista de valores da string delimitada
-      _value = string.Join(DefaultDelimiter, values);
-      _values = [.. values];
+      _value = string.Join(DefaultDelimiter, values!);
+      _values = [.. values!];
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor da string delimitada.
@@ -96,8 +109,14 @@ public class DelimitedString : ValueObject
   /// <summary>
   /// Lista de valores da string delimitada.
   /// </summary>
-  public string[] Values { get => _values; }
+  /// <remarks>
+  /// Cada leitura devolve uma cópia: alterar o resultado não altera o objeto.
+  /// </remarks>
+  public string[] Values { get => [.. _values]; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescreve o método <see cref="object.ToString"/> para retornar a string delimitada.
@@ -108,8 +127,8 @@ public class DelimitedString : ValueObject
   /// <summary>
   /// Converte a string delimitada em uma array de strings.
   /// </summary>
-  /// <returns>Array de strings.</returns>
-  public string[] ToArray() => _values;
+  /// <returns>Array de strings, em uma cópia.</returns>
+  public string[] ToArray() => [.. _values];
 
   /// <summary>
   /// Converte a string delimitada em uma lista de strings.
@@ -122,21 +141,28 @@ public class DelimitedString : ValueObject
   /// </summary>
   /// <param name="delimitedString">Instância de DelimitedString.</param>
   /// <returns>String delimitada.</returns>
-  public static implicit operator string(DelimitedString delimitedString) => delimitedString._value;
+  public static implicit operator string(DelimitedString delimitedString) =>
+    delimitedString?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Conversão implícita de DelimitedString para array de strings.
   /// </summary>
   /// <param name="delimitedString">Instância de DelimitedString.</param>
-  /// <returns>Array de strings.</returns>
-  public static implicit operator string[](DelimitedString delimitedString) => delimitedString._values;
+  /// <returns>Array de strings, em uma cópia.</returns>
+  public static implicit operator string[](DelimitedString delimitedString) =>
+    delimitedString is null ?
+      throw new InternalServerErrorException("Invalid.Parameter;null") :
+      [.. delimitedString._values];
 
   /// <summary>
   /// Conversão implícita de DelimitedString para lista de strings.
   /// </summary>
   /// <param name="delimitedString">Instância de DelimitedString.</param>
   /// <returns>Lista de strings.</returns>
-  public static implicit operator List<string>(DelimitedString delimitedString) => new([.. delimitedString._values]);
+  public static implicit operator List<string>(DelimitedString delimitedString) =>
+    delimitedString is null ?
+      throw new InternalServerErrorException("Invalid.Parameter;null") :
+      [.. delimitedString._values];
 
   /// <summary>
   /// Conversão implícita de string para DelimitedString.
@@ -158,4 +184,6 @@ public class DelimitedString : ValueObject
   /// <param name="values">Lista de strings.</param>
   /// <returns>Instância de DelimitedString.</returns>
   public static implicit operator DelimitedString(List<string> values) => new(values);
+
+  #endregion
 }

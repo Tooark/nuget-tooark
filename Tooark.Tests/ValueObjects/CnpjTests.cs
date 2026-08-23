@@ -38,7 +38,7 @@ public class CnpjTests
 
     // Assert
     Assert.False(document.IsValid);
-    Assert.Null(document.Number);
+    Assert.Equal(string.Empty, document.Number);
   }
 
   // Testa se o método ToString retorna um CNPJ

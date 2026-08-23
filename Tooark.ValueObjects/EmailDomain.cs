@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Validations;
 
 namespace Tooark.ValueObjects;
@@ -7,10 +8,16 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class EmailDomain : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do domínio de email.
   /// </summary>
-  private readonly string _value = null!;
+  private readonly string _value = string.Empty;
+
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe EmailDomain com o valor especificado.
@@ -31,12 +38,18 @@ public sealed class EmailDomain : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o valor do domínio de email.
   /// </summary>
   public string Value { get => _value; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o valor do domínio de email.
@@ -49,7 +62,8 @@ public sealed class EmailDomain : ValueObject
   /// </summary>
   /// <param name="emailDomain">O objeto EmailDomain a ser convertido.</param>
   /// <returns>Uma string que representa o valor do domínio de email.</returns>
-  public static implicit operator string(EmailDomain emailDomain) => emailDomain._value;
+  public static implicit operator string(EmailDomain emailDomain) =>
+    emailDomain?._value ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto EmailDomain.
@@ -57,4 +71,6 @@ public sealed class EmailDomain : ValueObject
   /// <param name="value">A string a ser convertida em um objeto EmailDomain.</param>
   /// <returns>Um objeto EmailDomain criado a partir da string fornecida.</returns>
   public static implicit operator EmailDomain(string value) => new(value);
+
+  #endregion
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Tooark.Validations.Messages;
 
@@ -36,7 +36,7 @@ public partial class Validation
   /// <param name="options">Opções de regex para Case Sensitive.</param>
   /// <param name="timeout">Tempo limite para validação. Em milissegundos.</param>
   /// <returns>True quando o valor corresponde ao padrão.</returns>
-  private static bool MatchFunc(string value, string pattern, RegexOptions options, int timeout)
+  private static bool MatchFunc(string? value, string pattern, RegexOptions options, int timeout)
   {
     try
     {
@@ -96,8 +96,8 @@ public partial class Validation
   /// <param name="pattern">Padrão a ser comparado.</param>
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
-  public Validation Match(string value, string pattern, string property) =>
-    Match(value, pattern, property, ValidationErrorMessages.Match(property, value));
+  public Validation Match(string? value, string pattern, string property) =>
+    Match(value, pattern, property, ValidationErrorMessages.Match(property, value ?? string.Empty));
 
   /// <summary>
   /// Verifica se o valor corresponde ao padrão. Com mensagem padrão.
@@ -107,8 +107,8 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <param name="options">Opções de regex para Case Sensitive.</param>
   /// <returns>Validação.</returns>
-  public Validation Match(string value, string pattern, string property, RegexOptions options) =>
-    Match(value, pattern, property, ValidationErrorMessages.Match(property, value), options);
+  public Validation Match(string? value, string pattern, string property, RegexOptions options) =>
+    Match(value, pattern, property, ValidationErrorMessages.Match(property, value ?? string.Empty), options);
 
   /// <summary>
   /// Verifica se o valor corresponde ao padrão.
@@ -121,7 +121,7 @@ public partial class Validation
   /// <param name="timeout">Tempo limite para validação. Em milissegundos. Parâmetro opcional. Padrão 300.</param>
   /// <returns>Validação.</returns>
   public Validation Match(
-    string value,
+    string? value,
     string pattern,
     string property,
     string message,
@@ -138,8 +138,8 @@ public partial class Validation
   /// <param name="pattern">Padrão a ser comparado.</param>
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
-  public Validation NotMatch(string value, string pattern, string property) =>
-    NotMatch(value, pattern, property, ValidationErrorMessages.NotMatch(property, value));
+  public Validation NotMatch(string? value, string pattern, string property) =>
+    NotMatch(value, pattern, property, ValidationErrorMessages.NotMatch(property, value ?? string.Empty));
 
   /// <summary>
   /// Verifica se o valor não corresponde ao padrão. Com mensagem padrão.
@@ -149,8 +149,8 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <param name="options">Opções de regex para Case Sensitive.</param>
   /// <returns>Validação.</returns>
-  public Validation NotMatch(string value, string pattern, string property, RegexOptions options) =>
-    NotMatch(value, pattern, property, ValidationErrorMessages.NotMatch(property, value), options);
+  public Validation NotMatch(string? value, string pattern, string property, RegexOptions options) =>
+    NotMatch(value, pattern, property, ValidationErrorMessages.NotMatch(property, value ?? string.Empty), options);
 
   /// <summary>
   /// Verifica se o valor não corresponde ao padrão.
@@ -163,7 +163,7 @@ public partial class Validation
   /// <param name="timeout">Tempo limite para validação. Em milissegundos. Parâmetro opcional. Padrão 300.</param>
   /// <returns>Validação.</returns>
   public Validation NotMatch(
-    string value,
+    string? value,
     string pattern,
     string property,
     string message,

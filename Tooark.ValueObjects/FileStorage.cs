@@ -1,4 +1,4 @@
-using Tooark.Validations;
+using Tooark.Exceptions;
 
 namespace Tooark.ValueObjects;
 
@@ -7,16 +7,21 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class FileStorage : ValueObject
 {
+  #region Private Fields
+
   /// <summary>
   /// Valor privado do link do arquivo do storage.
   /// </summary>
-  private readonly string _link = null!;
+  private readonly string _link = string.Empty;
 
   /// <summary>
   /// Valor privado do nome do arquivo do storage.
   /// </summary>
-  private readonly string _name = null!;
+  private readonly string _name = string.Empty;
 
+  #endregion
+
+  #region Constructor
 
   /// <summary>
   /// Inicializa uma nova instância da classe FileStorage com o link e o nome do arquivo.
@@ -30,7 +35,7 @@ public sealed class FileStorage : ValueObject
 
     // Se o nome do arquivo do storage não for informado, define o nome como o link
     name = string.IsNullOrWhiteSpace(name) ? link : name;
-    
+
     // Verifica se é válido então não existe notificação
     if (IsValid)
     {
@@ -40,6 +45,9 @@ public sealed class FileStorage : ValueObject
     }
   }
 
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Valor do link do arquivo do storage.
@@ -51,6 +59,9 @@ public sealed class FileStorage : ValueObject
   /// </summary>
   public string Name { get => _name; }
 
+  #endregion
+
+  #region Methods, Overrides and Implicit Operators
 
   /// <summary>
   /// Sobrescrita do método <see cref="object.ToString"/> para retornar o link do arquivo do storage.
@@ -63,7 +74,8 @@ public sealed class FileStorage : ValueObject
   /// </summary>
   /// <param name="document">O objeto FileStorage a ser convertido.</param>
   /// <returns>Uma string que representa o link do arquivo do storage.</returns>
-  public static implicit operator string(FileStorage document) => document._link;
+  public static implicit operator string(FileStorage document) =>
+    document?._link ?? throw new InternalServerErrorException("Invalid.Parameter;null");
 
   /// <summary>
   /// Define uma conversão implícita de uma string para um objeto FileStorage.
@@ -71,4 +83,6 @@ public sealed class FileStorage : ValueObject
   /// <param name="value">A string a ser convertida em um objeto FileStorage.</param>
   /// <returns>Um objeto FileStorage criado a partir da string fornecida.</returns>
   public static implicit operator FileStorage(string value) => new(value);
+
+  #endregion
 }

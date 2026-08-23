@@ -40,7 +40,7 @@ public class ProtocolWsTests
 
     // Assert
     Assert.False(protocolFtp.IsValid);
-    Assert.Null(protocolFtp.Value);
+    Assert.Equal(string.Empty, protocolFtp.Value);
   }
 
   // Testa se o método ToString retorna o protocolo WebSocket

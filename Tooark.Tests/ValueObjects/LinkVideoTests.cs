@@ -44,7 +44,7 @@ public class LinkVideoTests
 
     // Assert
     Assert.False(linkVideo.IsValid);
-    Assert.Null(linkVideo.Link);
+    Assert.Equal(string.Empty, linkVideo.Link);
   }
 
   // Testa se o link de vídeo é válido a partir de um link de vídeo válido para os parâmetros de validação
@@ -83,7 +83,7 @@ public class LinkVideoTests
 
     // Assert
     Assert.False(linkVideo.IsValid);
-    Assert.Null(linkVideo.Link);
+    Assert.Equal(string.Empty, linkVideo.Link);
   }
 
   // Testa se o método ToString retorna o código do idioma

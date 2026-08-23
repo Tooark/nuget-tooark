@@ -41,7 +41,7 @@ public class TitleTests
 
     // Assert
     Assert.False(title.IsValid);
-    Assert.Null(title.Value);
+    Assert.Equal(string.Empty, title.Value);
     Assert.Equal("", title.Normalized);
   }
 
