@@ -1,30 +1,33 @@
 using Microsoft.Extensions.Localization;
+using Tooark.Extensions;
 
 namespace Tooark.Dtos;
 
 /// <summary>
 /// Classe base para DTOs.
 /// </summary>
+/// <remarks>
+/// Fornece o localizador usado para traduzir as chaves de erro das respostas. O localizador resolve o idioma
+/// pelo fluxo de execução e lê as traduções de arquivos, então não depende do container de injeção de
+/// dependência: a tradução funciona com ou sem <c>AddTooarkDtos</c>.
+/// </remarks>
 public abstract class Dto
 {
-  /// <summary>
-  /// Localizador de strings privado.
-  /// </summary>
-  private static IStringLocalizer? _localizer;
-
+  #region Private Static Fields
 
   /// <summary>
-  /// Configura o localizador de strings.
+  /// Localizador de strings compartilhado pelos DTOs.
   /// </summary>
-  /// <param name="localizer">Localizador de strings.</param>
-  internal static void Configure(IStringLocalizer localizer)
-  {
-    // Atribui o localizador de strings.
-    _localizer = localizer;
-  }
+  private static readonly IStringLocalizer Localizer = new JsonStringLocalizerExtension();
+
+  #endregion
+
+  #region Properties
 
   /// <summary>
   /// Obtém o localizador de strings.
   /// </summary>
-  internal static IStringLocalizer? LocalizerString => _localizer;
+  internal static IStringLocalizer LocalizerString => Localizer;
+
+  #endregion
 }

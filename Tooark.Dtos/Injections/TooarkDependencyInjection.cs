@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Localization;
 using Tooark.Extensions.Injections;
 
 namespace Tooark.Dtos.Injections;
@@ -10,26 +9,19 @@ namespace Tooark.Dtos.Injections;
 public static partial class TooarkDependencyInjection
 {
   /// <summary>
-  /// Adiciona o serviço de localização de recursos com o tipo Dto ao container de injeção de dependência.
+  /// Adiciona o serviço de localização de recursos usado pelos DTOs ao container de injeção de dependência.
   /// </summary>
+  /// <remarks>
+  /// A tradução das mensagens de erro do <see cref="ResponseDto{T}"/> não depende deste registro: o
+  /// <see cref="Dto"/> cria o próprio localizador quando nenhum foi configurado. O registro existe para a
+  /// aplicação poder injetar <c>IStringLocalizer</c> nos próprios tipos.
+  /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
-  /// <returns>A coleção de serviços com o serviço de localização de recursos com o tipo Dto adicionado.</returns>
+  /// <returns>A coleção de serviços com o serviço de localização de recursos adicionado.</returns>
   public static IServiceCollection AddTooarkDtos(this IServiceCollection services)
   {
     // Adiciona o serviço JsonStringLocalizer
     services.AddJsonStringLocalizer();
-
-    // Adiciona o serviço de localização de recurso padrão
-    services.AddTransient<IStringLocalizer, StringLocalizer<Dto>>();
-
-    // Cria o provedor de serviços
-    var serviceProvider = services.BuildServiceProvider();
-
-    // Obtenção do serviço de localização de recurso
-    var localizer = serviceProvider.GetRequiredService<IStringLocalizer>();
-
-    // Configura o tipo Dto
-    Dto.Configure(localizer);
 
     // Retorna os serviços
     return services;

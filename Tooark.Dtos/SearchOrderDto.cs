@@ -5,13 +5,16 @@ namespace Tooark.Dtos;
 /// </summary>
 public class SearchOrderDto : SearchDto
 {
+  #region Properties
+
   /// <summary>
-  /// Referencia a ser ordenada.
+  /// Referência a ser ordenada.
   /// </summary>
   /// <remarks>
-  /// O nome da coluna da tabela para ser ordenada.
+  /// O nome da coluna da tabela para ser ordenada. Sem valor informado, cabe a quem consome decidir a
+  /// ordenação padrão.
   /// </remarks>
-  public string OrderBy { get; set; } = null!;
+  public string? OrderBy { get; set; }
 
   /// <summary>
   /// Sentido da ordenação.Crescente=true ou Decrescente=false. Por padrão a ordenação é crescente.
@@ -21,4 +24,6 @@ public class SearchOrderDto : SearchDto
   /// Para ordenação crescente atribuir <c>true</c> ou decrescente atribuir <c>false</c>.
   /// </remarks>
   public bool OrderAsc { get; set; } = true;
+
+  #endregion
 }

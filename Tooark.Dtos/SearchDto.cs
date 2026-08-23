@@ -7,19 +7,32 @@ namespace Tooark.Dtos;
 /// <summary>
 /// Classe para parâmetros de busca.
 /// </summary>
+/// <remarks>
+/// O <see cref="PageSize"/> é limitado por <see cref="PageSizeMax"/>, que existe para que uma requisição
+/// não possa pedir a base inteira de uma vez. Um DTO que precise de páginas maiores sobrescreve o limite.
+/// </remarks>
 public class SearchDto : Dto
 {
+  #region Constants
+
+  /// <summary>
+  /// Tamanho máximo padrão da página.
+  /// </summary>
+  public const long DefaultPageSizeMax = 100;
+
+  #endregion
+
   #region Private Properties
 
   /// <summary>
   /// Informação privada a ser procurada.
   /// </summary>
-  private string? _search = null!;
+  private string? _search;
 
   /// <summary>
   /// Cache para a informação normalizada.
   /// </summary>
-  private string? _searchNormalized = null;
+  private string? _searchNormalized;
 
   /// <summary>
   /// Índice privado da paginação.
@@ -79,6 +92,21 @@ public class SearchDto : Dto
   #region Properties
 
   /// <summary>
+  /// Tamanho máximo aceito para a página.
+  /// </summary>
+  /// <remarks>
+  /// Sobrescreva em um DTO próprio para permitir páginas maiores em um endpoint específico. Sem um teto,
+  /// uma única requisição poderia pedir todos os registros.
+  /// <para>
+  /// Use a forma de expressão, <c>protected override long PageSizeMax =&gt; 5000;</c>. Uma propriedade
+  /// automática com inicializador não serve: o limite é consultado pelo construtor da classe base, que roda
+  /// antes dos inicializadores da classe derivada, e o valor seria zero nesse momento.
+  /// </para>
+  /// </remarks>
+  /// <value>Valor padrão é <see cref="DefaultPageSizeMax"/>.</value>
+  protected virtual long PageSizeMax => DefaultPageSizeMax;
+
+  /// <summary>
   /// Informação a ser procurada.
   /// </summary>
   public string? Search
@@ -87,7 +115,9 @@ public class SearchDto : Dto
     set
     {
       _search = value;
-      _searchNormalized = null; // Invalida o cache ao alterar Search
+
+      // Invalida o cache ao alterar Search
+      _searchNormalized = null;
     }
   }
 
@@ -100,11 +130,9 @@ public class SearchDto : Dto
   {
     get
     {
-      if (_searchNormalized == null && _search != null)
-      {
-        _searchNormalized = _search.ToNormalize();
-      }
-      
+      // Normaliza uma única vez por valor de busca
+      _searchNormalized ??= _search?.ToNormalize();
+
       return _searchNormalized;
     }
   }
@@ -112,10 +140,10 @@ public class SearchDto : Dto
   /// <summary>
   /// Índice da paginação.
   /// </summary>
-  /// <value>Parâmetro padrão é 1.</value>
   /// <remarks>
-  /// Utilizar valor 0 (zero) para ignorar índice.
+  /// O menor índice é 1. Valor menor assume 1.
   /// </remarks>
+  /// <value>Parâmetro padrão é 1.</value>
   public long PageIndex
   {
     get => _pageIndex;
@@ -125,6 +153,9 @@ public class SearchDto : Dto
   /// <summary>
   /// Índice lógico da paginação.
   /// </summary>
+  /// <remarks>
+  /// É o <see cref="PageIndex"/> menos um, para uso direto em <c>Skip</c>.
+  /// </remarks>
   /// <value>Parâmetro padrão é 0.</value>
   [BindNever]
   [JsonIgnore]
@@ -136,14 +167,18 @@ public class SearchDto : Dto
   /// <summary>
   /// Tamanho da paginação.
   /// </summary>
-  /// <value>Parâmetro padrão é 10.</value>
   /// <remarks>
-  /// Utilizar valor 0 (zero) para ignorar tamanho.
+  /// Valor negativo assume 0, que significa ignorar o tamanho. Valor acima de <see cref="PageSizeMax"/>
+  /// assume o próprio limite.
   /// </remarks>
+  /// <value>Parâmetro padrão é 10.</value>
   public long PageSize
   {
     get => _pageSize;
-    set => _pageSize = value < 0 ? 0 : value;
+    set => _pageSize =
+      value < 0 ? 0 :
+      value > PageSizeMax ? PageSizeMax :
+      value;
   }
 
   #endregion

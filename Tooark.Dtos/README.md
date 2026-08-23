@@ -2,323 +2,285 @@
 
 Biblioteca para gerenciamento e manutenção de DTOs base em projetos .NET.
 
-## Configuração
-
-Para utilizar os resources disponíveis, adicione a seguinte linha no seu arquivo `.csproj`:
-
-```xml
-<Target Name="CopyNugetContentFiles" AfterTargets="Build">
-  <ItemGroup>
-    <NugetContentFiles Include="$(NuGetPackageRoot)\**\Resources\**\*.json" />
-  </ItemGroup>
-  <Copy SourceFiles="@(NugetContentFiles)" DestinationFolder="$(OutDir)Resources" SkipUnchangedFiles="true" />
-</Target>
-```
-
-Adicione a seguinte linha no seu arquivo `Program.cs`:
-
-```csharp
-// Importando o namespace necessário
-using Tooark.Dtos.Injections;
-
-// Nas suas configurações de serviços
-services.AddTooarkDtos();
-```
-
 ## Conteúdo
 
-- [Dto](#1-dto)
-- [SearchDto](#2-searchdto)
-- [SearchOrderDto](#3-searchorderdto)
-- [ResponseDto](#4-responsedto)
-- [PaginationDto](#5-paginationdto)
-- [MetadataDto](#6-metadatadto)
+- [Visão Geral](#visão-geral)
+- [Instalação](#-instalação)
+- [Configuração](#️-configuração)
+- [Componentes](#-componentes)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuição](#-contribuição)
+- [Licença](#-licença)
 
-## DTOs (Data Transfer Objects)
+## Visão Geral
 
-### 1. Dto
+O pacote `Tooark.Dtos` fornece:
 
-**Funcionalidade:**
-Classe base para DTOs com configuração de localizador de strings.
+- DTOs de busca e paginação para endpoints de listagem;
+- uma resposta padrão com dados, erros, paginação e metadados;
+- tradução automática das chaves de erro produzidas pelas validações do Tooark;
+- limite de tamanho de página, para que uma requisição não possa pedir todos os registros.
 
-- **Métodos:**
+> **Requisito de runtime**: `SearchDto`, `PaginationDto` e `ResponseDto` usam tipos do MVC, do `Http` e do
+> `WebUtilities`, então o pacote exige o runtime do ASP.NET Core instalado. É o esperado para DTOs de API.
 
-  - `Configure(IStringLocalizer localizer)`: Configura o localizador de strings.
+---
 
-### 2. SearchDto
+## 🔧 Instalação
 
-**Funcionalidade:**
-Classe para parâmetros de busca.
+```bash
+dotnet add package Tooark.Dtos
+```
 
-- **Propriedades:**
+---
 
-  - `Search`: Informação a ser procurada. Padrão: `nulo`.
-  - `PageIndex`: Índice da paginação. Padrão: `0`.
-  - `PageSize`: Tamanho da paginação. Padrão: `10`.
+## ⚙️ Configuração
 
-[**Exemplo de Uso**](#searchdto)
+A tradução das mensagens **não exige configuração**: o `ResponseDto` resolve o idioma pelo fluxo de execução
+da requisição e lê as traduções dos arquivos distribuídos com o
+[`Tooark.Extensions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions).
 
-### 3. SearchOrderDto
+O registro abaixo existe para a aplicação poder injetar `IStringLocalizer` nos próprios tipos:
 
-**Funcionalidade:**
-Classe para parâmetros de busca com parâmetro de ordenação.
+```csharp
+using Tooark.Dtos.Injections;
 
-- **Propriedades:**
+builder.Services.AddTooarkDtos();
+```
 
-  - `OrderBy`: Referencia a ser ordenada. Padrão: `nulo`.
-  - `OrderAsc`: Sentido da ordenação. Crescente=`true` ou Decrescente=`false`. Padrão: `true`.
+Para acrescentar ou sobrescrever traduções, coloque um `Resources/{idioma}.json` na saída da aplicação.
 
-[**Exemplo de Uso**](#searchorderdto)
+---
 
-### 4. ResponseDto
-
-**Funcionalidade:**
-Classe de resposta padrão para operações de API.
-
-- **Propriedades:**
-
-  - `Data`: Dados de resposta. Padrão: `nulo`.
-  - `Errors`: Lista de erros. Padrão: `vazio`.
-  - `Pagination`: Dados de paginação. Padrão: `nulo`.
-  - `Metadata`: Metadados. Padrão: `nulo`.
-
-- **Métodos:**
-
-  - `ResponseDto(T? data)`: Construtor da classe com dados de resposta.
-  - `ResponseDto(T data, IList<string> errors)`: Construtor da classe com dados de resposta e lista de erros.
-  - `ResponseDto(T? data, int total, HttpRequest request)`: Construtor da classe com dados de resposta, total de registros e requisição. Para montar a paginação.
-  - `ResponseDto(string error)`: Construtor da classe com erro.
-  - `ResponseDto(IList<string> errors)`: Construtor da classe com lista de erros.
-  - `ResponseDto(Exception exception)`: Construtor da classe com exceção.
-  - `ResponseDto(string message, bool isSuccess)`: Construtor da classe com mensagem e status de sucesso.
-  - `ResponseDto(IReadOnlyCollection<NotificationItem> notifications)`: Construtor da classe com notificações.
-  - `SetPagination(PaginationDto pagination)`: Adiciona dados de paginação.
-  - `SetMetadata(IList<MetadataDto> metadata)`: Adiciona metadados.
-  - `AddMetadata(MetadataDto metadata)`: Adiciona um metadado.
-
-[**Exemplo de Uso**](#responsedto)
-
-### 5. PaginationDto
-
-**Funcionalidade:**
-Classe de parâmetros de paginação para resposta de API.
-
-- **Propriedades:**
-
-  - `Total`: Total de registros. Padrão: `0`.
-  - `PageSize`: Tamanho da página. Padrão: `0`.
-  - `PageIndex`: Índice da página. Padrão: `0`.
-  - `Previous`: Índice da página anterior. Padrão: `nulo`.
-  - `Next`: Índice da página seguinte. Padrão: `nulo`.
-  - `CurrentLink`: Link da página atual. Padrão: `nulo`.
-  - `PreviousLink`: Link da página anterior. Padrão: `nulo`.
-  - `NextLink`: Link da página seguinte. Padrão: `nulo`.
-
-- **Métodos:**
-
-  - `PaginationDto(long total, HttpRequest request)`: Construtor da classe com total de registros e requisição.
-  - `PaginationDto(long total, long pageSize, long pageIndex, long previous, long next, HttpRequest request)`: Construtor da classe com parâmetros de paginação e requisição.
-  - `public PaginationDto(long total, SearchDto searchDto, HttpRequest request)`: Construtor da classe com total de registros, parâmetros de busca e requisição.
-
-[**Exemplo de Uso**](#paginationdto)
-
-### 6. MetadataDto
-
-**Funcionalidade:**
-Classe de metadados para resposta de API.
-
-- **Propriedades:**
-
-  - `Key`: Chave do metadado. Padrão: `nulo`.
-  - `Value`: Valor do metadado. Padrão: `nulo`.
-
-[**Exemplo de Uso**](#metadatadto)
-
-## Exemplos de Uso
+## 📦 Componentes
 
 ### Dto
 
-```csharp
-using Tooark.Dtos;
-
-Dto.Configure(localizer);
-```
+Classe base dos DTOs que produzem mensagens traduzidas. Não tem membros públicos: serve para o
+`ResponseDto` e o `SearchDto` compartilharem o localizador.
 
 ### SearchDto
 
-```csharp
-using Tooark.Dtos;
+Parâmetros de busca com paginação.
 
-var search = new SearchDto
-{
-  Search = "Exemplo",
-  PageIndex = 1,
-  PageSize = 20
-};
-```
+| Membro               | Tipo         | Descrição                                                                          |
+| -------------------- | ------------ | ---------------------------------------------------------------------------------- |
+| `Search`             | `string?`    | Informação a ser procurada. Padrão: nulo                                           |
+| `SearchNormalized`   | `string?`    | `Search` normalizado, calculado uma vez por valor. Não é vinculado nem serializado |
+| `PageIndex`          | `long`       | Índice da página, começando em 1. Valor menor assume 1. Padrão: 1                  |
+| `PageIndexLogical`   | `long`       | `PageIndex` menos um, para uso direto em `Skip`. Não é vinculado nem serializado   |
+| `PageSize`           | `long`       | Tamanho da página. Negativo assume 0, que significa ignorar o tamanho. Padrão: 10  |
+| `PageSizeMax`        | `long`       | `protected virtual`. Teto do `PageSize`. Padrão: `DefaultPageSizeMax`              |
+| `DefaultPageSizeMax` | `const long` | Teto padrão: 100                                                                   |
 
 ### SearchOrderDto
 
-```csharp
-using Tooark.Dtos;
+Herda de `SearchDto` e acrescenta ordenação.
 
-var searchOrder = new SearchOrderDto
-{
-  Search = "Exemplo",
-  PageIndex = 1,
-  PageSize = 20,
-  OrderBy = "Nome",
-  OrderAsc = true
-};
-```
-
-### ResponseDto
-
-**Dados de Resposta:**
-
-```csharp
-using Tooark.Dtos;
-
-var example = new ExampleDto() { Id = 1, Name = "Exemplo" };
-var response = new ResponseDto<ExampleDto>(example);
-
-response.SetPagination(new PaginationDto(100, request));
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**Dados de Resposta e Lista de Erros:**
-
-```csharp
-using Tooark.Dtos;
-
-var example = new ExampleDto() { Id = 1, Name = "Exemplo" };
-var errors = new List<string> { "Erro 1", "Erro 2" };
-var response = new ResponseDto<ExampleDto>(example, errors);
-
-response.SetPagination(new PaginationDto(100, request));
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**Dados de Resposta, total de registros e requisição:**
-
-```csharp
-using Tooark.Dtos;
-
-var example = new ExampleDto() { Id = 1, Name = "Exemplo" };
-var total = 100;
-var response = new ResponseDto<ExampleDto>(example, total, request);
-
-response.SetMetadata(new List<MetadataDto>() {new MetadataDto("Chave", "Valor")});
-```
-
-**Erro único:**
-
-```csharp
-using Tooark.Dtos;
-
-var response = new ResponseDto<ExampleDto>("Erro");
-
-response.SetPagination(new PaginationDto(100, request));
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**Lista de Erros:**
-
-```csharp
-using Tooark.Dtos;
-
-var errors = new List<string> { "Erro 1", "Erro 2" };
-var response = new ResponseDto<ExampleDto>(erros);
-
-response.SetPagination(new PaginationDto(100, request));
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**Exception:**
-
-```csharp
-using Tooark.Dtos;
-
-var response = new ResponseDto<ExampleDto>(exception);
-
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**String de dados:**
-
-```csharp
-using Tooark.Dtos;
-
-var data = "Exemplo";
-var response = new ResponseDto<ExampleDto>(data, true);
-
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
-
-**Itens de Notificação:**
-
-```csharp
-using Tooark.Dtos;
-
-NotificationItem notification = new NotificationItem("Chave", "Valor");
-var response = new ResponseDto<ExampleDto>(notification);
-
-response.AddMetadata(new MetadataDto("Chave", "Valor"));
-```
+| Membro     | Tipo      | Descrição                                   |
+| ---------- | --------- | ------------------------------------------- |
+| `OrderBy`  | `string?` | Nome da coluna a ordenar                    |
+| `OrderAsc` | `bool`    | Crescente quando verdadeiro. Padrão: `true` |
 
 ### PaginationDto
 
-**Total de Registros e Requisição:**
+Total de registros e navegação entre páginas. Todas as propriedades são somente leitura.
 
-```csharp
-using Tooark.Dtos;
+| Membro                                      | Tipo      | Descrição                                              |
+| ------------------------------------------- | --------- | ------------------------------------------------------ |
+| `Total`                                     | `long`    | Total de registros                                     |
+| `PageSize` / `PageIndex`                    | `long`    | Tamanho e índice da página                             |
+| `Previous` / `Next`                         | `long?`   | Índices das páginas vizinhas, nulos quando não existem |
+| `CurrentLink` / `PreviousLink` / `NextLink` | `string?` | URLs correspondentes                                   |
 
-var pagination = new PaginationDto(100, request);
-```
+### ResponseDto&lt;T&gt;
 
-**Parâmetros de Paginação e Requisição:**
+Resposta padrão de API.
 
-```csharp
-using Tooark.Dtos;
+| Membro                                          | Tipo                         | Descrição                                       |
+| ----------------------------------------------- | ---------------------------- | ----------------------------------------------- |
+| `Data`                                          | `T?`                         | Dados da resposta                               |
+| `Errors`                                        | `IReadOnlyList<string>`      | Mensagens de erro, já traduzidas                |
+| `Pagination`                                    | `PaginationDto?`             | Dados de paginação                              |
+| `Metadata`                                      | `IReadOnlyList<MetadataDto>` | Metadados                                       |
+| `SetPagination` / `SetMetadata` / `AddMetadata` |                              | Definem paginação e metadados após a construção |
 
-var pagination = new PaginationDto(100, 20, 1, 0, 2, request);
-```
-
-**Parâmetros de Paginação, Parâmetros de Busca e Requisição:**
-
-```csharp
-using Tooark.Dtos;
-
-var search = new SearchDto
-{
-  Search = "Exemplo",
-  PageIndex = 1,
-  PageSize = 20
-};
-
-var pagination = new PaginationDto(100, search, request);
-```
+`Errors` e `Metadata` são coleções somente leitura: convertê-las para `IList` compila, mas alterá-las lança
+`NotSupportedException`. Use `SetMetadata` ou `AddMetadata`.
 
 ### MetadataDto
 
+Par chave/valor. Chave e valor são independentes — informar um como nulo resulta em string vazia, sem
+descartar o outro.
+
+### Limite de tamanho de página
+
+Sem um teto, uma única requisição poderia pedir todos os registros. O `PageSize` é limitado a
+`DefaultPageSizeMax`, que vale 100. Um endpoint que precise de páginas maiores sobrescreve o limite no
+próprio DTO:
+
+```csharp
+public sealed class RelatorioSearchDto : SearchDto
+{
+  protected override long PageSizeMax => 5000;
+}
+```
+
+Use a forma de expressão. Uma propriedade automática com inicializador não serve: o limite é consultado pelo
+construtor da classe base, que roda antes dos inicializadores da classe derivada.
+
+### Links de paginação
+
+Os links reaproveitam a query string da requisição, trocando apenas o `PageIndex`, para que os filtros do
+endpoint sigam valendo na navegação.
+
+Duas consequências que valem conhecer:
+
+- **Todo parâmetro da requisição aparece no corpo da resposta.** Não trafegue credenciais na query string —
+  elas voltariam nos links e daí para logs, cache e histórico do navegador.
+- **Os links não são um controle de acesso.** Quem consegue chamar uma página consegue chamar as outras
+  editando a URL, e o `Total` já informa quantas existem. Contra coleta em massa, o que vale é o teto de
+  `PageSize`, o limite de taxa e a autorização — não esconder os links.
+
+---
+
+## 📝 Exemplos de Uso
+
+### Busca com paginação
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.Dtos;
+
+[HttpGet]
+public async Task<IActionResult> Listar([FromQuery] SearchDto filtro)
+{
+  var query = _context.Pessoas.AsQueryable();
+
+  if (!string.IsNullOrEmpty(filtro.SearchNormalized))
+  {
+    query = query.Where(p => p.NomeNormalizado.Contains(filtro.SearchNormalized));
+  }
+
+  var total = await query.LongCountAsync();
+
+  var pessoas = await query
+    .Skip((int)(filtro.PageIndexLogical * filtro.PageSize))
+    .Take((int)filtro.PageSize)
+    .ToListAsync();
+
+  var resposta = new ResponseDto<List<Pessoa>>(pessoas);
+  resposta.SetPagination(new PaginationDto(total, filtro, Request));
+
+  return Ok(resposta);
+}
+```
+
+A resposta:
+
+```json
+{
+  "data": [ ... ],
+  "errors": [],
+  "pagination": {
+    "total": 95,
+    "pageSize": 10,
+    "pageIndex": 9,
+    "previous": 8,
+    "next": 10,
+    "currentLink": "https://api.exemplo.com/pessoas?PageIndex=9&PageSize=10",
+    "previousLink": "https://api.exemplo.com/pessoas?PageIndex=8&PageSize=10",
+    "nextLink": "https://api.exemplo.com/pessoas?PageIndex=10&PageSize=10"
+  },
+  "metadata": []
+}
+```
+
+> **Não chame o parâmetro de `search`.** O `SearchDto` tem uma propriedade `Search`, e o ASP.NET Core emite
+> o aviso `MVC1004` quando o nome do parâmetro coincide com o de uma propriedade do tipo vinculado, porque a
+> resolução de prefixo fica ambígua. Qualquer outro nome resolve.
+
+### Busca com ordenação
+
 ```csharp
 using Tooark.Dtos;
 
-var metadata = new MetadataDto("Chave", "Valor");
+[HttpGet]
+public IActionResult Listar([FromQuery] SearchOrderDto filtro)
+{
+  var query = _context.Pessoas.OrderByProperty(filtro.OrderBy ?? nameof(Pessoa.Nome));
+
+  // ...
+}
 ```
 
-## Dependências
+### Resposta com erros de validação
 
-- [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/)
-- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection/)
-- [Microsoft.Extensions.Localization](https://www.nuget.org/packages/Microsoft.Extensions.Localization/)
-- [Tooark.Extensions](../Tooark.Extensions/README.md)
-- [Tooark.Notifications](../Tooark.Notifications/README.md)
+```csharp
+using Tooark.Dtos;
 
-## Contribuição
+var pessoa = new Pessoa(nome, email);
+
+// A notificação inválida vira a lista de erros, já traduzida
+if (!pessoa.IsValid)
+{
+  // ["O campo Nome é obrigatório"]
+  return BadRequest(new ResponseDto<Pessoa>(pessoa));
+}
+```
+
+Com o código do erro na frente da mensagem:
+
+```csharp
+// ["T.VLD.STR5: O campo Nome é obrigatório"]
+return BadRequest(new ResponseDto<Pessoa>(pessoa.Notification, withCode: true));
+```
+
+### Endpoint com página maior
+
+```csharp
+using Tooark.Dtos;
+
+public sealed class ExportacaoSearchDto : SearchDto
+{
+  protected override long PageSizeMax => 5000;
+}
+
+[HttpGet("exportacao")]
+public IActionResult Exportar([FromQuery] ExportacaoSearchDto filtro)
+{
+  // filtro.PageSize aceita até 5000 neste endpoint
+}
+```
+
+### Metadados
+
+```csharp
+using Tooark.Dtos;
+
+var resposta = new ResponseDto<List<Pessoa>>(pessoas);
+
+resposta.AddMetadata(new MetadataDto("versao", "2024-01"));
+resposta.SetMetadata([new MetadataDto("origem", "cache")]);
+```
+
+---
+
+## 📋 Dependências
+
+| Pacote                                                                                       | Versão   | Descrição                                         |
+| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
+| [`Tooark.Extensions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions)       | 4.x      | Localização das mensagens e normalização da busca |
+| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x      | Notificações que viram os erros da resposta       |
+| `Microsoft.AspNetCore.App` (framework compartilhado)                                         | 8.x/10.x | `HttpRequest`, `QueryHelpers` e `BindNever`       |
+
+---
+
+## 🪪 Contribuição
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Dtos](https://github.com/Tooark/tooark-cs/issues).
 
-## Licença
+## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

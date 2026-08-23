@@ -33,7 +33,7 @@ public class MetadataDtoTests
 
     // Assert
     Assert.Equal(string.Empty, metadata.Key);
-    Assert.Equal(string.Empty, metadata.Value);
+    Assert.Equal(value, metadata.Value);
   }
 
   // Testa se quando o valor é nulo, o Value é inicializado com string vazia

@@ -5,7 +5,7 @@
     <PackageId>Tooark.Dtos</PackageId>
     <Title>Tooark.Dtos</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, dto, .NET, management, creation</PackageTags>
+    <PackageTags>tooark, toolkit, dto, api, pagination, search, response, aspnetcore, .NET</PackageTags>
     <Summary>Management of base DTOs in .NET projects.</Summary>
     <PackageDescription>Package for managing base DTOs in .NET applications.</PackageDescription>
     <Description>Library to management and maintenance of base DTOs in .NET projects.</Description>

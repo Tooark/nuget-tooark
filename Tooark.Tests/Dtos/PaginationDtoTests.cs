@@ -203,9 +203,9 @@ public class PaginationDtoTests
     Assert.Equal("http://localhost/api/test?PageIndex=2&PageSize=10&Param=Abc123", paginationDto.NextLink);
   }
 
-  // Teste para verificar limite de índice da página seguinte.
+  // Teste para verificar que a penúltima página aponta para a última.
   [Fact]
-  public void PaginationDto_WithLimitNext_ShouldSetValuesCorrectly()
+  public void PaginationDto_OnSecondToLastPage_ShouldPointToLastPage()
   {
     // Arrange
     var total = 100;
@@ -223,10 +223,51 @@ public class PaginationDtoTests
     Assert.Equal(10, paginationDto.PageSize);
     Assert.Equal(9, paginationDto.PageIndex);
     Assert.Equal(8, paginationDto.Previous);
-    Assert.Null(paginationDto.Next);
+    Assert.Equal(10, paginationDto.Next);
     Assert.Equal("http://localhost/api/test?PageIndex=9&PageSize=10&Param=Abc123", paginationDto.CurrentLink);
     Assert.Equal("http://localhost/api/test?PageIndex=8&PageSize=10&Param=Abc123", paginationDto.PreviousLink);
+    Assert.Equal("http://localhost/api/test?PageIndex=10&PageSize=10&Param=Abc123", paginationDto.NextLink);
+  }
+
+  // Teste para verificar que a última página não aponta para uma página seguinte.
+  [Fact]
+  public void PaginationDto_OnLastPage_ShouldNotHaveNext()
+  {
+    // Arrange
+    var total = 100;
+    var context = new DefaultHttpContext();
+    context.Request.Scheme = "http";
+    context.Request.Host = new HostString("localhost");
+    context.Request.Path = "/api/test";
+    context.Request.QueryString = new QueryString("?PageIndex=10&PageSize=10");
+
+    // Act
+    var paginationDto = new PaginationDto(total, context.Request);
+
+    // Assert
+    Assert.Equal(9, paginationDto.Previous);
+    Assert.Null(paginationDto.Next);
     Assert.Null(paginationDto.NextLink);
+  }
+
+  // Teste para verificar a última página parcial, quando o total não é múltiplo do tamanho.
+  [Fact]
+  public void PaginationDto_WithPartialLastPage_ShouldBeReachable()
+  {
+    // Arrange
+    var total = 95;
+    var context = new DefaultHttpContext();
+    context.Request.Scheme = "http";
+    context.Request.Host = new HostString("localhost");
+    context.Request.Path = "/api/test";
+    context.Request.QueryString = new QueryString("?PageIndex=9&PageSize=10");
+
+    // Act
+    var paginationDto = new PaginationDto(total, context.Request);
+
+    // Assert: a página 10 traz os registros de 91 a 95
+    Assert.Equal(10, paginationDto.Next);
+    Assert.Equal("http://localhost/api/test?PageIndex=10&PageSize=10", paginationDto.NextLink);
   }
 
   // Teste para verificar se os valores padrões são atribuídos corretamente com uma query sem informações de paginação na request.

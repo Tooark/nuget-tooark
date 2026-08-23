@@ -311,10 +311,10 @@ pode acrescentar chaves próprias. Os arquivos são lidos uma vez por idioma, no
 
 ## Dependências
 
-| Dependência                                                                  | Versão   | Uso                                          |
-| ---------------------------------------------------------------------------- | -------- | -------------------------------------------- |
-| [`Tooark.Utils`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Utils) | 4.x      | Normalização e idioma                        |
-| `Microsoft.Extensions.Localization`                                          | 8.x/10.x | `IStringLocalizer` e o registro no container |
+| Dependência                         | Versão   | Uso                                          |
+| ----------------------------------- | -------- | -------------------------------------------- |
+| `Tooark.Utils`                      | 4.x      | Normalização e idioma                        |
+| `Microsoft.Extensions.Localization` | 8.x/10.x | `IStringLocalizer` e o registro no container |
 
 > **O pacote não exige o runtime do ASP.NET Core.** Até a v3 ele declarava o framework compartilhado por
 > causa do `ModelStateExtension`, e esse requisito se propagava para o `Tooark.Dtos`, o `Tooark.ValueObjects`,
