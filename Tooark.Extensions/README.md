@@ -10,16 +10,8 @@ dotnet add package Tooark.Extensions
 
 ## Configuração
 
-Para utilizar os resources disponíveis, adicione a seguinte linha no seu arquivo `.csproj`:
-
-```xml
-<Target Name="CopyNugetContentFiles" AfterTargets="Build">
-  <ItemGroup>
-    <NugetContentFiles Include="$(NuGetPackageRoot)\**\Resources\**\*.json" />
-  </ItemGroup>
-  <Copy SourceFiles="@(NugetContentFiles)" DestinationFolder="$(OutDir)Resources" SkipUnchangedFiles="true" />
-</Target>
-```
+Os arquivos de idioma acompanham o assembly, então **não há nada a configurar** para as traduções
+funcionarem — nem em aplicação, nem em contêiner, nem em publicação single-file.
 
 Adicione a seguinte linha no seu arquivo `Program.cs`:
 
@@ -306,8 +298,16 @@ sem que ele seja alterado.
 ### Sobrescrevendo ou acrescentando traduções
 
 Coloque um arquivo `Resources/{idioma}.json` na saída da sua aplicação. Ele é mesclado sobre o
-`{idioma}.default.json` distribuído com o pacote, **chave a chave**: você sobrescreve apenas o que quiser e
-pode acrescentar chaves próprias. Os arquivos são lidos uma vez por idioma, no primeiro uso.
+`{idioma}.default.json` embutido no pacote, **chave a chave**: você sobrescreve apenas o que quiser e
+pode acrescentar chaves próprias. As traduções são lidas uma vez por idioma, no primeiro uso.
+
+```xml
+<ItemGroup>
+  <None Update="Resources\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo identifica o que vem do pacote.
 
 ## Dependências
 

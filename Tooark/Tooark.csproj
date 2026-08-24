@@ -5,17 +5,11 @@
     <PackageId>Tooark</PackageId>
     <Title>Tooark</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>toolkit, management, resources, functionality, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, aggregate, mediator, validation, observability, .NET</PackageTags>
     <Summary>Tooark management for .NET projects.</Summary>
     <PackageDescription>Package with all Tooark resources for .NET applications.</PackageDescription>
     <Description>Library with all Tooark resources and features aimed at .NET projects.</Description>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Tooark.Notifications\Tooark.Notifications.csproj" />

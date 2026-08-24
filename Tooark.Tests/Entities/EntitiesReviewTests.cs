@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Tooark.Entities;
+using Tooark.Extensions;
 using Tooark.Exceptions;
 using Tooark.ValueObjects;
 
@@ -351,12 +352,13 @@ public class EntitiesReviewTests
   [InlineData("pt-BR")]
   public void EveryEmittedKey_ShouldHaveTranslation(string idioma)
   {
-    // Arrange
-    var caminho = Path.Combine(
-      AppContext.BaseDirectory, "Resources", $"{idioma}.default.json");
+    // Arrange: lê o recurso embutido no assembly, que é o que chega ao consumidor
+    var assembly = typeof(JsonStringLocalizerExtension).Assembly;
 
-    using var arquivo = File.OpenRead(caminho);
-    var traducoes = JsonSerializer.Deserialize<Dictionary<string, string>>(arquivo)!;
+    using var recurso = assembly.GetManifestResourceStream(
+      $"{assembly.GetName().Name}.Resources.{idioma}.default.json")!;
+
+    var traducoes = JsonSerializer.Deserialize<Dictionary<string, string>>(recurso)!;
 
     string[] chaves = [
       "Field.Empty",

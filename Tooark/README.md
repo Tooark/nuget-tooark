@@ -2,24 +2,18 @@
 
 Biblioteca com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET.
 
-## Configuração
-
-Instale o pacote NuGet `Tooark` para acessar todos os recursos disponíveis. Use o seguinte comando no seu terminal:
+## Instalação
 
 ```bash
 dotnet add package Tooark
 ```
 
-Para utilizar os resources disponíveis, adicione a seguinte linha no seu arquivo `.csproj`:
+O agregador traz todos os pacotes Tooark de uma vez. Instale os pacotes individualmente quando quiser
+apenas parte deles — a superfície é a mesma.
 
-```xml
-<Target Name="CopyNugetContentFiles" AfterTargets="Build">
-  <ItemGroup>
-    <NugetContentFiles Include="$(NuGetPackageRoot)\**\Resources\**\*.json" />
-  </ItemGroup>
-  <Copy SourceFiles="@(NugetContentFiles)" DestinationFolder="$(OutDir)Resources" SkipUnchangedFiles="true" />
-</Target>
-```
+## Configuração
+
+As traduções acompanham o assembly, então não há nada a configurar para elas funcionarem.
 
 Adicione a seguinte linha no seu arquivo `Program.cs`:
 
@@ -38,11 +32,53 @@ IConfiguration configuration = new ConfigurationBuilder()
 services.AddTooarkService(configuration);
 ```
 
+Essa única chamada registra `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects` e
+`Tooark.Mediator`, e acrescenta `Tooark.Securities` e `Tooark.Observability` quando as seções de
+configuração correspondentes existem.
+
+### Onde os manipuladores do mediador são procurados
+
+Sem argumento, no **assembly que chamou o `AddTooarkService`**. Numa aplicação de projeto único, é o
+que você quer e não há nada a fazer.
+
+Numa aplicação em camadas, os manipuladores costumam estar em outro projeto. Informe os assemblies:
+
+```csharp
+services.AddTooarkService(configuration, typeof(MeuHandler).Assembly);
+```
+
+Chamar o `AddTooarkMediator` depois também funciona, para acrescentar assemblies ou configurar as
+opções — o registro dos manipuladores não duplica:
+
+```csharp
+using Tooark.Mediator.Injections;
+
+services.AddTooarkService(configuration);
+services.AddTooarkMediator(typeof(MeuHandler).Assembly);
+```
+
+> **Atenção ao chamar o `AddTooarkService` de dentro de uma biblioteca sua.** O assembly procurado é o
+> de quem chama, então seria o da sua biblioteca, e não o da aplicação. Repasse o assembly certo.
+
+### Unidade de trabalho
+
+Fica de fora do `AddTooarkService`, porque depende do tipo do seu contexto do Entity Framework:
+
+```csharp
+using Tooark.Mediator.EntityFrameworkCore.Injections;
+
+services.AddTooarkMediatorUnitOfWork<MeuDbContext>();
+```
+
 ## Recursos disponíveis
 
 ### [Tooark.Attributes](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Attributes/README.md)
 
 Descrição: Este pacote fornece atributos personalizados para uso em projetos .NET.
+
+### [Tooark.AspNetCore](https://github.com/Tooark/tooark-cs/blob/main/Tooark.AspNetCore/README.md)
+
+Descrição: Este pacote reúne os recursos que dependem do ASP.NET Core, como a leitura de erros do `ModelState`.
 
 ### [Tooark.Dtos](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Dtos/README.md)
 
@@ -106,4 +142,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

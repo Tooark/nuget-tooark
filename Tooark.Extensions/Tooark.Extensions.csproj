@@ -12,11 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="Resources\**\*.json">
-      <Pack>true</Pack>
-      <PackagePath>contentFiles/any/any/</PackagePath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="Resources\**\*.default.json" />
   </ItemGroup>
 
   <ItemGroup>

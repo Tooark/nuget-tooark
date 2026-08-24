@@ -250,28 +250,50 @@ internal class InternalJsonStringLocalizer
     // O arquivo do consumidor é lido por último, sobrescrevendo o que veio do pacote
     var translations = new Dictionary<string, string>(StringComparer.Ordinal);
 
-    ReadJsonFile(GetFilePath(culture, true), translations);
-    ReadJsonFile(GetFilePath(culture, false), translations);
+    ReadEmbeddedFile(culture, translations);
+    ReadJsonFile(GetFilePath(culture), translations);
 
     return translations;
   }
 
   /// <summary>
-  /// Obtém o caminho do arquivo JSON do idioma.
+  /// Obtém o caminho do arquivo JSON do idioma fornecido pelo consumidor.
   /// </summary>
   /// <param name="culture">Código de idioma.</param>
-  /// <param name="defaultFile">Indica se é o arquivo JSON padrão.</param>
   /// <returns>Caminho do arquivo JSON.</returns>
-  private static string GetFilePath(string culture, bool defaultFile = true)
+  private static string GetFilePath(string culture)
   {
-    // Define o complemento do arquivo JSON
-    string complement = defaultFile ? ".default" : "";
-
     // Caminho relativo para o arquivo JSON
-    string relativeFilePath = Path.Combine("Resources", $"{culture}{complement}.json");
+    string relativeFilePath = Path.Combine("Resources", $"{culture}.json");
 
     // Retorna o caminho completo do arquivo JSON
     return Path.Combine(AppContext.BaseDirectory, relativeFilePath);
+  }
+
+  /// <summary>
+  /// Lê o arquivo de idioma embutido no assembly e acrescenta as traduções ao dicionário.
+  /// </summary>
+  /// <remarks>
+  /// O arquivo padrão acompanha o assembly em vez de ser copiado para a pasta de saída.
+  /// </remarks>
+  /// <param name="culture">Código de idioma.</param>
+  /// <param name="translations">Dicionário que recebe as traduções.</param>
+  private static void ReadEmbeddedFile(string culture, Dictionary<string, string> translations)
+  {
+    var assembly = typeof(InternalJsonStringLocalizer).Assembly;
+    var name = $"{assembly.GetName().Name}.Resources.{culture}.default.json";
+
+    using var stream = assembly.GetManifestResourceStream(name);
+
+    // Idioma sem arquivo próprio recai no padrão, tratado por quem chama
+    if (stream is null)
+    {
+      return;
+    }
+
+    using var reader = new StreamReader(stream);
+
+    ReadJsonContent(reader.ReadToEnd(), translations);
   }
 
   /// <summary>
@@ -288,10 +310,20 @@ internal class InternalJsonStringLocalizer
       return;
     }
 
+    ReadJsonContent(File.ReadAllText(filePath), translations);
+  }
+
+  /// <summary>
+  /// Interpreta o conteúdo JSON e acrescenta as traduções ao dicionário.
+  /// </summary>
+  /// <param name="content">Conteúdo do arquivo JSON.</param>
+  /// <param name="translations">Dicionário que recebe as traduções.</param>
+  private static void ReadJsonContent(string content, Dictionary<string, string> translations)
+  {
     try
     {
-      // Lê e interpreta o arquivo JSON
-      using var document = JsonDocument.Parse(File.ReadAllText(filePath));
+      // Lê e interpreta o conteúdo JSON
+      using var document = JsonDocument.Parse(content);
 
       // Indexa cada tradução pela chave
       foreach (var property in document.RootElement.EnumerateObject())

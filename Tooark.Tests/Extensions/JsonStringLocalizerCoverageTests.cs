@@ -16,13 +16,25 @@ public class JsonStringLocalizerCoverageTests
   // Constrói o localizador
   private static JsonStringLocalizerExtension Localizador() => new();
 
-  // Lê o arquivo de recurso do idioma distribuído com o pacote
+  // Lê o arquivo de recurso do idioma embutido no assembly, que é o que o consumidor recebe
   private static Dictionary<string, string> Recurso(string idioma)
   {
-    var caminho = Path.Combine(AppContext.BaseDirectory, "Resources", $"{idioma}.default.json");
-    using var documento = JsonDocument.Parse(File.ReadAllText(caminho));
+    using var conteudo = RecursoEmbutido(idioma)
+      ?? throw new InvalidOperationException($"O idioma {idioma} não está embutido no assembly.");
+
+    using var leitor = new StreamReader(conteudo);
+    using var documento = JsonDocument.Parse(leitor.ReadToEnd());
 
     return documento.RootElement.EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetString()!);
+  }
+
+  // Abre o recurso embutido do idioma, ou devolve nulo quando ele não é distribuído
+  private static Stream? RecursoEmbutido(string idioma)
+  {
+    var assembly = typeof(JsonStringLocalizerExtension).Assembly;
+
+    return assembly.GetManifestResourceStream(
+      $"{assembly.GetName().Name}.Resources.{idioma}.default.json");
   }
 
   public JsonStringLocalizerCoverageTests()
@@ -49,11 +61,8 @@ public class JsonStringLocalizerCoverageTests
   [Fact]
   public void Resources_ShouldNotShipRemovedLanguages()
   {
-    // Arrange
-    var caminho = Path.Combine(AppContext.BaseDirectory, "Resources", "pt-PT.default.json");
-
     // Act & Assert
-    Assert.False(File.Exists(caminho));
+    Assert.Null(RecursoEmbutido("pt-PT"));
   }
 
   // Testa se nenhum idioma tem texto vazio
