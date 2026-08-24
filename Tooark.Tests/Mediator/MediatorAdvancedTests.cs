@@ -15,6 +15,7 @@ public class MediatorAdvancedTests
 {
   #region CancellationToken Tests
 
+  // Testa se o token de cancelamento chega ao manipulador da requisição
   [Fact]
   public async Task SendAsync_ShouldPassCancellationTokenToHandler()
   {
@@ -36,6 +37,7 @@ public class MediatorAdvancedTests
     Assert.True(result);
   }
 
+  // Testa se o cancelamento pedido pelo chamador interrompe o despacho
   [Fact]
   public async Task SendAsync_ShouldRespectCancellation()
   {
@@ -53,6 +55,7 @@ public class MediatorAdvancedTests
       () => mediator.SendAsync(new CanceledRequest(), cts.Token));
   }
 
+  // Testa se o token de cancelamento chega aos manipuladores da notificação
   [Fact]
   public async Task PublishAsync_ShouldPassCancellationTokenToHandlers()
   {
@@ -79,6 +82,7 @@ public class MediatorAdvancedTests
 
   #region Sequential Strategy Tests
 
+  // Testa a ordem de execução na estratégia sequencial
   [Fact]
   public async Task PublishAsync_ShouldExecuteSequentially_WhenStrategyIsSequential()
   {
@@ -110,6 +114,7 @@ public class MediatorAdvancedTests
     Assert.True(ParallelPublishProbe.SecondHandlerStarted);
   }
 
+  // Testa a execução simultânea na estratégia paralela
   [Fact]
   public async Task PublishAsync_ShouldExecuteParallel_WhenStrategyIsParallelWhenAll()
   {
@@ -142,6 +147,7 @@ public class MediatorAdvancedTests
 
   #region Error Handling Tests
 
+  // Testa se a exceção do manipulador chega ao chamador sem ser embrulhada
   [Fact]
   public async Task SendAsync_ShouldThrowException_WhenHandlerThrows()
   {
@@ -160,6 +166,7 @@ public class MediatorAdvancedTests
     Assert.Contains("Handler intentionally threw an exception", exception.Message);
   }
 
+  // Testa se a exceção de um manipulador de notificação chega ao chamador
   [Fact]
   public async Task PublishAsync_ShouldThrowException_WhenHandlerThrows()
   {
@@ -178,6 +185,7 @@ public class MediatorAdvancedTests
     Assert.Contains("Notification handler intentionally threw an exception", exception.Message);
   }
 
+  // Testa se a estratégia paralela relança a primeira exceção ocorrida, e não a agregada
   [Fact]
   public async Task PublishAsync_ShouldThrowInFirstExceptionOccurred_WhenParallel()
   {
@@ -199,6 +207,7 @@ public class MediatorAdvancedTests
 
   #region SendAsync with null validation
 
+  // Testa se requisição nula é erro do chamador na sobrecarga assíncrona
   [Fact]
   public async Task SendAsync_ShouldThrowBadRequestException_WhenRequestIsNull()
   {
@@ -220,6 +229,7 @@ public class MediatorAdvancedTests
 
   #region PublishAsync with null validation
 
+  // Testa se notificação nula é erro do chamador na sobrecarga assíncrona
   [Fact]
   public async Task PublishAsync_ShouldThrowBadRequestException_WhenNotificationIsNull()
   {
@@ -241,6 +251,7 @@ public class MediatorAdvancedTests
 
   #region Handler resolution edge cases
 
+  // Testa se requisição sem manipulador falha com contexto na sobrecarga assíncrona
   [Fact]
   public async Task SendAsync_ShouldThrowInternalServerErrorException_WhenHandlerNotFound()
   {
@@ -263,6 +274,7 @@ public class MediatorAdvancedTests
 
   #region Multiple notification handlers with errors
 
+  // Testa se a falha de um manipulador interrompe a publicação em vez de aguardar os demais
   [Fact]
   public async Task PublishAsync_ShouldFailFast_WhenFirstHandlerThrowsInParallel()
   {
@@ -285,6 +297,7 @@ public class MediatorAdvancedTests
 
   #region Complex handlers with business logic
 
+  // Testa o despacho pela abstração de consulta
   [Fact]
   public async Task SendAsync_ShouldIntegrateQueryHandlerCorrectly()
   {
@@ -303,6 +316,7 @@ public class MediatorAdvancedTests
     Assert.Equal("test-query", result);
   }
 
+  // Testa o despacho pela abstração de comando com retorno
   [Fact]
   public async Task SendAsync_ShouldIntegrateCommandHandlerCorrectly()
   {
@@ -321,6 +335,7 @@ public class MediatorAdvancedTests
     Assert.Equal("test-command", result);
   }
 
+  // Testa o despacho do comando sem retorno, que resolve para o tipo unitário
   [Fact]
   public async Task SendAsync_ShouldHandleVoidCommand()
   {
@@ -343,6 +358,7 @@ public class MediatorAdvancedTests
 
   #region MediatorOptions tests
 
+  // Testa o valor padrão da estratégia de publicação
   [Fact]
   public void MediatorOptions_DefaultStrategy_ShouldBeParallelWhenAll()
   {
@@ -353,6 +369,7 @@ public class MediatorAdvancedTests
     Assert.Equal(ENotifyStrategy.ParallelWhenAll, options.NotifyPublishStrategy);
   }
 
+  // Testa se a estratégia de publicação aceita configuração
   [Fact]
   public void MediatorOptions_ShouldAllowStrategyChange()
   {
@@ -370,6 +387,7 @@ public class MediatorAdvancedTests
 
   #region Notification strategy enum tests
 
+  // Testa o valor numérico do enumerador, que a configuração externa pode informar
   [Fact]
   public void ENotifyStrategy_ParallelWhenAll_ShouldHaveValue0()
   {
@@ -377,6 +395,7 @@ public class MediatorAdvancedTests
     Assert.Equal(0, (int)ENotifyStrategy.ParallelWhenAll);
   }
 
+  // Testa o valor numérico do enumerador, que a configuração externa pode informar
   [Fact]
   public void ENotifyStrategy_Sequential_ShouldHaveValue1()
   {
@@ -388,6 +407,7 @@ public class MediatorAdvancedTests
 
   #region Mediator constructor tests
 
+  // Testa a construção do mediador com as opções padrão
   [Fact]
   public void Mediator_Constructor_WithDefaultOptions_ShouldWork()
   {
@@ -402,6 +422,7 @@ public class MediatorAdvancedTests
     Assert.NotNull(mediator);
   }
 
+  // Testa a construção do mediador com opções próprias
   [Fact]
   public void Mediator_Constructor_WithCustomOptions_ShouldWork()
   {
@@ -424,6 +445,7 @@ public class MediatorAdvancedTests
 
   #region Publisher/Sender interface tests
 
+  // Testa se o mediador atende pela interface de publicação
   [Fact]
   public async Task IPublisher_ShouldBeAccessibleFromMediator()
   {
@@ -439,6 +461,7 @@ public class MediatorAdvancedTests
     await publisher.PublishAsync(new TestNotification(), TestContext.Current.CancellationToken);
   }
 
+  // Testa se o mediador atende pela interface de envio
   [Fact]
   public async Task ISender_ShouldBeAccessibleFromMediator()
   {

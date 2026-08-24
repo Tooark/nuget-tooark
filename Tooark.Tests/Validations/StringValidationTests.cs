@@ -561,7 +561,6 @@ public class StringValidationTests
   }
 
   // Teste para validar se o valor é nulo ou vazio e cria notificação, com valor não nulo ou vazio
-  
   [Theory]
   [InlineData("Value")]
   [InlineData(" ")]

@@ -4,6 +4,7 @@ namespace Tooark.Tests.Mediator.Abstractions;
 
 public class UnitTests
 {
+  // Testa se a propriedade estática devolve o valor do tipo unitário
   [Fact]
   public void Value_ShouldReturnUnit()
   {
@@ -14,6 +15,7 @@ public class UnitTests
     Assert.Equal(new Unit(), value);
   }
 
+  // Testa se a tarefa já vem concluída, para o manipulador sem retorno não precisar aguardar
   [Fact]
   public async Task Task_ShouldReturnCompletedUnitTask()
   {
@@ -24,6 +26,7 @@ public class UnitTests
     Assert.Equal(Unit.Value, result);
   }
 
+  // Testa a comparação com um objeto que é do tipo unitário
   [Fact]
   public void EqualsObject_ShouldReturnTrue_WhenObjectIsUnit()
   {
@@ -37,6 +40,7 @@ public class UnitTests
     Assert.True(result);
   }
 
+  // Testa a comparação com um objeto de outro tipo
   [Fact]
   public void EqualsObject_ShouldReturnFalse_WhenObjectIsNotUnit()
   {
@@ -47,6 +51,7 @@ public class UnitTests
     Assert.False(result);
   }
 
+  // Testa se duas instâncias do tipo unitário são sempre iguais — ele tem um único valor possível
   [Fact]
   public void EqualsUnit_ShouldAlwaysReturnTrue()
   {
@@ -57,6 +62,7 @@ public class UnitTests
     Assert.True(result);
   }
 
+  // Testa se o código de dispersão é constante, coerente com haver um único valor
   [Fact]
   public void GetHashCode_ShouldReturnZero()
   {
@@ -67,6 +73,7 @@ public class UnitTests
     Assert.Equal(0, hashCode);
   }
 
+  // Testa o operador de igualdade, que acompanha o Equals
   [Fact]
   public void EqualityOperator_ShouldAlwaysReturnTrue()
   {
@@ -77,6 +84,7 @@ public class UnitTests
     Assert.True(result);
   }
 
+  // Testa o operador de diferença, que acompanha o Equals
   [Fact]
   public void InequalityOperator_ShouldAlwaysReturnFalse()
   {
@@ -87,6 +95,7 @@ public class UnitTests
     Assert.False(result);
   }
 
+  // Testa a representação textual, que segue a convenção do tipo unitário em outras linguagens
   [Fact]
   public void ToString_ShouldReturnParentheses()
   {
@@ -97,6 +106,7 @@ public class UnitTests
     Assert.Equal("()", result);
   }
 
+  // Testa se a tarefa é reaproveitada entre acessos, em vez de alocar uma nova a cada despacho
   [Fact]
   public async Task Task_ShouldReturnSameInstance_OnEveryAccess()
   {

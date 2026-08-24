@@ -10,6 +10,7 @@ namespace Tooark.Tests.Mediator;
 
 public class MediatorTests
 {
+  // Testa o despacho da requisição para o manipulador registrado
   [Fact]
   public async Task Send_ShouldDispatchRequestToHandler()
   {
@@ -30,6 +31,7 @@ public class MediatorTests
     Assert.Equal("pong", result);
   }
 
+  // Testa se requisição nula é erro do chamador, e não falha interna
   [Fact]
   public async Task Send_ShouldThrowBadRequestException_WhenRequestIsNull()
   {
@@ -45,6 +47,7 @@ public class MediatorTests
       () => mediator.SendAsync<string>(null!, TestContext.Current.CancellationToken));
   }
 
+  // Testa se requisição sem manipulador falha com contexto, e não com referência nula
   [Fact]
   public async Task Send_ShouldThrowInternalServerErrorException_WhenHandlerDoesNotExist()
   {
@@ -63,6 +66,7 @@ public class MediatorTests
     Assert.Contains("Handler.NotFound", exception.Message);
   }
 
+  // Testa se manipulador que devolve tarefa nula falha com contexto, em vez de estourar ao aguardar
   [Fact]
   public async Task Send_ShouldThrowInternalServerErrorException_WhenHandlerReturnsNullTask()
   {
@@ -82,6 +86,7 @@ public class MediatorTests
     Assert.Contains("Handler.ExecutionFailed", exception.Message);
   }
 
+  // Testa se a notificação alcança todos os manipuladores registrados para ela
   [Fact]
   public async Task Publish_ShouldInvokeAllNotificationHandlers()
   {
@@ -103,6 +108,7 @@ public class MediatorTests
     Assert.Equal(2, TestNotificationCounter.Value);
   }
 
+  // Testa se notificação sem manipulador é ignorada, ao contrário da requisição, que exige um
   [Fact]
   public async Task Publish_ShouldNotThrow_WhenNoNotificationHandlerExists()
   {
@@ -117,6 +123,7 @@ public class MediatorTests
     await mediator.PublishAsync(new TestNotification(), TestContext.Current.CancellationToken);
   }
 
+  // Testa se notificação nula é erro do chamador, e não falha interna
   [Fact]
   public async Task Publish_ShouldThrowBadRequestException_WhenNotificationIsNull()
   {
@@ -132,6 +139,7 @@ public class MediatorTests
       () => mediator.PublishAsync(null!, TestContext.Current.CancellationToken));
   }
 
+  // Testa se manipulador de notificação que devolve tarefa nula falha com contexto
   [Fact]
   public async Task Publish_ShouldThrowInternalServerErrorException_WhenHandlerReturnsNullTask()
   {
@@ -151,6 +159,7 @@ public class MediatorTests
     Assert.Contains("Handler.ExecutionFailed", exception.Message);
   }
 
+  // Testa se um manipulador que falha ao iniciar não impede os demais na estratégia paralela
   [Fact]
   public async Task Publish_ShouldStartRemainingHandlers_WhenHandlerFailsToStart_InParallelStrategy()
   {
@@ -174,6 +183,7 @@ public class MediatorTests
     Assert.True(TrackedNullTaskNotificationHandler.Executed);
   }
 
+  // Testa se a tarefa nula também é detectada na estratégia sequencial
   [Fact]
   public async Task Publish_ShouldThrowInternalServerErrorException_WhenHandlerReturnsNullTask_InSequentialStrategy()
   {
@@ -194,6 +204,7 @@ public class MediatorTests
     Assert.Contains("Handler.ExecutionFailed", exception.Message);
   }
 
+  // Testa se a estratégia padrão executa os manipuladores em paralelo
   [Fact]
   public async Task Publish_ShouldRunHandlersInParallel_ByDefault()
   {
@@ -221,6 +232,7 @@ public class MediatorTests
     await publishTask;
   }
 
+  // Testa se a estratégia sequencial respeita a ordem, um manipulador por vez
   [Fact]
   public async Task Publish_ShouldRunHandlersSequentially_WhenConfigured()
   {

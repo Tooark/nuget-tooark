@@ -9,6 +9,7 @@ public class MediatorAbstractionsAdvancedTests
 {
   #region IRequest Interface Tests
 
+  // Testa se a requisição sem retorno é apenas uma marcação, sem membros a implementar
   [Fact]
   public void IRequest_ShouldBeMarkerInterface()
   {
@@ -20,6 +21,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.False(requestType.GetMethods().Any());
   }
 
+  // Testa se a requisição com retorno declara o tipo da resposta no contrato
   [Fact]
   public void IRequest_Generic_ShouldDefineGenericContract()
   {
@@ -31,6 +33,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(requestGenericType.IsGenericTypeDefinition);
   }
 
+  // Testa se a requisição sem retorno equivale a uma requisição do tipo unitário
   [Fact]
   public void IRequest_ShouldImplementIRequestOfUnit()
   {
@@ -46,6 +49,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region ICommand Interface Tests
 
+  // Testa se o comando sem retorno se encaixa no mesmo despacho da requisição
   [Fact]
   public void ICommand_ShouldImplementIRequestOfUnit()
   {
@@ -57,6 +61,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Contains(expectedInterface, commandType.GetInterfaces());
   }
 
+  // Testa se o comando com retorno se encaixa no mesmo despacho da requisição
   [Fact]
   public void ICommand_Generic_ShouldImplementIRequestOfTResponse()
   {
@@ -72,6 +77,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region IQuery Interface Tests
 
+  // Testa se a consulta se encaixa no mesmo despacho da requisição
   [Fact]
   public void IQuery_ShouldImplementIRequestOfTResponse()
   {
@@ -87,6 +93,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region INotify Interface Tests
 
+  // Testa se a notificação é apenas uma marcação, sem membros a implementar
   [Fact]
   public void INotify_ShouldBeMarkerInterface()
   {
@@ -102,6 +109,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region Unit Struct Edge Cases
 
+  // Testa se o tipo unitário é de valor, para não alocar a cada comando sem retorno
   [Fact]
   public void Unit_ShouldBeValueType()
   {
@@ -109,6 +117,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(typeof(Unit).IsValueType);
   }
 
+  // Testa se o tipo unitário declara a igualdade fortemente tipada
   [Fact]
   public void Unit_ShouldImplementEquatable()
   {
@@ -120,6 +129,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Contains(equatableType, unitType.GetInterfaces());
   }
 
+  // Testa se todas as instâncias são iguais, já que o tipo tem um único valor possível
   [Fact]
   public void Unit_AllInstances_ShouldBeEqual()
   {
@@ -134,6 +144,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Equal(unit1, unit3);
   }
 
+  // Testa a representação textual, que segue a convenção do tipo unitário
   [Fact]
   public void Unit_ToString_ShouldReturnEmptyParentheses()
   {
@@ -144,6 +155,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Equal("()", result);
   }
 
+  // Testa se o código de dispersão é constante, coerente com haver um único valor
   [Fact]
   public void Unit_GetHashCode_ShouldAlwaysReturnZero()
   {
@@ -161,6 +173,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Equal(hash1, hash2);
   }
 
+  // Testa a reflexividade da igualdade: todo valor é igual a si mesmo
   [Fact]
   public void Unit_Equality_ShouldBeReflexive()
   {
@@ -173,6 +186,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.False(unit1 != unit2);
   }
 
+  // Testa a simetria da igualdade: a ordem da comparação não muda o resultado
   [Fact]
   public void Unit_Equality_ShouldBeSymmetric()
   {
@@ -185,6 +199,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(unit2 == unit1);
   }
 
+  // Testa a transitividade da igualdade, fechando o contrato de equivalência
   [Fact]
   public void Unit_Equality_ShouldBeTransitive()
   {
@@ -199,6 +214,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(unit1 == unit3);
   }
 
+  // Testa se o operador de diferença acompanha o de igualdade
   [Fact]
   public void Unit_Inequality_ShouldBeConsistent()
   {
@@ -210,6 +226,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.False(unit1 != unit2);
   }
 
+  // Testa a comparação não tipada com outro valor unitário
   [Fact]
   public void Unit_Equals_Object_ShouldReturnTrueForUnit()
   {
@@ -220,6 +237,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(Unit.Value.Equals(unit));
   }
 
+  // Testa a comparação não tipada com um objeto de outro tipo
   [Fact]
   public void Unit_Equals_Object_ShouldReturnFalseForNonUnit()
   {
@@ -230,6 +248,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.False(Unit.Value.Equals(notUnit));
   }
 
+  // Testa a comparação não tipada com nulo, que um tipo de valor nunca iguala
   [Fact]
   public void Unit_Equals_Object_ShouldReturnFalseForNull()
   {
@@ -240,6 +259,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.False(Unit.Value.Equals(nullObject));
   }
 
+  // Testa se a tarefa já vem concluída, para o comando sem retorno não precisar aguardar
   [Fact]
   public void Unit_Task_ShouldReturnCompletedTask()
   {
@@ -251,6 +271,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.True(task.IsCompleted);
   }
 
+  // Testa se a tarefa carrega o valor unitário como resultado
   [Fact]
   public async Task Unit_Task_ShouldReturnUnitValue()
   {
@@ -261,6 +282,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Equal(Unit.Value, result);
   }
 
+  // Testa se a tarefa é reaproveitada, em vez de alocar uma nova a cada despacho
   [Fact]
   public void Unit_Task_ShouldReturnSameInstanceWhenCalledMultipleTimes()
   {
@@ -276,6 +298,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region ISender Interface Tests
 
+  // Testa a superfície pública da interface de envio
   [Fact]
   public void ISender_ShouldDefinePublicMethods()
   {
@@ -287,6 +310,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.NotEmpty(methods);
   }
 
+  // Testa se a interface de envio declara o método de despacho
   [Fact]
   public void ISender_ShouldHaveSendAsyncMethod()
   {
@@ -300,6 +324,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.NotNull(sendAsyncMethod);
   }
 
+  // Testa se o despacho é genérico no tipo da resposta
   [Fact]
   public void ISender_SendAsync_ShouldBeGeneric()
   {
@@ -316,6 +341,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region IPublisher Interface Tests
 
+  // Testa se a interface de publicação declara o método de publicação
   [Fact]
   public void IPublisher_ShouldHavePublishAsyncMethod()
   {
@@ -333,6 +359,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region IMediator Interface Tests
 
+  // Testa se o mediador reúne a interface de envio
   [Fact]
   public void IMediator_ShouldImplementISender()
   {
@@ -343,6 +370,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Contains(typeof(ISender), mediatorType.GetInterfaces());
   }
 
+  // Testa se o mediador reúne a interface de publicação
   [Fact]
   public void IMediator_ShouldImplementIPublisher()
   {
@@ -353,6 +381,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.Contains(typeof(IPublisher), mediatorType.GetInterfaces());
   }
 
+  // Testa se o mediador não acrescenta membros além das duas interfaces que reúne
   [Fact]
   public void IMediator_ShouldCombineISenderAndIPublisher()
   {
@@ -370,6 +399,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region Interface constraints tests
 
+  // Testa se a restrição genérica impede usar o manipulador com um tipo que não é comando
   [Fact]
   public void ICommandHandler_ShouldHaveCommandConstraint()
   {
@@ -381,6 +411,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.NotEmpty(genericArgs);
   }
 
+  // Testa se a restrição genérica impede usar o manipulador com um tipo que não é consulta
   [Fact]
   public void IQueryHandler_ShouldHaveQueryConstraint()
   {
@@ -392,6 +423,7 @@ public class MediatorAbstractionsAdvancedTests
     Assert.NotEmpty(genericArgs);
   }
 
+  // Testa se a restrição genérica impede usar o manipulador com um tipo que não é notificação
   [Fact]
   public void INotifyHandler_ShouldHaveNotificationConstraint()
   {
@@ -407,6 +439,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region Covariance tests
 
+  // Testa se a requisição é invariante no tipo da resposta, o que o despacho por tipo exige
   [Fact]
   public void IRequest_ShouldBeInvariant()
   {
@@ -421,6 +454,7 @@ public class MediatorAbstractionsAdvancedTests
       genericArg.GenericParameterAttributes & System.Reflection.GenericParameterAttributes.VarianceMask);
   }
 
+  // Testa se o comando é invariante no tipo da resposta
   [Fact]
   public void ICommand_ShouldBeInvariant()
   {
@@ -435,6 +469,7 @@ public class MediatorAbstractionsAdvancedTests
       genericArgs[0].GenericParameterAttributes & System.Reflection.GenericParameterAttributes.VarianceMask);
   }
 
+  // Testa se a consulta é invariante no tipo da resposta
   [Fact]
   public void IQuery_ShouldBeInvariant()
   {
@@ -453,6 +488,7 @@ public class MediatorAbstractionsAdvancedTests
 
   #region Request handler interface tests
 
+  // Testa se o manipulador declara o método que o despacho invoca
   [Fact]
   public void IRequestHandler_ShouldHaveHandleAsyncMethod()
   {

@@ -19,6 +19,7 @@ public class ModelStateExtensionTests
     Assert.Empty(result);
   }
 
+  // Testes do método com erros, que devolve uma mensagem por erro registrado
   [Fact]
   public void GetErrors_ReturnsErrors_WhenModelStateHasErrors()
   {

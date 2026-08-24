@@ -1,18 +1,13 @@
 using System.Net;
 using Tooark.Exceptions;
 using Tooark.Notifications;
+using Tooark.Tests.Moq.Notifications;
 
 namespace Tooark.Tests.Exceptions;
 
 public class TooManyRequestsExceptionTests
 {
   // Classe de teste para simular uma notificação.
-  public class TestException : Notification
-  {
-    // Expoe o mutador protegido para uso nos testes.
-    public new void AddNotification(NotificationItem notification) => base.AddNotification(notification);
-  }
-
   // Teste para retornar a mensagem de erro correta com parâmetro de uma única mensagem.
   [Fact]
   public void TooManyRequestsException_ShouldReturnCorrectMessage_WithSingleMessage()

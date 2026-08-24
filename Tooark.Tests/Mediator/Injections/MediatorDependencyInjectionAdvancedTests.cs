@@ -16,6 +16,7 @@ public class MediatorDependencyInjectionAdvancedTests
 {
   #region Null validation tests
 
+  // Testa se a coleção de serviços nula falha no registro, e não em execução
   [Fact]
   public void AddTooarkMediator_ShouldThrowInternalServerErrorException_WhenServicesIsNull()
   {
@@ -29,6 +30,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.Contains("Mediator.Null.Service", exception.Message);
   }
 
+  // Testa se a ação de configuração nula falha no registro, e não em execução
   [Fact]
   public void AddTooarkMediator_ShouldThrowInternalServerErrorException_WhenConfigureIsNull()
   {
@@ -46,6 +48,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Handler registration with multiple assemblies
 
+  // Testa a varredura de vários assemblies numa única chamada, como em aplicação em camadas
   [Fact]
   public async Task AddTooarkMediator_ShouldRegisterHandlers_FromMultipleAssemblies()
   {
@@ -66,6 +69,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.Equal("test", result);
   }
 
+  // Testa se o mesmo assembly repetido na chamada não duplica os manipuladores
   [Fact]
   public void AddTooarkMediator_ShouldNotDuplicateHandlers_WhenSameAssemblyProvidedMultipleTimes()
   {
@@ -90,6 +94,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Options configuration tests
 
+  // Testa se as opções configuradas no registro chegam ao mediador
   [Fact]
   public void AddTooarkMediator_ShouldApplyOptions_FromConfigurationAction()
   {
@@ -108,6 +113,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
   }
 
+  // Testa se o registro sem configuração aplica as opções padrão
   [Fact]
   public void AddTooarkMediator_ShouldUseDefaultOptions_WhenNoConfigurationProvided()
   {
@@ -128,6 +134,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Service registration verification
 
+  // Testa o tempo de vida com que o mediador é registrado
   [Fact]
   public void AddTooarkMediator_ShouldRegisterMediator_AsSingleton()
   {
@@ -142,6 +149,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.NotEmpty(mediatorDescriptors);
   }
 
+  // Testa se a interface de envio resolve para o mediador
   [Fact]
   public void AddTooarkMediator_ShouldRegisterISender()
   {
@@ -156,6 +164,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.NotEmpty(senderDescriptors);
   }
 
+  // Testa se a interface de publicação resolve para o mediador
   [Fact]
   public void AddTooarkMediator_ShouldRegisterIPublisher()
   {
@@ -174,6 +183,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Handler interface registration tests
 
+  // Testa se cada manipulador é registrado sob a interface fechada que implementa
   [Fact]
   public void AddTooarkMediator_ShouldRegisterHandlers_ByConcreteInterfaces()
   {
@@ -195,6 +205,7 @@ public class MediatorDependencyInjectionAdvancedTests
       s.ServiceType == typeof(INotifyHandler<TestNotificationForDI>));
   }
 
+  // Testa se o manipulador também é alcançável pela interface base correspondente
   [Fact]
   public void AddTooarkMediator_ShouldRegisterHandlers_ByBaseInterfaces()
   {
@@ -217,6 +228,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Multiple handlers for same notification
 
+  // Testa se a notificação aceita vários manipuladores, ao contrário da requisição
   [Fact]
   public void AddTooarkMediator_ShouldRegisterMultipleNotificationHandlers_ForSameNotification()
   {
@@ -234,6 +246,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.NotEmpty(handlers);
   }
 
+  // Testa se todos os manipuladores registrados para a notificação executam de fato
   [Fact]
   public async Task AddTooarkMediator_ShouldExecuteAllRegisteredNotificationHandlers()
   {
@@ -258,6 +271,7 @@ public class MediatorDependencyInjectionAdvancedTests
 
   #region Assembly scanning edge cases
 
+  // Testa se, sem assembly informado, a varredura recai no assembly que chamou o registro
   [Fact]
   public void AddTooarkMediator_ShouldUseCallingAssembly_WhenNoAssemblyProvided()
   {
@@ -274,6 +288,7 @@ public class MediatorDependencyInjectionAdvancedTests
     Assert.NotNull(mediator);
   }
 
+  // Testa se assemblies repetidos são varridos uma única vez
   [Fact]
   public void AddTooarkMediator_ShouldIgnoreDuplicateAssemblies()
   {

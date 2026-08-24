@@ -12,6 +12,7 @@ namespace Tooark.Tests.Mediator.Injections;
 
 public class TooarkDependencyInjectionTests
 {
+  // Testa se a coleção de serviços nula falha no registro, e não em execução
   [Fact]
   public void AddTooarkMediator_ShouldThrowInternalServerErrorException_WhenServicesIsNull()
   {
@@ -22,6 +23,7 @@ public class TooarkDependencyInjectionTests
     Assert.Throws<InternalServerErrorException>(() => services!.AddTooarkMediator(typeof(TooarkDependencyInjectionTests).Assembly));
   }
 
+  // Testa o registro do mediador e dos manipuladores do assembly informado
   [Fact]
   public async Task AddTooarkMediator_ShouldRegisterMediatorAndHandlers_WhenAssemblyIsProvided()
   {
@@ -58,6 +60,7 @@ public class TooarkDependencyInjectionTests
     Assert.Equal(1, NotificationCounter.Value);
   }
 
+  // Testa se, sem assembly informado, a varredura recai no assembly que chamou o registro
   [Fact]
   public void AddTooarkMediator_ShouldUseDefaultAssembly_WhenNoAssemblyIsProvided()
   {
@@ -76,6 +79,7 @@ public class TooarkDependencyInjectionTests
     Assert.NotEmpty(provider.GetServices<INotifyHandler<TestNotification>>());
   }
 
+  // Testa se a array nula tem o mesmo efeito da ausência do argumento
   [Fact]
   public void AddTooarkMediator_ShouldFallbackToCallingAssembly_WhenAssembliesArrayIsNull()
   {
@@ -91,6 +95,7 @@ public class TooarkDependencyInjectionTests
     Assert.NotNull(provider.GetService<IRequestHandler<PingRequest, string>>());
   }
 
+  // Testa se um assembly com falha parcial de carregamento não impede o registro dos tipos que carregaram
   [Fact]
   public void AddTooarkMediator_ShouldRegisterLoadableTypes_WhenAssemblyThrowsReflectionTypeLoadException()
   {
@@ -120,6 +125,7 @@ public class TooarkDependencyInjectionTests
     }
   }
 
+  // Testa se genéricos abertos são ignorados na varredura, já que o despacho não os resolve
   [Fact]
   public void AddTooarkMediator_ShouldSkipOpenGenericHandlers_WhenScanningAssembly()
   {
@@ -138,6 +144,7 @@ public class TooarkDependencyInjectionTests
     Assert.NotEmpty(provider.GetServices<INotifyHandler<TestNotification>>());
   }
 
+  // Testa se o mesmo assembly informado duas vezes não duplica os manipuladores
   [Fact]
   public void AddTooarkMediator_ShouldNotDuplicateRegistrations_WhenAssembliesAreRepeated()
   {
@@ -161,6 +168,7 @@ public class TooarkDependencyInjectionTests
     Assert.Equal(1, notificationHandlerRegistrations);
   }
 
+  // Testa se cada manipulador é registrado sob a interface fechada que implementa
   [Fact]
   public void AddTooarkMediator_ShouldRegisterHandlersByConcreteHandlerInterfaces()
   {
@@ -184,6 +192,7 @@ public class TooarkDependencyInjectionTests
       && service.ImplementationType == typeof(VoidCommandHandler));
   }
 
+  // Testa se as duas interfaces de despacho resolvem para a mesma implementação do mediador
   [Fact]
   public void AddTooarkMediator_ShouldRegisterISenderAndIPublisher()
   {
@@ -205,6 +214,7 @@ public class TooarkDependencyInjectionTests
     Assert.NotNull(mediator);
   }
 
+  // Testa se as opções configuradas no registro chegam ao mediador
   [Fact]
   public void AddTooarkMediator_ShouldApplyConfiguredOptions()
   {
@@ -223,6 +233,7 @@ public class TooarkDependencyInjectionTests
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
   }
 
+  // Testa se chamadas repetidas compõem as opções, em ordem de registro, em vez de substituí-las
   [Fact]
   public void AddTooarkMediator_ShouldComposeOptions_WhenCalledMultipleTimes()
   {
@@ -243,6 +254,7 @@ public class TooarkDependencyInjectionTests
     Assert.Equal(ENotifyStrategy.Sequential, options.NotifyPublishStrategy);
   }
 
+  // Testa se dois manipuladores para a mesma requisição falham no registro — o excedente nunca executaria
   [Fact]
   public void AddTooarkMediator_ShouldThrow_WhenRequestHasMoreThanOneHandler()
   {
@@ -261,6 +273,7 @@ public class TooarkDependencyInjectionTests
     Assert.Contains(nameof(TestCommandHandler), exception.Message);
   }
 
+  // Testa se a duplicidade é detectada também quando o segundo manipulador vem de uma fábrica
   [Fact]
   public void AddTooarkMediator_ShouldThrow_WhenRequestHandlerIsAlsoRegisteredByFactory()
   {
@@ -277,6 +290,7 @@ public class TooarkDependencyInjectionTests
     Assert.Contains(nameof(TestQueryHandler), exception.Message);
   }
 
+  // Testa se a notificação aceita vários manipuladores, ao contrário da requisição
   [Fact]
   public void AddTooarkMediator_ShouldNotThrow_WhenNotificationHasMoreThanOneHandler()
   {
