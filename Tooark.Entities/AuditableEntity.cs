@@ -156,12 +156,10 @@ public abstract class AuditableEntity : DetailedEntity
   /// <exception cref="BadRequestException">Lançada quando a entidade foi excluída logicamente.</exception>
   public void EnsureNotDeleted()
   {
-    ValidateNotDeleted();
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
+    // Verifica se a entidade foi excluída logicamente e lança uma exceção se for o caso.
+    if (Deleted)
     {
-      throw new BadRequestException(this);
+      throw Failure("Record.Deleted", "Entity", "T.ENT.AUD1");
     }
   }
 
@@ -169,7 +167,7 @@ public abstract class AuditableEntity : DetailedEntity
   /// Atualiza entidade e incrementa a versão.
   /// </summary>
   /// <param name="updatedById">O valor do identificador do atualizador a ser definido.</param>
-  public new void SetUpdatedBy(UpdatedBy updatedById)
+  public override void SetUpdatedBy(UpdatedBy updatedById)
   {
     // Define o identificador do atualizador.
     base.SetUpdatedBy(updatedById);
@@ -182,16 +180,13 @@ public abstract class AuditableEntity : DetailedEntity
   /// Marca a entidade como excluída.
   /// </summary>
   /// <param name="deletedById">O valor do identificador do excluidor a ser definido.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public void SetDeleted(DeletedBy deletedById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(deletedById);
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(deletedById, "DeletedBy");
 
     // Atualiza apenas se não estiver deletada
     if (!Deleted)
@@ -200,7 +195,8 @@ public abstract class AuditableEntity : DetailedEntity
       DeletedById = deletedById;
       DeletedAt = DateTime.UtcNow;
 
-      IncrementVersion();
+      // Excluir é uma alteração: registra o autor e a data, e incrementa a versão uma única vez
+      SetUpdatedBy(new UpdatedBy(deletedById));
     }
   }
 
@@ -208,16 +204,13 @@ public abstract class AuditableEntity : DetailedEntity
   /// Marca a entidade como restaurada.
   /// </summary>
   /// <param name="restoredById">O valor do identificador do restaurador a ser definido.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public void SetRestored(RestoredBy restoredById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(restoredById);
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(restoredById, "RestoredBy");
 
     // Atualiza apenas se estiver deletada
     if (Deleted)
@@ -226,7 +219,8 @@ public abstract class AuditableEntity : DetailedEntity
       RestoredById = restoredById;
       RestoredAt = DateTime.UtcNow;
 
-      IncrementVersion();
+      // Restaurar é uma alteração: registra o autor e a data, e incrementa a versão uma única vez
+      SetUpdatedBy(new UpdatedBy(restoredById));
     }
   }
 

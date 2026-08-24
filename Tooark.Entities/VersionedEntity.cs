@@ -8,7 +8,7 @@ namespace Tooark.Entities;
 /// <summary>
 /// Classe base abstrata para entidades que suportam versionamento.
 /// </summary>
-/// /// <remarks>
+/// <remarks>
 /// Herda de <see cref="DetailedEntity"/> para incluir informações para auditoria.
 /// Esta classe é usada para representar entidades que suportam versionamento.
 /// </remarks>
@@ -23,7 +23,7 @@ public abstract class VersionedEntity : DetailedEntity
   /// Utilizado pelo Entity Framework.
   /// </remarks>
   protected VersionedEntity() { }
-  
+
   /// <summary>
   /// Cria uma nova instância da entidade versionamento.
   /// </summary>

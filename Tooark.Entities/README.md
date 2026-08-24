@@ -9,7 +9,7 @@ Biblioteca com entidades base para aplicações .NET, incluindo suporte a identi
 | Classe                                        | Descrição                                                                                                                                         |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [`BaseEntity`](#baseentity)                   | Identificador único + suporte a notificações/validações                                                                                           |
-| [`InitialEntity`](#initialentity)             | Informações de criação (`CreatedById`/`CreatedAt`)                                                                                                  |
+| [`InitialEntity`](#initialentity)             | Informações de criação (`CreatedById`/`CreatedAt`)                                                                                                |
 | [`DetailedEntity`](#detailedentity)           | Informações de atualização (`UpdatedById`/`UpdatedAt`)                                                                                            |
 | [`VersionedEntity`](#versionedentity)         | Controle de versão (`Version`) incrementada em atualizações                                                                                       |
 | [`SoftDeletableEntity`](#softdeletableentity) | Exclusão lógica simples (`Deleted`) + atualização via `UpdatedById`                                                                               |
@@ -18,7 +18,9 @@ Biblioteca com entidades base para aplicações .NET, incluindo suporte a identi
 
 ### Value Objects usados nas entidades
 
-As entidades usam Value Objects do pacote `Tooark.ValueObjects` (ex.: `CreatedById`, `UpdatedById`, `DeletedById`, `RestoredById`, `FileStorage`, `Title`).
+As entidades recebem Value Objects do pacote `Tooark.ValueObjects` — `CreatedBy`, `UpdatedBy`,
+`DeletedBy`, `RestoredBy`, `FileStorage` e `Title` — e guardam o valor já convertido. O que entra é o
+objeto de valor (`CreatedBy`); o que a entidade expõe é o `Guid` (`CreatedById`).
 
 ---
 
@@ -34,6 +36,45 @@ dotnet add package Tooark.Entities
 
 Não há configuração adicional.
 
+### Como as operações de escrita reagem a valor inválido
+
+Os métodos `Set*` **lançam `BadRequestException`** e **não deixam notificação na entidade**. Uma chamada
+recusada não altera nada: a entidade segue íntegra e a chamada seguinte, se correta, é aceita
+normalmente.
+
+```csharp
+using Tooark.Entities;
+using Tooark.Exceptions;
+
+public static class Exemplo
+{
+  public static void Excluir(AuditableEntity entidade, Guid usuario)
+  {
+    try
+    {
+      // Recusada: o identificador é vazio
+      entidade.SetDeleted(Guid.Empty);
+    }
+    catch (BadRequestException)
+    {
+      // A entidade não guardou nada da chamada recusada e segue íntegra
+    }
+
+    // Aceita normalmente
+    entidade.SetDeleted(usuario);
+  }
+}
+```
+
+A exceção do valor ausente é diferente da do valor inválido: `null` produz `Field.Required;<campo>`, e
+valor presente mas reprovado produz `Field.Invalid;<campo>`.
+
+O `SetId` do `BaseEntity` é a única exceção: ele **acumula notificação** em vez de lançar, porque roda
+no construtor. Verifique `IsValid` depois de construir uma entidade com identificador informado.
+
+Já `ValidateNotDeleted()` acumula notificação de propósito — é o método para checar sem interromper o
+fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
+
 ---
 
 ## 🧩 Entidades (Detalhes)
@@ -46,7 +87,12 @@ Não há configuração adicional.
   - `BaseEntity()` — gera `Id` automaticamente
   - `BaseEntity(Guid id)` — define `Id` determinístico (seed/testes/factories)
 - **Observações**
-  - O `Id` tem setter privado; não existe `SetId` público.
+  - O `Id` tem setter privado. Classes derivadas definem o identificador pelo `SetId` protegido, que
+    recusa `Guid.Empty` e recusa trocar a identidade de uma entidade já criada — nos dois casos por
+    notificação, sem lançar.
+  - A igualdade compara **tipo e identificador**: entidades de tipos diferentes com o mesmo `Id` não
+    são iguais. A comparação aceita herança nos dois sentidos, para não quebrar com os proxies de
+    carregamento tardio do Entity Framework.
   - [Exemplos de Uso](#entidade-base).
 
 ### InitialEntity
@@ -58,7 +104,7 @@ Não há configuração adicional.
   - `SetCreatedBy(CreatedBy createdById)`
 - **Observações**
   - Herda de `BaseEntity`.
-  - `CreatedById` é Value Object e aceita conversão implícita a partir de `Guid`.
+  - `SetCreatedBy` recebe o Value Object `CreatedBy`, que aceita conversão implícita a partir de `Guid`.
   - Em caso de dados inválidos, lança `BadRequestException`.
   - [Exemplos de Uso](#entidade-inicial).
 
@@ -68,11 +114,11 @@ Não há configuração adicional.
   - `UpdatedById` (Guid) — coluna `updated_by` (`uuid`)
   - `UpdatedAt` (DateTime/UTC) — coluna `updated_at` (`timestamp with time zone`)
 - **Métodos**
-  - `SetCreatedBy(CreatedBy createdById)` — define também `UpdatedById`
+  - `SetCreatedBy(CreatedBy createdById)` — define também `UpdatedById` e `UpdatedAt`, iguais aos da criação
   - `SetUpdatedBy(UpdatedBy updatedById)`
 - **Observações**
   - Herda de `InitialEntity`.
-  - `UpdatedById` é Value Object e aceita conversão implícita a partir de `Guid`.
+  - `SetUpdatedBy` recebe o Value Object `UpdatedBy`, que aceita conversão implícita a partir de `Guid`.
   - Em caso de dados inválidos, lança `BadRequestException`.
   - [Exemplos de Uso](#entidade-detalhada).
 
@@ -94,8 +140,8 @@ Não há configuração adicional.
 - **Métodos**
   - `ValidateNotDeleted()` — valida se não está deletada e adiciona notificação
   - `EnsureNotDeleted()` — lança exception se estiver deletada
-  - `SetDeleted(UpdatedBy changedById)` — marca como deletada e atualiza
-  - `SetRestored(UpdatedBy changedById)` — restaura e atualiza
+  - `SetDeleted(UpdatedBy changedById)` — marca como deletada e atualiza; ignorada se já estiver deletada
+  - `SetRestored(UpdatedBy changedById)` — restaura e atualiza; ignorada se não estiver deletada
 - **Observações**
   - Herda de `DetailedEntity`.
   - Em caso de dados inválidos, lança `BadRequestException`.
@@ -114,8 +160,8 @@ Não há configuração adicional.
   - `ValidateNotDeleted()` — valida se não está deletada e adiciona notificação
   - `EnsureNotDeleted()` — lança exception se estiver deletada
   - `SetUpdatedBy(UpdatedBy updatedById)` — atualiza e incrementa a versão
-  - `SetDeleted(DeletedById deletedById)` — marca como deletada, registra o usuário e a data da exclusão, e incrementa a versão
-  - `SetRestored(RestoredById restoredById)` — restaura, registra o usuário e a data da restauração, e incrementa a versão
+  - `SetDeleted(DeletedBy deletedById)` — marca como deletada, registra o usuário e a data da exclusão, atualiza `UpdatedById`/`UpdatedAt` e incrementa a versão
+  - `SetRestored(RestoredBy restoredById)` — restaura, registra o usuário e a data da restauração, atualiza `UpdatedById`/`UpdatedAt` e incrementa a versão
 - **Observações**
   - Herda de `DetailedEntity`.
   - Em caso de dados inválidos, lança `BadRequestException`.
@@ -358,13 +404,13 @@ public class Program
 
 ## 📋 Dependências
 
-| Projeto                | Versão | Descrição                                                   |
-| ---------------------- | ------ | ----------------------------------------------------------- |
-| `Tooark.Enums`         | —      | Tipos/enums compartilhados (ex.: `EFileType`)               |
-| `Tooark.Exceptions`    | —      | Exceções (ex.: `BadRequestException`)                       |
-| `Tooark.Notifications` | —      | Base de notificações usada pelas entidades                  |
-| `Tooark.Utils`         | —      | Utilitários internos do toolkit                             |
-| `Tooark.ValueObjects`  | —      | Value Objects usados por propriedades/métodos/constructores |
+| Pacote                                                                                       | Versão | Descrição                                                 |
+| -------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------- |
+| [`Tooark.Enums`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Enums)                 | 4.x    | Tipos compartilhados, como o `EFileType`                  |
+| [`Tooark.Exceptions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Exceptions)       | 4.x    | `BadRequestException`, lançada pelas operações de escrita |
+| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x    | Base de notificações das entidades                        |
+| [`Tooark.Validations`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Validations)     | 4.x    | Regras usadas na validação do `FileEntity`                |
+| [`Tooark.ValueObjects`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.ValueObjects)   | 4.x    | Objetos de valor recebidos pelos construtores e métodos   |
 
 ---
 
@@ -372,39 +418,57 @@ public class Program
 
 Os códigos de erro para notificações seguem o padrão `T.ENT.<SIGLA><N>` (ex.: `T.ENT.BAS1`).
 
-Alguns códigos utilizados diretamente nas entidades:
+Códigos emitidos pelas entidades:
 
-- `BaseEntity`: `T.ENT.BAS1`, `T.ENT.BAS2`
-- `InitialEntity`: `T.ENT.INI1`
-- `SoftDeletableEntity`: `T.ENT.SOF1`
-- `AuditableEntity`: `T.ENT.AUD1`
+| Código       | Emissor                                  | Situação                            |
+| ------------ | ---------------------------------------- | ----------------------------------- |
+| `T.ENT.BAS1` | `BaseEntity.SetId`                       | Identificador vazio                 |
+| `T.ENT.BAS2` | `BaseEntity.SetId`                       | Tentativa de trocar o identificador |
+| `T.ENT.INI1` | `InitialEntity.SetCreatedBy`             | Autoria da criação já registrada    |
+| `T.ENT.SOF1` | `SoftDeletableEntity.ValidateNotDeleted` | Registro excluído logicamente       |
+| `T.ENT.AUD1` | `AuditableEntity.ValidateNotDeleted`     | Registro excluído logicamente       |
+
+O código acompanha a notificação, esteja ela registrada na entidade ou transportada pela exceção. As
+mensagens que vêm dos objetos de valor — `Field.Invalid;CreatedBy` e as demais — são emitidas pelo
+`Tooark.ValueObjects` e carregam o código dele, não um `T.ENT.*`. Repare que o link reprovado do
+`FileEntity` reporta `ProtocolHttp`, que é o objeto de valor interno do `FileStorage`, e não
+`FileStorage`.
 
 Tabela de erros/notificações:
 
-| Entidade              | Mensagem                     | Descrição                           | Solução                                                                  | Retorno      |
-| --------------------- | ---------------------------- | ----------------------------------- | ------------------------------------------------------------------------ | ------------ |
-| `BaseEntity`          | `Empty;Id`                   | Identificador vazio                 | Defina um identificador válido para a entidade                           | Notification |
-| `BaseEntity`          | `ChangeBlocked;Id`           | Identificador não pode ser alterado | Informe o identificador do registro                                      | Notification |
-| `InitialEntity`       | `ChangeBlocked;CreatedBy`    | Criador não pode ser alterado       | Informe o criador do registro                                            | Exception    |
-| `InitialEntity`       | `Field.Invalid;CreatedBy`    | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
-| `DetailedEntity`      | `ChangeBlocked;CreatedBy`    | Criador não pode ser alterado       | Informe o criador do registro                                            | Exception    |
-| `DetailedEntity`      | `Field.Invalid;CreatedBy`    | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
-| `DetailedEntity`      | `Field.Invalid;UpdatedBy`    | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
-| `VersionedEntity`     | `ChangeBlocked;CreatedBy`    | Criador não pode ser alterado       | Informe o criador do registro                                            | Exception    |
-| `VersionedEntity`     | `Field.Invalid;CreatedBy`    | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
-| `VersionedEntity`     | `Field.Invalid;UpdatedBy`    | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
-| `SoftDeletableEntity` | `ChangeBlocked;CreatedBy`    | Criador não pode ser alterado       | Informe o criador do registro                                            | Exception    |
-| `SoftDeletableEntity` | `Field.Invalid;CreatedBy`    | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
-| `SoftDeletableEntity` | `Field.Invalid;UpdatedBy`    | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
-| `SoftDeletableEntity` | `Record.Deleted`             | Registro deletado                   | Análise se é necessário restaurar o registro antes de realizar operações | Notification |
-| `SoftDeletableEntity` | `Record.Deleted`             | Registro deletado                   | Restaure o registro se necessário antes de realizar operações            | Exception    |
-| `AuditableEntity`     | `ChangeBlocked;CreatedBy`    | Criador não pode ser alterado       | Informe o criador do registro                                            | Exception    |
-| `AuditableEntity`     | `Field.Invalid;CreatedBy`    | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
-| `AuditableEntity`     | `Field.Invalid;UpdatedBy`    | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
-| `AuditableEntity`     | `Field.Invalid;DeletedBy`  | Campo do Deletador inválido         | Informe um deletador válido                                              | Exception    |
-| `AuditableEntity`     | `Field.Invalid;RestoredBy` | Campo do Restaurador inválido       | Informe um restaurador válido                                            | Exception    |
-| `AuditableEntity`     | `Record.Deleted`             | Registro deletado                   | Análise se é necessário restaurar o registro antes de realizar operações | Notification |
-| `AuditableEntity`     | `Record.Deleted`             | Registro deletado                   | Restaure o registro se necessário antes de realizar operações            | Exception    |
+| Entidade              | Mensagem                        | Descrição                           | Solução                                                                  | Retorno      |
+| --------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ | ------------ |
+| `BaseEntity`          | `Field.Empty;Id`                | Identificador vazio                 | Defina um identificador válido para a entidade                           | Notification |
+| `BaseEntity`          | `Field.ChangeBlocked;Id`        | Identificador não pode ser alterado | Não troque o identificador de uma entidade já criada                     | Notification |
+| `InitialEntity`       | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
+| `InitialEntity`       | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
+| `DetailedEntity`      | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
+| `DetailedEntity`      | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
+| `DetailedEntity`      | `Field.Invalid;UpdatedBy`       | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
+| `VersionedEntity`     | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
+| `VersionedEntity`     | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
+| `VersionedEntity`     | `Field.Invalid;UpdatedBy`       | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
+| `SoftDeletableEntity` | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
+| `SoftDeletableEntity` | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
+| `SoftDeletableEntity` | `Field.Invalid;UpdatedBy`       | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
+| `SoftDeletableEntity` | `Record.Deleted`                | Registro deletado                   | Análise se é necessário restaurar o registro antes de realizar operações | Notification |
+| `SoftDeletableEntity` | `Record.Deleted`                | Registro deletado                   | Restaure o registro se necessário antes de realizar operações            | Exception    |
+| `AuditableEntity`     | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
+| `AuditableEntity`     | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
+| `AuditableEntity`     | `Field.Invalid;UpdatedBy`       | Campo do Atualizador inválido       | Informe um atualizador válido                                            | Exception    |
+| `AuditableEntity`     | `Field.Invalid;DeletedBy`       | Campo do Deletador inválido         | Informe um deletador válido                                              | Exception    |
+| `AuditableEntity`     | `Field.Invalid;RestoredBy`      | Campo do Restaurador inválido       | Informe um restaurador válido                                            | Exception    |
+| `AuditableEntity`     | `Record.Deleted`                | Registro deletado                   | Análise se é necessário restaurar o registro antes de realizar operações | Notification |
+| `AuditableEntity`     | `Record.Deleted`                | Registro deletado                   | Restaure o registro se necessário antes de realizar operações            | Exception    |
+| `FileEntity`          | `Field.Invalid;ProtocolHttp`    | Link do arquivo inválido            | Informe um link HTTP ou HTTPS válido                                     | Exception    |
+| `FileEntity`          | `Field.Invalid;Title`           | Título do arquivo inválido          | Informe um título válido                                                 | Exception    |
+| `FileEntity`          | `Field.Required;FileStorage`    | Arquivo não informado               | Informe o `FileStorage` do arquivo                                       | Exception    |
+| `FileEntity`          | `Field.Required;Title`          | Título não informado                | Informe o `Title` do arquivo                                             | Exception    |
+| `FileEntity`          | `Field.Required;FileFormat`     | Formato do arquivo não informado    | Informe o formato do arquivo                                             | Exception    |
+| `FileEntity`          | `Field.Invalid;Size`            | Tamanho do arquivo negativo         | Informe um tamanho maior ou igual a zero                                 | Exception    |
+
+Vale para todas as entidades: argumento **nulo** produz `Field.Required;<campo>` — `CreatedBy`,
+`UpdatedBy`, `DeletedBy` ou `RestoredBy`, conforme a operação — como `Exception`.
 
 ---
 
@@ -414,4 +478,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull re
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](../LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.

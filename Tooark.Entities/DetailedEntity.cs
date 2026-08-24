@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Tooark.ValueObjects;
 using Tooark.Exceptions;
+using Tooark.ValueObjects;
 
 namespace Tooark.Entities;
 
@@ -78,23 +78,22 @@ public abstract class DetailedEntity : InitialEntity
   {
     base.SetCreatedBy(createdById);
 
+    // A criação também é a primeira atualização, então as duas marcas nascem idênticas
     UpdatedById = createdById;
+    UpdatedAt = CreatedAt;
   }
 
   /// <summary>
   /// Define o identificador do atualizador da entidade e a data e hora da última atualização.
   /// </summary>
   /// <param name="updatedById">O valor do identificador do atualizador a ser definido.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public virtual void SetUpdatedBy(UpdatedBy updatedById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(updatedById);
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(updatedById, "UpdatedBy");
 
     UpdatedById = updatedById;
     UpdatedAt = DateTime.UtcNow;

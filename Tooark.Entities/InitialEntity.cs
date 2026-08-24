@@ -74,24 +74,19 @@ public abstract class InitialEntity : BaseEntity
   /// Define o identificador do criador da entidade e a data e hora de criação.
   /// </summary>
   /// <param name="createdById">O valor do identificador do criador a ser definido.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando a criação já foi registrada, ou quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public virtual void SetCreatedBy(CreatedBy createdById)
   {
-    // Verifica se o identificador da entidade é vazio.
+    // A autoria da criação é registrada uma única vez
     if (CreatedById != Guid.Empty)
     {
-      AddNotification("ChangeBlocked;CreatedBy", "CreatedBy", "T.ENT.INI1");
-    }
-    else
-    {
-      // Adiciona as validações dos atributos.
-      AddNotifications(createdById);
+      throw Failure("Field.ChangeBlocked;CreatedBy", "CreatedBy", "T.ENT.INI1");
     }
 
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(createdById, "CreatedBy");
 
     CreatedById = createdById;
     CreatedAt = DateTime.UtcNow;

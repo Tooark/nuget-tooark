@@ -85,13 +85,13 @@ public class AuditableEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetDeleted(userId));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(userId, entity.UpdatedById);
     Assert.Equal(1, entity.Version);
     Assert.False(entity.Deleted);
     Assert.Null(entity.DeletedById);
     Assert.Null(entity.DeletedAt);
-    Assert.Equal("Field.Invalid;DeletedBy", entity.Notifications.First());
     Assert.Contains("Field.Invalid;DeletedBy", ex.GetErrorMessages());
   }
 
@@ -130,12 +130,12 @@ public class AuditableEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetRestored(userId));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(2, entity.Version);
     Assert.True(entity.Deleted);
     Assert.Null(entity.RestoredById);
     Assert.Null(entity.RestoredAt);
-    Assert.Equal("Field.Invalid;RestoredBy", entity.Notifications.First());
     Assert.Contains("Field.Invalid;RestoredBy", ex.GetErrorMessages());
   }
 
@@ -184,8 +184,8 @@ public class AuditableEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.EnsureNotDeleted());
 
     // Assert
-    Assert.False(entity.IsValid);
-    Assert.Contains(entity.Notifications, n => n.Key == "Entity");
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Contains("Record.Deleted", ex.GetErrorMessages());
   }
 
@@ -233,10 +233,10 @@ public class AuditableEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetUpdatedBy(userId));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(Guid.Empty, entity.UpdatedById);
     Assert.Equal(1, entity.Version);
-    Assert.Equal("Field.Invalid;UpdatedBy", entity.Notifications.First());
     Assert.Contains("Field.Invalid;UpdatedBy", ex.GetErrorMessages());
   }
 }

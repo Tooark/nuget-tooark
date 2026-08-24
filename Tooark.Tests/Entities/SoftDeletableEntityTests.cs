@@ -73,7 +73,8 @@ public class SoftDeletableEntityTests
 
     // Act & Assert
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetDeleted(userId));
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.False(entity.Deleted);
     Assert.Contains("Field.Invalid;UpdatedBy", ex.GetErrorMessages());
   }
@@ -106,7 +107,8 @@ public class SoftDeletableEntityTests
 
     // Act & Assert
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetRestored(Guid.Empty));
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.True(entity.Deleted);
     Assert.Contains("Field.Invalid;UpdatedBy", ex.GetErrorMessages());
   }
@@ -156,8 +158,8 @@ public class SoftDeletableEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.EnsureNotDeleted());
 
     // Assert
-    Assert.False(entity.IsValid);
-    Assert.Contains(entity.Notifications, n => n.Key == "Entity");
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Contains("Record.Deleted", ex.GetErrorMessages());
   }
 

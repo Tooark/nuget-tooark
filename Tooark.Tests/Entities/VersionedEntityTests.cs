@@ -81,7 +81,8 @@ public class VersionedEntityTests
     var updatedVersion = entity.Version;
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Contains("Field.Invalid;UpdatedBy", ex.GetErrorMessages());
     Assert.Equal(version, updatedVersion);
   }

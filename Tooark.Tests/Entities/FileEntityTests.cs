@@ -32,9 +32,9 @@ public class FileEntityTests
 
     // Assert
     Assert.True(fileEntity.IsValid);
-    Assert.Null(fileEntity.FileName);
-    Assert.Null(fileEntity.Title);
-    Assert.Null(fileEntity.Link);
+    Assert.Equal(string.Empty, fileEntity.FileName);
+    Assert.Equal(string.Empty, fileEntity.Title);
+    Assert.Equal(string.Empty, fileEntity.Link);
     Assert.Equal(Guid.Empty, fileEntity.CreatedById);
   }
 

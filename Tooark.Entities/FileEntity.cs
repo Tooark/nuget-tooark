@@ -34,15 +34,10 @@ public abstract class FileEntity : InitialEntity
   /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
   protected FileEntity(FileStorage file, Title title, CreatedBy createdById) : base(createdById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(file, title);
+    // Valida os argumentos sem acumular notificação na entidade
+    EnsureValid(file, "FileStorage");
+    EnsureValid(title, "Title");
 
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
-    
     FileName = file.Name;
     Title = title;
     Link = file.Link;
@@ -59,20 +54,14 @@ public abstract class FileEntity : InitialEntity
   /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
   protected FileEntity(FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById) : base(createdById)
   {
-    // Valida os parâmetros
-    AddNotifications(
-      file,
-      title,
+    // Valida os argumentos sem acumular notificação na entidade
+    EnsureValid(file, "FileStorage");
+    EnsureValid(title, "Title");
+    EnsureValid(
       new Validation()
         .IsNotNullOrEmpty(fileFormat, "FileFormat", "Field.Required;FileFormat")
-        .IsGreaterOrEquals(size, 0, "Size", "Field.Invalid;Size")
-    );
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+        .IsGreaterOrEquals(size, 0, "Size", "Field.Invalid;Size"),
+      "File");
 
     FileName = file.Name;
     Title = title;
@@ -98,7 +87,7 @@ public abstract class FileEntity : InitialEntity
   [DatabaseGenerated(DatabaseGeneratedOption.None)]
   [Column("file_name", TypeName = "text")]
   [Required]
-  public string FileName { get; private set; } = null!;
+  public string FileName { get; private set; } = string.Empty;
 
   /// <summary>
   /// Título do arquivo para exibição.
@@ -112,7 +101,7 @@ public abstract class FileEntity : InitialEntity
   [DatabaseGenerated(DatabaseGeneratedOption.None)]
   [Column("title", TypeName = "varchar(255)")]
   [Required]
-  public string Title { get; private set; } = null!;
+  public string Title { get; private set; } = string.Empty;
 
   /// <summary>
   /// Link do arquivo para utilização em páginas web.
@@ -126,7 +115,7 @@ public abstract class FileEntity : InitialEntity
   [DatabaseGenerated(DatabaseGeneratedOption.None)]
   [Column("link", TypeName = "text")]
   [Required]
-  public string Link { get; private set; } = null!;
+  public string Link { get; private set; } = string.Empty;
 
   /// <summary>
   /// Formato do arquivo.

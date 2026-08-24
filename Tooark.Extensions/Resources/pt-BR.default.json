@@ -27,6 +27,7 @@
   "Exceptions.MessageNullEmpty": "A exceção foi criada sem mensagem.",
   "False": "Falso",
   "Field": "Campo",
+  "Field.ChangeBlocked": "O campo {0} não pode ser alterado",
   "Field.Empty": "O campo {0} está vazio",
   "Field.ErrorFormat": "O campo {0} está em um formato inválido",
   "Field.ErrorFormatHelp": "O campo {0} está em um formato inválido. Formato esperado: {1}",

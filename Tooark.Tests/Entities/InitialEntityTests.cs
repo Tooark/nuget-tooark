@@ -73,7 +73,8 @@ public class InitialEntityTests
 
     // Act & Assert
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetCreatedBy(createdBy));
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(createdBy, entity.CreatedById);
     Assert.Contains("Field.Invalid;CreatedBy", ex.GetErrorMessages());
   }
@@ -89,8 +90,9 @@ public class InitialEntityTests
 
     // Act & Assert
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetCreatedBy(Guid.NewGuid()));
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(createdBy, entity.CreatedById);
-    Assert.Contains("ChangeBlocked;CreatedBy", ex.GetErrorMessages());
+    Assert.Contains("Field.ChangeBlocked;CreatedBy", ex.GetErrorMessages());
   }
 }

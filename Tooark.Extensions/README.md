@@ -69,7 +69,7 @@ Adiciona a injeção de dependência do serviço de localização de strings com
 ### 3. Extensão Localiza String dentro de Json (Extensão para IStringLocalizer)
 
 **Funcionalidade:**
-Utiliza os [arquivos](#arquivos-de-recursos-multiculturais) padrão de recursos multiculturais para localização de strings.
+Utiliza os arquivos padrão de recursos multiculturais para localização de strings.
 
 **Métodos:**
 
@@ -275,7 +275,7 @@ string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 
 Os arquivos de recurso cobrem **todas as mensagens emitidas pelos pacotes Tooark**: validações, atributos,
 exceções, notificações, mediador, unidade de trabalho, criptografia, JWT, observabilidade, enumeradores e
-utilitários. São 134 chaves, com o mesmo conjunto nos três idiomas.
+utilitários. São 135 chaves, com o mesmo conjunto nos três idiomas.
 
 | Idioma    | Arquivo                                                                                                            |
 | --------- | ------------------------------------------------------------------------------------------------------------------ |

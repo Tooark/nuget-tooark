@@ -64,7 +64,7 @@ public abstract class SoftDeletableEntity : DetailedEntity
     // Verifica se a entidade foi excluída logicamente.
     if (Deleted)
     {
-      AddNotification("Record.Deleted", "Entity", "T.ENT.AUD1");
+      AddNotification("Record.Deleted", "Entity", "T.ENT.SOF1");
     }
   }
 
@@ -74,12 +74,10 @@ public abstract class SoftDeletableEntity : DetailedEntity
   /// <exception cref="BadRequestException">Lançada quando a entidade foi excluída logicamente.</exception>
   public void EnsureNotDeleted()
   {
-    ValidateNotDeleted();
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
+    // Verifica se a entidade foi excluída logicamente e lança uma exceção se for o caso.
+    if (Deleted)
     {
-      throw new BadRequestException(this);
+      throw Failure("Record.Deleted", "Entity", "T.ENT.SOF1");
     }
   }
 
@@ -87,16 +85,13 @@ public abstract class SoftDeletableEntity : DetailedEntity
   /// Marca a entidade como excluída logicamente.
   /// </summary>
   /// <param name="changedById">O identificador do usuário que excluiu a entidade.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public void SetDeleted(UpdatedBy changedById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(changedById);
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(changedById, "UpdatedBy");
 
     // Atualiza apenas se não estiver deletada
     if (!Deleted)
@@ -111,16 +106,13 @@ public abstract class SoftDeletableEntity : DetailedEntity
   /// Marca a entidade como não excluída logicamente.
   /// </summary>
   /// <param name="changedById">O identificador do usuário que restaurou a entidade.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado está ausente ou é inválido.
+  /// </exception>
   public void SetRestored(UpdatedBy changedById)
   {
-    // Adiciona as validações dos atributos.
-    AddNotifications(changedById);
-
-    // Se houver notificações, lança exceção de bad request
-    if (!IsValid)
-    {
-      throw new BadRequestException(this);
-    }
+    // Valida o argumento sem acumular notificação na entidade
+    EnsureValid(changedById, "UpdatedBy");
 
     // Atualiza apenas se estiver deletada
     if (Deleted)

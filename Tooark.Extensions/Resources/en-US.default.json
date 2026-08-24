@@ -27,6 +27,7 @@
   "Exceptions.MessageNullEmpty": "The exception was created without a message.",
   "False": "False",
   "Field": "Field",
+  "Field.ChangeBlocked": "Field {0} cannot be changed",
   "Field.Empty": "Field {0} is empty",
   "Field.ErrorFormat": "Field {0} is in an invalid format",
   "Field.ErrorFormatHelp": "Field {0} is in an invalid format. Expected format: {1}",

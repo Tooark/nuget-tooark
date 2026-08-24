@@ -53,7 +53,7 @@ public class BaseEntityTests
 
     // Assert
     Assert.False(entity.IsValid);
-    Assert.Equal("Empty;Id", entity.Notifications.First());
+    Assert.Equal("Field.Empty;Id", entity.Notifications.First());
     Assert.Equal(Guid.Empty, entity.Id);
   }
 

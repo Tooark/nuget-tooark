@@ -91,7 +91,8 @@ public class DetailedEntityTests
     var entity = new TestDetailedEntity();
     // Act & Assert
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetCreatedBy(Guid.Empty));
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(Guid.Empty, entity.CreatedById);
     Assert.Equal(Guid.Empty, entity.UpdatedById);
     Assert.Contains("Field.Invalid;CreatedBy", ex.GetErrorMessages());
@@ -110,10 +111,11 @@ public class DetailedEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetCreatedBy(Guid.NewGuid()));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(createdBy, entity.CreatedById);
     Assert.Equal(createdBy, entity.UpdatedById);
-    Assert.Contains("ChangeBlocked;CreatedBy", ex.GetErrorMessages());
+    Assert.Contains("Field.ChangeBlocked;CreatedBy", ex.GetErrorMessages());
   }
 
   // Testa se SetUpdatedBy gera uma notificação ao tentar atribuir um Guid vazio
@@ -128,7 +130,8 @@ public class DetailedEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetUpdatedBy(Guid.Empty));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(createdBy, entity.CreatedById);
     Assert.Equal(createdBy, entity.UpdatedById);
     Assert.Contains("Field.Invalid;UpdatedBy", ex.GetErrorMessages());
@@ -166,9 +169,10 @@ public class DetailedEntityTests
     var ex = Assert.Throws<Tooark.Exceptions.BadRequestException>(() => entity.SetCreatedBy(Guid.Empty));
 
     // Assert
-    Assert.False(entity.IsValid);
+    // A chamada recusada não deixa notificação na entidade: ela segue utilizável
+    Assert.True(entity.IsValid);
     Assert.Equal(validCreatedBy, entity.CreatedById);
     Assert.Equal(validCreatedBy, entity.UpdatedById);
-    Assert.Contains("ChangeBlocked;CreatedBy", ex.GetErrorMessages());
+    Assert.Contains("Field.ChangeBlocked;CreatedBy", ex.GetErrorMessages());
   }
 }
