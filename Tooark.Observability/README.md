@@ -693,17 +693,17 @@ public class MeuServico
 
 ## 📋 Dependências
 
-| Pacote                                         | Descrição                               |
-| ---------------------------------------------- | --------------------------------------- |
-| `Tooark.Exceptions`                            | Exceções customizadas                   |
-| `OpenTelemetry`                                | SDK base do OpenTelemetry               |
-| `OpenTelemetry.Exporter.Console`               | Exporter para console (desenvolvimento) |
-| `OpenTelemetry.Exporter.OpenTelemetryProtocol` | Exporter OTLP (gRPC/HTTP)               |
-| `OpenTelemetry.Extensions.Hosting`             | Integração com Host do .NET             |
-| `OpenTelemetry.Instrumentation.AspNetCore`     | Instrumentação automática ASP.NET Core  |
-| `OpenTelemetry.Instrumentation.Http`           | Instrumentação automática HttpClient    |
-| `OpenTelemetry.Instrumentation.Process`        | Instrumentação automática Process       |
-| `OpenTelemetry.Instrumentation.Runtime`        | Métricas do runtime .NET                |
+| Pacote                                                                  | Descrição                               |
+| ----------------------------------------------------------------------- | --------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | Exceções customizadas                   |
+| `OpenTelemetry`                                                         | SDK base do OpenTelemetry               |
+| `OpenTelemetry.Exporter.Console`                                        | Exporter para console (desenvolvimento) |
+| `OpenTelemetry.Exporter.OpenTelemetryProtocol`                          | Exporter OTLP (gRPC/HTTP)               |
+| `OpenTelemetry.Extensions.Hosting`                                      | Integração com Host do .NET             |
+| `OpenTelemetry.Instrumentation.AspNetCore`                              | Instrumentação automática ASP.NET Core  |
+| `OpenTelemetry.Instrumentation.Http`                                    | Instrumentação automática HttpClient    |
+| `OpenTelemetry.Instrumentation.Process`                                 | Instrumentação automática Process       |
+| `OpenTelemetry.Instrumentation.Runtime`                                 | Métricas do runtime .NET                |
 
 ---
 

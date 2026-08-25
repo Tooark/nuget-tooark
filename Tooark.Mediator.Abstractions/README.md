@@ -125,9 +125,9 @@ public sealed class OrderMaintenanceService(ISender sender)
 
 ## 📋 Dependências
 
-| Pacote              | Versão | Descrição                             |
-| ------------------- | ------ | ------------------------------------- |
-| `Tooark.Exceptions` | 4.x    | Exceções (ex.: `BadRequestException`) |
+| Pacote                                                                  | Versão | Descrição                             |
+| ----------------------------------------------------------------------- | ------ | ------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | 4.x    | Exceções (ex.: `BadRequestException`) |
 
 ---
 

@@ -151,6 +151,9 @@ coverletreport/*
 coverage*.json
 coverage*.xml
 coverage*.info
+# Saída de cobertura e do relatório do ReportGenerator, conforme o README do Tooark.Tests
+cobertura/
+[Cc]overage[Rr]eport/
 
 # Visual Studio code coverage results
 *.coverage
@@ -383,6 +386,9 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
+# exceto os dois arquivos versionados, que padronizam o ambiente do time
+!.vscode/settings.json
+!.vscode/tasks.json
 *.code-workspace
 
 # Local History for Visual Studio Code
@@ -480,17 +486,20 @@ appsettings.*.json
 # Folder sonarqube
 .sonarqube/
 
+# Script files
+# Precisam vir antes das exceções da pasta scripts: a última regra que casa é a que vale
+*.ps1
+*.sh
+
 # Folder scripts
 scripts/**
 !scripts/example-run-sonarqube-local.ps1
 !scripts/example-run-sonarqube-local.sh
 
-# Arquivo de documentação
-*.xml
-
-# Script files
-*.ps1
-*.sh
+# Arquivo de documentação gerado pelo build
+# Sai em bin/ e obj/, que já são ignorados; a regra cobre apenas o que escapar para fora deles
+**/[Bb]in/**/*.xml
+**/[Oo]bj/**/*.xml
 
 ## Report files
 **/reports/*.json

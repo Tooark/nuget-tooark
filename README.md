@@ -10,11 +10,12 @@ O pacote Tooark está disponível no **[Nuget Registry](https://www.nuget.org/pr
 dotnet add package Tooark
 ```
 
-O código do projeto com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET estão disponíveis no [link](/Tooark/README.md).
+O código do projeto com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET estão disponíveis no [link](https://github.com/Tooark/tooark-cs/tree/main/Tooark).
 
 | Package                               | Version                                                                                                                                            | Downloads                                                                                                                                           | Individual Install                                       |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Tooark`                              | [![NuGet](https://img.shields.io/nuget/v/Tooark.svg)](https://nuget.org/packages/Tooark)                                                           | [![Nuget](https://img.shields.io/nuget/dt/Tooark.svg)](https://nuget.org/packages/Tooark)                                                           | `dotnet add package Tooark`                              |
+| `Tooark.AspNetCore`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.AspNetCore.svg)](https://nuget.org/packages/Tooark.AspNetCore)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.AspNetCore.svg)](https://nuget.org/packages/Tooark.AspNetCore)                                     | `dotnet add package Tooark.AspNetCore`                   |
 | `Tooark.Attributes`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Attributes.svg)](https://nuget.org/packages/Tooark.Attributes)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Attributes.svg)](https://nuget.org/packages/Tooark.Attributes)                                     | `dotnet add package Tooark.Attributes`                   |
 | `Tooark.Dtos`                         | [![NuGet](https://img.shields.io/nuget/v/Tooark.Dtos.svg)](https://nuget.org/packages/Tooark.Dtos)                                                 | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Dtos.svg)](https://nuget.org/packages/Tooark.Dtos)                                                 | `dotnet add package Tooark.Dtos`                         |
 | `Tooark.Entities`                     | [![NuGet](https://img.shields.io/nuget/v/Tooark.Entities.svg)](https://nuget.org/packages/Tooark.Entities)                                         | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Entities.svg)](https://nuget.org/packages/Tooark.Entities)                                         | `dotnet add package Tooark.Entities`                     |
@@ -51,4 +52,4 @@ Os seguintes usuários estão contribuindo para o projeto:
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença BSD3](./LICENSE). Consulte o arquivo `LICENSE` para mais detalhes.
+Este projeto está licenciado sob a [Licença BSD3](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE). Consulte o arquivo `LICENSE` para mais detalhes.

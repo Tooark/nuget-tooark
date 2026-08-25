@@ -8,7 +8,7 @@ namespace Tooark.Notifications;
 /// <param name="message">Mensagem da notificação. Nula, vazia ou em branco assume 'Notifications.MessageNullEmpty'.</param>
 /// <param name="key">Chave da notificação. Espaços em branco são removidos. Nula, vazia ou em branco assume 'Unknown'.</param>
 /// <param name="code">Código de erro da notificação. Nulo, vazio ou em branco assume 'T.ERR'. T[ooark].ERR[or]</param>
-public class NotificationItem(string message, string key = NotificationItem.DefaultKey, string code = NotificationItem.DefaultCode)
+public class NotificationItem(string? message, string? key = NotificationItem.DefaultKey, string? code = NotificationItem.DefaultCode)
 {
   #region Constants
 
@@ -71,7 +71,7 @@ public class NotificationItem(string message, string key = NotificationItem.Defa
   /// </summary>
   /// <param name="key">Chave a ser tratada.</param>
   /// <returns>Chave sem espaços em branco ou 'Unknown' quando não há conteúdo.</returns>
-  private static string SanitizeKey(string key) =>
+  private static string SanitizeKey(string? key) =>
     string.IsNullOrWhiteSpace(key) ?
       DefaultKey :
       string.Concat(key.Where(character => !char.IsWhiteSpace(character)));

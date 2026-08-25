@@ -236,9 +236,9 @@ foreach (var resultado in resultados)
 
 ## Dependências
 
-- [Tooark.Enums](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Enums)
-- [Tooark.Exceptions](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Exceptions)
-- [Tooark.Validations](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Validations)
+- [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)
+- [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
+- [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 
 ## Contribuição
 

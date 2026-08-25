@@ -4,9 +4,24 @@ Biblioteca para criação e gerenciamento de notificações e alertas, facilitan
 
 ## Conteúdo
 
+- [Instalação](#-instalação)
 - [NotificationItem](#1-item-de-notificação)
 - [Notification](#2-notificação)
 - [NotificationErrorMessages](#3-mensagens-de-erro)
+
+## 🔧 Instalação
+
+```bash
+dotnet add package Tooark.Notifications
+```
+
+O pacote não tem configuração. `Notification` é usada por herança, em classes que acumulam o resultado
+de várias verificações — como os objetos de valor e as entidades do Tooark —, e os mutadores são
+protegidos: quem acumula a notificação é o próprio objeto, não quem o consome.
+
+As mensagens são guardadas como **chave**, e não como texto final. Quem traduz é a camada que monta a
+resposta, como o `ResponseDto` do
+[`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos).
 
 ## Classes
 
@@ -25,9 +40,14 @@ Representa a estrutura de um item de notificação com mensagem, chave e código
 
 **Métodos:**
 
-- `NotificationItem(string message)`: Cria uma nova instância com a chave `Unknown` e o código `T.ERR`.
-- `NotificationItem(string message, string key)`: Cria uma nova instância com a chave informada e o código `T.ERR`.
-- `NotificationItem(string message, string key, string code)`: Cria uma nova instância com a chave e o código informados.
+- `NotificationItem(string? message)`: Cria uma nova instância com a chave `Unknown` e o código `T.ERR`.
+- `NotificationItem(string? message, string? key)`: Cria uma nova instância com a chave informada e o código `T.ERR`.
+- `NotificationItem(string? message, string? key, string? code)`: Cria uma nova instância com a chave e o código informados.
+
+Os três parâmetros aceitam ausência de valor porque o construtor já a tratava: mensagem em branco vira
+`Notifications.MessageUnknown`, chave em branco vira `Unknown` e código em branco vira `T.ERR`. A
+assinatura declarava não anulável e o corpo verificava nulo — quem passava um `string?` recebia aviso do
+compilador para um caminho que sempre funcionou.
 - `ToString()`: Retorna a mensagem da notificação.
 - `string`: Converte implicitamente a instância de `NotificationItem` para uma string, retornando a mensagem. Instância nula retorna string vazia.
 - `NotificationItem`: Converte implicitamente uma string para uma instância de `NotificationItem`, com a chave `Unknown` e o código `T.ERR`.

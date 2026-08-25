@@ -27,24 +27,27 @@ public sealed class LinkVideo : ValueObject
   /// <param name="youtube">Validar link do YouTube. Padrão: true.</param>
   /// <param name="vimeo">Validar link do Vimeo. Padrão: true.</param>
   /// <param name="dailymotion">Validar link do Dailymotion. Padrão: true.</param>
-  public LinkVideo(string link, bool youtube = true, bool vimeo = true, bool dailymotion = true)
+  public LinkVideo(string? link, bool youtube = true, bool vimeo = true, bool dailymotion = true)
   {
     // Método de validação de expressão regular.
     static bool RegexValidation(string link, string pattern) => Regex.IsMatch(link, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(300));
 
+    // Link ausente é tratado como vazio, que nenhum provedor aceita
+    var value = link ?? string.Empty;
+
     // Verifica se o link é válido.
-    bool linkIsValid = !string.IsNullOrWhiteSpace(link) &&
+    bool linkIsValid = !string.IsNullOrWhiteSpace(value) &&
     (
-      (youtube && RegexValidation(link, RegexPattern.YouTube)) ||
-      (vimeo && RegexValidation(link, RegexPattern.Vimeo)) ||
-      (dailymotion && RegexValidation(link, RegexPattern.Dailymotion))
+      (youtube && RegexValidation(value, RegexPattern.YouTube)) ||
+      (vimeo && RegexValidation(value, RegexPattern.Vimeo)) ||
+      (dailymotion && RegexValidation(value, RegexPattern.Dailymotion))
     );
 
     // Verifica se o link é válido.
     if (linkIsValid)
     {
       // Define o valor do link
-      _link = link;
+      _link = value;
     }
     else
     {

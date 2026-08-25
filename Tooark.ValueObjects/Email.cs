@@ -37,7 +37,7 @@ public sealed class Email : ValueObject
   /// Inicializa uma nova instância da classe Email com o valor especificado.
   /// </summary>
   /// <param name="value">O valor do email a ser validado.</param>
-  public Email(string value)
+  public Email(string? value)
   {
     // Adiciona as notificações de validação do email
     AddNotifications(new Validation()

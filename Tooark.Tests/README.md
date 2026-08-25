@@ -5,10 +5,10 @@ Suíte de testes de todos os pacotes Tooark. Não é publicada no nuget.org (`Is
 ## Conteúdo
 
 - [Visão Geral](#visão-geral)
-- [Executando](#-executando)
+- [Executando](#️-executando)
 - [Cobertura](#-cobertura)
 - [Organização](#-organização)
-- [Convenções](#-convenções)
+- [Convenções](#️-convenções)
 - [Recursos Compartilhados](#-recursos-compartilhados)
 - [Testes Sensíveis a Estado Global](#️-testes-sensíveis-a-estado-global)
 
@@ -43,43 +43,90 @@ dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualified
 
 ## 📊 Cobertura
 
+### Tabela no console
+
+```bash
+dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
+```
+
+Sai uma linha por pacote, com linhas, branches e métodos, mais o total e a média ao final. É o
+suficiente para o dia a dia.
+
+### Detalhe por linha e por branch
+
 ```bash
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
   -p:CollectCoverage=true \
   -p:CoverletOutputFormat=json \
-  -p:CoverletOutput=../cobertura/
+  -p:CoverletOutput=cobertura/
 ```
 
-A tabela por pacote sai no console ao fim da execução. O arquivo JSON traz o detalhe por linha e por
-branch, útil para descobrir **qual** caminho falta — escrever teste a partir da lacuna medida rende
-mais do que a partir de suposição.
+O JSON traz o detalhe necessário para descobrir **qual** caminho falta — escrever teste a partir da
+lacuna medida rende mais do que a partir de suposição.
 
-A meta praticada é 100% de linhas, branches e métodos nos pacotes revisados. Onde não é possível,
-o motivo fica registrado em `Notes/revisao-pendencias.md`.
+Dois detalhes do coverlet que costumam confundir:
 
----
+- o caminho relativo é resolvido a partir do diretório de onde o comando roda, e não do projeto de
+  teste. Use caminho absoluto quando o destino importar;
+- o nome do arquivo recebe o alvo, porque o projeto é multi-alvo: sai `coverage.net10.0.json`, e não
+  `coverage.json`.
+
+### Relatório HTML
+
+O `ReportGenerator` já é dependência do projeto. Gere a cobertura no formato `cobertura` e aponte o
+relatório para ela:
+
+```bash
+dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
+  -p:CollectCoverage=true \
+  -p:CoverletOutputFormat=cobertura \
+  -p:CoverletOutput=cobertura/
+
+reportgenerator \
+  -reports:cobertura/coverage.net10.0.cobertura.xml \
+  -targetdir:cobertura/html \
+  -reporttypes:Html
+```
+
+Abra `cobertura/html/index.html`. Cada tipo ganha uma página com o código-fonte marcando linha
+coberta, linha descoberta e branch parcialmente coberta — é a forma mais rápida de ver o caminho que
+falta.
+
+O comando `reportgenerator` vem da ferramenta global:
+
+```bash
+dotnet tool install -g dotnet-reportgenerator-globaltool
+```
+
+Sem instalá-la, chame o executável que já veio com o pacote, em
+`~/.nuget/packages/reportgenerator/<versão>/tools/net10.0/ReportGenerator.exe`.
+
+### Meta
+
+100% de linhas, branches e métodos nos pacotes revisados. Onde não foi possível, o motivo fica
+registrado nas notas da versão, em `Notes/`.
 
 ## 📁 Organização
 
 Uma pasta por pacote, espelhando a estrutura do projeto testado:
 
-| Pasta | Pacote testado |
-| --- | --- |
-| `AspNetCore/` | `Tooark.AspNetCore` |
-| `Attributes/` | `Tooark.Attributes` |
-| `Dtos/` | `Tooark.Dtos` |
-| `Entities/` | `Tooark.Entities` |
-| `Enums/` | `Tooark.Enums` |
-| `Exceptions/` | `Tooark.Exceptions` |
-| `Extensions/` | `Tooark.Extensions` |
-| `Injections/` | `Tooark` (o agregador) |
-| `Mediator/` | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore` |
-| `Notifications/` | `Tooark.Notifications` |
-| `Observability/` | `Tooark.Observability` |
-| `Securities/` | `Tooark.Securities` |
-| `Utils/` | `Tooark.Utils` |
-| `Validations/` | `Tooark.Validations` |
-| `ValueObjects/` | `Tooark.ValueObjects` |
+| Pasta            | Pacote testado                                              |
+| ---------------- | ----------------------------------------------------------- |
+| `AspNetCore/`    | `Tooark.AspNetCore`                                         |
+| `Attributes/`    | `Tooark.Attributes`                                         |
+| `Dtos/`          | `Tooark.Dtos`                                               |
+| `Entities/`      | `Tooark.Entities`                                           |
+| `Enums/`         | `Tooark.Enums`                                              |
+| `Exceptions/`    | `Tooark.Exceptions`                                         |
+| `Extensions/`    | `Tooark.Extensions`                                         |
+| `Injections/`    | `Tooark` (o agregador)                                      |
+| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore` |
+| `Notifications/` | `Tooark.Notifications`                                      |
+| `Observability/` | `Tooark.Observability`                                      |
+| `Securities/`    | `Tooark.Securities`                                         |
+| `Utils/`         | `Tooark.Utils`                                              |
+| `Validations/`   | `Tooark.Validations`                                        |
+| `ValueObjects/`  | `Tooark.ValueObjects`                                       |
 
 Duas pastas não contêm testes:
 

@@ -170,10 +170,10 @@ EFileType desconhecido = "planilha";    // Unknown
 
 ## Dependências
 
-| Dependência                                                                              | Versão | Uso                                     |
-| ---------------------------------------------------------------------------------------- | ------ | --------------------------------------- |
-| [`Tooark.Validations`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Validations) | 4.x    | `DocumentDigit` e os padrões de formato |
-| [`Tooark.Exceptions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Exceptions)   | 4.x    | Erro de conversão de instância nula     |
+| Dependência                                                               | Versão | Uso                                     |
+| ------------------------------------------------------------------------- | ------ | --------------------------------------- |
+| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations) | 4.x    | `DocumentDigit` e os padrões de formato |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)   | 4.x    | Erro de conversão de instância nula     |
 
 ## Contribuição
 

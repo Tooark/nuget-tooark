@@ -709,4 +709,37 @@ public class StringValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
+
+  #region Nulo tratado como vazio nas comparações
+
+  // Testa se as comparações com comparador textual tratam valor nulo como vazio. A sobrecarga que
+  // compara texto não fazia esse tratamento, ao contrário da que compara tamanho: as duas
+  // discordavam sobre a mesma entrada.
+  [Theory]
+  [InlineData(null, "", true)]
+  [InlineData(null, "x", false)]
+  [InlineData("", "", true)]
+  public void AreEquals_ShouldTreatNullAsEmpty(string? value, string comparer, bool esperado)
+  {
+    // Arrange
+    var validation = new Validation();
+
+    // Act
+    validation.AreEquals(value!, comparer, "TestProperty");
+
+    // Assert
+    Assert.Equal(esperado, validation.IsValid);
+  }
+
+  // Testa se o mesmo vale para as demais comparações textuais, sem lançar para valor ausente
+  [Fact]
+  public void TextComparisons_ShouldNotThrow_WhenValueIsNull()
+  {
+    // Arrange & Act & Assert
+    Assert.False(new Validation().AreNotEquals(null!, "", "P").IsValid);
+    Assert.False(new Validation().Contains(null!, "x", "P").IsValid);
+    Assert.True(new Validation().NotContains(null!, "x", "P").IsValid);
+  }
+
+  #endregion
 }

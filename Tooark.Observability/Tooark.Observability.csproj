@@ -16,6 +16,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      O pacote usa HttpContext e HttpRequest no enriquecimento e no filtro do rastreamento.
+      Esses tipos chegavam por transitividade do OpenTelemetry.Instrumentation.AspNetCore, o que
+      fazia o build depender do grafo de dependências de terceiro: uma reorganização lá quebraria a
+      compilação aqui, sem alteração nossa. O requisito de runtime já existia — o
+      runtimeconfig.json do consumidor já listava o Microsoft.AspNetCore.App —, então declarar
+      apenas torna explícito o que já era verdade.
+    -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="OpenTelemetry" />
     <PackageReference Include="OpenTelemetry.Exporter.Console" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />

@@ -142,7 +142,7 @@ public abstract class TooarkException : Exception
   /// <param name="messageFormat">Formato da mensagem de erro.</param>
   /// <param name="args">Parâmetros para substituição nos marcadores.</param>
   /// <returns>Mensagem formatada, ou o formato original quando a formatação não é possível.</returns>
-  private static string Format(string messageFormat, object[] args)
+  private static string? Format(string? messageFormat, object[]? args)
   {
     // Sem formato ou sem parâmetros não há o que substituir
     if (string.IsNullOrWhiteSpace(messageFormat) || args is not { Length: > 0 })
@@ -166,14 +166,14 @@ public abstract class TooarkException : Exception
   /// </summary>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Lista com a mensagem normalizada.</returns>
-  private static List<string> BuildErrors(string message) => [Normalize(message)];
+  private static List<string> BuildErrors(string? message) => [Normalize(message)];
 
   /// <summary>
   /// Monta a lista de mensagens a partir de uma coleção.
   /// </summary>
   /// <param name="errors">Lista de mensagens de erro.</param>
   /// <returns>Lista normalizada, com ao menos um item.</returns>
-  private static List<string> BuildErrors(IList<string> errors)
+  private static List<string> BuildErrors(IList<string>? errors)
   {
     // Coleção ausente ou vazia registra a chave conhecida, evitando uma exceção sem erro
     if (errors is not { Count: > 0 })
@@ -220,7 +220,7 @@ public abstract class TooarkException : Exception
   /// </summary>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Mensagem sem espaços nas extremidades, ou 'Exceptions.MessageNullEmpty' quando não há conteúdo.</returns>
-  private static string Normalize(string message) =>
+  private static string Normalize(string? message) =>
     string.IsNullOrWhiteSpace(message) ?
     ExceptionErrorMessages.MessageIsNullOrEmpty :
     message.Trim();

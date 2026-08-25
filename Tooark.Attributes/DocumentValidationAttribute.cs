@@ -64,16 +64,17 @@ public class DocumentValidationAttribute(string type, string propertyName = "Doc
   /// <summary>
   /// Resolve o tipo de documento a partir do texto informado no atributo.
   /// </summary>
-  /// <param name="type">Tipo de documento informado.</param>
+  /// <param name="type">Tipo de documento informado. Ausente é tratado como desconhecido.</param>
   /// <returns>O tipo de documento correspondente.</returns>
   /// <exception cref="InternalServerErrorException">Se o tipo informado não for reconhecido.</exception>
-  private static EDocumentType Resolve(string type)
+  private static EDocumentType Resolve(string? type)
   {
-    // A conversão implícita devolve None tanto para "None" quanto para um valor desconhecido
-    EDocumentType resolved = type;
-
-    // O tipo normalizado é o que de fato foi considerado, e é ele que a mensagem deve mostrar
+    // O tipo normalizado é o que de fato foi considerado, e é ele que a mensagem deve mostrar.
+    // Tipo ausente vira texto vazio, que a conversão trata como desconhecido.
     var normalized = type?.Trim() ?? string.Empty;
+
+    // A conversão implícita devolve None tanto para "None" quanto para um valor desconhecido
+    EDocumentType resolved = normalized;
 
     // Só é None legítimo quando foi isso que o consumidor pediu
     if (ReferenceEquals(resolved, EDocumentType.None) &&

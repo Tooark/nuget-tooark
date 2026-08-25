@@ -267,4 +267,89 @@ public class EmailValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
+
+  #region Nick e domínio curtos, aceitos a partir da v4.0.0
+
+  // Testa se endereços com uma única letra no nick ou no rótulo do domínio são aceitos.
+  // O padrão anterior exigia dois caracteres em cada parte, e reprovava endereços legítimos e
+  // existentes, como x@google.com.
+  [Theory]
+  [InlineData("x@google.com")]
+  [InlineData("a@b.co")]
+  [InlineData("ab@b.co")]
+  [InlineData("a1@b2.c3")]
+  public void IsEmail_ShouldAccept_WhenLocalPartOrDomainLabelHasASingleCharacter(string value)
+  {
+    // Arrange
+    var validation = new Validation();
+
+    // Act
+    validation.IsEmail(value, "Email");
+
+    // Assert
+    Assert.True(validation.IsValid);
+  }
+
+  // Testa se o sinal de mais segue reprovado. É decisão do pacote: o sufixo com '+' é válido pelo
+  // RFC 5322 e usado por Gmail e Outlook, mas o Tooark mantém o bloqueio.
+  [Theory]
+  [InlineData("nome+tag@exemplo.com")]
+  [InlineData("nome!tag@exemplo.com")]
+  [InlineData("nome#tag@exemplo.com")]
+  [InlineData("nome tag@exemplo.com")]
+  public void IsEmail_ShouldStillReject_WhenLocalPartHasSpecialCharacters(string value)
+  {
+    // Arrange
+    var validation = new Validation();
+
+    // Act
+    validation.IsEmail(value, "Email");
+
+    // Assert
+    Assert.False(validation.IsValid);
+  }
+
+  // Testa se o domínio segue exigindo ao menos um ponto e rótulos bem formados
+  [Theory]
+  [InlineData("nome@exemplo")]
+  [InlineData("nome@-exemplo.com")]
+  [InlineData("nome@exemplo-.com")]
+  [InlineData("nome@exemplo..com")]
+  public void IsEmail_ShouldStillReject_WhenDomainIsMalformed(string value)
+  {
+    // Arrange
+    var validation = new Validation();
+
+    // Act
+    validation.IsEmail(value, "Email");
+
+    // Assert
+    Assert.False(validation.IsValid);
+  }
+
+  // Testa se o padrão deixou de ser vulnerável a retrocesso catastrófico. A entrada hostil levava o
+  // padrão anterior a estourar o tempo limite de 300 ms a partir de 96 caracteres; o novo resolve de
+  // imediato, porque não tem classes quantificadas adjacentes com conjuntos sobrepostos.
+  [Theory]
+  [InlineData(96)]
+  [InlineData(128)]
+  [InlineData(256)]
+  public void IsEmail_ShouldNotBacktrack_WhenInputIsHostile(int length)
+  {
+    // Arrange
+    var value = new string('a', length) + "@" + new string('b', length);
+    var validation = new Validation();
+    var cronometro = System.Diagnostics.Stopwatch.StartNew();
+
+    // Act
+    validation.IsEmail(value, "Email");
+    cronometro.Stop();
+
+    // Assert
+    Assert.False(validation.IsValid);
+    Assert.True(cronometro.ElapsedMilliseconds < 100,
+      $"A avaliação levou {cronometro.ElapsedMilliseconds} ms, sinal de retrocesso catastrófico.");
+  }
+
+  #endregion
 }

@@ -404,13 +404,13 @@ public class Program
 
 ## 📋 Dependências
 
-| Pacote                                                                                       | Versão | Descrição                                                 |
-| -------------------------------------------------------------------------------------------- | ------ | --------------------------------------------------------- |
-| [`Tooark.Enums`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Enums)                 | 4.x    | Tipos compartilhados, como o `EFileType`                  |
-| [`Tooark.Exceptions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Exceptions)       | 4.x    | `BadRequestException`, lançada pelas operações de escrita |
-| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x    | Base de notificações das entidades                        |
-| [`Tooark.Validations`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Validations)     | 4.x    | Regras usadas na validação do `FileEntity`                |
-| [`Tooark.ValueObjects`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.ValueObjects)   | 4.x    | Objetos de valor recebidos pelos construtores e métodos   |
+| Pacote                                                                        | Versão | Descrição                                                 |
+| ----------------------------------------------------------------------------- | ------ | --------------------------------------------------------- |
+| [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)                 | 4.x    | Tipos compartilhados, como o `EFileType`                  |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)       | 4.x    | `BadRequestException`, lançada pelas operações de escrita |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | Base de notificações das entidades                        |
+| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)     | 4.x    | Regras usadas na validação do `FileEntity`                |
+| [`Tooark.ValueObjects`](https://www.nuget.org/packages/Tooark.ValueObjects)   | 4.x    | Objetos de valor recebidos pelos construtores e métodos   |
 
 ---
 

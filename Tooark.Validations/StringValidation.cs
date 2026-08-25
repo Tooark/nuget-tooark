@@ -26,7 +26,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <param name="condition">Condição a ser validada.</param>
   /// <returns>Validação.</returns>
-  private Validation Validate(string value, int comparer, string property, string message, Func<string, int, bool> condition)
+  private Validation Validate(string? value, int comparer, string property, string message, Func<string, int, bool> condition)
   {
     // Valor nulo é tratado como vazio: a validação de tamanho reprova o valor em vez de lançar.
     // Se a condição for verdadeira, adicione a notificação.
@@ -49,10 +49,12 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <param name="condition">Condição a ser validada.</param>
   /// <returns>Validação.</returns>
-  private Validation Validate(string value, string comparer, string property, string message, Func<string, string, bool> condition)
+  private Validation Validate(string? value, string comparer, string property, string message, Func<string, string, bool> condition)
   {
+    // Valor nulo é tratado como vazio, como na sobrecarga que compara tamanho. Sem isso, o nulo
+    // chegaria à condição e estouraria dentro dela.
     // Se a condição for verdadeira, adicione a notificação.
-    if (condition(value, comparer))
+    if (condition(value ?? string.Empty, comparer))
     {
       // Adiciona a notificação.
       AddNotification(message, property, "T.VLD.STR2");
@@ -71,7 +73,7 @@ public partial class Validation
   /// <param name="message">Mensagem de erro.</param>
   /// <param name="condition">Condição a ser validada.</param>
   /// <returns>Validação.</returns>
-  private Validation ValidateList(string value, string[] list, string property, string message, Func<string, string[], bool> condition)
+  private Validation ValidateList(string? value, string[]? list, string property, string message, Func<string, string[], bool> condition)
   {
     // Lista nula é tratada como vazia: nenhum valor está contido nela, em vez de lançar.
     // Se a condição for verdadeira, adicione a notificação.

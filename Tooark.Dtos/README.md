@@ -269,11 +269,11 @@ resposta.SetMetadata([new MetadataDto("origem", "cache")]);
 
 ## 📋 Dependências
 
-| Pacote                                                                                       | Versão   | Descrição                                         |
-| -------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
-| [`Tooark.Extensions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions)       | 4.x      | Localização das mensagens e normalização da busca |
-| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x      | Notificações que viram os erros da resposta       |
-| `Microsoft.AspNetCore.App` (framework compartilhado)                                         | 8.x/10.x | `HttpRequest`, `QueryHelpers` e `BindNever`       |
+| Pacote                                                                                                          | Versão   | Descrição                                         |
+| --------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens e normalização da busca |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications)                                   | 4.x      | Notificações que viram os erros da resposta       |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `HttpRequest`, `QueryHelpers` e `BindNever`       |
 
 ---
 

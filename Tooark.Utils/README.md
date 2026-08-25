@@ -274,8 +274,8 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 ## Dependências
 
 - [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/)
-- [Tooark.Exceptions](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Exceptions)
-- [Tooark.Validations](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Validations)
+- [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
+- [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 
 ## Contribuição
 

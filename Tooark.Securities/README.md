@@ -517,10 +517,10 @@ openssl pkcs8 -topk8 -nocrypt -in ec_private.pem -out ec_private_pkcs8.pem
 
 ## 📋 Dependências
 
-| Pacote                                          | Versão   | Descrição                             |
-| ----------------------------------------------- | -------- | ------------------------------------- |
-| `Tooark.Exceptions`                             | 4.x      | Exceções (ex.: `BadRequestException`) |
-| `Microsoft.AspNetCore.Authentication.JwtBearer` | 8.x/10.x | Autenticação JWT para ASP.NET Core    |
+| Pacote                                                                                                                          | Versão   | Descrição                             |
+| ------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceções (ex.: `BadRequestException`) |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | Autenticação JWT para ASP.NET Core    |
 
 ---
 

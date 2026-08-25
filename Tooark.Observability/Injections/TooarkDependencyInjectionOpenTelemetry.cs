@@ -115,7 +115,7 @@ public static partial class TooarkDependencyInjection
   /// </summary>
   /// <param name="key">Chave do atributo.</param>
   /// <returns>Chave normalizada.</returns>
-  internal static string NormalizeAttributeKey(string key)
+  internal static string NormalizeAttributeKey(string? key)
   {
     // Se a chave for nula ou vazia, retorna como está
     if (string.IsNullOrEmpty(key))

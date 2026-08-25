@@ -311,15 +311,15 @@ O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo ident
 
 ## Dependências
 
-| Dependência                         | Versão   | Uso                                          |
-| ----------------------------------- | -------- | -------------------------------------------- |
-| `Tooark.Utils`                      | 4.x      | Normalização e idioma                        |
-| `Microsoft.Extensions.Localization` | 8.x/10.x | `IStringLocalizer` e o registro no container |
+| Dependência                                                                                             | Versão   | Uso                                          |
+| ------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
+| [`Tooark.Utils`](https://www.nuget.org/packages/Tooark.Utils)                                           | 4.x      | Normalização e idioma                        |
+| [`Microsoft.Extensions.Localization`](https://www.nuget.org/packages/Microsoft.Extensions.Localization) | 8.x/10.x | `IStringLocalizer` e o registro no container |
 
 > **O pacote não exige o runtime do ASP.NET Core.** Até a v3 ele declarava o framework compartilhado por
 > causa do `ModelStateExtension`, e esse requisito se propagava para o `Tooark.Dtos`, o `Tooark.ValueObjects`,
 > o `Tooark.Entities` e o agregador. Na v4 o `ModelStateExtension` passou para o
-> [Tooark.AspNetCore](https://github.com/Tooark/tooark-cs/tree/main/Tooark.AspNetCore), e este pacote voltou a
+> [`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore), e este pacote voltou a
 > ser de uso geral: funciona em console, worker e função serverless sem o runtime do ASP.NET Core instalado.
 
 ## Contribuição

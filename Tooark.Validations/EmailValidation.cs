@@ -36,7 +36,7 @@ public partial class Validation
   /// <param name="value">Valor a ser validado.</param>
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
-  public Validation IsEmailOrEmpty(string value, string property) =>
+  public Validation IsEmailOrEmpty(string? value, string property) =>
     IsEmailOrEmpty(value, property, ValidationErrorMessages.IsValid(property, "EmailOrEmpty"));
 
   /// <summary>
@@ -46,7 +46,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsEmailOrEmpty(string value, string property, string message) =>
+  public Validation IsEmailOrEmpty(string? value, string property, string message) =>
     string.IsNullOrEmpty(value) ? this : IsEmail(value, property, message);
   #endregion
 
@@ -78,7 +78,7 @@ public partial class Validation
   /// <param name="value">Valor a ser validado.</param>
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
-  public Validation IsEmailDomainOrEmpty(string value, string property) =>
+  public Validation IsEmailDomainOrEmpty(string? value, string property) =>
     IsEmailDomainOrEmpty(value, property, ValidationErrorMessages.IsValid(property, "EmailDomainOrEmpty"));
 
   /// <summary>
@@ -88,7 +88,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsEmailDomainOrEmpty(string value, string property, string message) =>
+  public Validation IsEmailDomainOrEmpty(string? value, string property, string message) =>
     string.IsNullOrEmpty(value) ? this : IsEmailDomain(value, property, message);
   #endregion
 }

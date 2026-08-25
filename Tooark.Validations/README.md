@@ -692,8 +692,8 @@ A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validaç
 - `IsCultureIgnoreCase` Validação de Cultura ignorando maiúsculas e minúsculas.
 - `IsEmail`: Validação de e-mail.
 - `IsEmailDomain`: Validação de domínio de e-mail.
-- `IsEmailDomainOrEmpty`: Validação de domínio de e-mail ou vazio.
-- `IsEmailOrEmpty`: Validação de e-mail ou vazio.
+- `IsEmailDomainOrEmpty`: Validação de domínio de e-mail ou vazio. Aceita valor ausente.
+- `IsEmailOrEmpty`: Validação de e-mail ou vazio. Aceita valor ausente.
 - `IsEmpty`: Validação se é vazia.
 - `IsFalse`: Validação de valor falso.
 - `IsFtp`: Validação de FTP.
@@ -797,9 +797,9 @@ Duas observações importantes para quem filtra notificações por código:
 
 ## Dependências
 
-| Dependência                                                                                  | Versão | Uso                                  |
-| -------------------------------------------------------------------------------------------- | ------ | ------------------------------------ |
-| [`Tooark.Notifications`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Notifications) | 4.x    | `Notification`, base de `Validation` |
+| Dependência                                                                   | Versão | Uso                                  |
+| ----------------------------------------------------------------------------- | ------ | ------------------------------------ |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | `Notification`, base de `Validation` |
 
 ## Contribuição
 

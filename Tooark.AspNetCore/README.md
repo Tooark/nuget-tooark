@@ -216,10 +216,10 @@ builder.Services.AddControllers(options => options.Filters.Add<ValidacaoFilter>(
 
 ## 📋 Dependências
 
-| Pacote                                               | Versão   | Descrição                         |
-| ---------------------------------------------------- | -------- | --------------------------------- |
-| `Tooark.Extensions`                                  | 4.x      | Localização das mensagens de erro |
-| `Microsoft.AspNetCore.App` (framework compartilhado) | 8.x/10.x | `ModelStateDictionary`            |
+| Pacote                                                                                                          | Versão   | Descrição                         |
+| --------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------- |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `ModelStateDictionary`            |
 
 ---
 

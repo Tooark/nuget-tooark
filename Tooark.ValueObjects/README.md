@@ -103,18 +103,18 @@ Documento reprovado fica com `Number` vazio e `Type` igual a `None`.
 
 ### Endereços e protocolos
 
-| Tipo | Construtor | Propriedades | Aceita |
-| ----------------------- | -------------------------------------------------------------------------------- | --- | --------------------------------------------------------------- |
-| `Email` | `(string value)` | `Value` | Endereço de email |
-| `EmailDomain` | `(string value)` | `Value` | Domínio de email |
-| `Url` | `(string value)` | `Value` | FTP, SFTP, HTTP, HTTPS, IMAP, POP3, SMTP, WS e WSS |
-| `ProtocolHttp` | `(string value)` | `Value` | HTTP e HTTPS |
-| `ProtocolFtp` | `(string value)` | `Value` | FTP e SFTP |
-| `ProtocolWs` | `(string value)` | `Value` | WS e WSS |
-| `ProtocolEmailSender` | `(string value)` | `Value` | SMTP |
-| `ProtocolEmailReceiver` | `(string value)` | `Value` | IMAP e POP3 |
-| `LinkVideo` | `(string link, bool youtube = true, bool vimeo = true, bool dailymotion = true)` | `Link` | YouTube, Vimeo e Dailymotion |
-| `FileStorage` | `(ProtocolHttp link, string? name = null)` | `Link`, `Name` | Link e nome de arquivo |
+| Tipo                    | Construtor                                                                       | Propriedades   | Aceita                                             |
+| ----------------------- | -------------------------------------------------------------------------------- | -------------- | -------------------------------------------------- |
+| `Email`                 | `(string value)`                                                                 | `Value`        | Endereço de email                                  |
+| `EmailDomain`           | `(string value)`                                                                 | `Value`        | Domínio de email                                   |
+| `Url`                   | `(string value)`                                                                 | `Value`        | FTP, SFTP, HTTP, HTTPS, IMAP, POP3, SMTP, WS e WSS |
+| `ProtocolHttp`          | `(string value)`                                                                 | `Value`        | HTTP e HTTPS                                       |
+| `ProtocolFtp`           | `(string value)`                                                                 | `Value`        | FTP e SFTP                                         |
+| `ProtocolWs`            | `(string value)`                                                                 | `Value`        | WS e WSS                                           |
+| `ProtocolEmailSender`   | `(string value)`                                                                 | `Value`        | SMTP                                               |
+| `ProtocolEmailReceiver` | `(string value)`                                                                 | `Value`        | IMAP e POP3                                        |
+| `LinkVideo`             | `(string link, bool youtube = true, bool vimeo = true, bool dailymotion = true)` | `Link`         | YouTube, Vimeo e Dailymotion                       |
+| `FileStorage`           | `(ProtocolHttp link, string? name = null)`                                       | `Link`, `Name` | Link e nome de arquivo                             |
 
 Repare que `LinkVideo` e `FileStorage` expõem `Link`, e não `Value`. O `FileStorage` construído sem nome
 usa o próprio link como `Name`. O `Email` tem ainda as constantes `Email.MinLength` (6) e
@@ -296,13 +296,13 @@ string texto = outras;   // "a;b"
 
 ## 📋 Dependências
 
-| Pacote                 | Versão | Descrição                         |
-| ---------------------- | ------ | --------------------------------- |
-| `Tooark.Enums`         | 4.x    | Tipos de documento                |
-| `Tooark.Exceptions`    | 4.x    | Erro das conversões sem instância |
-| `Tooark.Extensions`    | 4.x    | Normalização de texto             |
-| `Tooark.Notifications` | 4.x    | Base de notificações              |
-| `Tooark.Validations`   | 4.x    | Regras de validação               |
+| Pacote                                                                        | Versão | Descrição                         |
+| ----------------------------------------------------------------------------- | ------ | --------------------------------- |
+| [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)                 | 4.x    | Tipos de documento                |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)       | 4.x    | Erro das conversões sem instância |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)       | 4.x    | Normalização de texto             |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | Base de notificações              |
+| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)     | 4.x    | Regras de validação               |
 
 ---
 
