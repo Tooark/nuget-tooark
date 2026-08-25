@@ -69,9 +69,9 @@ lista. Um campo com mais de um erro contribui com todas as mensagens dele. A ord
 ### Integração com as validações
 
 As mensagens devolvidas são o que os atributos do
-[`Tooark.Attributes`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Attributes) produzem: chaves de
+[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes) produzem: chaves de
 tradução no formato `Chave;Campo`, como `Field.Required;Email`. Elas viram texto pelo `IStringLocalizer` do
-[`Tooark.Extensions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions), que resolve o idioma
+[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions), que resolve o idioma
 pelo fluxo de execução da requisição.
 
 Erros que o próprio model binding gera — um inteiro recebendo texto, por exemplo — vêm com a mensagem do
@@ -123,7 +123,7 @@ public sealed class PessoaController : ControllerBase
 ### Exemplo com as mensagens traduzidas
 
 As chaves viram texto pelo `IStringLocalizer`, que vem do
-[`Tooark.Extensions`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions) e é registrado por lá:
+[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions) e é registrado por lá:
 
 ```csharp
 using Tooark.Extensions.Injections;
@@ -225,8 +225,8 @@ builder.Services.AddControllers(options => options.Filters.Add<ValidacaoFilter>(
 
 ## 🪪 Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.AspNetCore](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/issues).
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.

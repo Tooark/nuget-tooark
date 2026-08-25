@@ -500,6 +500,8 @@ scripts/**
 # Sai em bin/ e obj/, que já são ignorados; a regra cobre apenas o que escapar para fora deles
 **/[Bb]in/**/*.xml
 **/[Oo]bj/**/*.xml
+# Documentação XML gerada na raiz dos projetos (<Projeto>/<Projeto>.xml)
+Tooark*/Tooark*.xml
 
 ## Report files
 **/reports/*.json

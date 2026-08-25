@@ -10,7 +10,7 @@ O pacote Tooark está disponível no **[Nuget Registry](https://www.nuget.org/pr
 dotnet add package Tooark
 ```
 
-O código do projeto com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET estão disponíveis no [link](https://github.com/Tooark/tooark-cs/tree/main/Tooark).
+O código do projeto com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET estão disponíveis no [link](https://github.com/Tooark/nuget-tooark/tree/main/Tooark).
 
 | Package                               | Version                                                                                                                                            | Downloads                                                                                                                                           | Individual Install                                       |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -36,7 +36,7 @@ O código do projeto com todos os recursos e funcionalidades do Tooark voltadas 
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/nuget-tooark/issues).
 
 ---
 
@@ -52,4 +52,4 @@ Os seguintes usuários estão contribuindo para o projeto:
 
 ## Licença
 
-Este projeto está licenciado sob a [Licença BSD3](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE). Consulte o arquivo `LICENSE` para mais detalhes.
+Este projeto está licenciado sob a [Licença BSD3](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE). Consulte o arquivo `LICENSE` para mais detalhes.

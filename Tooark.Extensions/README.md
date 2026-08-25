@@ -269,11 +269,11 @@ Os arquivos de recurso cobrem **todas as mensagens emitidas pelos pacotes Tooark
 exceções, notificações, mediador, unidade de trabalho, criptografia, JWT, observabilidade, enumeradores e
 utilitários. São 135 chaves, com o mesmo conjunto nos três idiomas.
 
-| Idioma    | Arquivo                                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------------------------ |
-| Inglês    | [en-US.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/en-US.default.json) |
-| Espanhol  | [es-ES.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/es-ES.default.json) |
-| Português | [pt-BR.default.json](https://github.com/Tooark/tooark-cs/blob/main/Tooark.Extensions/Resources/pt-BR.default.json) |
+| Idioma    | Arquivo                                                                                                               |
+| --------- | --------------------------------------------------------------------------------------------------------------------- |
+| Inglês    | [en-US.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/en-US.default.json) |
+| Espanhol  | [es-ES.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/es-ES.default.json) |
+| Português | [pt-BR.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/pt-BR.default.json) |
 
 O idioma padrão da aplicação é o `en-US`, e é para ele que a busca cai quando o idioma atual não tem
 tradução para a chave. Um idioma sem arquivo próprio — o `pt-PT`, por exemplo, que deixou de ser
@@ -324,8 +324,8 @@ O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo ident
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/issues).
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.

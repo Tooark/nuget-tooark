@@ -163,7 +163,7 @@ Chaves de tradução das mensagens de erro geradas pelo próprio pacote, em `Too
 
 - `FileSizeExceeded`: `"File.SizeExceeded"`. Emitida pelo `FileConvert` quando o conteúdo excede o limite, no formato `File.SizeExceeded;{limite}`.
 
-As traduções acompanham os recursos do [Tooark.Extensions](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Extensions).
+As traduções acompanham os recursos do [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions).
 
 ## Exemplo de Uso
 
@@ -279,8 +279,8 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Utils](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Utils](https://github.com/Tooark/nuget-tooark/issues).
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.

@@ -158,7 +158,7 @@ senha.Value           // "Senha@123" — único caminho, e é evidente na leitur
 Os critérios valem exatamente como informados: desabilitar todos significa exigir apenas o comprimento,
 que é uma política legítima de frase secreta. A regra é a mesma aplicada pelo
 `PasswordValidationAttribute` do
-[`Tooark.Attributes`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Attributes), porque os dois
+[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes), porque os dois
 usam o `PasswordPattern` do `Tooark.Validations`.
 
 ### String delimitada
@@ -213,7 +213,7 @@ if (!cpf.IsValid || !email.IsValid)
 
 As mensagens saem como chave, não como texto final. Para devolvê-las traduzidas, entregue as
 notificações ao `ResponseDto` do
-[`Tooark.Dtos`](https://github.com/Tooark/tooark-cs/tree/main/Tooark.Dtos), que resolve o idioma do
+[`Tooark.Dtos`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Dtos), que resolve o idioma do
 consumidor:
 
 ```csharp
@@ -308,8 +308,8 @@ string texto = outras;   // "a;b"
 
 ## 🪪 Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.ValueObjects](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.ValueObjects](https://github.com/Tooark/nuget-tooark/issues).
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.

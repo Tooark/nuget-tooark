@@ -1,13 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.0.0</Version>
+    <Version>4.0.1</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageIcon>icon.jpg</PackageIcon>
-    <RepositoryBaseUrl>https://github.com/Tooark/tooark-cs</RepositoryBaseUrl>
+    <RepositoryBaseUrl>https://github.com/Tooark/nuget-tooark</RepositoryBaseUrl>
     <RepositoryUrl>$(RepositoryBaseUrl)</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryBaseUrl)/tree/main/$(MSBuildProjectName)</PackageProjectUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

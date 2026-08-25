@@ -48,6 +48,7 @@ Os três parâmetros aceitam ausência de valor porque o construtor já a tratav
 `Notifications.MessageUnknown`, chave em branco vira `Unknown` e código em branco vira `T.ERR`. A
 assinatura declarava não anulável e o corpo verificava nulo — quem passava um `string?` recebia aviso do
 compilador para um caminho que sempre funcionou.
+
 - `ToString()`: Retorna a mensagem da notificação.
 - `string`: Converte implicitamente a instância de `NotificationItem` para uma string, retornando a mensagem. Instância nula retorna string vazia.
 - `NotificationItem`: Converte implicitamente uma string para uma instância de `NotificationItem`, com a chave `Unknown` e o código `T.ERR`.
@@ -168,8 +169,8 @@ validation.AddNotifications(myNotification, myOtherNotification);
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Notifications](https://github.com/Tooark/tooark-cs/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Notifications](https://github.com/Tooark/nuget-tooark/issues).
 
 ## Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/tooark-cs/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
