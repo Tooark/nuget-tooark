@@ -9,6 +9,17 @@ namespace Tooark.Tests.Attributes;
 /// </summary>
 public class TooarkValidationAttributeTests
 {
+  // Atributo que expõe o auxiliar protegido, para exercitar a guarda de tempo limite com um padrão
+  // deliberadamente patológico — nenhum padrão do pacote retrocede mais, então sem isso a guarda
+  // ficaria sem cobertura e o próximo a mexer não saberia se ainda funciona.
+  private sealed class ComPadraoPatologico() : TooarkValidationAttribute("Patologico")
+  {
+    // Classes quantificadas aninhadas com conjuntos sobrepostos: o formato clássico do retrocesso
+    private const string Patologico = "^(a+)+$";
+
+    protected override bool IsSatisfied(string value) => Matches(value, Patologico);
+  }
+
   // Modelo com a mensagem de erro configurada pelo consumidor
   private class ComMensagemPropria
   {
@@ -172,11 +183,14 @@ public class TooarkValidationAttributeTests
     Assert.Equal("Field.Required;Email", mensagem);
   }
 
-  // Testa se o estouro do tempo limite da expressão regular reprova em vez de escapar
+  // Testa se entrada longa e malformada é reprovada sem escapar exceção.
+  // Até a v4.0.0 esta entrada provocava retrocesso catastrófico no padrão de email e era o que
+  // exercitava a guarda de tempo limite. O padrão foi corrigido e não retrocede mais, então hoje ela
+  // reprova por formato — a guarda passou a ser exercitada por Matches_ShouldRejectOnTimeout.
   [Fact]
-  public void RegexTimeout_ShouldRejectInsteadOfThrowing()
+  public void LongMalformedInput_ShouldBeRejected()
   {
-    // Arrange: entrada que provoca retrocesso excessivo no padrão de email
+    // Arrange
     var entrada = new string('a', 128) + "@" + new string('b', 128);
     var atributo = new EmailValidationAttribute();
 
@@ -283,5 +297,22 @@ public class TooarkValidationAttributeTests
 
     // Assert
     Assert.True(resultado);
+  }
+
+  // Testa se o estouro do tempo limite da expressão regular reprova em vez de escapar a exceção.
+  // Com o padrão patológico e uma entrada que não casa, o motor tenta todas as combinações e estoura
+  // os 300 ms; sem a guarda, isso viraria 500 em vez de 400 numa API.
+  [Fact]
+  public void Matches_ShouldRejectOnTimeout()
+  {
+    // Arrange
+    var atributo = new ComPadraoPatologico();
+    var entrada = new string('a', 40) + "!";
+
+    // Act
+    var resultado = atributo.IsValid(entrada);
+
+    // Assert
+    Assert.False(resultado);
   }
 }

@@ -10,9 +10,6 @@
 
 * text=auto eol=lf
 
-# O Visual Studio reescreve a solução com CRLF.
-*.sln text eol=crlf
-
 # Binários: o Git não deve converter nada.
 *.jpg binary
 *.png binary

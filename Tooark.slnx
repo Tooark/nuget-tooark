@@ -1,0 +1,20 @@
+<Solution>
+  <Project Path="Tooark.AspNetCore/Tooark.AspNetCore.csproj" />
+  <Project Path="Tooark.Attributes/Tooark.Attributes.csproj" />
+  <Project Path="Tooark.Dtos/Tooark.Dtos.csproj" />
+  <Project Path="Tooark.Entities/Tooark.Entities.csproj" />
+  <Project Path="Tooark.Enums/Tooark.Enums.csproj" />
+  <Project Path="Tooark.Exceptions/Tooark.Exceptions.csproj" />
+  <Project Path="Tooark.Extensions/Tooark.Extensions.csproj" />
+  <Project Path="Tooark.Mediator.Abstractions/Tooark.Mediator.Abstractions.csproj" />
+  <Project Path="Tooark.Mediator.EntityFrameworkCore/Tooark.Mediator.EntityFrameworkCore.csproj" />
+  <Project Path="Tooark.Mediator/Tooark.Mediator.csproj" />
+  <Project Path="Tooark.Notifications/Tooark.Notifications.csproj" />
+  <Project Path="Tooark.Observability/Tooark.Observability.csproj" />
+  <Project Path="Tooark.Securities/Tooark.Securities.csproj" />
+  <Project Path="Tooark.Tests/Tooark.Tests.csproj" />
+  <Project Path="Tooark.Utils/Tooark.Utils.csproj" />
+  <Project Path="Tooark.Validations/Tooark.Validations.csproj" />
+  <Project Path="Tooark.ValueObjects/Tooark.ValueObjects.csproj" />
+  <Project Path="Tooark/Tooark.csproj" />
+</Solution>

@@ -86,4 +86,19 @@ public class DocumentValidationAttributeTests
   // A mensagem passou a vir no resultado da validacao, e nao do estado do atributo.
   private static string? Mensagem(ValidationAttribute atributo, object? valor) =>
     atributo.GetValidationResult(valor, new ValidationContext(new object()))?.ErrorMessage;
+
+  // Testa se tipo de documento ausente é tratado como desconhecido, e não como None legítimo.
+  // O atributo aceita o tipo como texto, então nada impede [DocumentValidation(null!)].
+  [Fact]
+  public void Resolve_ShouldThrow_WhenTypeIsMissing()
+  {
+    // Arrange
+    var atributo = new DocumentValidationAttribute(null!);
+
+    // Act & Assert
+    var excecao = Assert.Throws<Tooark.Exceptions.InternalServerErrorException>(
+      () => atributo.IsValid("529.982.247-25"));
+
+    Assert.Contains("Attributes.DocumentTypeUnknown;", excecao.Message);
+  }
 }
