@@ -211,7 +211,8 @@ Validações para protocolos.
 ### 16. Regex
 
 **Funcionalidade:**
-Validações para expressões regulares.
+Validações para expressões regulares. O tempo limite padrão de avaliação é a constante pública
+`Validation.DefaultTimeout` (300 ms), disponível para consulta externa.
 
 [**Exemplo de Uso**](#regex)
 

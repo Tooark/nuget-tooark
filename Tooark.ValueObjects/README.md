@@ -100,6 +100,8 @@ Documento reprovado fica com `Number` vazio e `Type` igual a `None`.
 | `ZipCode`       | `(string value)` | `Value`               |
 
 `Normalized` devolve o valor sem acentos, sem espaços e em maiúsculas — útil para busca e ordenação.
+O `LanguageCode` normaliza para o formato `xx-XX` (ex.: `pt-BR`) e expõe a constante
+`LanguageCode.Length` (5) para consulta externa, como no dimensionamento de colunas.
 
 ### Endereços e protocolos
 
@@ -170,6 +172,7 @@ usam o `PasswordPattern` do `Tooark.Validations`.
 | `DelimitedString(List<string>? values)`    | A partir de uma lista                 |
 | `Value`                                    | O texto delimitado                    |
 | `Values`, `ToArray()`, `ToList()`          | Os itens, sempre em uma cópia         |
+| `DefaultDelimiter`                         | A constante do delimitador padrão `;` |
 
 As coleções entram e saem copiadas: alterar a array informada, ou a devolvida, não altera o objeto.
 
