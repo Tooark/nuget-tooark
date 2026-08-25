@@ -90,7 +90,7 @@ Descrição: Este pacote define objetos de valor utilizados na aplicação.
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/tooark/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/nuget-tooark/issues).
 
 ## Licença
 

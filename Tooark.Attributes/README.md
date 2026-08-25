@@ -141,7 +141,7 @@ public class Endereco
 
 ## Contribuição
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Attributes](https://github.com/Tooark/tooark/issues).
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/issues).
 
 ## Licença
 
