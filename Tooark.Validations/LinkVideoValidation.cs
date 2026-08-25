@@ -16,7 +16,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
   public Validation IsLinkVideo(string value, string property) =>
-    IsLinkVideo(value, property, ValidationErrorMessages.IsValid(property, "Url"));
+    IsLinkVideo(value, property, ValidationErrorMessages.IsValid(property, "LinkVideo"));
 
   /// <summary>
   /// Verifica se o valor corresponde ao formato de um link de vídeo.
@@ -37,7 +37,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
   public Validation IsLinkVideoYouTube(string value, string property) =>
-    IsLinkVideoYouTube(value, property, ValidationErrorMessages.IsValid(property, "Ftp"));
+    IsLinkVideoYouTube(value, property, ValidationErrorMessages.IsValid(property, "LinkVideoYouTube"));
 
   /// <summary>
   /// Verifica se o valor corresponde ao formato link de vídeo do YouTube.
@@ -58,7 +58,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
   public Validation IsLinkVideoVimeo(string value, string property) =>
-    IsLinkVideoVimeo(value, property, ValidationErrorMessages.IsValid(property, "Sftp"));
+    IsLinkVideoVimeo(value, property, ValidationErrorMessages.IsValid(property, "LinkVideoVimeo"));
 
   /// <summary>
   /// Verifica se o valor corresponde ao formato link de vídeo do Vimeo.
@@ -79,7 +79,7 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>
   public Validation IsLinkVideoDailymotion(string value, string property) =>
-    IsLinkVideoDailymotion(value, property, ValidationErrorMessages.IsValid(property, "ProtocolFtp"));
+    IsLinkVideoDailymotion(value, property, ValidationErrorMessages.IsValid(property, "LinkVideoDailymotion"));
 
   /// <summary>
   /// Verifica se o valor corresponde ao formato link de vídeo do Dailymotion.
