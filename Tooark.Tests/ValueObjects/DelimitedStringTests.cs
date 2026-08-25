@@ -211,4 +211,12 @@ public class DelimitedStringTests
     Assert.Equal(arrayValues, result.Values);
     Assert.Equal(listValues, result.Values);
   }
+
+  // Teste se a constante pública do delimitador padrão está disponível para consulta externa com o valor esperado
+  [Fact]
+  public void DelimitedString_DefaultDelimiter_ShouldBePubliclyConsultable()
+  {
+    // Assert
+    Assert.Equal(';', DelimitedString.DefaultDelimiter);
+  }
 }

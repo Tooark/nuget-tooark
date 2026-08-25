@@ -153,5 +153,13 @@ public class RegexValidationTests
 
     // Assert
     Assert.Empty(validation.Notifications);
-  }  
+  }
+
+  // Teste se a constante pública do tempo limite padrão está disponível para consulta externa com o valor esperado
+  [Fact]
+  public void DefaultTimeout_ShouldBePubliclyConsultable()
+  {
+    // Assert
+    Assert.Equal(300, Validation.DefaultTimeout);
+  }
 }

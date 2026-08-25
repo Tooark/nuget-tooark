@@ -13,7 +13,7 @@ public partial class Validation
   /// <summary>
   /// Tempo limite padrão para validação por expressão regular. Em milissegundos.
   /// </summary>
-  internal const int DefaultTimeout = 300;
+  public const int DefaultTimeout = 300;
   #endregion
 
   #region Private Static Fields
