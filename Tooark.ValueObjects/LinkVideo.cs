@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Tooark.Exceptions;
+using Tooark.Validations;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.ValueObjects;
@@ -30,7 +31,7 @@ public sealed class LinkVideo : ValueObject
   public LinkVideo(string? link, bool youtube = true, bool vimeo = true, bool dailymotion = true)
   {
     // Método de validação de expressão regular.
-    static bool RegexValidation(string link, string pattern) => Regex.IsMatch(link, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(300));
+    static bool RegexValidation(string link, string pattern) => Regex.IsMatch(link, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(Validation.DefaultTimeout));
 
     // Link ausente é tratado como vazio, que nenhum provedor aceita
     var value = link ?? string.Empty;

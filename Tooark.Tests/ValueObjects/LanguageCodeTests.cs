@@ -108,4 +108,16 @@ public class LanguageCodeTests
     Assert.True(languageCode.IsValid);
     Assert.Equal(expectedCode, languageCode.Code);
   }
+
+  // Teste se a constante pública de tamanho está disponível para consulta externa e condiz com o formato xx-XX
+  [Fact]
+  public void LanguageCode_Length_ShouldBePubliclyConsultable()
+  {
+    // Arrange
+    var languageCode = new LanguageCode("pt-BR");
+
+    // Assert
+    Assert.Equal(5, LanguageCode.Length);
+    Assert.Equal(LanguageCode.Length, languageCode.Code.Length);
+  }
 }

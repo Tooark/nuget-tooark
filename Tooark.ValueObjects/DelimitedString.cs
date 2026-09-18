@@ -17,7 +17,7 @@ public class DelimitedString : ValueObject
   /// <summary>
   /// Delimitador padrão utilizado para separar os valores.
   /// </summary>
-  private const char DefaultDelimiter = ';';
+  public const char DefaultDelimiter = ';';
 
   #endregion
 

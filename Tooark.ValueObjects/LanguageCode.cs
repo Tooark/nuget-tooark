@@ -8,6 +8,15 @@ namespace Tooark.ValueObjects;
 /// </summary>
 public sealed class LanguageCode : ValueObject
 {
+  #region Constants
+
+  /// <summary>
+  /// Tamanho do código do idioma, no formato xx-XX. Exemplo: pt-BR.
+  /// </summary>
+  public const int Length = 5;
+
+  #endregion
+
   #region Private Fields
 
   /// <summary>
