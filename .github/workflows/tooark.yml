@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 env:
   VERSION: 0.0.0
-  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.8
+  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.9
 
 jobs:
   build-and-deploy:
