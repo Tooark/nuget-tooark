@@ -10,7 +10,38 @@ env:
   SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.9
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract version from Directory.Build.props
+        id: extract_version
+        run: |
+          VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" Directory.Build.props)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if the version tag exists
+        id: check_tag
+        run: |
+          VERSION="${{ steps.extract_version.outputs.version }}"
+          if [ -n "$(git ls-remote --tags origin "refs/tags/v${VERSION}")" ]; then
+            echo "has_tag=true" >> $GITHUB_OUTPUT
+            echo "::warning::A versão v${VERSION} já existe (tag publicada). Workflow interrompido sem build e sem publicação. Atualize a versão no Directory.Build.props para lançar uma nova versão."
+          else
+            echo "has_tag=false" >> $GITHUB_OUTPUT
+            echo "Tag v${VERSION} não existe. Prosseguindo com o build e a publicação."
+          fi
+
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      has_tag: ${{ steps.check_tag.outputs.has_tag }}
+
   build-and-deploy:
+    needs: check-version
+    if: needs.check-version.outputs.has_tag == 'false'
     runs-on: ubuntu-latest
     permissions:
       contents: write
