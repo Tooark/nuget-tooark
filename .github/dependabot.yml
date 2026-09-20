@@ -5,11 +5,16 @@
 #
 # Scope:
 #   - NuGet: weekly, against the central pins in Directory.Packages.props.
-#     Minor/patch updates are grouped into one PR. Runtime-bound packages
-#     (Microsoft.AspNetCore.*, Microsoft.Extensions.*, EF Core) have one pin
-#     per target framework and must move within their own line: the 8.0.x
-#     pins never jump to 10.x. Major updates of those packages are ignored
-#     here and handled by hand when a new .NET line is adopted.
+#     Minor/patch updates are grouped into one PR; the test tooling (xunit,
+#     coverlet, Microsoft.Testing.*) is grouped separately and may include
+#     majors, because those packages only move together.
+#   - Runtime-bound packages (Microsoft.AspNetCore.Authentication.*,
+#     Microsoft.Extensions.*, EF Core, System.Security.Cryptography.Xml) are
+#     NOT handled by Dependabot. They have one pin per target framework in
+#     conditional ItemGroups, and Dependabot only evaluates the first one: it
+#     bumped the 8.0.x line and left the 10.0.x line behind (PR #54). Those
+#     pins are bumped by hand, in pairs, after each .NET servicing release;
+#     scripts/check-package-pairs.sh (run by CI) checks the structure.
 #   - GitHub Actions: weekly, minor/patch grouped into one PR.
 #   - The security-scanner image used by the release workflow is pinned by
 #     hand in the workflow env; Dependabot does not track it.
@@ -33,6 +38,19 @@ updates:
       prefix: "build"
       include: "scope"
     groups:
+      # xunit.v3 and xunit.runner.visualstudio are released together and a
+      # major of one needs the major of the other; coverlet.MTP follows the
+      # Microsoft.Testing.Platform line shipped by xunit.
+      test-tooling:
+        patterns:
+          - "xunit*"
+          - "coverlet*"
+          - "Microsoft.Testing.*"
+          - "Microsoft.NET.Test.Sdk"
+        update-types:
+          - "major"
+          - "minor"
+          - "patch"
       nuget-minor-patch:
         patterns:
           - "*"
@@ -40,15 +58,11 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      # Runtime-bound lines: stay on the pinned major of each target framework.
-      - dependency-name: "Microsoft.AspNetCore.*"
-        update-types: ["version-update:semver-major"]
+      # Runtime-bound lines, pinned per target framework: bumped by hand, in pairs.
+      - dependency-name: "Microsoft.AspNetCore.Authentication.*"
       - dependency-name: "Microsoft.Extensions.*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "Microsoft.EntityFrameworkCore*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "System.Security.Cryptography.Xml"
-        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

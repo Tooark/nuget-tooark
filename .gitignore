@@ -151,8 +151,8 @@ coverletreport/*
 coverage*.json
 coverage*.xml
 coverage*.info
-# Saída de cobertura e do relatório do ReportGenerator, conforme o README do Tooark.Tests
-cobertura/
+# Saída da cobertura (coverlet.MTP) e do relatório do ReportGenerator: TestResults/, já coberta por
+# [Tt]est[Rr]esult*/ acima, conforme o README do Tooark.Tests
 [Cc]overage[Rr]eport/
 
 # Visual Studio code coverage results
@@ -495,6 +495,7 @@ appsettings.*.json
 scripts/**
 !scripts/example-run-sonarqube-local.ps1
 !scripts/example-run-sonarqube-local.sh
+!scripts/check-package-pairs.sh
 
 # Arquivo de documentação gerado pelo build
 # Sai em bin/ e obj/, que já são ignorados; a regra cobre apenas o que escapar para fora deles
