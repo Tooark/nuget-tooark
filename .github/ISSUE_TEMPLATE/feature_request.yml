@@ -1,0 +1,80 @@
+name: ✨ Feature request
+description: Suggest an improvement to an existing package or a new Tooark package.
+title: "[feat] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your idea! Please explain the **problem** you are trying to solve, not just the solution.
+        A new package needs its own justification — the rule of thumb is "requires a provider SDK"; configuration over an existing framework feature belongs in an existing package.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I have searched existing issues.
+          required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which package?
+      options:
+        - Tooark (aggregator)
+        - Tooark.AspNetCore
+        - Tooark.Attributes
+        - Tooark.Dtos
+        - Tooark.Entities
+        - Tooark.Enums
+        - Tooark.Exceptions
+        - Tooark.Extensions
+        - Tooark.Mediator / Abstractions / EntityFrameworkCore
+        - Tooark.Notifications
+        - Tooark.Observability
+        - Tooark.Securities
+        - Tooark.Securities.OpenId
+        - Tooark.Utils
+        - Tooark.Validations
+        - Tooark.ValueObjects
+        - New package / cross-cutting
+        - Repo tooling (build, workflows, scripts)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve? Who is affected? What do you do today instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: The API or configuration you have in mind. For a new package, say which provider SDK or framework feature it wraps and whether it must run outside ASP.NET Core.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: checkboxes
+    id: breaking
+    attributes:
+      label: Compatibility
+      options:
+        - label: This change is backward compatible (no breaking change to a public API or default behavior).
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to help implement this.
+        - label: I would be willing to help test this.

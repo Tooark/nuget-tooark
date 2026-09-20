@@ -1,0 +1,73 @@
+# ==============================================================================
+# Tooark — Dependabot configuration
+# ==============================================================================
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Scope:
+#   - NuGet: weekly, against the central pins in Directory.Packages.props.
+#     Minor/patch updates are grouped into one PR. Runtime-bound packages
+#     (Microsoft.AspNetCore.*, Microsoft.Extensions.*, EF Core) have one pin
+#     per target framework and must move within their own line: the 8.0.x
+#     pins never jump to 10.x. Major updates of those packages are ignored
+#     here and handled by hand when a new .NET line is adopted.
+#   - GitHub Actions: weekly, minor/patch grouped into one PR.
+#   - The security-scanner image used by the release workflow is pinned by
+#     hand in the workflow env; Dependabot does not track it.
+# ==============================================================================
+
+version: 2
+
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "nuget"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    groups:
+      nuget-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Runtime-bound lines: stay on the pinned major of each target framework.
+      - dependency-name: "Microsoft.AspNetCore.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "System.Security.Cryptography.Xml"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
