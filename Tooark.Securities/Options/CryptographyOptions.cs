@@ -29,7 +29,7 @@ public class CryptographyOptions
   /// Algoritmo de criptografia a ser utilizado.
   /// </summary>
   /// <remarks>
-  /// Valores válidos (case insensitive): 
+  /// Valores válidos (case insensitive):
   ///   - "CBC"  que representa o modo AES-256-CBC
   ///   - "GCM"  que representa o modo AES-256-GCM
   ///   - "CBCUnsafe" que representa o modo AES-256-CBC com IV zerado (legado)

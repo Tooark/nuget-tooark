@@ -72,7 +72,7 @@ public class DocumentValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
-  
+
   // Teste para validar se o valor corresponde ao padrão e cria notificação, com valor que não corresponde
   [Fact]
   public void IsCnh_ShouldAddNotification_WhenValueNotIsCnh()
@@ -141,7 +141,7 @@ public class DocumentValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
-  
+
   // Teste para validar se o valor corresponde ao padrão e cria notificação, com valor que não corresponde
   [Fact]
   public void IsCpfRgCnh_ShouldAddNotification_WhenValueNotIsCpfRgCnh()
@@ -212,7 +212,7 @@ public class DocumentValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
-  
+
   // Teste para validar se o valor corresponde ao padrão e cria notificação, com valor que não corresponde
   [Fact]
   public void IsCpfCnpj_ShouldAddNotification_WhenValueNotIsCpfCnpj()

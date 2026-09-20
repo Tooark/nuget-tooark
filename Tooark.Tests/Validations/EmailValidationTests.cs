@@ -206,7 +206,7 @@ public class EmailValidationTests
     // Assert
     Assert.Empty(validation.Notifications);
   }
-  
+
   // Teste para validar se o valor corresponde ao padrão e cria notificação, com valor que não corresponde
   [Theory]
   [InlineData("teste@example.com")] // Email válido

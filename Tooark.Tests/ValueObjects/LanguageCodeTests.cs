@@ -26,7 +26,7 @@ public class LanguageCodeTests
   {
     // Arrange
     var expectedCode = codeParam[..2].ToLowerInvariant() + "-" + codeParam[3..].ToUpperInvariant();
-    
+
     // Act
     var languageCode = new LanguageCode(codeParam);
 

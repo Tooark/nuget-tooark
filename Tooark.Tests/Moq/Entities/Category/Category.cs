@@ -6,7 +6,7 @@ public class Category
   public string Type { get; set; } = null!;
   public string? Description { get; set; }
   public DateTime CreatedAt { get; set; }
-  
+
   public object Object { get; set; } = null!;
   public bool Boolean { get; set; } = false;
   public char Char { get; set; } = 'T';

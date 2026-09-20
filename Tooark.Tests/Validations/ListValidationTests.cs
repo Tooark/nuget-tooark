@@ -169,7 +169,7 @@ public class ListValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    
+
     // Act
     validation
       .AreEquals(_doubleValue, _singleValue, property)
@@ -188,7 +188,7 @@ public class ListValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    
+
     // Act
     validation
       .AreEquals(_singleValue, _singleValue, property)
@@ -206,7 +206,7 @@ public class ListValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    
+
     // Act
     validation
       .AreNotEquals(_singleValue, _singleValue, property)
@@ -225,7 +225,7 @@ public class ListValidationTests
     // Arrange
     var property = "TestProperty";
     var validation = new Validation();
-    
+
     // Act
     validation
       .AreNotEquals(_doubleValue, _singleValue, property)

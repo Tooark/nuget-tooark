@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using Moq;
 using Tooark.Dtos;
 using Tooark.Extensions.Factories;
 using Tooark.Injections;
-using Microsoft.Extensions.Options;
 using Tooark.Mediator.Abstractions;
 using Tooark.Mediator.Enums;
 using Tooark.Mediator.Handlers;

@@ -1,4 +1,4 @@
-﻿using Tooark.Validations.Messages;
+using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Validations;

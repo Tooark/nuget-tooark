@@ -73,7 +73,7 @@ public class RegexValidationTests
 
     // Assert
     Assert.Empty(validation.Notifications);
-  }  
+  }
 
   // Teste para validar se o valor corresponde ao padrão e cria notificação, com valor que não corresponde
   [Fact]

@@ -1,4 +1,4 @@
-﻿using Tooark.Validations.Messages;
+using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.Validations;
@@ -235,10 +235,11 @@ public partial class Validation
   /// <param name="property">Propriedade a ser validada.</param>
   /// <param name="message">Mensagem de erro.</param>
   /// <returns>Validação.</returns>
-  public Validation IsPassword(string value, int length, string property, string message) {
+  public Validation IsPassword(string value, int length, string property, string message)
+  {
     // Define o tamanho mínimo da senha.
     length = length < 8 ? 8 : length;
-    
+
     // Define a expressão regular para validação da senha.
     var pattern = RegexPattern.PassComplex.Replace(".{8,}", $".{{{length},}}");
 

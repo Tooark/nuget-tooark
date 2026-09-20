@@ -456,7 +456,7 @@ public class CryptographyServiceTests
     // Act & Assert - dados adulterados retornam sempre a mesma exceção (sem distinção de causa)
     var ex = Assert.Throws<BadRequestException>(() => service.Decrypt(tampered));
     Assert.Contains("Cryptography.InvalidCipherText", ex.GetErrorMessages());
-  }  
+  }
 
   #endregion
 

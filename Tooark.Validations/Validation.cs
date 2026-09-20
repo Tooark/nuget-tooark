@@ -1,4 +1,4 @@
-﻿using Tooark.Notifications;
+using Tooark.Notifications;
 
 namespace Tooark.Validations;
 

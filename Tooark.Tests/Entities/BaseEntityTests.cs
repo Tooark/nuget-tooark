@@ -26,7 +26,7 @@ public class BaseEntityTests
     Assert.NotEqual(Guid.Empty, entity.Id);
   }
 
-   // Teste se construtor com id atribui um Guid válido
+  // Teste se construtor com id atribui um Guid válido
   [Fact]
   public void Constructor_WithValidGuid_ShouldAssignGuid()
   {

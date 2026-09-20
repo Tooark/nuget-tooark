@@ -79,7 +79,7 @@ public class ValidationTests
     // Arrange
     var validNotification = new Validation();
     validNotification.IsTrue(true, "TestProperty");
-    
+
     var invalidNotification = new Validation();
     invalidNotification.IsTrue(false, "TestProperty");
 
@@ -98,9 +98,9 @@ public class ValidationTests
   public void Join_WithMultipleInvalidNotifications_AddsAllInvalidNotifications()
   {
     // Arrange
-     var invalidNotification1 = new Validation();
+    var invalidNotification1 = new Validation();
     invalidNotification1.IsTrue(false, "TestProperty");
-    
+
     var invalidNotification2 = new Validation();
     invalidNotification2.IsTrue(false, "TestProperty");
 
@@ -134,9 +134,9 @@ public class ValidationTests
   public void Join_WithAllValidNotifications_DoesNotAddAnyNotifications()
   {
     // Arrange
-     var validNotification1 = new Validation();
+    var validNotification1 = new Validation();
     validNotification1.IsTrue(true, "TestProperty");
-    
+
     var validNotification2 = new Validation();
     validNotification2.IsTrue(true, "TestProperty");
 

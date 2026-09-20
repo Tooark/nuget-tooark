@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Text.Json;
 using Tooark.Entities;
-using Tooark.Extensions;
 using Tooark.Exceptions;
+using Tooark.Extensions;
 using Tooark.ValueObjects;
 
 namespace Tooark.Tests.Entities;

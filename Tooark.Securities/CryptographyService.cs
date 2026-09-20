@@ -370,7 +370,7 @@ public class CryptographyService : ICryptographyService
     // Lê e retorna o texto plano descriptografado
     return sr.ReadToEnd();
   }
-  
+
   /// <summary>
   /// Deriva uma chave de 32 bytes (256 bits) a partir do segredo fornecido.
   /// </summary>
