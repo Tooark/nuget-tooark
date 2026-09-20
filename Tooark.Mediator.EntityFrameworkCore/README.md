@@ -1,32 +1,34 @@
 # Tooark.Mediator.EntityFrameworkCore
 
-Biblioteca que move a persistência do Entity Framework Core para o pipeline do `Tooark.Mediator`, mantendo os handlers livres de `SaveChanges`.
+Library that moves Entity Framework Core persistence into the `Tooark.Mediator` pipeline, keeping handlers free of `SaveChanges`.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.EntityFrameworkCore/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Configuração](#️-configuração)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-Cada handler de comando termina com `await context.SaveChangesAsync(...)`. Repetida em dezenas de handlers, a linha vira ruído — e esquecê-la produz um comando que "funciona" sem gravar nada.
+## Overview
 
-O pacote registra um behavior no pipeline do `Tooark.Mediator` que persiste as alterações uma única vez, ao final do comando:
+Every command handler ends with `await context.SaveChangesAsync(...)`. Repeated across dozens of handlers, the line becomes noise — and forgetting it produces a command that "works" without writing anything.
 
-- os handlers apenas descrevem as alterações no `DbContext`;
-- a persistência ocorre somente quando o pipeline conclui sem exceção;
-- consultas não passam pela persistência;
-- comandos aninhados participam da mesma unidade de trabalho.
+The package registers a behavior in the `Tooark.Mediator` pipeline that persists the changes once, at the end of the command:
+
+- handlers only describe the changes on the `DbContext`;
+- persistence happens only when the pipeline completes without an exception;
+- queries do not go through persistence;
+- nested commands take part in the same unit of work.
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Mediator.EntityFrameworkCore
@@ -34,7 +36,7 @@ dotnet add package Tooark.Mediator.EntityFrameworkCore
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
 ```csharp
 using Tooark.Mediator.EntityFrameworkCore.Injections;
@@ -46,7 +48,7 @@ builder.Services.AddTooarkMediator(typeof(Program).Assembly);
 builder.Services.AddTooarkMediatorUnitOfWork<AppDbContext>();
 ```
 
-Com transação explícita, para quando o handler persiste mais de uma vez ou combina o `DbContext` com outro recurso transacional:
+With an explicit transaction, for when the handler persists more than once or combines the `DbContext` with another transactional resource:
 
 ```csharp
 using Tooark.Mediator.EntityFrameworkCore.Enums;
@@ -54,46 +56,46 @@ using Tooark.Mediator.EntityFrameworkCore.Enums;
 builder.Services.AddTooarkMediatorUnitOfWork<AppDbContext>(EUnitOfWorkStrategy.Transaction);
 ```
 
-> **Ordem de registro**: o behavior ocupa a posição em que `AddTooarkMediatorUnitOfWork` é chamado, e os
-> behaviors do pipeline executam na ordem de registro. Registre a validação **antes** da unidade de
-> trabalho — não faz sentido preparar a persistência para em seguida rejeitar a requisição.
+> **Registration order**: the behavior takes the position where `AddTooarkMediatorUnitOfWork` is called, and
+> the pipeline behaviors run in registration order. Register validation **before** the unit of work — it
+> makes no sense to prepare persistence and then reject the request.
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
-### Estratégias de persistência
+### Persistence strategies
 
-| Estratégia    | Comportamento                                                                       |
-| ------------- | ----------------------------------------------------------------------------------- |
-| `SaveChanges` | Persiste ao final do comando, com a transação implícita do Entity Framework Core    |
-| `Transaction` | Executa o comando dentro de uma transação explícita, persistindo antes de confirmar |
+| Strategy      | Behavior                                                                              |
+| ------------- | ------------------------------------------------------------------------------------- |
+| `SaveChanges` | Persists at the end of the command, with Entity Framework Core's implicit transaction |
+| `Transaction` | Runs the command inside an explicit transaction, persisting before committing         |
 
-`SaveChanges` é o padrão e atende o caso comum: uma única chamada a `SaveChangesAsync` já é atômica, pois o Entity Framework Core envolve o lote em uma transação. A transação explícita só é necessária quando há mais de uma persistência no mesmo comando, ou quando o `DbContext` é combinado com outro recurso transacional.
+`SaveChanges` is the default and covers the common case: a single call to `SaveChangesAsync` is already atomic, since Entity Framework Core wraps the batch in a transaction. The explicit transaction is only needed when there is more than one persistence in the same command, or when the `DbContext` is combined with another transactional resource.
 
-Na estratégia `Transaction`, a transação é aberta dentro da estratégia de resiliência do provedor. Isso evita o erro que ocorre ao abrir transação explícita com retentativa configurada (`EnableRetryOnFailure`), mas implica que a operação pode ser executada mais de uma vez em caso de falha transitória — o handler precisa ser idempotente.
+In the `Transaction` strategy, the transaction is opened inside the provider's resiliency strategy. That avoids the error that occurs when opening an explicit transaction with retries configured (`EnableRetryOnFailure`), but it means the operation may run more than once on a transient failure — the handler must be idempotent.
 
-### Injeção de dependência
+### Dependency injection
 
 - `TooarkDependencyInjection.AddTooarkMediatorUnitOfWork<TContext>(IServiceCollection, EUnitOfWorkStrategy)`
 
-### Abstração
+### Abstraction
 
-- `IUnitOfWork` (`Tooark.Mediator.EntityFrameworkCore.Interfaces`): expõe `SaveChangesAsync` e `ExecuteInTransactionAsync`, sem tipos do Entity Framework, permitindo substituir a implementação em testes.
+- `IUnitOfWork` (`Tooark.Mediator.EntityFrameworkCore.Interfaces`): exposes `SaveChangesAsync` and `ExecuteInTransactionAsync`, with no Entity Framework types, allowing the implementation to be replaced in tests.
 
-### Comportamento com comandos aninhados
+### Behavior with nested commands
 
-Um comando despachado de dentro de outro comando participa da unidade de trabalho já iniciada: apenas o comando mais externo persiste. Sem esse controle, o comando interno gravaria no meio da operação do externo, e uma falha posterior deixaria o banco em estado parcial.
+A command dispatched from within another command takes part in the unit of work already started: only the outermost command persists. Without that control, the inner command would write in the middle of the outer one's operation, and a later failure would leave the database in a partial state.
 
-### Comportamento com notificações
+### Behavior with notifications
 
-Notificações não passam pelo pipeline: os handlers delas executam dentro do handler do comando, portanto **antes** da persistência. O que escreverem no `DbContext` é gravado junto, na mesma unidade de trabalho.
+Notifications do not go through the pipeline: their handlers run inside the command handler, therefore **before** persistence. Whatever they write to the `DbContext` is saved together, in the same unit of work.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Handler sem persistência
+### Handler without persistence
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -109,13 +111,13 @@ public sealed class CreateProductHandler(AppDbContext context) : ICommandHandler
 
     context.Products.Add(product);
 
-    // Sem SaveChanges: a persistência é responsabilidade do pipeline
+    // No SaveChanges: persistence is the pipeline's responsibility
     return Task.FromResult(product.Id);
   }
 }
 ```
 
-### Consulta, que não passa pela persistência
+### Query, which does not go through persistence
 
 ```csharp
 public sealed record CountProducts : IQuery<int>;
@@ -129,9 +131,9 @@ public sealed class CountProductsHandler(AppDbContext context) : IQueryHandler<C
 }
 ```
 
-O behavior é restrito a `ICommand<TResponse>`, então o container o ignora ao despachar a consulta — sem verificação de tipo em tempo de execução.
+The behavior is constrained to `ICommand<TResponse>`, so the container skips it when dispatching the query — with no runtime type check.
 
-### Pipeline completo
+### Full pipeline
 
 ```csharp
 builder.Services.AddTooarkMediator(typeof(Program).Assembly);
@@ -140,30 +142,30 @@ builder.Services.AddTooarkMediatorBehavior(typeof(ValidationBehavior<,>));
 builder.Services.AddTooarkMediatorUnitOfWork<AppDbContext>();
 ```
 
-Do mais externo para o mais interno: log, validação, unidade de trabalho e, por último, o handler.
+From outermost to innermost: logging, validation, unit of work and, last, the handler.
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                                                                                          | Versão   | Uso                                 |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------- |
-| [`Tooark.Mediator`](https://www.nuget.org/packages/Tooark.Mediator)                                                                             | 4.x      | Pipeline de behaviors e registro    |
-| [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Contratos de mensagens (`ICommand`) |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Erros de configuração               |
-| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Contexto, persistência e transações |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container               |
+| Package                                                                                                                                         | Version  | Usage                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
+| [`Tooark.Mediator`](https://www.nuget.org/packages/Tooark.Mediator)                                                                             | 4.x      | Behavior pipeline and registration    |
+| [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Message contracts (`ICommand`)        |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Configuration errors                  |
+| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Context, persistence and transactions |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                |
 
-O pacote integra o agregador `Tooark`, então quem instala `Tooark` já o recebe.
-
----
-
-## 🪪 Contribuição
-
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Mediator.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/issues).
+The package is part of the `Tooark` aggregator, so whoever installs `Tooark` already gets it.
 
 ---
 
-## 📄 Licença
+## 🪪 Contributing
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Mediator.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/issues) repository.
+
+---
+
+## 📄 License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

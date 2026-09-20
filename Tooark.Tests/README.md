@@ -1,58 +1,60 @@
 # Tooark.Tests
 
-Suíte de testes de todos os pacotes Tooark. Não é publicada no nuget.org (`IsPackable=false`).
+Test suite of every Tooark package. It is not published to nuget.org (`IsPackable=false`).
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Tests/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Executando](#️-executando)
-- [Cobertura](#-cobertura)
-- [Organização](#-organização)
-- [Convenções](#️-convenções)
-- [Recursos Compartilhados](#-recursos-compartilhados)
-- [Testes Sensíveis a Estado Global](#️-testes-sensíveis-a-estado-global)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Running](#️-running)
+- [Coverage](#-coverage)
+- [Organization](#-organization)
+- [Conventions](#️-conventions)
+- [Shared Resources](#-shared-resources)
+- [Tests Sensitive to Global State](#️-tests-sensitive-to-global-state)
 
-Um único projeto cobre todos os pacotes, com uma pasta por pacote. Ele referencia o agregador
-`Tooark` e o `Tooark.AspNetCore`, então alcança toda a superfície pública sem uma referência por
-pacote.
+## Overview
 
-Os testes rodam nos **dois alvos** do repositório, `net8.0` e `net10.0`. Um teste que passe em um e
-falhe no outro indica diferença de comportamento entre os runtimes, e não um teste instável.
+A single project covers every package, with one folder per package. It references the `Tooark`
+aggregator and `Tooark.AspNetCore`, so it reaches the whole public surface without one reference per
+package.
+
+The tests run on the repository's **two targets**, `net8.0` and `net10.0`. A test that passes on one
+and fails on the other points to a behavior difference between the runtimes, not to a flaky test.
 
 ---
 
-## ▶️ Executando
+## ▶️ Running
 
 ```bash
-# Todos os alvos
+# Every target
 dotnet test Tooark.Tests/Tooark.Tests.csproj
 
-# Um alvo só, durante o desenvolvimento
+# A single target, during development
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0
 
-# Um pacote só
+# A single package
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
 
-# Um teste só
+# A single test
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Equals_ShouldBeFalse_WhenTypesDiffer"
 ```
 
 ---
 
-## 📊 Cobertura
+## 📊 Coverage
 
-### Tabela no console
+### Table in the console
 
 ```bash
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
 ```
 
-Sai uma linha por pacote, com linhas, branches e métodos, mais o total e a média ao final. É o
-suficiente para o dia a dia.
+Prints one line per package, with lines, branches and methods, plus the total and the average at the
+end. It is enough for day-to-day work.
 
-### Detalhe por linha e por branch
+### Detail per line and per branch
 
 ```bash
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
@@ -61,20 +63,20 @@ dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
   -p:CoverletOutput=cobertura/
 ```
 
-O JSON traz o detalhe necessário para descobrir **qual** caminho falta — escrever teste a partir da
-lacuna medida rende mais do que a partir de suposição.
+The JSON carries the detail needed to find out **which** path is missing — writing a test from the
+measured gap pays more than writing it from a guess.
 
-Dois detalhes do coverlet que costumam confundir:
+Two coverlet details that tend to confuse:
 
-- o caminho relativo é resolvido a partir do diretório de onde o comando roda, e não do projeto de
-  teste. Use caminho absoluto quando o destino importar;
-- o nome do arquivo recebe o alvo, porque o projeto é multi-alvo: sai `coverage.net10.0.json`, e não
-  `coverage.json`.
+- the relative path is resolved from the directory the command runs in, not from the test project.
+  Use an absolute path when the destination matters;
+- the file name gets the target, because the project is multi-targeted: it comes out as
+  `coverage.net10.0.json`, not `coverage.json`.
 
-### Relatório HTML
+### HTML report
 
-O `ReportGenerator` já é dependência do projeto. Gere a cobertura no formato `cobertura` e aponte o
-relatório para ela:
+`ReportGenerator` is already a dependency of the project. Generate the coverage in the `cobertura`
+format and point the report at it:
 
 ```bash
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
@@ -88,61 +90,60 @@ reportgenerator \
   -reporttypes:Html
 ```
 
-Abra `cobertura/html/index.html`. Cada tipo ganha uma página com o código-fonte marcando linha
-coberta, linha descoberta e branch parcialmente coberta — é a forma mais rápida de ver o caminho que
-falta.
+Open `cobertura/html/index.html`. Every type gets a page with the source code marking covered lines,
+uncovered lines and partially covered branches — it is the fastest way to see the missing path.
 
-O comando `reportgenerator` vem da ferramenta global:
+The `reportgenerator` command comes from the global tool:
 
 ```bash
 dotnet tool install -g dotnet-reportgenerator-globaltool
 ```
 
-Sem instalá-la, chame o executável que já veio com o pacote, em
-`~/.nuget/packages/reportgenerator/<versão>/tools/net10.0/ReportGenerator.exe`.
+Without installing it, call the executable that already came with the package, at
+`~/.nuget/packages/reportgenerator/<version>/tools/net10.0/ReportGenerator.exe`.
 
-### Meta
+### Goal
 
-100% de linhas, branches e métodos nos pacotes revisados. Onde não foi possível, o motivo fica
-registrado nas notas da versão, em `Notes/`.
+100% of lines, branches and methods on the reviewed packages. Where that was not possible, the reason
+is recorded in the release notes, under `Notes/`.
 
-## 📁 Organização
+## 📁 Organization
 
-Uma pasta por pacote, espelhando a estrutura do projeto testado:
+One folder per package, mirroring the structure of the package under test:
 
-| Pasta            | Pacote testado                                              |
-| ---------------- | ----------------------------------------------------------- |
-| `AspNetCore/`    | `Tooark.AspNetCore`                                         |
-| `Attributes/`    | `Tooark.Attributes`                                         |
-| `Dtos/`          | `Tooark.Dtos`                                               |
-| `Entities/`      | `Tooark.Entities`                                           |
-| `Enums/`         | `Tooark.Enums`                                              |
-| `Exceptions/`    | `Tooark.Exceptions`                                         |
-| `Extensions/`    | `Tooark.Extensions`                                         |
-| `Injections/`    | `Tooark` (o agregador)                                      |
-| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore` |
-| `Notifications/` | `Tooark.Notifications`                                      |
-| `Observability/` | `Tooark.Observability`                                      |
-| `Securities/`    | `Tooark.Securities`                                         |
-| `Utils/`         | `Tooark.Utils`                                              |
-| `Validations/`   | `Tooark.Validations`                                        |
-| `ValueObjects/`  | `Tooark.ValueObjects`                                       |
+| Folder           | Package under test                                             |
+| ---------------- | -------------------------------------------------------------- |
+| `AspNetCore/`    | `Tooark.AspNetCore`                                            |
+| `Attributes/`    | `Tooark.Attributes`                                            |
+| `Dtos/`          | `Tooark.Dtos`                                                  |
+| `Entities/`      | `Tooark.Entities`                                              |
+| `Enums/`         | `Tooark.Enums`                                                 |
+| `Exceptions/`    | `Tooark.Exceptions`                                            |
+| `Extensions/`    | `Tooark.Extensions`                                            |
+| `Injections/`    | `Tooark` (the aggregator)                                      |
+| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` and `.EntityFrameworkCore`  |
+| `Notifications/` | `Tooark.Notifications`                                         |
+| `Observability/` | `Tooark.Observability`                                         |
+| `Securities/`    | `Tooark.Securities` and `Tooark.Securities.OpenId` (`OpenId/`) |
+| `Utils/`         | `Tooark.Utils`                                                 |
+| `Validations/`   | `Tooark.Validations`                                           |
+| `ValueObjects/`  | `Tooark.ValueObjects`                                          |
 
-Duas pastas não contêm testes:
+Two folders hold no tests:
 
-- **`Moq/`** — dublês compartilhados: entidades de exemplo, DTOs e utilitários usados por mais de um
-  arquivo de teste. Um dublê usado em dois lugares mora aqui, não duplicado em cada um.
-- **`Resources/`** — arquivos `{idioma}.json` que exercitam a **sobrescrita do consumidor** sobre as
-  traduções embutidas no `Tooark.Extensions`. Não confundir com os `{idioma}.default.json` do
-  pacote, que vão embutidos no assembly e são lidos pelo manifesto.
+- **`Moq/`** — shared test doubles: sample entities, DTOs and utilities used by more than one test
+  file. A double used in two places lives here, not duplicated in each one.
+- **`Resources/`** — `{language}.json` files that exercise the **consumer override** over the
+  translations embedded in `Tooark.Extensions`. Not to be confused with the package's
+  `{language}.default.json`, which are embedded in the assembly and read from the manifest.
 
 ---
 
-## ✏️ Convenções
+## ✏️ Conventions
 
-### Nome do teste
+### Test name
 
-`Metodo_Deve_Quando`, em inglês, com o "quando" apenas onde há condição a distinguir:
+`Method_Should_When`, in English, with the "when" only where there is a condition to distinguish:
 
 ```csharp
 SetUpdatedBy_ShouldIncrementVersion_WhenCalledThroughBaseReference
@@ -150,10 +151,10 @@ Equals_ShouldBeFalse_WhenTypesDiffer
 Value_ShouldReturnUnit
 ```
 
-### Comentário de intenção
+### Intent comment
 
-**Todo teste tem um comentário imediatamente acima do atributo**, dizendo o que se verifica e, quando
-o teste nasceu de um defeito, por que ele existe. O nome diz o quê; o comentário diz por quê:
+**Every test has a comment right above the attribute**, saying what is verified and, when the test was
+born from a defect, why it exists. The name says what; the comment says why:
 
 ```csharp
 // Testa se SetUpdatedBy incrementa a versão quando chamado por referência de DetailedEntity.
@@ -162,12 +163,13 @@ o teste nasceu de um defeito, por que ele existe. O nome diz o quê; o comentár
 public void SetUpdatedBy_ShouldIncrementVersion_WhenCalledThroughBaseReference()
 ```
 
-Comentário que apenas repete o nome do teste não acrescenta nada. O que vale registrar é o defeito
-que o teste impede de voltar, ou a razão não óbvia de a asserção ser aquela.
+A comment that merely repeats the test name adds nothing. What is worth recording is the defect the test
+keeps from coming back, or the non-obvious reason for the assertion being what it is. Comments are
+written in Portuguese, the project's working language.
 
 ### Arrange / Act / Assert
 
-As três seções são marcadas por comentário, e as etapas que se fundem aparecem juntas
+The three sections are marked by comment, and steps that merge appear together
 (`// Arrange & Act & Assert`):
 
 ```csharp
@@ -175,53 +177,54 @@ As três seções são marcadas por comentário, e as etapas que se fundem apare
 public void SetDeleted_ShouldRecordWhoChanged()
 {
   // Arrange
-  var entidade = new Auditavel(Guid.NewGuid());
-  var autor = Guid.NewGuid();
+  var entity = new Auditable(Guid.NewGuid());
+  var author = Guid.NewGuid();
 
   // Act
-  entidade.SetDeleted(new DeletedBy(autor));
+  entity.SetDeleted(new DeletedBy(author));
 
   // Assert
-  Assert.Equal(autor, entidade.UpdatedById);
+  Assert.Equal(author, entity.UpdatedById);
 }
 ```
 
-### Token de cancelamento
+### Cancellation token
 
-Chamadas assíncronas usam `TestContext.Current.CancellationToken`, para o cancelamento da execução
-chegar ao teste (regra `xUnit1051`, tratada como erro).
+Asynchronous calls use `TestContext.Current.CancellationToken`, so that cancelling the run reaches the
+test (rule `xUnit1051`, treated as an error).
 
-### Teste de revisão
+### Review tests
 
-Cada revisão de pacote da v4.0.0 deixou um arquivo `{Pacote}ReviewTests.cs` com os testes dos
-defeitos corrigidos. Eles ficam separados dos testes originais de propósito: agrupam o que não pode
-regredir, com o contexto do defeito no comentário.
-
----
-
-## 🔁 Recursos Compartilhados
-
-Antes de declarar um dublê dentro do arquivo de teste, verifique se ele já existe em `Moq/`. O
-`TestException` chegou a existir em quinze cópias idênticas, uma por arquivo de teste de exceção,
-até ser consolidado em `Moq/Notifications/`.
-
-Um dublê usado por um único arquivo pode continuar nele, como classe aninhada privada — o custo de
-compartilhar só compensa a partir do segundo uso.
+Each package review of v4.0.0 left a `{Package}ReviewTests.cs` file with the tests of the fixed
+defects. They are kept apart from the original tests on purpose: they group what must not regress,
+with the defect's context in the comment.
 
 ---
 
-## ⚠️ Testes Sensíveis a Estado Global
+## 🔁 Shared Resources
 
-A cultura corrente é estado de processo. Testes que a alteram precisam da coleção
-`CultureSensitive`, definida em `CultureSensitiveCollection.cs`:
+Before declaring a double inside the test file, check whether it already exists in `Moq/`. The
+`TestException` once existed in fifteen identical copies, one per exception test file, until it was
+consolidated in `Moq/Notifications/`.
+
+A double used by a single file can stay in it, as a private nested class — sharing only pays off from
+the second use on.
+
+---
+
+## ⚠️ Tests Sensitive to Global State
+
+The current culture is process state. Tests that change it need the `CultureSensitive` collection,
+defined in `CultureSensitiveCollection.cs`:
 
 ```csharp
 [Collection("CultureSensitive")]
-public class MeuTeste
+public class MyTest
 ```
 
-A coleção tem `DisableParallelization`, e roda em fase isolada. Sem isso, um teste que troca a
-cultura corre em paralelo com outro que a lê, e a falha aparece de forma intermitente — o que piora
-quando os dois alvos, `net8.0` e `net10.0`, disputam CPU na mesma máquina.
+The collection has `DisableParallelization`, and runs in an isolated phase. Without it, a test that
+switches the culture runs in parallel with another that reads it, and the failure shows up
+intermittently — which gets worse when the two targets, `net8.0` and `net10.0`, compete for CPU on the
+same machine.
 
-O mesmo cuidado vale para qualquer outro estado compartilhado de processo que venha a ser exercitado.
+The same care applies to any other shared process state that comes to be exercised.

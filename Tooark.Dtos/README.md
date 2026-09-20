@@ -1,33 +1,35 @@
 # Tooark.Dtos
 
-Biblioteca para gerenciamento e manutenção de DTOs base em projetos .NET.
+Library for managing and maintaining base DTOs in .NET projects.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Dtos/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Configuração](#️-configuração)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-O pacote `Tooark.Dtos` fornece:
+## Overview
 
-- DTOs de busca e paginação para endpoints de listagem;
-- uma resposta padrão com dados, erros, paginação e metadados;
-- tradução automática das chaves de erro produzidas pelas validações do Tooark;
-- limite de tamanho de página, para que uma requisição não possa pedir todos os registros.
+The `Tooark.Dtos` package provides:
 
-> **Requisito de runtime**: `SearchDto`, `PaginationDto` e `ResponseDto` usam tipos do MVC, do `Http` e do
-> `WebUtilities`, então o pacote exige o runtime do ASP.NET Core instalado. É o esperado para DTOs de API.
+- search and pagination DTOs for listing endpoints;
+- a standard response with data, errors, pagination and metadata;
+- automatic translation of the error keys produced by the Tooark validations;
+- a page size limit, so that a request cannot ask for every record.
+
+> **Runtime requirement**: `SearchDto`, `PaginationDto` and `ResponseDto` use MVC, `Http` and `WebUtilities`
+> types, so the package requires the ASP.NET Core runtime to be installed. That is expected for API DTOs.
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Dtos
@@ -35,13 +37,13 @@ dotnet add package Tooark.Dtos
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-A tradução das mensagens **não exige configuração**: o `ResponseDto` resolve o idioma pelo fluxo de execução
-da requisição e lê as traduções dos arquivos distribuídos com o
+Message translation **requires no configuration**: `ResponseDto` resolves the language from the request's
+execution flow and reads the translations from the files shipped with
 [`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions).
 
-O registro abaixo existe para a aplicação poder injetar `IStringLocalizer` nos próprios tipos:
+The registration below exists so the application can inject `IStringLocalizer` into its own types:
 
 ```csharp
 using Tooark.Dtos.Injections;
@@ -49,135 +51,134 @@ using Tooark.Dtos.Injections;
 builder.Services.AddTooarkDtos();
 ```
 
-Para acrescentar ou sobrescrever traduções, coloque um `Resources/{idioma}.json` na saída da aplicação.
+To add or override translations, place a `Resources/{language}.json` in the application output.
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
 ### Dto
 
-Classe base dos DTOs que produzem mensagens traduzidas. Não tem membros públicos: serve para o
-`ResponseDto` e o `SearchDto` compartilharem o localizador.
+Base class of the DTOs that produce translated messages. It has no public members: it exists so that
+`ResponseDto` and `SearchDto` share the localizer.
 
 ### SearchDto
 
-Parâmetros de busca com paginação.
+Search parameters with pagination.
 
-| Membro               | Tipo         | Descrição                                                                          |
-| -------------------- | ------------ | ---------------------------------------------------------------------------------- |
-| `Search`             | `string?`    | Informação a ser procurada. Padrão: nulo                                           |
-| `SearchNormalized`   | `string?`    | `Search` normalizado, calculado uma vez por valor. Não é vinculado nem serializado |
-| `PageIndex`          | `long`       | Índice da página, começando em 1. Valor menor assume 1. Padrão: 1                  |
-| `PageIndexLogical`   | `long`       | `PageIndex` menos um, para uso direto em `Skip`. Não é vinculado nem serializado   |
-| `PageSize`           | `long`       | Tamanho da página. Negativo assume 0, que significa ignorar o tamanho. Padrão: 10  |
-| `PageSizeMax`        | `long`       | `protected virtual`. Teto do `PageSize`. Padrão: `DefaultPageSizeMax`              |
-| `DefaultPageSizeMax` | `const long` | Teto padrão: 100                                                                   |
+| Member               | Type         | Description                                                                   |
+| -------------------- | ------------ | ----------------------------------------------------------------------------- |
+| `Search`             | `string?`    | Information to look for. Default: null                                        |
+| `SearchNormalized`   | `string?`    | Normalized `Search`, computed once per value. Neither bound nor serialized    |
+| `PageIndex`          | `long`       | Page index, starting at 1. A smaller value assumes 1. Default: 1              |
+| `PageIndexLogical`   | `long`       | `PageIndex` minus one, for direct use in `Skip`. Neither bound nor serialized |
+| `PageSize`           | `long`       | Page size. Negative assumes 0, which means ignoring the size. Default: 10     |
+| `PageSizeMax`        | `long`       | `protected virtual`. Ceiling of `PageSize`. Default: `DefaultPageSizeMax`     |
+| `DefaultPageSizeMax` | `const long` | Default ceiling: 100                                                          |
 
 ### SearchOrderDto
 
-Herda de `SearchDto` e acrescenta ordenação.
+Inherits from `SearchDto` and adds ordering.
 
-| Membro     | Tipo      | Descrição                                   |
-| ---------- | --------- | ------------------------------------------- |
-| `OrderBy`  | `string?` | Nome da coluna a ordenar                    |
-| `OrderAsc` | `bool`    | Crescente quando verdadeiro. Padrão: `true` |
+| Member     | Type      | Description                          |
+| ---------- | --------- | ------------------------------------ |
+| `OrderBy`  | `string?` | Name of the column to order by       |
+| `OrderAsc` | `bool`    | Ascending when true. Default: `true` |
 
 ### PaginationDto
 
-Total de registros e navegação entre páginas. Todas as propriedades são somente leitura.
+Record total and navigation between pages. Every property is read-only.
 
-| Membro                                      | Tipo      | Descrição                                              |
-| ------------------------------------------- | --------- | ------------------------------------------------------ |
-| `Total`                                     | `long`    | Total de registros                                     |
-| `PageSize` / `PageIndex`                    | `long`    | Tamanho e índice da página                             |
-| `Previous` / `Next`                         | `long?`   | Índices das páginas vizinhas, nulos quando não existem |
-| `CurrentLink` / `PreviousLink` / `NextLink` | `string?` | URLs correspondentes                                   |
+| Member                                      | Type      | Description                                        |
+| ------------------------------------------- | --------- | -------------------------------------------------- |
+| `Total`                                     | `long`    | Total records                                      |
+| `PageSize` / `PageIndex`                    | `long`    | Page size and index                                |
+| `Previous` / `Next`                         | `long?`   | Indexes of the neighboring pages, null when absent |
+| `CurrentLink` / `PreviousLink` / `NextLink` | `string?` | Corresponding URLs                                 |
 
 ### ResponseDto&lt;T&gt;
 
-Resposta padrão de API.
+Standard API response.
 
-| Membro                                          | Tipo                         | Descrição                                       |
-| ----------------------------------------------- | ---------------------------- | ----------------------------------------------- |
-| `Data`                                          | `T?`                         | Dados da resposta                               |
-| `Errors`                                        | `IReadOnlyList<string>`      | Mensagens de erro, já traduzidas                |
-| `Pagination`                                    | `PaginationDto?`             | Dados de paginação                              |
-| `Metadata`                                      | `IReadOnlyList<MetadataDto>` | Metadados                                       |
-| `SetPagination` / `SetMetadata` / `AddMetadata` |                              | Definem paginação e metadados após a construção |
+| Member                                          | Type                         | Description                                    |
+| ----------------------------------------------- | ---------------------------- | ---------------------------------------------- |
+| `Data`                                          | `T?`                         | Response data                                  |
+| `Errors`                                        | `IReadOnlyList<string>`      | Error messages, already translated             |
+| `Pagination`                                    | `PaginationDto?`             | Pagination data                                |
+| `Metadata`                                      | `IReadOnlyList<MetadataDto>` | Metadata                                       |
+| `SetPagination` / `SetMetadata` / `AddMetadata` |                              | Set pagination and metadata after construction |
 
-`Errors` e `Metadata` são coleções somente leitura: convertê-las para `IList` compila, mas alterá-las lança
-`NotSupportedException`. Use `SetMetadata` ou `AddMetadata`.
+`Errors` and `Metadata` are read-only collections: casting them to `IList` compiles, but changing them throws
+`NotSupportedException`. Use `SetMetadata` or `AddMetadata`.
 
 ### MetadataDto
 
-Par chave/valor. Chave e valor são independentes — informar um como nulo resulta em string vazia, sem
-descartar o outro.
+Key/value pair. Key and value are independent — passing one as null results in an empty string, without
+discarding the other.
 
-### Limite de tamanho de página
+### Page size limit
 
-Sem um teto, uma única requisição poderia pedir todos os registros. O `PageSize` é limitado a
-`DefaultPageSizeMax`, que vale 100. Um endpoint que precise de páginas maiores sobrescreve o limite no
-próprio DTO:
+Without a ceiling, a single request could ask for every record. `PageSize` is limited to
+`DefaultPageSizeMax`, which is 100. An endpoint that needs larger pages overrides the limit in its own DTO:
 
 ```csharp
-public sealed class RelatorioSearchDto : SearchDto
+public sealed class ReportSearchDto : SearchDto
 {
   protected override long PageSizeMax => 5000;
 }
 ```
 
-Use a forma de expressão. Uma propriedade automática com inicializador não serve: o limite é consultado pelo
-construtor da classe base, que roda antes dos inicializadores da classe derivada.
+Use the expression-bodied form. An auto-property with an initializer does not work: the limit is read by
+the base class constructor, which runs before the derived class initializers.
 
-### Links de paginação
+### Pagination links
 
-Os links reaproveitam a query string da requisição, trocando apenas o `PageIndex`, para que os filtros do
-endpoint sigam valendo na navegação.
+The links reuse the request's query string, replacing only `PageIndex`, so that the endpoint's filters keep
+applying while navigating.
 
-Duas consequências que valem conhecer:
+Two consequences worth knowing:
 
-- **Todo parâmetro da requisição aparece no corpo da resposta.** Não trafegue credenciais na query string —
-  elas voltariam nos links e daí para logs, cache e histórico do navegador.
-- **Os links não são um controle de acesso.** Quem consegue chamar uma página consegue chamar as outras
-  editando a URL, e o `Total` já informa quantas existem. Contra coleta em massa, o que vale é o teto de
-  `PageSize`, o limite de taxa e a autorização — não esconder os links.
+- **Every request parameter shows up in the response body.** Do not send credentials in the query string —
+  they would come back in the links and from there into logs, caches and browser history.
+- **The links are not an access control.** Whoever can call one page can call the others by editing the URL,
+  and `Total` already says how many exist. Against mass harvesting, what counts is the `PageSize` ceiling,
+  rate limiting and authorization — not hiding the links.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Busca com paginação
+### Search with pagination
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Tooark.Dtos;
 
 [HttpGet]
-public async Task<IActionResult> Listar([FromQuery] SearchDto filtro)
+public async Task<IActionResult> List([FromQuery] SearchDto filter)
 {
-  var query = _context.Pessoas.AsQueryable();
+  var query = _context.People.AsQueryable();
 
-  if (!string.IsNullOrEmpty(filtro.SearchNormalized))
+  if (!string.IsNullOrEmpty(filter.SearchNormalized))
   {
-    query = query.Where(p => p.NomeNormalizado.Contains(filtro.SearchNormalized));
+    query = query.Where(p => p.NormalizedName.Contains(filter.SearchNormalized));
   }
 
   var total = await query.LongCountAsync();
 
-  var pessoas = await query
-    .Skip((int)(filtro.PageIndexLogical * filtro.PageSize))
-    .Take((int)filtro.PageSize)
+  var people = await query
+    .Skip((int)(filter.PageIndexLogical * filter.PageSize))
+    .Take((int)filter.PageSize)
     .ToListAsync();
 
-  var resposta = new ResponseDto<List<Pessoa>>(pessoas);
-  resposta.SetPagination(new PaginationDto(total, filtro, Request));
+  var response = new ResponseDto<List<Person>>(people);
+  response.SetPagination(new PaginationDto(total, filter, Request));
 
-  return Ok(resposta);
+  return Ok(response);
 }
 ```
 
-A resposta:
+The response:
 
 ```json
 {
@@ -189,98 +190,98 @@ A resposta:
     "pageIndex": 9,
     "previous": 8,
     "next": 10,
-    "currentLink": "https://api.exemplo.com/pessoas?PageIndex=9&PageSize=10",
-    "previousLink": "https://api.exemplo.com/pessoas?PageIndex=8&PageSize=10",
-    "nextLink": "https://api.exemplo.com/pessoas?PageIndex=10&PageSize=10"
+    "currentLink": "https://api.example.com/people?PageIndex=9&PageSize=10",
+    "previousLink": "https://api.example.com/people?PageIndex=8&PageSize=10",
+    "nextLink": "https://api.example.com/people?PageIndex=10&PageSize=10"
   },
   "metadata": []
 }
 ```
 
-> **Não chame o parâmetro de `search`.** O `SearchDto` tem uma propriedade `Search`, e o ASP.NET Core emite
-> o aviso `MVC1004` quando o nome do parâmetro coincide com o de uma propriedade do tipo vinculado, porque a
-> resolução de prefixo fica ambígua. Qualquer outro nome resolve.
+> **Do not name the parameter `search`.** `SearchDto` has a `Search` property, and ASP.NET Core emits the
+> `MVC1004` warning when the parameter name matches a property of the bound type, because prefix resolution
+> becomes ambiguous. Any other name works.
 
-### Busca com ordenação
+### Search with ordering
 
 ```csharp
 using Tooark.Dtos;
 
 [HttpGet]
-public IActionResult Listar([FromQuery] SearchOrderDto filtro)
+public IActionResult List([FromQuery] SearchOrderDto filter)
 {
-  var query = _context.Pessoas.OrderByProperty(filtro.OrderBy ?? nameof(Pessoa.Nome));
+  var query = _context.People.OrderByProperty(filter.OrderBy ?? nameof(Person.Name));
 
   // ...
 }
 ```
 
-### Resposta com erros de validação
+### Response with validation errors
 
 ```csharp
 using Tooark.Dtos;
 
-var pessoa = new Pessoa(nome, email);
+var person = new Person(name, email);
 
-// A notificação inválida vira a lista de erros, já traduzida
-if (!pessoa.IsValid)
+// The invalid notification becomes the error list, already translated
+if (!person.IsValid)
 {
-  // ["O campo Nome é obrigatório"]
-  return BadRequest(new ResponseDto<Pessoa>(pessoa));
+  // ["The Name field is required"]
+  return BadRequest(new ResponseDto<Person>(person));
 }
 ```
 
-Com o código do erro na frente da mensagem:
+With the error code in front of the message:
 
 ```csharp
-// ["T.VLD.STR5: O campo Nome é obrigatório"]
-return BadRequest(new ResponseDto<Pessoa>(pessoa.Notification, withCode: true));
+// ["T.VLD.STR5: The Name field is required"]
+return BadRequest(new ResponseDto<Person>(person.Notification, withCode: true));
 ```
 
-### Endpoint com página maior
+### Endpoint with a larger page
 
 ```csharp
 using Tooark.Dtos;
 
-public sealed class ExportacaoSearchDto : SearchDto
+public sealed class ExportSearchDto : SearchDto
 {
   protected override long PageSizeMax => 5000;
 }
 
-[HttpGet("exportacao")]
-public IActionResult Exportar([FromQuery] ExportacaoSearchDto filtro)
+[HttpGet("export")]
+public IActionResult Export([FromQuery] ExportSearchDto filter)
 {
-  // filtro.PageSize aceita até 5000 neste endpoint
+  // filter.PageSize accepts up to 5000 in this endpoint
 }
 ```
 
-### Metadados
+### Metadata
 
 ```csharp
 using Tooark.Dtos;
 
-var resposta = new ResponseDto<List<Pessoa>>(pessoas);
+var response = new ResponseDto<List<Person>>(people);
 
-resposta.AddMetadata(new MetadataDto("versao", "2024-01"));
-resposta.SetMetadata([new MetadataDto("origem", "cache")]);
+response.AddMetadata(new MetadataDto("version", "2024-01"));
+response.SetMetadata([new MetadataDto("source", "cache")]);
 ```
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                                                          | Versão   | Descrição                                         |
-| --------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens e normalização da busca |
-| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications)                                   | 4.x      | Notificações que viram os erros da resposta       |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `HttpRequest`, `QueryHelpers` e `BindNever`       |
+| Package                                                                                                  | Version  | Description                                   |
+| -------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------- |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Message localization and search normalization |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications)                            | 4.x      | Notifications that become the response errors |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `HttpRequest`, `QueryHelpers` and `BindNever` |
 
 ---
 
-## 🪪 Contribuição
+## 🪪 Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Dtos](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Dtos](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

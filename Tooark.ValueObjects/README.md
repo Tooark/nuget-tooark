@@ -1,45 +1,47 @@
 # Tooark.ValueObjects
 
-Biblioteca de objetos de valor que validam a si mesmos na construção, para projetos .NET.
+Library of value objects that validate themselves on construction, for .NET projects.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.ValueObjects/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Configuração](#️-configuração)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-O pacote `Tooark.ValueObjects` fornece:
+## Overview
 
-- 33 objetos de valor que validam a si mesmos na construção, sem lançar exceção;
-- notificações traduzidas em vez de exceções, herdadas de `Notification`;
-- conversão implícita nos dois sentidos, para o tipo se comportar como o valor que representa;
-- documentos brasileiros com conferência de dígito verificador: CPF, CNPJ, RG e CNH.
+The `Tooark.ValueObjects` package provides:
 
-**Como funciona.** Um objeto de valor nunca lança por dado inválido: ele nasce com notificações. Quem
-recebe consulta `IsValid` antes de usar o valor.
+- 33 value objects that validate themselves on construction, without throwing;
+- translated notifications instead of exceptions, inherited from `Notification`;
+- implicit conversion in both directions, so the type behaves like the value it represents;
+- Brazilian documents with check digit verification: CPF, CNPJ, RG and CNH.
+
+**How it works.** A value object never throws for invalid data: it is born with notifications. Whoever
+receives it checks `IsValid` before using the value.
 
 ```csharp
 var cpf = new Cpf("111.111.111-11");
 
 cpf.IsValid       // false
-cpf.Number        // "" — objeto inválido não carrega valor
-cpf.Notifications // as mensagens do que falhou
+cpf.Number        // "" — an invalid object carries no value
+cpf.Notifications // the messages of what failed
 ```
 
-Objeto inválido **nunca devolve nulo**: devolve o vazio do próprio tipo — string vazia nos 29 objetos de
-texto, `Guid.Empty` nos quatro de auditoria. Vale também para `ToString()`, então interpolação,
-concatenação e serialização são seguras sem verificação prévia.
+An invalid object **never returns null**: it returns the empty value of its own type — an empty string in
+the 29 text objects, `Guid.Empty` in the four audit ones. That also holds for `ToString()`, so
+interpolation, concatenation and serialization are safe without a prior check.
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.ValueObjects
@@ -47,14 +49,14 @@ dotnet add package Tooark.ValueObjects
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-**Os objetos de valor não exigem registro algum.** Eles validam sozinhos e, quando algo falha, guardam a
-_chave_ da mensagem — `Field.Invalid;Email`, por exemplo. Quem traduz a chave é a camada que monta a
-resposta, não o objeto de valor.
+**Value objects require no registration at all.** They validate on their own and, when something fails,
+keep the message _key_ — `Field.Invalid;Email`, for instance. The layer that builds the response
+translates the key, not the value object.
 
-O registro abaixo apenas encaminha para o `AddTooarkExtensions()`, que disponibiliza o `IStringLocalizer`
-e os arquivos de idioma para a aplicação:
+The registration below only forwards to `AddTooarkExtensions()`, which makes the `IStringLocalizer` and
+the language files available to the application:
 
 ```csharp
 using Tooark.ValueObjects.Injections;
@@ -64,13 +66,13 @@ builder.Services.AddTooarkValueObjects();
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
-### Documentos
+### Documents
 
-Validam formato **e** dígito verificador.
+Validate format **and** check digit.
 
-| Tipo       | Construtor                                    | Propriedade      |
+| Type       | Constructor                                   | Property         |
 | ---------- | --------------------------------------------- | ---------------- |
 | `Cpf`      | `(string number)`                             | `Number`         |
 | `Cnpj`     | `(string number)`                             | `Number`         |
@@ -81,13 +83,13 @@ Validam formato **e** dígito verificador.
 | `CpfRgCnh` | `(string number)`                             | `Number`         |
 | `Document` | `(string number, EDocumentType? type = null)` | `Number`, `Type` |
 
-O `Document` é a forma genérica: sem tipo informado, assume `EDocumentType.None`, que aceita qualquer
-texto alfanumérico — `new Document("111")` é válido, `new Document("111", EDocumentType.CPF)` não é.
-Documento reprovado fica com `Number` vazio e `Type` igual a `None`.
+`Document` is the generic form: without a type it assumes `EDocumentType.None`, which accepts any
+alphanumeric text — `new Document("111")` is valid, `new Document("111", EDocumentType.CPF)` is not.
+A rejected document has an empty `Number` and `Type` equal to `None`.
 
-### Texto
+### Text
 
-| Tipo            | Construtor       | Propriedades          |
+| Type            | Constructor      | Properties            |
 | --------------- | ---------------- | --------------------- |
 | `Name`          | `(string value)` | `Value`, `Normalized` |
 | `Title`         | `(string value)` | `Value`, `Normalized` |
@@ -99,105 +101,105 @@ Documento reprovado fica com `Number` vazio e `Type` igual a `None`.
 | `LanguageCode`  | `(string code)`  | `Code`                |
 | `ZipCode`       | `(string value)` | `Value`               |
 
-`Normalized` devolve o valor sem acentos, sem espaços e em maiúsculas — útil para busca e ordenação.
-O `LanguageCode` normaliza para o formato `xx-XX` (ex.: `pt-BR`) e expõe a constante
-`LanguageCode.Length` (5) para consulta externa, como no dimensionamento de colunas.
+`Normalized` returns the value without accents, without spaces and in uppercase — useful for searching
+and sorting. `LanguageCode` normalizes to the `xx-XX` format (e.g. `pt-BR`) and exposes the
+`LanguageCode.Length` constant (5) for external use, such as sizing columns.
 
-### Endereços e protocolos
+### Addresses and protocols
 
-| Tipo                    | Construtor                                                                       | Propriedades   | Aceita                                             |
-| ----------------------- | -------------------------------------------------------------------------------- | -------------- | -------------------------------------------------- |
-| `Email`                 | `(string value)`                                                                 | `Value`        | Endereço de email                                  |
-| `EmailDomain`           | `(string value)`                                                                 | `Value`        | Domínio de email                                   |
-| `Url`                   | `(string value)`                                                                 | `Value`        | FTP, SFTP, HTTP, HTTPS, IMAP, POP3, SMTP, WS e WSS |
-| `ProtocolHttp`          | `(string value)`                                                                 | `Value`        | HTTP e HTTPS                                       |
-| `ProtocolFtp`           | `(string value)`                                                                 | `Value`        | FTP e SFTP                                         |
-| `ProtocolWs`            | `(string value)`                                                                 | `Value`        | WS e WSS                                           |
-| `ProtocolEmailSender`   | `(string value)`                                                                 | `Value`        | SMTP                                               |
-| `ProtocolEmailReceiver` | `(string value)`                                                                 | `Value`        | IMAP e POP3                                        |
-| `LinkVideo`             | `(string link, bool youtube = true, bool vimeo = true, bool dailymotion = true)` | `Link`         | YouTube, Vimeo e Dailymotion                       |
-| `FileStorage`           | `(ProtocolHttp link, string? name = null)`                                       | `Link`, `Name` | Link e nome de arquivo                             |
+| Type                    | Constructor                                                                      | Properties     | Accepts                                              |
+| ----------------------- | -------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------- |
+| `Email`                 | `(string value)`                                                                 | `Value`        | Email address                                        |
+| `EmailDomain`           | `(string value)`                                                                 | `Value`        | Email domain                                         |
+| `Url`                   | `(string value)`                                                                 | `Value`        | FTP, SFTP, HTTP, HTTPS, IMAP, POP3, SMTP, WS and WSS |
+| `ProtocolHttp`          | `(string value)`                                                                 | `Value`        | HTTP and HTTPS                                       |
+| `ProtocolFtp`           | `(string value)`                                                                 | `Value`        | FTP and SFTP                                         |
+| `ProtocolWs`            | `(string value)`                                                                 | `Value`        | WS and WSS                                           |
+| `ProtocolEmailSender`   | `(string value)`                                                                 | `Value`        | SMTP                                                 |
+| `ProtocolEmailReceiver` | `(string value)`                                                                 | `Value`        | IMAP and POP3                                        |
+| `LinkVideo`             | `(string link, bool youtube = true, bool vimeo = true, bool dailymotion = true)` | `Link`         | YouTube, Vimeo and Dailymotion                       |
+| `FileStorage`           | `(ProtocolHttp link, string? name = null)`                                       | `Link`, `Name` | File link and name                                   |
 
-Repare que `LinkVideo` e `FileStorage` expõem `Link`, e não `Value`. O `FileStorage` construído sem nome
-usa o próprio link como `Name`. O `Email` tem ainda as constantes `Email.MinLength` (6) e
+Note that `LinkVideo` and `FileStorage` expose `Link`, not `Value`. A `FileStorage` built without a name
+uses the link itself as `Name`. `Email` also has the constants `Email.MinLength` (6) and
 `Email.MaxLength` (255).
 
-O `Email` guarda o valor em minúsculas. O formato exigido é mais restritivo que o RFC 5322: a parte
-local e o domínio precisam de ao menos dois caracteres, `+` não é aceito e espaços nas extremidades
-reprovam o valor em vez de serem aparados.
+`Email` keeps the value in lowercase. The required format is stricter than RFC 5322: the local part and
+the domain need at least two characters, `+` is not accepted and leading/trailing spaces reject the value
+instead of being trimmed.
 
-### Auditoria
+### Auditing
 
-| Tipo         | Construtor     | Propriedade |
-| ------------ | -------------- | ----------- |
-| `CreatedBy`  | `(Guid value)` | `Value`     |
-| `UpdatedBy`  | `(Guid value)` | `Value`     |
-| `DeletedBy`  | `(Guid value)` | `Value`     |
-| `RestoredBy` | `(Guid value)` | `Value`     |
+| Type         | Constructor    | Property |
+| ------------ | -------------- | -------- |
+| `CreatedBy`  | `(Guid value)` | `Value`  |
+| `UpdatedBy`  | `(Guid value)` | `Value`  |
+| `DeletedBy`  | `(Guid value)` | `Value`  |
+| `RestoredBy` | `(Guid value)` | `Value`  |
 
-Reprovam `Guid.Empty`. Objeto inválido tem `Value` igual a `Guid.Empty`.
+Reject `Guid.Empty`. An invalid object has `Value` equal to `Guid.Empty`.
 
-### Senha
+### Password
 
-| Membro                                                                                                                          | Descrição                                                        |
-| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `Password(string? value, bool lowercase = true, bool uppercase = true, bool number = true, bool symbol = true, int length = 8)` | Critérios de complexidade                                        |
-| `Value`                                                                                                                         | O valor em texto puro                                            |
-| `Mask`                                                                                                                          | A máscara `********`, devolvida por `ToString()` quando há valor |
+| Member                                                                                                                          | Description                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `Password(string? value, bool lowercase = true, bool uppercase = true, bool number = true, bool symbol = true, int length = 8)` | Complexity criteria                                                 |
+| `Value`                                                                                                                         | The plain-text value                                                |
+| `Mask`                                                                                                                          | The `********` mask, returned by `ToString()` when there is a value |
 
-O `Password` **não vaza o valor**. `ToString()` devolve a máscara, e não existe conversão implícita para
-texto — o valor só sai por `Value`, explicitamente:
+`Password` **does not leak the value**. `ToString()` returns the mask, and there is no implicit
+conversion to text — the value only comes out through `Value`, explicitly:
 
 ```csharp
-var senha = new Password("Senha@123");
+var password = new Password("Password@123");
 
-senha.ToString()      // "********"
-$"{senha}"            // "********"
-logger.LogInformation("{Senha}", senha);   // grava a máscara
-senha.Value           // "Senha@123" — único caminho, e é evidente na leitura
+password.ToString()      // "********"
+$"{password}"            // "********"
+logger.LogInformation("{Password}", password);   // logs the mask
+password.Value           // "Password@123" — the only path, and it is obvious when reading
 ```
 
-Os critérios valem exatamente como informados: desabilitar todos significa exigir apenas o comprimento,
-que é uma política legítima de frase secreta. A regra é a mesma aplicada pelo
-`PasswordValidationAttribute` do
-[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes), porque os dois
-usam o `PasswordPattern` do `Tooark.Validations`.
+The criteria apply exactly as given: disabling all of them means requiring only the length, which is a
+legitimate passphrase policy. The rule is the same applied by the `PasswordValidationAttribute` of
+[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes), because both
+use the `PasswordPattern` of `Tooark.Validations`.
 
-### String delimitada
+### Delimited string
 
-| Membro                                     | Descrição                             |
-| ------------------------------------------ | ------------------------------------- |
-| `DelimitedString(string? value)`           | A partir de um texto separado por `;` |
-| `DelimitedString(params string[]? values)` | A partir de uma array                 |
-| `DelimitedString(List<string>? values)`    | A partir de uma lista                 |
-| `Value`                                    | O texto delimitado                    |
-| `Values`, `ToArray()`, `ToList()`          | Os itens, sempre em uma cópia         |
-| `DefaultDelimiter`                         | A constante do delimitador padrão `;` |
+| Member                                     | Description                        |
+| ------------------------------------------ | ---------------------------------- |
+| `DelimitedString(string? value)`           | From a `;`-separated text          |
+| `DelimitedString(params string[]? values)` | From an array                      |
+| `DelimitedString(List<string>? values)`    | From a list                        |
+| `Value`                                    | The delimited text                 |
+| `Values`, `ToArray()`, `ToList()`          | The items, always as a copy        |
+| `DefaultDelimiter`                         | The default delimiter constant `;` |
 
-As coleções entram e saem copiadas: alterar a array informada, ou a devolvida, não altera o objeto.
+Collections come in and go out as copies: changing the given array, or the returned one, does not change
+the object.
 
-### Conversões implícitas
+### Implicit conversions
 
-Cada objeto converte nos dois sentidos com o tipo que representa — o `DelimitedString` converte com os
-três: `string`, `string[]` e `List<string>`:
+Every object converts in both directions with the type it represents — `DelimitedString` converts with
+three: `string`, `string[]` and `List<string>`:
 
 ```csharp
 Cpf cpf = "529.982.247-25";   // string -> value object
-string numero = cpf;          // value object -> string
+string number = cpf;          // value object -> string
 ```
 
-A conversão **de saída** exige uma instância: converter uma referência nula lança
-`InternalServerErrorException` com `Invalid.Parameter;null`, em vez de `NullReferenceException` sem
-contexto.
+The **outbound** conversion requires an instance: converting a null reference throws
+`InternalServerErrorException` with `Invalid.Parameter;null`, instead of a context-less
+`NullReferenceException`.
 
-A conversão **de entrada** cria o objeto e valida. Ela não lança por dado inválido — produz um objeto com
-notificações, e cabe a quem recebe consultar `IsValid`.
+The **inbound** conversion creates the object and validates it. It does not throw for invalid data — it
+produces an object with notifications, and whoever receives it checks `IsValid`.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Validando na entrada
+### Validating on input
 
 ```csharp
 using Tooark.ValueObjects;
@@ -207,68 +209,67 @@ var email = new Email(dto.Email);
 
 if (!cpf.IsValid || !email.IsValid)
 {
-  // ["Field.Invalid;Document", "Field.Invalid;Email"] — chaves, ainda sem tradução
-  IEnumerable<string> erros = [.. cpf.Messages, .. email.Messages];
+  // ["Field.Invalid;Document", "Field.Invalid;Email"] — keys, not yet translated
+  IEnumerable<string> errors = [.. cpf.Messages, .. email.Messages];
 
-  return BadRequest(erros);
+  return BadRequest(errors);
 }
 ```
 
-As mensagens saem como chave, não como texto final. Para devolvê-las traduzidas, entregue as
-notificações ao `ResponseDto` do
-[`Tooark.Dtos`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Dtos), que resolve o idioma do
-consumidor:
+The messages come out as keys, not as final text. To return them translated, hand the notifications to
+the `ResponseDto` of [`Tooark.Dtos`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Dtos), which
+resolves the consumer's language:
 
 ```csharp
-var notificacoes = cpf.Notifications.Concat(email.Notifications).ToList();
+var notifications = cpf.Notifications.Concat(email.Notifications).ToList();
 
-// {"Errors": ["O campo Document é inválido", "O campo E-mail é inválido"], ...}
-return BadRequest(new ResponseDto<string>(notificacoes));
+// {"Errors": ["The Document field is invalid", "The E-mail field is invalid"], ...}
+return BadRequest(new ResponseDto<string>(notifications));
 ```
 
-### Compondo em uma entidade
+### Composing in an entity
 
 ```csharp
 using Tooark.Notifications;
 using Tooark.ValueObjects;
 
-public sealed class Pessoa : Notification
+public sealed class Person : Notification
 {
-  public Pessoa(string nome, string email, string cpf)
+  public Person(string name, string email, string cpf)
   {
-    var nomeVo = new Name(nome);
+    var nameVo = new Name(name);
     var emailVo = new Email(email);
     var cpfVo = new Cpf(cpf);
 
-    // As notificações dos objetos de valor sobem para a entidade
-    AddNotifications(nomeVo, emailVo, cpfVo);
+    // The value object notifications bubble up to the entity
+    AddNotifications(nameVo, emailVo, cpfVo);
 
     if (IsValid)
     {
-      Nome = nomeVo;
+      Name = nameVo;
       Email = emailVo;
       Cpf = cpfVo;
     }
   }
 
-  public Name Nome { get; } = null!;
+  public Name Name { get; } = null!;
   public Email Email { get; } = null!;
   public Cpf Cpf { get; } = null!;
 }
 ```
 
-### Busca com o valor normalizado
+### Searching with the normalized value
 
 ```csharp
 using Tooark.ValueObjects;
 
-var titulo = new Title("Ação e Reação");
+var title = new Title("Ação e Reação");
 
-titulo.Value       // "Ação e Reação"
-titulo.Normalized  // "ACAOEREACAO"
+title.Value       // "Ação e Reação"
+title.Normalized  // "ACAOEREACAO"
 ```
 
-### Objeto inválido em texto
+### Invalid object as text
 
 ```csharp
 using Tooark.ValueObjects;
@@ -277,11 +278,11 @@ var cpf = new Cpf("111");
 
 cpf.IsValid          // false
 cpf.Number           // ""
-cpf.ToString()       // "" — nunca nulo
-$"documento: {cpf}"  // "documento: "
+cpf.ToString()       // "" — never null
+$"document: {cpf}"   // "document: "
 ```
 
-### Trabalhando com string delimitada
+### Working with a delimited string
 
 ```csharp
 using Tooark.ValueObjects;
@@ -291,28 +292,28 @@ DelimitedString tags = "csharp;dotnet;tooark";
 tags.Values   // ["csharp", "dotnet", "tooark"]
 tags.Value    // "csharp;dotnet;tooark"
 
-DelimitedString outras = new[] { "a", "b" };
-string texto = outras;   // "a;b"
+DelimitedString others = new[] { "a", "b" };
+string text = others;   // "a;b"
 ```
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                        | Versão | Descrição                         |
-| ----------------------------------------------------------------------------- | ------ | --------------------------------- |
-| [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)                 | 4.x    | Tipos de documento                |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)       | 4.x    | Erro das conversões sem instância |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)       | 4.x    | Normalização de texto             |
-| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | Base de notificações              |
-| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)     | 4.x    | Regras de validação               |
+| Package                                                                       | Version | Description                           |
+| ----------------------------------------------------------------------------- | ------- | ------------------------------------- |
+| [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)                 | 4.x     | Document types                        |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)       | 4.x     | Error of conversions without instance |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)       | 4.x     | Text normalization                    |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x     | Notification base                     |
+| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)     | 4.x     | Validation rules                      |
 
 ---
 
-## 🪪 Contribuição
+## 🪪 Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.ValueObjects](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.ValueObjects](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

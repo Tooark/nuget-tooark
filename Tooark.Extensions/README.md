@@ -1,101 +1,103 @@
 # Tooark.Extensions
 
-Biblioteca para gerenciar extensões e utilitários, facilitando o desenvolvimento e a manutenção de projetos .NET.
+Library that manages extensions and utilities, easing the development and maintenance of .NET projects.
 
-## Instalação
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.pt-BR.md)
+
+## Installation
 
 ```bash
 dotnet add package Tooark.Extensions
 ```
 
-## Configuração
+## Configuration
 
-Os arquivos de idioma acompanham o assembly, então **não há nada a configurar** para as traduções
-funcionarem — nem em aplicação, nem em contêiner, nem em publicação single-file.
+The language files ship with the assembly, so **there is nothing to configure** for the translations to
+work — not in the application, not in a container, not in a single-file publish.
 
-Adicione a seguinte linha no seu arquivo `Program.cs`:
+Add the following line to your `Program.cs`:
 
 ```csharp
-// Importando o namespace necessário
+// Importing the required namespace
 using Tooark.Extensions.Injections;
 
-// Nas suas configurações de serviços
+// In your service configuration
 services.AddTooarkExtensions();
 ```
 
-## Conteúdo
+## Contents
 
-- [EnumerableExtensions](#1-extensão-de-enumeráveis)
-- [AddJsonStringLocalizer](#2-configuração-do-jsonstringlocalizer-extensão-localiza-string-dentro-de-json)
-- [JsonStringLocalizerExtensions](#3-extensão-localiza-string-dentro-de-json-extensão-para-istringlocalizer)
-- [StringExtensions](#4-extensões-de-string)
-- [Catálogo de mensagens](#catálogo-de-mensagens)
+- [EnumerableExtensions](#1-enumerable-extension)
+- [AddJsonStringLocalizer](#2-jsonstringlocalizer-configuration-json-string-localization-extension)
+- [JsonStringLocalizerExtensions](#3-json-string-localization-extension-extension-for-istringlocalizer)
+- [StringExtensions](#4-string-extensions)
+- [Message catalog](#message-catalog)
 
-## Extensões
+## Extensions
 
-As extensões disponíveis são:
+The available extensions are:
 
-### 1. Extensão de Enumeráveis
+### 1. Enumerable Extension
 
-**Funcionalidade:**
-Ordenação de coleções de objetos por propriedades específicas e propriedades de sub classes. Suporta ordenação ascendente e descendente de coleções de objetos.
+**Purpose:**
+Sorts collections of objects by specific properties and by properties of nested classes. Supports ascending and descending ordering of object collections.
 
-**Métodos:**
+**Methods:**
 
-- `OrderByProperty<T>(string sortProperty)`: Ordena uma coleção de objetos de forma ascendente por uma propriedade específica.
-- `OrderByPropertyDescending<T>(string sortProperty)`: Ordena uma coleção de objetos de forma descendente por uma propriedade específica.
+- `OrderByProperty<T>(string sortProperty)`: Sorts a collection of objects in ascending order by a specific property.
+- `OrderByPropertyDescending<T>(string sortProperty)`: Sorts a collection of objects in descending order by a specific property.
 
-[**Exemplo de Uso**](#extensão-de-enumeráveis)
+[**Usage Example**](#enumerable-extension)
 
-### 2. Configuração do JsonStringLocalizer (Extensão Localiza String dentro de Json)
+### 2. JsonStringLocalizer Configuration (JSON String Localization Extension)
 
-**Funcionalidade:**
-Adiciona a injeção de dependência do serviço de localização de strings com base em arquivos JSON.
+**Purpose:**
+Adds the dependency injection of the string localization service based on JSON files.
 
-**Métodos:**
+**Methods:**
 
-- `AddJsonStringLocalizer`: Adiciona a injeção de dependência do serviço de localização de strings com base em arquivos JSON.
+- `AddJsonStringLocalizer`: Adds the dependency injection of the string localization service based on JSON files.
 
-[**Exemplo de Uso**](#configuração-do-jsonstringlocalizer)
+[**Usage Example**](#jsonstringlocalizer-configuration)
 
-### 3. Extensão Localiza String dentro de Json (Extensão para IStringLocalizer)
+### 3. JSON String Localization Extension (Extension for IStringLocalizer)
 
-**Funcionalidade:**
-Utiliza os arquivos padrão de recursos multiculturais para localização de strings.
+**Purpose:**
+Uses the default multicultural resource files for string localization.
 
-**Métodos:**
+**Methods:**
 
-- `LocalizedString this[string name]`: Representa um valor localizado.
-- `LocalizedString this[string name, params object[] arguments]`: Representa um valor localizado com argumentos.
-- `GetAllStrings(bool includeParentCultures)`: Obtém todos os valores localizados. Se `includeParentCultures` utilizado para valores da cultura `default` caso `true` ou `current` caso `false`.
+- `LocalizedString this[string name]`: Represents a localized value.
+- `LocalizedString this[string name, params object[] arguments]`: Represents a localized value with arguments.
+- `GetAllStrings(bool includeParentCultures)`: Gets every localized value. `includeParentCultures` selects the `default` culture values when `true` or the `current` ones when `false`.
 
-[**Exemplo de Uso**](#extensão-localiza-string-dentro-de-json-extensões-para-istringlocalizer)
+[**Usage Example**](#json-string-localization-extension-extensions-for-istringlocalizer)
 
-### 4. Extensões de String
+### 4. String Extensions
 
-**Funcionalidade:**
-Extensões para manipulação de strings.
+**Purpose:**
+Extensions for string manipulation.
 
-**Métodos:**
+**Methods:**
 
-- `ToBase64`: Converte uma string para Base64.
-- `FromBase64`: Converte uma string Base64 de volta para uma string normal.
-- `ToSlug`: Converte uma string para um formato de slug.
-- `ToNormalize`: Normaliza uma string removendo espaços, convertendo para maiúscula e substituindo caracteres especiais.
-- `FromSnakeToPascalCase`: Converte uma string de snake_case para PascalCase.
-- `FromSnakeToCamelCase`: Converte uma string de snake_case para camelCase.
-- `FromSnakeToKebabCase`: Converte uma string de snake_case para kebab-case.
-- `FromPascalToSnakeCase`: Converte uma string de PascalCase para snake_case.
-- `FromCamelToSnakeCase`: Converte uma string de camelCase para snake_case.
-- `FromKebabToSnakeCase`: Converte uma string de kebab-case para snake_case.
+- `ToBase64`: Converts a string to Base64.
+- `FromBase64`: Converts a Base64 string back to a regular string.
+- `ToSlug`: Converts a string to a slug format.
+- `ToNormalize`: Normalizes a string by removing spaces, converting to uppercase and replacing special characters.
+- `FromSnakeToPascalCase`: Converts a string from snake_case to PascalCase.
+- `FromSnakeToCamelCase`: Converts a string from snake_case to camelCase.
+- `FromSnakeToKebabCase`: Converts a string from snake_case to kebab-case.
+- `FromPascalToSnakeCase`: Converts a string from PascalCase to snake_case.
+- `FromCamelToSnakeCase`: Converts a string from camelCase to snake_case.
+- `FromKebabToSnakeCase`: Converts a string from kebab-case to snake_case.
 
-[**Exemplos de Uso**](#extensões-de-string)
+[**Usage Examples**](#string-extensions)
 
-## Exemplos de Uso
+## Usage Examples
 
-### Extensão de Enumeráveis
+### Enumerable Extension
 
-**OrderByProperty com Parâmetro Simples:**
+**OrderByProperty with a simple parameter:**
 
 ```csharp
 using Tooark.Extensions;
@@ -106,7 +108,7 @@ var sortedList = list.OrderByProperty("Name").toList();
 // [{"Name": "A", "Age": 30}, {"Name": "B", "Age": 20}, {"Name": "C", "Age": 10}]
 ```
 
-**OrderByPropertyDescending com Parâmetro Simples:**
+**OrderByPropertyDescending with a simple parameter:**
 
 ```csharp
 using Tooark.Extensions;
@@ -117,7 +119,7 @@ var sortedList = list.OrderByPropertyDescending("Name").toList();
 // [{"Name": "C", "Age": 10}, {"Name": "B", "Age": 20}, {"Name": "A", "Age": 30}]
 ```
 
-**OrderByPropertyDescending com Parâmetro Complexo:**
+**OrderByPropertyDescending with a nested parameter:**
 
 ```csharp
 using Tooark.Extensions;
@@ -136,7 +138,7 @@ var sortedList = list.OrderByProperty("Address.City").toList();
 //]
 ```
 
-### Configuração do JsonStringLocalizer
+### JsonStringLocalizer Configuration
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -148,33 +150,33 @@ var services = new ServiceCollection();
 services.AddJsonStringLocalizer();
 ```
 
-### Extensão Localiza String dentro de Json (Extensões para IStringLocalizer)
+### JSON String Localization Extension (Extensions for IStringLocalizer)
 
-**Obter Valor Localizado:**
-
-```csharp
-using Tooark.Extensions;
-
-var localizedString = _localizer["Field"]; // "Campo"
-```
-
-**Obter Valor Localizado com Argumentos juntos:**
+**Get a localized value:**
 
 ```csharp
 using Tooark.Extensions;
 
-var localizedString = _localizer["Field.Empty;Name"]; // "O campo Name está vazio"
+var localizedString = _localizer["Field"]; // "Field"
 ```
 
-**Obter Valor Localizado com Argumentos:**
+**Get a localized value with inline arguments:**
 
 ```csharp
 using Tooark.Extensions;
 
-var localizedString = _localizer["Field.Empty", "Name"]; // "O campo Name está vazio"
+var localizedString = _localizer["Field.Empty;Name"]; // "The Name field is empty"
 ```
 
-### Extensões de String
+**Get a localized value with arguments:**
+
+```csharp
+using Tooark.Extensions;
+
+var localizedString = _localizer["Field.Empty", "Name"]; // "The Name field is empty"
+```
+
+### String Extensions
 
 **ToBase64:**
 
@@ -263,43 +265,43 @@ string value = "hello-world";
 string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 ```
 
-## Catálogo de mensagens
+## Message catalog
 
-Os arquivos de recurso cobrem **todas as mensagens emitidas pelos pacotes Tooark**: validações, atributos,
-exceções, notificações, mediador, unidade de trabalho, criptografia, JWT, observabilidade, enumeradores e
-utilitários. São 135 chaves, com o mesmo conjunto nos três idiomas.
+The resource files cover **every message emitted by the Tooark packages**: validations, attributes,
+exceptions, notifications, mediator, unit of work, cryptography, JWT, OpenID Connect, observability,
+enumerators and utilities. There are 148 keys, with the same set in the three languages.
 
-| Idioma    | Arquivo                                                                                                               |
-| --------- | --------------------------------------------------------------------------------------------------------------------- |
-| Inglês    | [en-US.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/en-US.default.json) |
-| Espanhol  | [es-ES.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/es-ES.default.json) |
-| Português | [pt-BR.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/pt-BR.default.json) |
+| Language   | File                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| English    | [en-US.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/en-US.default.json) |
+| Spanish    | [es-ES.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/es-ES.default.json) |
+| Portuguese | [pt-BR.default.json](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/Resources/pt-BR.default.json) |
 
-O idioma padrão da aplicação é o `en-US`, e é para ele que a busca cai quando o idioma atual não tem
-tradução para a chave. Um idioma sem arquivo próprio — o `pt-PT`, por exemplo, que deixou de ser
-distribuído nesta versão — funciona pelo mesmo caminho, respondendo em inglês.
+The application's default language is `en-US`, and that is where the lookup falls back to when the current
+language has no translation for the key. A language without its own file — `pt-PT`, for instance, which is
+no longer shipped in this version — works through the same path, answering in English.
 
-### Formato das chaves
+### Key format
 
-A chave pode trazer parâmetros separados por ponto e vírgula, no formato `Chave;parametro1;parametro2`.
-Os parâmetros substituem os marcadores `{0}`, `{1}` e assim por diante, e são eles próprios traduzidos
-quando correspondem a uma chave existente:
+The key may carry parameters separated by semicolons, in the `Key;parameter1;parameter2` format. The
+parameters replace the `{0}`, `{1}` and so on placeholders, and are themselves translated when they match an
+existing key:
 
 ```csharp
-localizer["Field.Required;Email"]        // pt-BR: "O campo E-mail é obrigatório"
-localizer["Validation.IsBetween;Idade;18;65"]  // pt-BR: "O valor da propriedade Idade está entre 18 e 65."
+localizer["Field.Required;Email"]              // en-US: "The E-mail field is required"
+localizer["Validation.IsBetween;Age;18;65"]    // en-US: "The value of property Age is between 18 and 65."
 ```
 
-Quando a chave não existe, `LocalizedString.ResourceNotFound` é verdadeiro e `Value` traz o texto recebido
-inalterado — mesmo comportamento do `ResourceManagerStringLocalizer` do framework. Isso permite passar pelo
-localizador um texto que não é chave do Tooark, como as mensagens que o model binding do ASP.NET Core gera,
-sem que ele seja alterado.
+When the key does not exist, `LocalizedString.ResourceNotFound` is true and `Value` carries the received
+text unchanged — the same behavior as the framework's `ResourceManagerStringLocalizer`. That lets a text that
+is not a Tooark key, such as the messages ASP.NET Core model binding generates, pass through the localizer
+without being altered.
 
-### Sobrescrevendo ou acrescentando traduções
+### Overriding or adding translations
 
-Coloque um arquivo `Resources/{idioma}.json` na saída da sua aplicação. Ele é mesclado sobre o
-`{idioma}.default.json` embutido no pacote, **chave a chave**: você sobrescreve apenas o que quiser e
-pode acrescentar chaves próprias. As traduções são lidas uma vez por idioma, no primeiro uso.
+Place a `Resources/{language}.json` file in your application output. It is merged over the
+`{language}.default.json` embedded in the package, **key by key**: you override only what you want and can
+add your own keys. The translations are read once per language, on first use.
 
 ```xml
 <ItemGroup>
@@ -307,25 +309,27 @@ pode acrescentar chaves próprias. As traduções são lidas uma vez por idioma,
 </ItemGroup>
 ```
 
-O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo identifica o que vem do pacote.
+The consumer's file does **not** carry `.default` in its name — that suffix identifies what comes from the
+package.
 
-## Dependências
+## Dependencies
 
-| Dependência                                                                                             | Versão   | Uso                                          |
-| ------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
-| [`Tooark.Utils`](https://www.nuget.org/packages/Tooark.Utils)                                           | 4.x      | Normalização e idioma                        |
-| [`Microsoft.Extensions.Localization`](https://www.nuget.org/packages/Microsoft.Extensions.Localization) | 8.x/10.x | `IStringLocalizer` e o registro no container |
+| Dependency                                                                                              | Version  | Usage                                             |
+| ------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
+| [`Tooark.Utils`](https://www.nuget.org/packages/Tooark.Utils)                                           | 4.x      | Normalization and language                        |
+| [`Microsoft.Extensions.Localization`](https://www.nuget.org/packages/Microsoft.Extensions.Localization) | 8.x/10.x | `IStringLocalizer` and the container registration |
 
-> **O pacote não exige o runtime do ASP.NET Core.** Até a v3 ele declarava o framework compartilhado por
-> causa do `ModelStateExtension`, e esse requisito se propagava para o `Tooark.Dtos`, o `Tooark.ValueObjects`,
-> o `Tooark.Entities` e o agregador. Na v4 o `ModelStateExtension` passou para o
-> [`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore), e este pacote voltou a
-> ser de uso geral: funciona em console, worker e função serverless sem o runtime do ASP.NET Core instalado.
+> **The package does not require the ASP.NET Core runtime.** Until v3 it declared the shared framework
+> because of `ModelStateExtension`, and that requirement propagated to `Tooark.Dtos`, `Tooark.ValueObjects`,
+> `Tooark.Entities` and the aggregator. In v4 `ModelStateExtension` moved to
+> [`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore), and this package is
+> general-purpose again: it works in console, worker and serverless function without the ASP.NET Core runtime
+> installed.
 
-## Contribuição
+## Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

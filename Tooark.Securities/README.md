@@ -1,54 +1,56 @@
 # Tooark.Securities
 
-Biblioteca de segurança para aplicações .NET, fornecendo serviços de **criptografia AES** e **autenticação JWT** com suporte a múltiplos algoritmos.
+Security library for .NET applications, providing **AES cryptography** and **JWT authentication** services with support for multiple algorithms.
 
-## 📦 Conteúdo do Pacote
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md)
 
-### Serviços
+## 📦 Package Contents
 
-| Classe                                                     | Descrição                                       |
-| ---------------------------------------------------------- | ----------------------------------------------- |
-| [`JwtTokenService`](#jwt---criação-e-validação-de-token)   | Serviço para criação e validação de tokens JWT  |
-| [`CryptographyService`](#criptografia---encrypt-e-decrypt) | Serviço de criptografia/descriptografia AES-256 |
+### Services
+
+| Class                                                        | Description                                    |
+| ------------------------------------------------------------ | ---------------------------------------------- |
+| [`JwtTokenService`](#jwt---creating-and-validating-a-token)  | Service for creating and validating JWT tokens |
+| [`CryptographyService`](#cryptography---encrypt-and-decrypt) | AES-256 encryption/decryption service          |
 
 ### Interfaces
 
-| Interface              | Descrição                                      |
-| ---------------------- | ---------------------------------------------- |
-| `IJwtTokenService`     | Contrato para manipulação de tokens JWT        |
-| `ICryptographyService` | Contrato para criptografia/descriptografia AES |
+| Interface              | Description                            |
+| ---------------------- | -------------------------------------- |
+| `IJwtTokenService`     | Contract for handling JWT tokens       |
+| `ICryptographyService` | Contract for AES encryption/decryption |
 
-| Membro                           | Descrição                                                      |
-| -------------------------------- | -------------------------------------------------------------- |
-| `IJwtTokenService.Create`        | Cria o token. Síncrono: o handler não expõe criação assíncrona |
-| `IJwtTokenService.ValidateAsync` | Valida o token. Caminho direto ao handler, que é assíncrono    |
-| `IJwtTokenService.Validate`      | Valida o token. Encapsulamento síncrono de `ValidateAsync`     |
-| `ICryptographyService.Encrypt`   | Criptografa. Síncrono: AES em memória, sem operação de I/O     |
-| `ICryptographyService.Decrypt`   | Descriptografa. Síncrono, pelo mesmo motivo                    |
+| Member                           | Description                                                            |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `IJwtTokenService.Create`        | Creates the token. Synchronous: the handler exposes no async creation  |
+| `IJwtTokenService.ValidateAsync` | Validates the token. Direct path to the handler, which is asynchronous |
+| `IJwtTokenService.Validate`      | Validates the token. Synchronous wrapper of `ValidateAsync`            |
+| `ICryptographyService.Encrypt`   | Encrypts. Synchronous: in-memory AES, no I/O                           |
+| `ICryptographyService.Decrypt`   | Decrypts. Synchronous, for the same reason                             |
 
 ### DTOs
 
-| Classe         | Descrição                                         |
-| -------------- | ------------------------------------------------- |
-| `JwtTokenDto`  | Dados para criação de token (id, login, security) |
-| `UserTokenDto` | Resultado da validação do token                   |
+| Class          | Description                                     |
+| -------------- | ----------------------------------------------- |
+| `JwtTokenDto`  | Data for creating a token (id, login, security) |
+| `UserTokenDto` | Result of the token validation                  |
 
 ### Options
 
-| Classe                | Descrição                                                                   |
-| --------------------- | --------------------------------------------------------------------------- |
-| `JwtOptions`          | Configurações do JWT (algoritmo, chaves, issuer(s), audience(s), expiração) |
-| `CryptographyOptions` | Configurações de criptografia (algoritmo, secret ou secretBase64)           |
+| Class                 | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| `JwtOptions`          | JWT settings (algorithm, keys, issuer(s), audience(s), expiration) |
+| `CryptographyOptions` | Cryptography settings (algorithm, secret or secretBase64)          |
 
 ### Extensions
 
-| Classe                | Descrição                                                           |
-| --------------------- | ------------------------------------------------------------------- |
-| `RoleClaimsExtension` | Extensão que converte `JwtTokenDto` em claims (id, login, security) |
+| Class                 | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
+| `RoleClaimsExtension` | Extension that converts `JwtTokenDto` into claims (id, login, security) |
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Securities
@@ -56,110 +58,110 @@ dotnet add package Tooark.Securities
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
 ### appsettings.json
 
-Para configurar os serviços de segurança, adicione as seções `Jwt` e `Cryptography` no seu arquivo `appsettings.json`:
+To configure the security services, add the `Jwt` and `Cryptography` sections to your `appsettings.json`:
 
-Configuração exemplo para token JWT com algoritmos simétricos (utiliza _Secret_ para assinatura e validação):
+Example configuration for a JWT token with symmetric algorithms (uses _Secret_ for signing and validation):
 
 ```json
 {
   "Jwt": {
     "Algorithm": "HS256",
-    "Secret": "sua-chave-secreta-com-pelo-menos-32-caracteres",
-    "Issuer": "sua-aplicacao",
-    "Audience": "seus-clientes",
+    "Secret": "your-secret-key-with-at-least-32-characters",
+    "Issuer": "your-application",
+    "Audience": "your-clients",
     "ExpirationTime": 60
   }
 }
 ```
 
-Configuração exemplo para token JWT com algoritmos assimétricos (_PrivateKey_ obrigatória para assinatura, _PublicKey_ obrigatória para validação):
+Example configuration for a JWT token with asymmetric algorithms (_PrivateKey_ required for signing, _PublicKey_ required for validation):
 
 ```json
 {
   "Jwt": {
     "Algorithm": "RS256",
-    "PrivateKey": "sua-chave-privada-em-base64",
-    "PublicKey": "sua-chave-publica-em-base64",
-    "Issuer": "sua-aplicacao",
-    "Audience": "seus-clientes",
+    "PrivateKey": "your-private-key-in-base64",
+    "PublicKey": "your-public-key-in-base64",
+    "Issuer": "your-application",
+    "Audience": "your-clients",
     "ExpirationTime": 60
   }
 }
 ```
 
-Configuração exemplo para criptografia AES:
+Example configuration for AES cryptography:
 
 ```json
 {
   "Cryptography": {
     "Algorithm": "GCM",
-    "Secret": "sua-chave-secreta-com-32-caracteres"
+    "Secret": "your-secret-key-with-32-characters"
   }
 }
 ```
 
-Ou com chave AES pronta em Base64 (**recomendado** — a chave é usada diretamente, sem derivação):
+Or with a ready-made AES key in Base64 (**recommended** — the key is used directly, without derivation):
 
 ```json
 {
   "Cryptography": {
     "Algorithm": "GCM",
-    "SecretBase64": "chave-de-32-bytes-em-base64"
+    "SecretBase64": "32-byte-key-in-base64"
   }
 }
 ```
 
-#### Propriedades de `JwtOptions`
+#### `JwtOptions` properties
 
-| Propriedade      | Tipo      | Padrão  | Descrição                                                     |
-| ---------------- | --------- | ------- | ------------------------------------------------------------- |
-| `Algorithm`      | string    | `ES256` | Algoritmo de assinatura. Valores desconhecidos lançam exceção |
-| `Secret`         | string?   | `null`  | Chave para algoritmos simétricos (HS256/384/512)              |
-| `PrivateKey`     | string?   | `null`  | Chave privada Base64 (PKCS#8) para assinatura                 |
-| `PublicKey`      | string?   | `null`  | Chave pública Base64 (SPKI) para validação                    |
-| `Issuer`         | string?   | `null`  | Emissor aceito na validação e gravado no token                |
-| `Issuers`        | string[]? | `null`  | Emissores adicionais aceitos na validação                     |
-| `Audience`       | string?   | `null`  | Destinatário aceito na validação e gravado no token           |
-| `Audiences`      | string[]? | `null`  | Destinatários adicionais aceitos na validação                 |
-| `ExpirationTime` | int       | `5`     | Expiração do token em **minutos**                             |
+| Property         | Type      | Default | Description                                              |
+| ---------------- | --------- | ------- | -------------------------------------------------------- |
+| `Algorithm`      | string    | `ES256` | Signing algorithm. Unknown values throw                  |
+| `Secret`         | string?   | `null`  | Key for symmetric algorithms (HS256/384/512)             |
+| `PrivateKey`     | string?   | `null`  | Base64 private key (PKCS#8) for signing                  |
+| `PublicKey`      | string?   | `null`  | Base64 public key (SPKI) for validation                  |
+| `Issuer`         | string?   | `null`  | Issuer accepted on validation and written to the token   |
+| `Issuers`        | string[]? | `null`  | Additional issuers accepted on validation                |
+| `Audience`       | string?   | `null`  | Audience accepted on validation and written to the token |
+| `Audiences`      | string[]? | `null`  | Additional audiences accepted on validation              |
+| `ExpirationTime` | int       | `5`     | Token expiration in **minutes**                          |
 
-> `Issuer`/`Issuers` e `Audience`/`Audiences` se somam: informar qualquer um deles liga a validação do
-> respectivo campo. Quando nenhum é informado, a validação daquele campo é desligada. O parâmetro
-> `audience` de `Create` e `Validate`/`ValidateAsync` tem prioridade sobre a configuração.
+> `Issuer`/`Issuers` and `Audience`/`Audiences` add up: providing any of them turns on the validation of
+> that field. When none is provided, the validation of that field is turned off. The `audience` parameter
+> of `Create` and `Validate`/`ValidateAsync` takes precedence over the configuration.
 >
-> `PrivateKey` e `PublicKey` aceitam tanto o Base64 puro quanto o PEM completo: os delimitadores
-> `-----BEGIN/END ... KEY-----` e as quebras de linha são removidos ao atribuir.
+> `PrivateKey` and `PublicKey` accept both the raw Base64 and the full PEM: the
+> `-----BEGIN/END ... KEY-----` delimiters and the line breaks are removed on assignment.
 
-Exemplo com múltiplos emissores e destinatários:
+Example with multiple issuers and audiences:
 
 ```json
 {
   "Jwt": {
     "Algorithm": "ES256",
-    "PublicKey": "sua-chave-publica-em-base64",
-    "Issuers": ["api-legada", "api-nova"],
-    "Audiences": ["app-web", "app-mobile"],
+    "PublicKey": "your-public-key-in-base64",
+    "Issuers": ["legacy-api", "new-api"],
+    "Audiences": ["web-app", "mobile-app"],
     "ExpirationTime": 60
   }
 }
 ```
 
-#### Propriedades de `CryptographyOptions`
+#### `CryptographyOptions` properties
 
-| Propriedade    | Tipo    | Padrão | Descrição                                                   |
-| -------------- | ------- | ------ | ----------------------------------------------------------- |
-| `Algorithm`    | string  | `GCM`  | Modo AES-256: `GCM`, `CBC` ou `CBCUnsafe` (somente decrypt) |
-| `Secret`       | string? | `null` | Chave derivada via SHA256 (compatibilidade)                 |
-| `SecretBase64` | string? | `null` | Chave AES de 32 bytes usada diretamente (**recomendado**)   |
+| Property       | Type    | Default | Description                                              |
+| -------------- | ------- | ------- | -------------------------------------------------------- |
+| `Algorithm`    | string  | `GCM`   | AES-256 mode: `GCM`, `CBC` or `CBCUnsafe` (decrypt only) |
+| `Secret`       | string? | `null`  | Key derived via SHA256 (compatibility)                   |
+| `SecretBase64` | string? | `null`  | 32-byte AES key used directly (**recommended**)          |
 
-> É obrigatório informar `Secret` **ou** `SecretBase64`. Quando ambos são informados, `SecretBase64` tem
-> prioridade. O `SecretBase64` deve representar exatamente 32 bytes (AES-256) — valores inválidos falham
-> no startup. Gere uma chave com `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
-> Com `Secret`, a chave é derivada via SHA256 (mantido por compatibilidade).
+> `Secret` **or** `SecretBase64` is required. When both are provided, `SecretBase64` takes precedence.
+> `SecretBase64` must represent exactly 32 bytes (AES-256) — invalid values fail at startup. Generate a
+> key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`. With `Secret`, the key is derived
+> via SHA256 (kept for compatibility).
 
 ### Program.cs
 
@@ -168,33 +170,33 @@ using Tooark.Securities.Injections;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona os serviços de segurança
+// Adds the security services
 builder.Services.AddTooarkSecurities(builder.Configuration);
 
 var app = builder.Build();
 ```
 
-Ou, para adicionar apenas o serviço de token JWT:
+Or, to add only the JWT token service:
 
 ```csharp
 using Tooark.Securities.Injections;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona os serviços de segurança
+// Adds the security services
 builder.Services.AddTooarkJwtToken(builder.Configuration);
 
 var app = builder.Build();
 ```
 
-Ou, para adicionar apenas o serviço de criptografia:
+Or, to add only the cryptography service:
 
 ```csharp
 using Tooark.Securities.Injections;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona os serviços de segurança
+// Adds the security services
 builder.Services.AddTooarkCryptography(builder.Configuration);
 
 var app = builder.Build();
@@ -202,23 +204,23 @@ var app = builder.Build();
 
 ---
 
-## 🔐 JWT - Algoritmos Suportados
+## 🔐 JWT - Supported Algorithms
 
-### Algoritmos Simétricos (HMAC)
+### Symmetric Algorithms (HMAC)
 
-| Algoritmo | Descrição   | Requisitos         |
+| Algorithm | Description | Requirements       |
 | --------- | ----------- | ------------------ |
 | `HS256`   | HMAC-SHA256 | Secret (≥32 bytes) |
 | `HS384`   | HMAC-SHA384 | Secret (≥48 bytes) |
 | `HS512`   | HMAC-SHA512 | Secret (≥64 bytes) |
 
-> Os mínimos seguem a RFC 7518 (chave HMAC com ao menos o tamanho da saída do hash) e são validados no
-> startup (`Options.Jwt.SecretTooShort`). O tamanho é medido em **bytes** (UTF-8): caracteres não-ASCII
-> ocupam mais de um byte.
+> The minimums follow RFC 7518 (HMAC key at least as long as the hash output) and are validated at
+> startup (`Options.Jwt.SecretTooShort`). The size is measured in **bytes** (UTF-8): non-ASCII characters
+> take more than one byte.
 
-### Algoritmos Assimétricos (RSA)
+### Asymmetric Algorithms (RSA)
 
-| Algoritmo | Descrição      | Requisitos                        |
+| Algorithm | Description    | Requirements                      |
 | --------- | -------------- | --------------------------------- |
 | `RS256`   | RSA-SHA256     | PrivateKey/PublicKey (≥2048 bits) |
 | `RS384`   | RSA-SHA384     | PrivateKey/PublicKey (≥2048 bits) |
@@ -227,69 +229,69 @@ var app = builder.Build();
 | `PS384`   | RSA-PSS-SHA384 | PrivateKey/PublicKey (≥2048 bits) |
 | `PS512`   | RSA-PSS-SHA512 | PrivateKey/PublicKey (≥2048 bits) |
 
-### Algoritmos Assimétricos (ECDsa)
+### Asymmetric Algorithms (ECDsa)
 
-| Algoritmo | Descrição    | Curva Requerida   |
+| Algorithm | Description  | Required Curve    |
 | --------- | ------------ | ----------------- |
 | `ES256`   | ECDSA-SHA256 | P-256 (secp256r1) |
 | `ES384`   | ECDSA-SHA384 | P-384 (secp384r1) |
 | `ES512`   | ECDSA-SHA512 | P-521 (secp521r1) |
 
-> O algoritmo padrão é `ES256` quando `Algorithm` não é informado. Valores desconhecidos lançam exceção
-> (`Options.Jwt.AlgorithmNotSupported`) — em configuração de segurança, um algoritmo inválido nunca é
-> substituído silenciosamente por outro. Internamente, criação e validação usam o `JsonWebTokenHandler`
-> (handler atual da Microsoft.IdentityModel); o `UserTokenDto` aceita tanto `JsonWebToken` quanto o
-> legado `JwtSecurityToken`.
+> The default algorithm is `ES256` when `Algorithm` is not provided. Unknown values throw
+> (`Options.Jwt.AlgorithmNotSupported`) — in security configuration, an invalid algorithm is never silently
+> replaced by another. Internally, creation and validation use the `JsonWebTokenHandler` (the current
+> Microsoft.IdentityModel handler); `UserTokenDto` accepts both `JsonWebToken` and the legacy
+> `JwtSecurityToken`.
 
 ---
 
-## 🔒 Criptografia - Algoritmos Suportados
+## 🔒 Cryptography - Supported Algorithms
 
-| Algoritmo   | Modo        | Descrição                                          |
-| ----------- | ----------- | -------------------------------------------------- |
-| `GCM`       | AES-256-GCM | **Recomendado** - Authenticated encryption         |
-| `CBC`       | AES-256-CBC | Modo tradicional com IV aleatório                  |
-| `CBCUnsafe` | AES-256-CBC | ⚠️ Legado - IV zerado, **somente descriptografia** |
+| Algorithm   | Mode        | Description                                |
+| ----------- | ----------- | ------------------------------------------ |
+| `GCM`       | AES-256-GCM | **Recommended** - Authenticated encryption |
+| `CBC`       | AES-256-CBC | Traditional mode with random IV            |
+| `CBCUnsafe` | AES-256-CBC | ⚠️ Legacy - zero IV, **decryption only**   |
 
-> `CBCUnsafe` existe apenas para ler dados antigos criptografados com IV zero: criptografar neste modo
-> lança exceção (`Options.Cryptography.AlgorithmDecryptOnly`). Para novos dados, use `GCM`.
+> `CBCUnsafe` exists only to read old data encrypted with a zero IV: encrypting in this mode throws
+> (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### JWT - Criação e Validação de Token
+### JWT - Creating and Validating a Token
 
-#### Configuração com HMAC (Simétrico)
+#### Configuration with HMAC (Symmetric)
 
 ```json
 {
   "Jwt": {
     "Algorithm": "HS256",
-    "Secret": "minha-chave-secreta-super-segura-32chars",
-    "Issuer": "minha-api",
-    "Audience": "meus-clientes",
+    "Secret": "my-super-secure-secret-key-32chars",
+    "Issuer": "my-api",
+    "Audience": "my-clients",
     "ExpirationTime": 60
   }
 }
 ```
 
-#### Configuração com RSA (Assimétrico)
+#### Configuration with RSA (Asymmetric)
 
 ```json
 {
   "Jwt": {
     "Algorithm": "RS256",
-    "PrivateKey": "MIIEvQIBADANBgkqh...chave-privada-base64...",
-    "PublicKey": "MIIBIjANBgkqhkiG9w...chave-publica-base64...",
-    "Issuer": "minha-api",
-    "Audience": "meus-clientes",
+    "PrivateKey": "MIIEvQIBADANBgkqh...base64-private-key...",
+    "PublicKey": "MIIBIjANBgkqhkiG9w...base64-public-key...",
+    "Issuer": "my-api",
+    "Audience": "my-clients",
     "ExpirationTime": 60
   }
 }
 ```
 
-#### Criando um Token
+#### Creating a Token
 
 ```csharp
 public class AuthController : ControllerBase
@@ -304,22 +306,22 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public IActionResult Login(LoginRequest request)
     {
-        // Validar credenciais...
+        // Validate credentials...
 
-        // Criar dados do token
+        // Create the token data
         var tokenData = new JwtTokenDto(
             id: user.Id,
             login: user.Email,
             security: user.SecurityStamp
         );
 
-        // Gerar token
+        // Generate the token
         var token = _jwtService.Create(tokenData);
 
         return Ok(new { Token = token });
     }
 
-    // Com audience customizada e claims extras
+    // With a custom audience and extra claims
     [HttpPost("login-custom")]
     public IActionResult LoginCustom(LoginRequest request)
     {
@@ -331,17 +333,18 @@ public class AuthController : ControllerBase
             new Claim("department", "IT")
         };
 
-        var token = _jwtService.Create(tokenData, audience: "app-mobile", extraClaims: extraClaims);
+        var token = _jwtService.Create(tokenData, audience: "mobile-app", extraClaims: extraClaims);
 
         return Ok(new { Token = token });
     }
 }
 ```
 
-#### Validando um Token
+#### Validating a Token
 
-O handler da Microsoft.IdentityModel expõe a validação apenas de forma assíncrona, então `ValidateAsync` é o
-caminho direto e `Validate` é o encapsulamento síncrono. Em código que já é assíncrono, prefira `ValidateAsync`:
+The Microsoft.IdentityModel handler exposes validation only asynchronously, so `ValidateAsync` is the
+direct path and `Validate` is the synchronous wrapper. In code that is already asynchronous, prefer
+`ValidateAsync`:
 
 ```csharp
 [HttpGet("validate")]
@@ -360,7 +363,7 @@ public async Task<IActionResult> ValidateTokenAsync([FromHeader] string authoriz
 }
 ```
 
-Em código síncrono, a sobrecarga bloqueante entrega o mesmo resultado:
+In synchronous code, the blocking overload delivers the same result:
 
 ```csharp
 [HttpGet("validate")]
@@ -379,7 +382,7 @@ public IActionResult ValidateToken([FromHeader] string authorization)
     {
         UserId = result.Id,
         Login = result.Login,
-        // Ou usando helpers
+        // Or using the helpers
         GuidId = result.GetGuidId,
         IntId = result.GetIntId
     });
@@ -388,20 +391,20 @@ public IActionResult ValidateToken([FromHeader] string authorization)
 
 ---
 
-### Criptografia - Encrypt e Decrypt
+### Cryptography - Encrypt and Decrypt
 
-#### Configuração
+#### Configuration
 
 ```json
 {
   "Cryptography": {
     "Algorithm": "GCM",
-    "Secret": "minha-chave-secreta-32-caracteres"
+    "Secret": "my-secret-key-32-characters-long"
   }
 }
 ```
 
-#### Usando ICryptographyService
+#### Using ICryptographyService
 
 ```csharp
 public class DataProtectionService
@@ -415,25 +418,25 @@ public class DataProtectionService
 
     public string ProtectSensitiveData(string plainText)
     {
-        // Retorna texto criptografado em Base64
+        // Returns the encrypted text in Base64
         return _crypto.Encrypt(plainText);
     }
 
     public string UnprotectData(string encryptedText)
     {
-        // Retorna texto original descriptografado
+        // Returns the original decrypted text
         return _crypto.Decrypt(encryptedText);
     }
 }
 ```
 
-#### Exemplo Completo
+#### Full Example
 
 ```csharp
-// Configurar no Program.cs (registra ICryptographyService como singleton)
+// Configure in Program.cs (registers ICryptographyService as a singleton)
 builder.Services.AddTooarkCryptography(builder.Configuration);
 
-// Usar no serviço
+// Use in the service
 public class UserService
 {
     private readonly ICryptographyService _crypto;
@@ -445,18 +448,18 @@ public class UserService
 
     public void SaveUser(User user)
     {
-        // Criptografar dados sensíveis antes de salvar
+        // Encrypt sensitive data before saving
         user.CreditCard = _crypto.Encrypt(user.CreditCard);
         user.SSN = _crypto.Encrypt(user.SSN);
 
-        // Salvar no banco...
+        // Save to the database...
     }
 
     public User GetUser(int id)
     {
-        var user = // Buscar do banco...
+        var user = // Fetch from the database...
 
-        // Descriptografar dados sensíveis
+        // Decrypt sensitive data
         user.CreditCard = _crypto.Decrypt(user.CreditCard);
         user.SSN = _crypto.Decrypt(user.SSN);
 
@@ -467,36 +470,36 @@ public class UserService
 
 ---
 
-## 🔑 Gerando Chaves
+## 🔑 Generating Keys
 
-### Chave para HMAC (HS256/HS384/HS512)
+### Key for HMAC (HS256/HS384/HS512)
 
 ```bash
-# Gerar chave aleatória de 32 bytes (256 bits) para HS256
+# Generate a random 32-byte (256-bit) key for HS256
 openssl rand -base64 32
 
-# Gerar chave aleatória de 64 bytes (512 bits) para HS512
+# Generate a random 64-byte (512-bit) key for HS512
 openssl rand -base64 64
 ```
 
-### Chaves RSA (RS256/PS256)
+### RSA Keys (RS256/PS256)
 
 ```bash
-# Gerar chave privada RSA de 2048 bits
+# Generate a 2048-bit RSA private key
 openssl genrsa -out private.pem 2048
 
-# Extrair chave pública
+# Extract the public key
 openssl rsa -in private.pem -pubout -out public.pem
 
-# Converter para formato PKCS8 (recomendado)
+# Convert to the PKCS8 format (recommended)
 openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in private.pem -out private_pkcs8.pem
 
-# Obter chave em Base64 (sem headers)
+# Get the key in Base64 (without headers)
 cat private_pkcs8.pem | grep -v "BEGIN\|END" | tr -d '\n'
 cat public.pem | grep -v "BEGIN\|END" | tr -d '\n'
 ```
 
-### Chaves ECDsa (ES256/ES384/ES512)
+### ECDsa Keys (ES256/ES384/ES512)
 
 ```bash
 # ES256 (P-256)
@@ -509,74 +512,74 @@ openssl ecparam -genkey -name secp384r1 -noout -out ec_private.pem
 # ES512 (P-521)
 openssl ecparam -genkey -name secp521r1 -noout -out ec_private.pem
 
-# Converter para PKCS8
+# Convert to PKCS8
 openssl pkcs8 -topk8 -nocrypt -in ec_private.pem -out ec_private_pkcs8.pem
 ```
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                                                                          | Versão   | Descrição                             |
-| ------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceções (ex.: `BadRequestException`) |
-| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | Autenticação JWT para ASP.NET Core    |
+| Package                                                                                                                         | Version  | Description                             |
+| ------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceptions (e.g. `BadRequestException`) |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | JWT authentication for ASP.NET Core     |
 
 ---
 
-## 🎯 Boas Práticas
+## 🎯 Best Practices
 
 ### JWT
 
-1. **Use algoritmos assimétricos (RS/PS/ES) em produção** - Permite validar tokens sem expor a chave de assinatura
-2. **Configure `ExpirationTime` apropriadamente** - Tokens de curta duração são mais seguros
-3. **Use `Issuer` e `Audience`** - Previne uso indevido de tokens entre aplicações
-4. **Armazene chaves em Secret Manager** - Nunca commite chaves no código fonte
+1. **Use asymmetric algorithms (RS/PS/ES) in production** - Allows validating tokens without exposing the signing key
+2. **Configure `ExpirationTime` appropriately** - Short-lived tokens are safer
+3. **Use `Issuer` and `Audience`** - Prevents tokens from being misused across applications
+4. **Store keys in a Secret Manager** - Never commit keys to source code
 
-### Criptografia
+### Cryptography
 
-1. **Prefira GCM sobre CBC** - GCM fornece autenticação integrada
-2. **Nunca use CBCUnsafe para novos dados** - Modo somente-descriptografia para compatibilidade com sistemas legados
-3. **Prefira `SecretBase64` com chave aleatória de 32 bytes** - A chave é usada diretamente, sem derivação
-4. **Gere chaves aleatórias** - Use `openssl rand -base64 32` ou `RandomNumberGenerator.GetBytes(32)`
-
----
-
-## ⚠️ Códigos de Erro e Soluções
-
-| Serviço               | Mensagem                                       | Descrição                              | Solução                                                               | Exception             |
-| --------------------- | ---------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- | --------------------- |
-| `CryptographyService` | `Options.NotConfigured`                        | `Options` não configurado              | Configure `CryptographyOptions`                                       | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretNotConfigured`     | Nenhuma chave configurada              | Configure `Secret` ou `SecretBase64` em `CryptographyOptions`         | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretBase64Invalid`     | `SecretBase64` não é Base64 válido     | Forneça um valor Base64 válido em `SecretBase64`                      | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretBase64InvalidSize` | `SecretBase64` não tem 32 bytes        | Use uma chave de exatamente 32 bytes (AES-256)                        | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.AlgorithmDecryptOnly`    | `CBCUnsafe` usado para criptografar    | Use `CBCUnsafe` apenas para descriptografar dados legados             | `InternalServerError` |
-| `CryptographyService` | `Cryptography.PlainTextNotProvided`            | `PlainText` não fornecido              | Forneça o texto plano para criptografar                               | `BadRequest`          |
-| `CryptographyService` | `Cryptography.CipherTextNotProvided`           | `CipherText` não fornecido             | Forneça o texto criptografado para descriptografar                    | `BadRequest`          |
-| `CryptographyService` | `Cryptography.InvalidCipherText`               | `CipherText` inválido                  | Forneça um texto criptografado válido para descriptografar            | `BadRequest`          |
-| `JwtTokenService`     | `Options.NotConfigured`                        | `Options` não configurado              | Configure `JwtOptions`                                                | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.SecretNotConfigured`              | `Secret` não configurado               | Configure `Secret` dentro de `JwtOptions` para token simétrico        | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.SecretTooShort`                   | `Secret` abaixo do mínimo do algoritmo | Use ao menos 32/48/64 bytes para HS256/HS384/HS512                    | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeysNotConfigured`                | `Private` e `Public` não configurado   | Configure as chaves dentro de `JwtOptions` para token assimétrico     | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidSize`           | Tamanho da chave `Private` inválido    | Use uma chave `Private` de pelo menos 2048 bits                       | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidSize`            | Tamanho da chave `Public` inválido     | Use uma chave `Public` de pelo menos 2048 bits                        | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidCurve`          | Curva da chave `Private` inválida      | Use uma chave `Private` com a curva correta                           | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidCurve`           | Curva da chave `Public` inválida       | Use uma chave `Public` com a curva correta                            | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.InvalidKey`                       | Chave inválida                         | [Utilize chaves válidas](#-gerando-chaves) para o algoritmo escolhido | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.AlgorithmNotSupported`            | Algoritmo não suportado                | [Utilize um algoritmo suportado](#-jwt---algoritmos-suportados)       | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PrivateKey`      | Chave `Private` não configurado        | Configure `PrivateKey` dentro de `JwtOptions` para gerar um token     | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PublicKey`       | Chave `Public` não configurado         | Configure `PublicKey` dentro de `JwtOptions` para validar um token    | `InternalServerError` |
-| `JwtTokenService`     | `Token.Expired`                                | Token expirado                         | Gere um novo token                                                    | N/A                   |
-| `JwtTokenService`     | `Token.InvalidSignature`                       | Token com assinatura inválida          | Utilize apenas token com assinatura válida                            | N/A                   |
-| `JwtTokenService`     | `Token.Invalid`                                | Token inválido                         | Utilize apenas token válido                                           | N/A                   |
-| `JwtTokenService`     | `InternalServerError`                          | Erro interno do servidor               | Analise os logs para mais detalhes                                    | N/A                   |
+1. **Prefer GCM over CBC** - GCM provides built-in authentication
+2. **Never use CBCUnsafe for new data** - Decrypt-only mode for compatibility with legacy systems
+3. **Prefer `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation
+4. **Generate random keys** - Use `openssl rand -base64 32` or `RandomNumberGenerator.GetBytes(32)`
 
 ---
 
-## 🪪 Contribuição
+## ⚠️ Error Codes and Solutions
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Securities](https://github.com/Tooark/nuget-tooark/issues).
+| Service               | Message                                        | Description                           | Solution                                                      | Exception             |
+| --------------------- | ---------------------------------------------- | ------------------------------------- | ------------------------------------------------------------- | --------------------- |
+| `CryptographyService` | `Options.NotConfigured`                        | `Options` not configured              | Configure `CryptographyOptions`                               | `InternalServerError` |
+| `CryptographyService` | `Options.Cryptography.SecretNotConfigured`     | No key configured                     | Configure `Secret` or `SecretBase64` in `CryptographyOptions` | `InternalServerError` |
+| `CryptographyService` | `Options.Cryptography.SecretBase64Invalid`     | `SecretBase64` is not valid Base64    | Provide a valid Base64 value in `SecretBase64`                | `InternalServerError` |
+| `CryptographyService` | `Options.Cryptography.SecretBase64InvalidSize` | `SecretBase64` is not 32 bytes        | Use a key of exactly 32 bytes (AES-256)                       | `InternalServerError` |
+| `CryptographyService` | `Options.Cryptography.AlgorithmDecryptOnly`    | `CBCUnsafe` used to encrypt           | Use `CBCUnsafe` only to decrypt legacy data                   | `InternalServerError` |
+| `CryptographyService` | `Cryptography.PlainTextNotProvided`            | `PlainText` not provided              | Provide the plain text to encrypt                             | `BadRequest`          |
+| `CryptographyService` | `Cryptography.CipherTextNotProvided`           | `CipherText` not provided             | Provide the encrypted text to decrypt                         | `BadRequest`          |
+| `CryptographyService` | `Cryptography.InvalidCipherText`               | Invalid `CipherText`                  | Provide a valid encrypted text to decrypt                     | `BadRequest`          |
+| `JwtTokenService`     | `Options.NotConfigured`                        | `Options` not configured              | Configure `JwtOptions`                                        | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.SecretNotConfigured`              | `Secret` not configured               | Configure `Secret` in `JwtOptions` for a symmetric token      | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.SecretTooShort`                   | `Secret` below the algorithm minimum  | Use at least 32/48/64 bytes for HS256/HS384/HS512             | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.KeysNotConfigured`                | `Private` and `Public` not configured | Configure the keys in `JwtOptions` for an asymmetric token    | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidSize`           | Invalid `Private` key size            | Use a `Private` key of at least 2048 bits                     | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidSize`            | Invalid `Public` key size             | Use a `Public` key of at least 2048 bits                      | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidCurve`          | Invalid `Private` key curve           | Use a `Private` key with the correct curve                    | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidCurve`           | Invalid `Public` key curve            | Use a `Public` key with the correct curve                     | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.InvalidKey`                       | Invalid key                           | [Use valid keys](#-generating-keys) for the chosen algorithm  | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.AlgorithmNotSupported`            | Unsupported algorithm                 | [Use a supported algorithm](#-jwt---supported-algorithms)     | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PrivateKey`      | `Private` key not configured          | Configure `PrivateKey` in `JwtOptions` to generate a token    | `InternalServerError` |
+| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PublicKey`       | `Public` key not configured           | Configure `PublicKey` in `JwtOptions` to validate a token     | `InternalServerError` |
+| `JwtTokenService`     | `Token.Expired`                                | Expired token                         | Generate a new token                                          | N/A                   |
+| `JwtTokenService`     | `Token.InvalidSignature`                       | Token with an invalid signature       | Use only tokens with a valid signature                        | N/A                   |
+| `JwtTokenService`     | `Token.Invalid`                                | Invalid token                         | Use only valid tokens                                         | N/A                   |
+| `JwtTokenService`     | `InternalServerError`                          | Internal server error                 | Check the logs for details                                    | N/A                   |
 
-## 📄 Licença
+---
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+## 🪪 Contributing
+
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Securities](https://github.com/Tooark/nuget-tooark/issues) repository.
+
+## 📄 License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

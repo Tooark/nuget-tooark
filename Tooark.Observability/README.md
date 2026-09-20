@@ -1,44 +1,46 @@
 # Tooark.Observability
 
-Biblioteca de observabilidade para aplicações .NET, fornecendo integração simplificada com **OpenTelemetry** para coleta de **traces**, **metrics** e **logs** com configuração via `appsettings.json` e defaults sensatos.
+Observability library for .NET applications, providing a simplified integration with **OpenTelemetry** to collect **traces**, **metrics** and **logs**, configured through `appsettings.json` with sensible defaults.
 
-## 📦 Conteúdo do Pacote
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md)
 
-### Classes de Configuração (Options)
+## 📦 Package Contents
 
-| Classe                     | Descrição                                                               |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `ObservabilityOptions`     | Configurações principais de Observability                               |
-| `TracingOptions`           | Configurações de rastreamento (tracing)                                 |
-| `MetricsOptions`           | Configurações de métricas                                               |
-| `LoggingOptions`           | Configurações de logging                                                |
-| `OtlpOptions`              | Configurações do exportador OTLP                                        |
-| `OtlpBatchOptions`         | Configurações do processador Batch (OTLP)                               |
-| `OtlpOverrideOptions`      | Overrides do OTLP por sinal (Tracing/Metrics/Logging), herdam do global |
-| `OtlpBatchOverrideOptions` | Overrides do Batch por sinal, herdam do global                          |
-| `DataSensitiveOptions`     | Configurações de sanitização de dados sensíveis para Tracing            |
+### Configuration Classes (Options)
 
-### Enumerações
+| Class                      | Description                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| `ObservabilityOptions`     | Main Observability settings                                                  |
+| `TracingOptions`           | Tracing settings                                                             |
+| `MetricsOptions`           | Metrics settings                                                             |
+| `LoggingOptions`           | Logging settings                                                             |
+| `OtlpOptions`              | OTLP exporter settings                                                       |
+| `OtlpBatchOptions`         | Batch processor settings (OTLP)                                              |
+| `OtlpOverrideOptions`      | Per-signal OTLP overrides (Tracing/Metrics/Logging), inherit from the global |
+| `OtlpBatchOverrideOptions` | Per-signal Batch overrides, inherit from the global                          |
+| `DataSensitiveOptions`     | Sensitive data sanitization settings for Tracing                             |
 
-| Enum             | Descrição                                         |
-| ---------------- | ------------------------------------------------- |
-| `EProtocolOtlp`  | Protocolo de comunicação OTLP (grpc, http)        |
-| `EProcessorType` | Tipo de processador de exportação (batch, simple) |
+### Enumerations
 
-### Extensões de Injeção de Dependência
+| Enum             | Description                              |
+| ---------------- | ---------------------------------------- |
+| `EProtocolOtlp`  | OTLP communication protocol (grpc, http) |
+| `EProcessorType` | Export processor type (batch, simple)    |
 
-| Método                     | Descrição                                          |
-| -------------------------- | -------------------------------------------------- |
-| `AddTooarkOpenTelemetry()` | Configura OpenTelemetry com traces, metrics e logs |
-| `AddTooarkObservability()` | Alias de `AddTooarkOpenTelemetry()`                |
+### Dependency Injection Extensions
 
-Ambos recebem `IConfiguration` e uma `Action<ObservabilityOptions>` opcional, e produzem exatamente o mesmo
-registro — `AddTooarkObservability` delega para `AddTooarkOpenTelemetry`. Use o que ficar mais legível no seu
-`Program.cs`.
+| Method                     | Description                                            |
+| -------------------------- | ------------------------------------------------------ |
+| `AddTooarkOpenTelemetry()` | Configures OpenTelemetry with traces, metrics and logs |
+| `AddTooarkObservability()` | Alias of `AddTooarkOpenTelemetry()`                    |
+
+Both receive an `IConfiguration` and an optional `Action<ObservabilityOptions>`, and produce exactly the same
+registration — `AddTooarkObservability` delegates to `AddTooarkOpenTelemetry`. Use whichever reads better in
+your `Program.cs`.
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Observability
@@ -46,19 +48,19 @@ dotnet add package Tooark.Observability
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
-### appsettings.json - Configuração Completa
+### appsettings.json - Full Configuration
 
-Exemplo com **todas as opções disponíveis** no pacote:
+Example with **every option available** in the package:
 
 ```json
 {
   "Observability": {
     "Enabled": true,
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "ServiceVersion": "1.0.0",
-    "ServiceInstanceId": "instancia-001",
+    "ServiceInstanceId": "instance-001",
     "UseConsoleExporterInDevelopment": true,
     "AllowSensitiveData": false,
     "ResourceAttributes": {
@@ -85,7 +87,7 @@ Exemplo com **todas as opções disponíveis** no pacote:
         "/favicon.ico"
       ],
       "ActivitySourceName": "Tooark",
-      "AdditionalSources": ["MinhaActivitySource", "OutraSource"],
+      "AdditionalSources": ["MyActivitySource", "OtherSource"],
       "DataSensitive": {
         "HideQueryParameters": true,
         "HideHeaders": true,
@@ -110,7 +112,7 @@ Exemplo com **todas as opções disponíveis** no pacote:
       "RuntimeMetricsEnabled": true,
       "ProcessMetricsEnabled": true,
       "MeterName": "Tooark",
-      "AdditionalMeters": ["MeuMeter", "OutroMeter"],
+      "AdditionalMeters": ["MyMeter", "OtherMeter"],
       "Otlp": {
         "Headers": "tenant-id=metrics-tenant"
       }
@@ -142,15 +144,15 @@ Exemplo com **todas as opções disponíveis** no pacote:
 }
 ```
 
-### Override de OTLP por recurso
+### Per-signal OTLP override
 
-As configurações em `Observability:Otlp` funcionam como base para `Tracing`, `Metrics` e `Logging`.
+The settings in `Observability:Otlp` work as the base for `Tracing`, `Metrics` and `Logging`.
 
-Se você definir `Tracing:Otlp`, `Metrics:Otlp` ou `Logging:Otlp`, apenas os campos informados naquele recurso sobrescrevem o OTLP global. Os demais continuam herdados do bloco principal.
+If you define `Tracing:Otlp`, `Metrics:Otlp` or `Logging:Otlp`, only the fields provided for that signal override the global OTLP. The others keep being inherited from the main block.
 
-Como os overrides usam campos anuláveis (`OtlpOverrideOptions`), qualquer valor informado é aplicado — inclusive valores iguais aos defaults. Por exemplo, `"Tracing": { "Otlp": { "Enabled": false } }` desabilita o OTLP apenas para tracing, mesmo com o OTLP global habilitado.
+Since the overrides use nullable fields (`OtlpOverrideOptions`), any provided value is applied — including values equal to the defaults. For instance, `"Tracing": { "Otlp": { "Enabled": false } }` disables OTLP for tracing only, even with the global OTLP enabled.
 
-Exemplo: neste caso, `Tracing` reutiliza `Enabled`, `Headers`, `Batch` e demais campos do OTLP global, alterando apenas `Endpoint` e `Protocol`.
+Example: here `Tracing` reuses `Enabled`, `Headers`, `Batch` and the other fields of the global OTLP, changing only `Endpoint` and `Protocol`.
 
 ```json
 {
@@ -170,14 +172,14 @@ Exemplo: neste caso, `Tracing` reutiliza `Enabled`, `Headers`, `Batch` e demais 
 }
 ```
 
-### appsettings.json - Configuração Mínima
+### appsettings.json - Minimal Configuration
 
-Para a maioria dos casos, uma configuração mínima é suficiente para habilitar **tracing**, **metrics** e **logging** com export via **OTLP**:
+For most cases, a minimal configuration is enough to enable **tracing**, **metrics** and **logging** exported through **OTLP**:
 
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://localhost:4317"
@@ -186,12 +188,12 @@ Para a maioria dos casos, uma configuração mínima é suficiente para habilita
 }
 ```
 
-ou com header personalizado:
+or with a custom header:
 
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://localhost:4317",
@@ -201,14 +203,14 @@ ou com header personalizado:
 }
 ```
 
-### appsettings.json - Configuração Serverless
+### appsettings.json - Serverless Configuration
 
-Para ambientes serverless (AWS ECS, GCP Cloud Run, Azure Container Apps) com scale-to-zero:
+For serverless environments (AWS ECS, GCP Cloud Run, Azure Container Apps) with scale-to-zero:
 
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://otel-collector:4317",
@@ -218,12 +220,12 @@ Para ambientes serverless (AWS ECS, GCP Cloud Run, Azure Container Apps) com sca
 }
 ```
 
-Para AWS Lambda, GCP Cloud Functions ou Azure Functions (envio imediato):
+For AWS Lambda, GCP Cloud Functions or Azure Functions (immediate export):
 
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://otel-collector:4317",
@@ -240,7 +242,7 @@ using Tooark.Observability.Injections;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona OpenTelemetry com configurações do appsettings.json
+// Adds OpenTelemetry with the appsettings.json settings
 builder.Services.AddTooarkOpenTelemetry(builder.Configuration);
 
 var app = builder.Build();
@@ -248,9 +250,9 @@ var app = builder.Build();
 app.Run();
 ```
 
-### Configuração Programática
+### Programmatic Configuration
 
-Você também pode configurar programaticamente ou combinar com `appsettings.json`:
+You can also configure programmatically or combine with `appsettings.json`:
 
 ```csharp
 using Tooark.Observability.Injections;
@@ -259,29 +261,29 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddTooarkOpenTelemetry(builder.Configuration, options =>
 {
-    // Sobrescreve configurações do appsettings.json
-    options.ServiceName = "MeuServicoCustomizado";
-    options.Tracing.SamplingRatio = 0.5; // 50% dos traces
+    // Overrides the appsettings.json settings
+    options.ServiceName = "MyCustomService";
+    options.Tracing.SamplingRatio = 0.5; // 50% of the traces
 
-    // Adiciona sources/meters customizados
-    options.Tracing.AdditionalSources = ["MinhaActivitySource"];
-    options.Metrics.AdditionalMeters = ["MeuMeter"];
+    // Adds custom sources/meters
+    options.Tracing.AdditionalSources = ["MyActivitySource"];
+    options.Metrics.AdditionalMeters = ["MyMeter"];
 
-    // Configuração avançada via callbacks
+    // Advanced configuration through callbacks
     options.ConfigureTracing = builder =>
     {
-        // Adicionar instrumentações adicionais
+        // Add extra instrumentations
         // builder.AddSqlClientInstrumentation();
     };
 
     options.ConfigureMetrics = builder =>
     {
-        // Configuração adicional de métricas
+        // Extra metrics configuration
     };
 
     options.ConfigureLogging = loggerOptions =>
     {
-        // Configuração adicional de logging
+        // Extra logging configuration
     };
 });
 
@@ -292,173 +294,173 @@ app.Run();
 
 ---
 
-## 📊 Opções de Configuração
+## 📊 Configuration Options
 
 ### ObservabilityOptions
 
-| Propriedade                       | Tipo                      | Padrão  | Descrição                                       |
-| --------------------------------- | ------------------------- | ------- | ----------------------------------------------- |
-| `Enabled`                         | bool                      | `true`  | Habilita/desabilita Observability               |
-| `ServiceName`                     | string?                   | `null`  | Nome do serviço (inferido se não definido)      |
-| `ServiceVersion`                  | string?                   | `null`  | Versão do serviço (inferida se não definida)    |
-| `ServiceInstanceId`               | string?                   | `null`  | ID único da instância (GUID se não definido)    |
-| `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Atributos adicionais para Resource              |
-| `AllowSensitiveData`              | bool                      | `false` | Permitir dados sensíveis sem sanitização global |
-| `UseConsoleExporterInDevelopment` | bool                      | `true`  | Usar Console exporter em Development            |
-| `Tracing`                         | TracingOptions            | (novo)  | Configurações de rastreamento                   |
-| `Metrics`                         | MetricsOptions            | (novo)  | Configurações de métricas                       |
-| `Logging`                         | LoggingOptions            | (novo)  | Configurações de logging                        |
-| `Otlp`                            | OtlpOptions               | (novo)  | Configurações do exportador OTLP                |
+| Property                          | Type                      | Default | Description                                      |
+| --------------------------------- | ------------------------- | ------- | ------------------------------------------------ |
+| `Enabled`                         | bool                      | `true`  | Enables/disables Observability                   |
+| `ServiceName`                     | string?                   | `null`  | Service name (inferred when not set)             |
+| `ServiceVersion`                  | string?                   | `null`  | Service version (inferred when not set)          |
+| `ServiceInstanceId`               | string?                   | `null`  | Unique instance ID (GUID when not set)           |
+| `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Additional attributes for the Resource           |
+| `AllowSensitiveData`              | bool                      | `false` | Allow sensitive data without global sanitization |
+| `UseConsoleExporterInDevelopment` | bool                      | `true`  | Use the Console exporter in Development          |
+| `Tracing`                         | TracingOptions            | (new)   | Tracing settings                                 |
+| `Metrics`                         | MetricsOptions            | (new)   | Metrics settings                                 |
+| `Logging`                         | LoggingOptions            | (new)   | Logging settings                                 |
+| `Otlp`                            | OtlpOptions               | (new)   | OTLP exporter settings                           |
 
-Além das opções vinculáveis por `appsettings.json`, `ObservabilityOptions` expõe três callbacks que só podem
-ser definidos programaticamente, pela sobrecarga com `Action<ObservabilityOptions>`:
+Besides the options bindable from `appsettings.json`, `ObservabilityOptions` exposes three callbacks that can
+only be set programmatically, through the overload with `Action<ObservabilityOptions>`:
 
-| Callback           | Tipo                                  | Uso                                             |
-| ------------------ | ------------------------------------- | ----------------------------------------------- |
-| `ConfigureTracing` | `Action<TracerProviderBuilder>?`      | Instrumentações e processadores extras de trace |
-| `ConfigureMetrics` | `Action<MeterProviderBuilder>?`       | Instrumentações e readers extras de métricas    |
-| `ConfigureLogging` | `Action<OpenTelemetryLoggerOptions>?` | Ajustes extras do logging OpenTelemetry         |
+| Callback           | Type                                  | Usage                                       |
+| ------------------ | ------------------------------------- | ------------------------------------------- |
+| `ConfigureTracing` | `Action<TracerProviderBuilder>?`      | Extra trace instrumentations and processors |
+| `ConfigureMetrics` | `Action<MeterProviderBuilder>?`       | Extra metrics instrumentations and readers  |
+| `ConfigureLogging` | `Action<OpenTelemetryLoggerOptions>?` | Extra adjustments to OpenTelemetry logging  |
 
 ### TracingOptions
 
-| Propriedade          | Tipo                 | Padrão                       | Descrição                                   |
-| -------------------- | -------------------- | ---------------------------- | ------------------------------------------- |
-| `Enabled`            | bool                 | `true`                       | Habilita tracing                            |
-| `SamplingRatio`      | double               | `1.0`                        | Taxa de amostragem (0.0-1.0)                |
-| `IgnorePathPrefix`   | string?              | `null`                       | Prefixo a adicionar aos paths ignorados     |
-| `IgnorePaths`        | string[]             | health, metrics, traces, etc | Paths a serem ignorados no tracing          |
-| `ActivitySourceName` | string               | `Tooark`                     | Nome do ActivitySource padrão               |
-| `AdditionalSources`  | string[]             | `[]`                         | ActivitySources adicionais para capturar    |
-| `DataSensitive`      | DataSensitiveOptions | (defaults)                   | Configurações granulares de dados sensíveis |
+| Property             | Type                 | Default                      | Description                           |
+| -------------------- | -------------------- | ---------------------------- | ------------------------------------- |
+| `Enabled`            | bool                 | `true`                       | Enables tracing                       |
+| `SamplingRatio`      | double               | `1.0`                        | Sampling ratio (0.0-1.0)              |
+| `IgnorePathPrefix`   | string?              | `null`                       | Prefix added to the ignored paths     |
+| `IgnorePaths`        | string[]             | health, metrics, traces, etc | Paths ignored by tracing              |
+| `ActivitySourceName` | string               | `Tooark`                     | Name of the default ActivitySource    |
+| `AdditionalSources`  | string[]             | `[]`                         | Additional ActivitySources to capture |
+| `DataSensitive`      | DataSensitiveOptions | (defaults)                   | Granular sensitive data settings      |
 
 ### DataSensitiveOptions (Tracing)
 
-| Propriedade               | Tipo     | Padrão                     | Descrição                                     |
+| Property                  | Type     | Default                    | Description                                   |
 | ------------------------- | -------- | -------------------------- | --------------------------------------------- |
-| `HideQueryParameters`     | bool     | `true`                     | Remove a query string dos atributos dos spans |
-| `HideHeaders`             | bool     | `true`                     | Mascara headers sensíveis                     |
-| `SensitiveRequestHeaders` | string[] | authorization, cookie, etc | Lista de headers a serem mascarados           |
+| `HideQueryParameters`     | bool     | `true`                     | Removes the query string from span attributes |
+| `HideHeaders`             | bool     | `true`                     | Masks sensitive headers                       |
+| `SensitiveRequestHeaders` | string[] | authorization, cookie, etc | List of headers to mask                       |
 
 ### MetricsOptions
 
-| Propriedade                  | Tipo     | Padrão   | Descrição                                                     |
-| ---------------------------- | -------- | -------- | ------------------------------------------------------------- |
-| `Enabled`                    | bool     | `true`   | Habilita métricas                                             |
-| `ExportIntervalMilliseconds` | int?     | `null`   | Intervalo de export OTLP (null: 60000, ou 5000 em serverless) |
-| `RuntimeMetricsEnabled`      | bool     | `true`   | Habilita métricas de runtime .NET                             |
-| `ProcessMetricsEnabled`      | bool     | `true`   | Habilita métricas de processo                                 |
-| `MeterName`                  | string   | `Tooark` | Nome do Meter padrão                                          |
-| `AdditionalMeters`           | string[] | `[]`     | Meters adicionais a registrar                                 |
+| Property                     | Type     | Default  | Description                                               |
+| ---------------------------- | -------- | -------- | --------------------------------------------------------- |
+| `Enabled`                    | bool     | `true`   | Enables metrics                                           |
+| `ExportIntervalMilliseconds` | int?     | `null`   | OTLP export interval (null: 60000, or 5000 in serverless) |
+| `RuntimeMetricsEnabled`      | bool     | `true`   | Enables .NET runtime metrics                              |
+| `ProcessMetricsEnabled`      | bool     | `true`   | Enables process metrics                                   |
+| `MeterName`                  | string   | `Tooark` | Name of the default Meter                                 |
+| `AdditionalMeters`           | string[] | `[]`     | Additional Meters to register                             |
 
 ### LoggingOptions
 
-| Propriedade               | Tipo | Padrão | Descrição                         |
-| ------------------------- | ---- | ------ | --------------------------------- |
-| `Enabled`                 | bool | `true` | Habilita logging OpenTelemetry    |
-| `IncludeFormattedMessage` | bool | `true` | Incluir mensagem formatada        |
-| `IncludeScopes`           | bool | `true` | Incluir scopes                    |
-| `ParseStateValues`        | bool | `true` | Fazer parse dos valores de estado |
+| Property                  | Type | Default | Description                   |
+| ------------------------- | ---- | ------- | ----------------------------- |
+| `Enabled`                 | bool | `true`  | Enables OpenTelemetry logging |
+| `IncludeFormattedMessage` | bool | `true`  | Include the formatted message |
+| `IncludeScopes`           | bool | `true`  | Include scopes                |
+| `ParseStateValues`        | bool | `true`  | Parse the state values        |
 
 ### OtlpOptions
 
-| Propriedade           | Tipo             | Padrão   | Descrição                                         |
+| Property              | Type             | Default  | Description                                       |
 | --------------------- | ---------------- | -------- | ------------------------------------------------- |
-| `Enabled`             | bool             | `false`  | Habilita exportador OTLP                          |
-| `Endpoint`            | string?          | `null`   | Endpoint do coletor (ex: `http://localhost:4317`) |
-| `Protocol`            | EProtocolOtlp    | `grpc`   | Protocolo: `grpc` ou `http`                       |
-| `ExportProcessorType` | EProcessorType   | `batch`  | Processador: `batch` ou `simple`                  |
-| `ServerlessOptimized` | bool             | `false`  | Otimiza batch para ambientes serverless           |
-| `Headers`             | string?          | `null`   | Headers (formato: `key1=value1,key2=value2`)      |
-| `Batch`               | OtlpBatchOptions | defaults | Opções do batch                                   |
+| `Enabled`             | bool             | `false`  | Enables the OTLP exporter                         |
+| `Endpoint`            | string?          | `null`   | Collector endpoint (e.g. `http://localhost:4317`) |
+| `Protocol`            | EProtocolOtlp    | `grpc`   | Protocol: `grpc` or `http`                        |
+| `ExportProcessorType` | EProcessorType   | `batch`  | Processor: `batch` or `simple`                    |
+| `ServerlessOptimized` | bool             | `false`  | Optimizes the batch for serverless environments   |
+| `Headers`             | string?          | `null`   | Headers (format: `key1=value1,key2=value2`)       |
+| `Batch`               | OtlpBatchOptions | defaults | Batch options                                     |
 
 ### OtlpBatchOptions
 
-| Propriedade                   | Tipo | Padrão  | Descrição                               |
-| ----------------------------- | ---- | ------- | --------------------------------------- |
-| `MaxQueueSize`                | int  | `2048`  | Tamanho máximo da fila interna          |
-| `MaxExportBatchSize`          | int  | `512`   | Tamanho máximo do lote (≤ MaxQueueSize) |
-| `ScheduledDelayMilliseconds`  | int  | `5000`  | Intervalo entre envios em lote (ms)     |
-| `ExporterTimeoutMilliseconds` | int  | `30000` | Timeout do export (ms)                  |
+| Property                      | Type | Default | Description                         |
+| ----------------------------- | ---- | ------- | ----------------------------------- |
+| `MaxQueueSize`                | int  | `2048`  | Maximum size of the internal queue  |
+| `MaxExportBatchSize`          | int  | `512`   | Maximum batch size (≤ MaxQueueSize) |
+| `ScheduledDelayMilliseconds`  | int  | `5000`  | Interval between batch exports (ms) |
+| `ExporterTimeoutMilliseconds` | int  | `30000` | Export timeout (ms)                 |
 
-### OtlpOverrideOptions e OtlpBatchOverrideOptions
+### OtlpOverrideOptions and OtlpBatchOverrideOptions
 
-Usadas em `Tracing:Otlp`, `Metrics:Otlp` e `Logging:Otlp`. Possuem os mesmos campos de `OtlpOptions` e `OtlpBatchOptions`, porém todos anuláveis: campos não informados (`null`) herdam o valor do OTLP global; campos informados sobrescrevem o global, mesmo quando iguais aos defaults (ex: `Enabled: false` desabilita o OTLP apenas naquele sinal).
+Used in `Tracing:Otlp`, `Metrics:Otlp` and `Logging:Otlp`. They have the same fields as `OtlpOptions` and `OtlpBatchOptions`, but all nullable: fields not provided (`null`) inherit the value of the global OTLP; provided fields override the global one, even when equal to the defaults (e.g. `Enabled: false` disables OTLP for that signal only).
 
 ---
 
-## 🎯 Comportamento Padrão
+## 🎯 Default Behavior
 
-### Resource (Identificação do Serviço)
+### Resource (Service Identification)
 
-O OpenTelemetry usa Resource para identificar a origem dos dados de telemetria:
+OpenTelemetry uses the Resource to identify the origin of the telemetry data:
 
-| Atributo                      | Fonte                                                                     |
+| Attribute                     | Source                                                                    |
 | ----------------------------- | ------------------------------------------------------------------------- |
 | `service.name`                | `ServiceName` → `AssemblyName` → `"unknown_service"`                      |
 | `service.version`             | `ServiceVersion` → `AssemblyVersion` → `"unknown_version"`                |
 | `service.instance.id`         | `ServiceInstanceId` → `OTEL_SERVICE_INSTANCE_ID` → `Guid.NewGuid()`       |
 | `deployment.environment.name` | `ASPNETCORE_ENVIRONMENT` → `DOTNET_ENVIRONMENT` → `"unknown_environment"` |
-| `deployment.environment`      | Mesmo valor acima (chave legada, mantida para compatibilidade)            |
+| `deployment.environment`      | Same value as above (legacy key, kept for compatibility)                  |
 | `host.name`                   | `Environment.MachineName`                                                 |
 | `process.pid`                 | `Environment.ProcessId`                                                   |
-| `process.runtime.*`           | Informações do runtime .NET                                               |
+| `process.runtime.*`           | .NET runtime information                                                  |
 
 ### Tracing
 
-Quando habilitado (`Tracing.Enabled = true`):
+When enabled (`Tracing.Enabled = true`):
 
-- **ASP.NET Core Instrumentation**: captura automaticamente traces de requisições HTTP de entrada
-- **HTTP Client Instrumentation**: captura traces de requisições HTTP de saída (HttpClient)
-- **Filter Paths**: por padrão ignora: `/health`, `/healthz`, `/ready`, `/traces`, `/metrics`, `/logs`, `/favicon.ico`
-- **RecordException**: exceções são registradas automaticamente nos spans
-- **Sampling**: configurável via `SamplingRatio` (0.0 = 0%, 1.0 = 100%)
+- **ASP.NET Core Instrumentation**: automatically captures traces of incoming HTTP requests
+- **HTTP Client Instrumentation**: captures traces of outgoing HTTP requests (HttpClient)
+- **Filter Paths**: by default ignores: `/health`, `/healthz`, `/ready`, `/traces`, `/metrics`, `/logs`, `/favicon.ico`
+- **RecordException**: exceptions are automatically recorded on the spans
+- **Sampling**: configurable through `SamplingRatio` (0.0 = 0%, 1.0 = 100%)
 
-### Sanitização de Dados Sensíveis
+### Sensitive Data Sanitization
 
-Quando `AllowSensitiveData = false` (padrão):
+When `AllowSensitiveData = false` (default):
 
-- **Query Parameters**: removidos dos atributos das convenções semânticas atuais — `url.query` (ASP.NET Core) e `url.full` (HttpClient); o atributo legado `http.target` é reescrito quando presente com query (ex: `/api/users?token=xxx` → `/api/users`)
-- **Headers Sensíveis**: mascarados nos spans (Authorization, Cookie, API keys, etc.)
+- **Query Parameters**: removed from the attributes of the current semantic conventions — `url.query` (ASP.NET Core) and `url.full` (HttpClient); the legacy `http.target` attribute is rewritten when present with a query (e.g. `/api/users?token=xxx` → `/api/users`)
+- **Sensitive Headers**: masked on the spans (Authorization, Cookie, API keys, etc.)
 
-Com `AllowSensitiveData = true`, a sanitização é desligada globalmente e as opções granulares de `Tracing.DataSensitive` são ignoradas.
+With `AllowSensitiveData = true`, sanitization is turned off globally and the granular `Tracing.DataSensitive` options are ignored.
 
 ### Metrics
 
-Quando habilitado (`Metrics.Enabled = true`):
+When enabled (`Metrics.Enabled = true`):
 
-- **ASP.NET Core Instrumentation**: métricas de requisições HTTP de entrada
-- **HTTP Client Instrumentation**: métricas de chamadas HTTP de saída
-- **Runtime Instrumentation**: métricas do runtime .NET (GC, threads, etc.) quando `RuntimeMetricsEnabled = true`
-- **Process Instrumentation**: métricas de processo (CPU, memória) quando `ProcessMetricsEnabled = true`
-- **Intervalo de exportação**: métricas são exportadas via OTLP a cada `ExportIntervalMilliseconds` (padrão: 60s; 5s quando o OTLP efetivo tem `ServerlessOptimized` habilitado)
+- **ASP.NET Core Instrumentation**: metrics of incoming HTTP requests
+- **HTTP Client Instrumentation**: metrics of outgoing HTTP calls
+- **Runtime Instrumentation**: .NET runtime metrics (GC, threads, etc.) when `RuntimeMetricsEnabled = true`
+- **Process Instrumentation**: process metrics (CPU, memory) when `ProcessMetricsEnabled = true`
+- **Export interval**: metrics are exported through OTLP every `ExportIntervalMilliseconds` (default: 60s; 5s when the effective OTLP has `ServerlessOptimized` enabled)
 
 ### Logging
 
-Quando habilitado (`Logging.Enabled = true`):
+When enabled (`Logging.Enabled = true`):
 
-- Integra com `Microsoft.Extensions.Logging`
-- Exporta logs via OTLP junto com traces e metrics
-- Correlaciona automaticamente logs com traces (TraceId/SpanId)
+- Integrates with `Microsoft.Extensions.Logging`
+- Exports logs through OTLP together with traces and metrics
+- Automatically correlates logs with traces (TraceId/SpanId)
 
-### Exportadores
+### Exporters
 
-| Exportador  | Ativação                                                                       | Tipo |
-| ----------- | ------------------------------------------------------------------------------ | ---- |
-| **OTLP**    | `Otlp.Enabled = true` + `Otlp.Endpoint` configurado                            | Push |
-| **Console** | Ambiente `Development` + `UseConsoleExporterInDevelopment` + OTLP desabilitado | Push |
+| Exporter    | Activation                                                                    | Type |
+| ----------- | ----------------------------------------------------------------------------- | ---- |
+| **OTLP**    | `Otlp.Enabled = true` + `Otlp.Endpoint` configured                            | Push |
+| **Console** | `Development` environment + `UseConsoleExporterInDevelopment` + OTLP disabled | Push |
 
-> **Nota**: Este pacote **não expõe endpoints HTTP** para coleta de métricas (como `/metrics` do Prometheus). Usa apenas o modelo **push** via OTLP.
+> **Note**: This package **does not expose HTTP endpoints** for metrics collection (such as Prometheus' `/metrics`). It uses the **push** model through OTLP only.
 
 ---
 
-## 🔌 Integração com Coletores
+## 🔌 Collector Integration
 
 ### OpenTelemetry Collector (gRPC)
 
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://otel-collector:4317",
@@ -473,7 +475,7 @@ Quando habilitado (`Logging.Enabled = true`):
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://otel-collector:4318",
@@ -488,7 +490,7 @@ Quando habilitado (`Logging.Enabled = true`):
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "http://jaeger:4317",
@@ -503,7 +505,7 @@ Quando habilitado (`Logging.Enabled = true`):
 ```json
 {
   "Observability": {
-    "ServiceName": "MeuServico",
+    "ServiceName": "MyService",
     "Otlp": {
       "Enabled": true,
       "Endpoint": "https://otlp-gateway-prod-us-central-0.grafana.net/otlp",
@@ -516,7 +518,7 @@ Quando habilitado (`Logging.Enabled = true`):
 
 ### Azure Monitor / Application Insights
 
-Para Azure Monitor, use o pacote `Azure.Monitor.OpenTelemetry.Exporter` e configure via callback:
+For Azure Monitor, use the `Azure.Monitor.OpenTelemetry.Exporter` package and configure it through the callback:
 
 ```csharp
 builder.Services.AddTooarkOpenTelemetry(builder.Configuration, options =>
@@ -541,63 +543,63 @@ builder.Services.AddTooarkOpenTelemetry(builder.Configuration, options =>
 
 ---
 
-## 🚀 Ambientes Serverless
+## 🚀 Serverless Environments
 
-Containers serverless podem ser desligados a qualquer momento (scale-to-zero), causando **perda de dados de telemetria** se o shutdown acontecer antes do flush do buffer.
+Serverless containers can be shut down at any time (scale-to-zero), causing **telemetry data loss** if the shutdown happens before the buffer is flushed.
 
 ### ServerlessOptimized
 
-Otimiza automaticamente as configurações de batch para minimizar perda de dados:
+Automatically tunes the batch settings to minimize data loss:
 
-| Parâmetro                              | Valor Padrão | Valor Serverless | Impacto                                 |
-| -------------------------------------- | ------------ | ---------------- | --------------------------------------- |
-| `ScheduledDelayMilliseconds`           | 5000ms       | 1000ms           | Flush a cada 1 segundo                  |
-| `MaxExportBatchSize`                   | 512          | 128              | Lotes menores, envios mais frequentes   |
-| `MaxQueueSize`                         | 2048         | 512              | Menos dados em risco de perda           |
-| `Metrics.ExportIntervalMilliseconds`\* | 60000ms      | 5000ms           | Métricas exportadas com mais frequência |
+| Parameter                              | Default Value | Serverless Value | Impact                                 |
+| -------------------------------------- | ------------- | ---------------- | -------------------------------------- |
+| `ScheduledDelayMilliseconds`           | 5000ms        | 1000ms           | Flush every second                     |
+| `MaxExportBatchSize`                   | 512           | 128              | Smaller batches, more frequent exports |
+| `MaxQueueSize`                         | 2048          | 512              | Less data at risk of loss              |
+| `Metrics.ExportIntervalMilliseconds`\* | 60000ms       | 5000ms           | Metrics exported more often            |
 
-\* Métricas usam um reader periódico (não o processador Batch); o intervalo serverless só é aplicado quando `Metrics.ExportIntervalMilliseconds` não foi informado.
+\* Metrics use a periodic reader (not the Batch processor); the serverless interval is only applied when `Metrics.ExportIntervalMilliseconds` was not provided.
 
-Os valores serverless são aplicados apenas aos campos de batch **não customizados**: qualquer valor definido explicitamente pelo usuário é mantido, mesmo que seja igual ao default padrão.
+The serverless values are applied only to the batch fields **not customized**: any value explicitly set by the user is kept, even when equal to the standard default.
 
-### Recomendações por Ambiente
+### Recommendations by Environment
 
-| Cenário                                   | Configuração Recomendada              |
-| ----------------------------------------- | ------------------------------------- |
-| Servidores tradicionais (VMs, bare metal) | Padrão (`ServerlessOptimized: false`) |
-| Kubernetes com pods persistentes          | Padrão (`ServerlessOptimized: false`) |
-| AWS ECS (Fargate ou EC2)                  | `ServerlessOptimized: true`           |
-| GCP Cloud Run                             | `ServerlessOptimized: true`           |
-| Azure Container Apps                      | `ServerlessOptimized: true`           |
-| AWS Lambda                                | `ExportProcessorType: simple`         |
-| GCP Cloud Functions                       | `ExportProcessorType: simple`         |
-| Azure Functions                           | `ExportProcessorType: simple`         |
+| Scenario                              | Recommended Configuration              |
+| ------------------------------------- | -------------------------------------- |
+| Traditional servers (VMs, bare metal) | Default (`ServerlessOptimized: false`) |
+| Kubernetes with persistent pods       | Default (`ServerlessOptimized: false`) |
+| AWS ECS (Fargate or EC2)              | `ServerlessOptimized: true`            |
+| GCP Cloud Run                         | `ServerlessOptimized: true`            |
+| Azure Container Apps                  | `ServerlessOptimized: true`            |
+| AWS Lambda                            | `ExportProcessorType: simple`          |
+| GCP Cloud Functions                   | `ExportProcessorType: simple`          |
+| Azure Functions                       | `ExportProcessorType: simple`          |
 
 ### Graceful Shutdown
 
-O OpenTelemetry SDK faz `ForceFlush` automaticamente durante o shutdown. Configure tempo suficiente:
+The OpenTelemetry SDK does a `ForceFlush` automatically during shutdown. Configure enough time:
 
-- **AWS ECS**: `stopTimeout` no task definition (padrão: 30s)
-- **GCP Cloud Run**: `terminationGracePeriodSeconds` (padrão: 10s)
-- **Kubernetes**: `terminationGracePeriodSeconds` no Pod spec
+- **AWS ECS**: `stopTimeout` in the task definition (default: 30s)
+- **GCP Cloud Run**: `terminationGracePeriodSeconds` (default: 10s)
+- **Kubernetes**: `terminationGracePeriodSeconds` in the Pod spec
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Exemplo Completo com API
+### Full Example with an API
 
 ```csharp
 using Tooark.Observability.Injections;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configura serviços
+// Configures services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configura OpenTelemetry
+// Configures OpenTelemetry
 builder.Services.AddTooarkOpenTelemetry(builder.Configuration);
 
 var app = builder.Build();
@@ -615,7 +617,7 @@ app.MapControllers();
 app.Run();
 ```
 
-Com `appsettings.json`:
+With `appsettings.json`:
 
 ```json
 {
@@ -626,7 +628,7 @@ Com `appsettings.json`:
     }
   },
   "Observability": {
-    "ServiceName": "MinhaAPI",
+    "ServiceName": "MyAPI",
     "ServiceVersion": "1.0.0",
     "Otlp": {
       "Enabled": true,
@@ -636,24 +638,24 @@ Com `appsettings.json`:
 }
 ```
 
-### Criando Traces Customizados
+### Creating Custom Traces
 
 ```csharp
 using System.Diagnostics;
 
-public class MeuServico
+public class MyService
 {
     private static readonly ActivitySource _activitySource = new("Tooark");
 
-    public async Task ProcessarPedido(int pedidoId)
+    public async Task ProcessOrder(int orderId)
     {
-        using var activity = _activitySource.StartActivity("ProcessarPedido");
-        activity?.SetTag("pedido.id", pedidoId);
+        using var activity = _activitySource.StartActivity("ProcessOrder");
+        activity?.SetTag("order.id", orderId);
 
         try
         {
-            // Lógica de processamento...
-            activity?.SetTag("pedido.status", "sucesso");
+            // Processing logic...
+            activity?.SetTag("order.status", "success");
         }
         catch (Exception ex)
         {
@@ -665,68 +667,68 @@ public class MeuServico
 }
 ```
 
-### Criando Métricas Customizadas
+### Creating Custom Metrics
 
 ```csharp
 using System.Diagnostics.Metrics;
 
-public class MeuServico
+public class MyService
 {
     private static readonly Meter _meter = new("Tooark");
-    private static readonly Counter<long> _pedidosProcessados = _meter.CreateCounter<long>("pedidos.processados");
-    private static readonly Histogram<double> _tempoProcessamento = _meter.CreateHistogram<double>("pedidos.tempo_ms");
+    private static readonly Counter<long> _ordersProcessed = _meter.CreateCounter<long>("orders.processed");
+    private static readonly Histogram<double> _processingTime = _meter.CreateHistogram<double>("orders.time_ms");
 
-    public async Task ProcessarPedido(int pedidoId)
+    public async Task ProcessOrder(int orderId)
     {
         var sw = Stopwatch.StartNew();
 
-        // Lógica de processamento...
+        // Processing logic...
 
         sw.Stop();
-        _pedidosProcessados.Add(1, new KeyValuePair<string, object?>("tipo", "novo"));
-        _tempoProcessamento.Record(sw.ElapsedMilliseconds);
+        _ordersProcessed.Add(1, new KeyValuePair<string, object?>("type", "new"));
+        _processingTime.Record(sw.ElapsedMilliseconds);
     }
 }
 ```
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                  | Descrição                               |
-| ----------------------------------------------------------------------- | --------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | Exceções customizadas                   |
-| `OpenTelemetry`                                                         | SDK base do OpenTelemetry               |
-| `OpenTelemetry.Exporter.Console`                                        | Exporter para console (desenvolvimento) |
-| `OpenTelemetry.Exporter.OpenTelemetryProtocol`                          | Exporter OTLP (gRPC/HTTP)               |
-| `OpenTelemetry.Extensions.Hosting`                                      | Integração com Host do .NET             |
-| `OpenTelemetry.Instrumentation.AspNetCore`                              | Instrumentação automática ASP.NET Core  |
-| `OpenTelemetry.Instrumentation.Http`                                    | Instrumentação automática HttpClient    |
-| `OpenTelemetry.Instrumentation.Process`                                 | Instrumentação automática Process       |
-| `OpenTelemetry.Instrumentation.Runtime`                                 | Métricas do runtime .NET                |
-
----
-
-## ⚠️ Observações Importantes
-
-1. **Lifecycle gerenciado pelo host**: O OpenTelemetry é registrado via `services.AddOpenTelemetry()`, garantindo gerenciamento correto de `TracerProvider`, `MeterProvider` e shutdown graceful.
-
-2. **Sem quebra silenciosa**: Se nenhum exportador estiver configurado, a aplicação continua funcionando normalmente, apenas sem exportar telemetria.
-
-3. **Console Exporter em Development**: Ativado automaticamente quando `UseConsoleExporterInDevelopment = true` e OTLP não está configurado.
-
-4. **Sem endpoint /metrics**: Este pacote usa modelo **push** (OTLP). Não expõe endpoints HTTP para scraping estilo Prometheus.
-
-5. **Normalização de ResourceAttributes**: Chaves são normalizadas automaticamente: `lowercase`, espaços → `.`, caracteres inválidos → `_`.
-
-6. **Callbacks para customização**: Use `ConfigureTracing`, `ConfigureMetrics` e `ConfigureLogging` para adicionar instrumentações ou configurações avançadas.
+| Package                                                                 | Description                            |
+| ----------------------------------------------------------------------- | -------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | Custom exceptions                      |
+| `OpenTelemetry`                                                         | OpenTelemetry base SDK                 |
+| `OpenTelemetry.Exporter.Console`                                        | Console exporter (development)         |
+| `OpenTelemetry.Exporter.OpenTelemetryProtocol`                          | OTLP exporter (gRPC/HTTP)              |
+| `OpenTelemetry.Extensions.Hosting`                                      | Integration with the .NET Host         |
+| `OpenTelemetry.Instrumentation.AspNetCore`                              | Automatic ASP.NET Core instrumentation |
+| `OpenTelemetry.Instrumentation.Http`                                    | Automatic HttpClient instrumentation   |
+| `OpenTelemetry.Instrumentation.Process`                                 | Automatic Process instrumentation      |
+| `OpenTelemetry.Instrumentation.Runtime`                                 | .NET runtime metrics                   |
 
 ---
 
-## 🪪 Contribuição
+## ⚠️ Important Notes
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Observability](https://github.com/Tooark/nuget-tooark/issues).
+1. **Lifecycle managed by the host**: OpenTelemetry is registered through `services.AddOpenTelemetry()`, ensuring proper management of `TracerProvider`, `MeterProvider` and graceful shutdown.
 
-## 📄 Licença
+2. **No silent break**: If no exporter is configured, the application keeps working normally, just without exporting telemetry.
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+3. **Console Exporter in Development**: Enabled automatically when `UseConsoleExporterInDevelopment = true` and OTLP is not configured.
+
+4. **No /metrics endpoint**: This package uses the **push** model (OTLP). It does not expose HTTP endpoints for Prometheus-style scraping.
+
+5. **ResourceAttributes normalization**: Keys are normalized automatically: `lowercase`, spaces → `.`, invalid characters → `_`.
+
+6. **Callbacks for customization**: Use `ConfigureTracing`, `ConfigureMetrics` and `ConfigureLogging` to add instrumentations or advanced settings.
+
+---
+
+## 🪪 Contributing
+
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Observability](https://github.com/Tooark/nuget-tooark/issues) repository.
+
+## 📄 License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

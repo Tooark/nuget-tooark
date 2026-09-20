@@ -1,32 +1,34 @@
 # Tooark.Mediator.Abstractions
 
-Biblioteca com os contratos base do padrão Mediator para projetos .NET, utilizada por implementações como `Tooark.Mediator`.
+Library with the base contracts of the Mediator pattern for .NET projects, used by implementations such as `Tooark.Mediator`.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.Abstractions/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-O pacote `Tooark.Mediator.Abstractions` define os contratos para:
+## Overview
+
+The `Tooark.Mediator.Abstractions` package defines the contracts for:
 
 - requests (`IRequest`, `IRequest<TResponse>`);
 - commands (`ICommand`, `ICommand<TResponse>`);
 - queries (`IQuery<TResponse>`);
 - notifications (`INotify`);
-- envio e publicação (`ISender`, `IPublisher`);
-- interface principal (`IMediator`);
-- retorno vazio (`Unit`).
+- sending and publishing (`ISender`, `IPublisher`);
+- the main interface (`IMediator`);
+- the empty return (`Unit`).
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Mediator.Abstractions
@@ -34,36 +36,36 @@ dotnet add package Tooark.Mediator.Abstractions
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
-### Contratos de mensagem
+### Message contracts
 
-- `IRequest<TResponse>`: contrato base de requisição com resposta.
-- `IRequest`: atalho para requisição sem payload de resposta (`Unit`).
-- `ICommand<TResponse>`: comando com resposta.
-- `ICommand`: comando sem resposta explícita (`Unit`).
-- `IQuery<TResponse>`: consulta com resposta.
-- `INotify`: notificação/evento sem resposta.
+- `IRequest<TResponse>`: base contract of a request with a response.
+- `IRequest`: shortcut for a request without a response payload (`Unit`).
+- `ICommand<TResponse>`: command with a response.
+- `ICommand`: command without an explicit response (`Unit`).
+- `IQuery<TResponse>`: query with a response.
+- `INotify`: notification/event without a response.
 
-### Contratos de orquestração
+### Orchestration contracts
 
 - `ISender`
   - `Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)`
 - `IPublisher`
   - `Task PublishAsync(INotify notify, CancellationToken cancellationToken = default)`
-- `IMediator`: combina `ISender` e `IPublisher`.
+- `IMediator`: combines `ISender` and `IPublisher`.
 
-### Tipo utilitário
+### Utility type
 
 - `Unit`
-  - `Unit.Value`: a única instância de `Unit`.
-  - `Unit.Task`: tarefa concluída com `Unit.Value`, criada uma única vez e reutilizada a cada acesso.
+  - `Unit.Value`: the single instance of `Unit`.
+  - `Unit.Task`: a task completed with `Unit.Value`, created once and reused on every access.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Definindo mensagens
+### Defining messages
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -75,7 +77,7 @@ public sealed record GetOrderByIdQuery(Guid Id) : IQuery<string>;
 public sealed record OrderCreatedNotify(Guid OrderId) : INotify;
 ```
 
-### Dependendo dos contratos no serviço
+### Depending on the contracts in a service
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -98,19 +100,19 @@ public sealed class OrderApplicationService(ISender sender, IPublisher publisher
 }
 ```
 
-### Usando Unit em comandos sem retorno
+### Using Unit in commands without a return value
 
 ```csharp
 using Tooark.Mediator.Abstractions;
 
 public sealed record DeactivateOrderCommand(Guid Id) : ICommand;
 
-// ICommand é atalho para ICommand<Unit>: o envio retorna Task<Unit>
+// ICommand is a shortcut for ICommand<Unit>: sending returns Task<Unit>
 public sealed class OrderMaintenanceService(ISender sender)
 {
   public Task<Unit> DeactivateAsync(Guid id, CancellationToken cancellationToken)
   {
-    // Curto-circuito síncrono: Unit.Task reutiliza a tarefa pré-construída, sem nova alocação
+    // Synchronous short-circuit: Unit.Task reuses the pre-built task, with no new allocation
     if (id == Guid.Empty)
     {
       return Unit.Task;
@@ -123,18 +125,18 @@ public sealed class OrderMaintenanceService(ISender sender)
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                  | Versão | Descrição                             |
-| ----------------------------------------------------------------------- | ------ | ------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | 4.x    | Exceções (ex.: `BadRequestException`) |
+| Package                                                                 | Version | Description                             |
+| ----------------------------------------------------------------------- | ------- | --------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) | 4.x     | Exceptions (e.g. `BadRequestException`) |
 
 ---
 
-## 🪪 Contribuição
+## 🪪 Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Mediator.Abstractions](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Mediator.Abstractions](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

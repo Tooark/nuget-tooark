@@ -1,24 +1,26 @@
 # Tooark
 
-Biblioteca com todos os recursos e funcionalidades do Tooark voltadas para projetos .NET.
+Library with every Tooark resource and feature aimed at .NET projects.
 
-## Instalação
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.pt-BR.md)
+
+## Installation
 
 ```bash
 dotnet add package Tooark
 ```
 
-O agregador traz todos os pacotes Tooark de uma vez. Instale os pacotes individualmente quando quiser
-apenas parte deles — a superfície é a mesma.
+The aggregator brings every Tooark package at once. Install the packages individually when you only want
+some of them — the surface is the same.
 
-## Configuração
+## Configuration
 
-As traduções acompanham o assembly, então não há nada a configurar para elas funcionarem.
+The translations ship with the assembly, so there is nothing to configure for them to work.
 
-Adicione a seguinte linha no seu arquivo `Program.cs`:
+Add the following line to your `Program.cs`:
 
 ```csharp
-// Importando o namespace necessário
+// Importing the required namespaces
 using Tooark.Injections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,118 +30,134 @@ var services = new ServiceCollection();
 IConfiguration configuration = new ConfigurationBuilder()
   .Build();
 
-// Nas suas configurações de serviços
+// In your service configuration
 services.AddTooarkService(configuration);
 ```
 
-Essa única chamada registra `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects` e
-`Tooark.Mediator`, e acrescenta `Tooark.Securities` e `Tooark.Observability` quando as seções de
-configuração correspondentes existem.
+That single call registers `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects` and
+`Tooark.Mediator`, and adds `Tooark.Securities` and `Tooark.Observability` when the corresponding
+configuration sections exist.
 
-### Onde os manipuladores do mediador são procurados
+### Where the mediator handlers are looked up
 
-Sem argumento, no **assembly que chamou o `AddTooarkService`**. Numa aplicação de projeto único, é o
-que você quer e não há nada a fazer.
+Without an argument, in the **assembly that called `AddTooarkService`**. In a single-project application
+that is what you want, and there is nothing to do.
 
-Numa aplicação em camadas, os manipuladores costumam estar em outro projeto. Informe os assemblies:
+In a layered application the handlers usually live in another project. Pass the assemblies:
 
 ```csharp
-services.AddTooarkService(configuration, typeof(MeuHandler).Assembly);
+services.AddTooarkService(configuration, typeof(MyHandler).Assembly);
 ```
 
-Chamar o `AddTooarkMediator` depois também funciona, para acrescentar assemblies ou configurar as
-opções — o registro dos manipuladores não duplica:
+Calling `AddTooarkMediator` afterwards also works, to add assemblies or configure the options — the
+handler registration does not duplicate:
 
 ```csharp
 using Tooark.Mediator.Injections;
 
 services.AddTooarkService(configuration);
-services.AddTooarkMediator(typeof(MeuHandler).Assembly);
+services.AddTooarkMediator(typeof(MyHandler).Assembly);
 ```
 
-> **Atenção ao chamar o `AddTooarkService` de dentro de uma biblioteca sua.** O assembly procurado é o
-> de quem chama, então seria o da sua biblioteca, e não o da aplicação. Repasse o assembly certo.
+> **Careful when calling `AddTooarkService` from inside a library of yours.** The assembly looked up is the
+> caller's, so it would be your library's, not the application's. Pass the right assembly along.
 
-### Unidade de trabalho
+### Unit of work
 
-Fica de fora do `AddTooarkService`, porque depende do tipo do seu contexto do Entity Framework:
+Stays out of `AddTooarkService`, because it depends on the type of your Entity Framework context:
 
 ```csharp
 using Tooark.Mediator.EntityFrameworkCore.Injections;
 
-services.AddTooarkMediatorUnitOfWork<MeuDbContext>();
+services.AddTooarkMediatorUnitOfWork<MyDbContext>();
 ```
 
-## Recursos disponíveis
+### OpenID Connect SSO
+
+Also stays out of `AddTooarkService`: the same provider can back an interactive login (`OpenIdConnect`
+handler) or an API (`JwtBearer` handler), and that choice is yours. Register it explicitly:
+
+```csharp
+using Tooark.Securities.OpenId.Injections;
+
+services.AddTooarkEntraSso(configuration);   // reads OpenId:Entra
+services.AddTooarkGoogleSso(configuration);  // reads OpenId:Google
+```
+
+## Available features
 
 ### [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.md)
 
-Descrição: Este pacote fornece atributos personalizados para uso em projetos .NET.
+Description: This package provides custom attributes for use in .NET projects.
 
 ### [Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.md)
 
-Descrição: Este pacote reúne os recursos que dependem do ASP.NET Core, como a leitura de erros do `ModelState`.
+Description: This package gathers the features that depend on ASP.NET Core, such as reading `ModelState` errors.
 
 ### [Tooark.Dtos](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Dtos/README.md)
 
-Descrição: Este pacote contém objetos de transferência de dados (DTOs) para facilitar a comunicação entre camadas da aplicação.
+Description: This package contains data transfer objects (DTOs) that ease the communication between application layers.
 
 ### [Tooark.Entities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities/README.md)
 
-Descrição: Este pacote define as entidades do domínio utilizadas na aplicação.
+Description: This package defines the domain entities used by the application.
 
 ### [Tooark.Enums](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.md)
 
-Descrição: Este pacote contém definições de enums utilizados em várias partes da aplicação.
+Description: This package contains the enum definitions used across the application.
 
 ### [Tooark.Exceptions](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.md)
 
-Descrição: Este pacote fornece exceções personalizadas para uso em projetos .NET.
+Description: This package provides custom exceptions for use in .NET projects.
 
 ### [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.md)
 
-Descrição: Este pacote fornece métodos de extensão para tipos e classes comuns do .NET.
+Description: This package provides extension methods for common .NET types and classes.
 
 ### [Tooark.Notifications](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Notifications/README.md)
 
-Descrição: Este pacote oferece funcionalidades para gerenciamento de notificações e mensagens na aplicação.
+Description: This package offers features to manage notifications and messages in the application.
 
 ### [Tooark.Mediator.Abstractions](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.Abstractions/README.md)
 
-Descrição: Este pacote fornece contratos base do padrão Mediator para uso em projetos .NET.
+Description: This package provides the base contracts of the Mediator pattern for use in .NET projects.
 
 ### [Tooark.Mediator](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator/README.md)
 
-Descrição: Este pacote oferece uma implementação concreta do padrão Mediator, facilitando a comunicação entre componentes da aplicação.
+Description: This package offers a concrete implementation of the Mediator pattern, easing the communication between application components.
 
 ### [Tooark.Mediator.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.EntityFrameworkCore/README.md)
 
-Descrição: Este pacote move a persistência do Entity Framework Core para o pipeline do Mediator, mantendo os handlers livres de SaveChanges.
+Description: This package moves Entity Framework Core persistence into the Mediator pipeline, keeping handlers free of SaveChanges.
 
 ### [Tooark.Observability](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.md)
 
-Descrição: Este pacote fornece ferramentas para monitoramento e observabilidade da aplicação.
+Description: This package provides tools for monitoring and observability of the application.
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md)
 
-Descrição: Este pacote oferece funcionalidades para segurança, incluindo criptografia e autenticação.
+Description: This package offers security features, including cryptography and authentication.
+
+### [Tooark.Securities.OpenId](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.md)
+
+Description: This package configures the native ASP.NET Core OpenID Connect handlers, with SSO presets for Microsoft Entra ID and Google.
 
 ### [Tooark.Utils](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Utils/README.md)
 
-Descrição: Este pacote contém utilitários e funções auxiliares para diversas operações.
+Description: This package contains utilities and helper functions for assorted operations.
 
 ### [Tooark.Validations](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Validations/README.md)
 
-Descrição: Este pacote fornece funcionalidades de validação para dados e entidades.
+Description: This package provides validation features for data and entities.
 
 ### [Tooark.ValueObjects](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.ValueObjects/README.md)
 
-Descrição: Este pacote define objetos de valor utilizados na aplicação.
+Description: This package defines the value objects used by the application.
 
-## Contribuição
+## Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
