@@ -1,31 +1,33 @@
 # Tooark.Mediator
 
-Biblioteca com implementação de Mediator para projetos .NET, focada em CQRS/CQS com baixo acoplamento entre camadas.
+Library with a Mediator implementation for .NET projects, focused on CQRS/CQS with low coupling between layers.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Configuração](#️-configuração)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-O pacote `Tooark.Mediator` fornece:
+## Overview
 
-- implementação concreta de `IMediator`;
-- registro automático de handlers por assembly;
-- pipeline de behaviors para preocupações transversais;
-- estratégia configurável de publicação de notificações;
-- integração com DI do `Microsoft.Extensions.DependencyInjection`.
+The `Tooark.Mediator` package provides:
+
+- a concrete implementation of `IMediator`;
+- automatic handler registration by assembly;
+- a behavior pipeline for cross-cutting concerns;
+- a configurable notification publishing strategy;
+- integration with `Microsoft.Extensions.DependencyInjection`.
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Mediator
@@ -33,7 +35,7 @@ dotnet add package Tooark.Mediator
 
 ---
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
 ```csharp
 using Tooark.Mediator.Injections;
@@ -41,7 +43,7 @@ using Tooark.Mediator.Injections;
 builder.Services.AddTooarkMediator(typeof(Program).Assembly);
 ```
 
-Também é possível configurar as opções do mediador:
+The mediator options can also be configured:
 
 ```csharp
 using Tooark.Mediator.Enums;
@@ -53,76 +55,75 @@ builder.Services.AddTooarkMediator(options =>
 }, typeof(Program).Assembly);
 ```
 
-> **Recomendação**: informe sempre os assemblies explicitamente (ex: `typeof(Program).Assembly`).
-> Sem assemblies, o assembly chamador é escaneado como fallback — funciona para o caso comum,
-> mas a forma explícita é imune a refatorações que movam a chamada para outro projeto.
-> Classes genéricas abertas são ignoradas pelo scan (o dispatch não suporta open generics).
+> **Recommendation**: always pass the assemblies explicitly (e.g. `typeof(Program).Assembly`).
+> Without assemblies, the calling assembly is scanned as a fallback — it works for the common case,
+> but the explicit form is immune to refactorings that move the call to another project.
+> Open generic classes are skipped by the scan (dispatch does not support open generics).
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
-### Classe principal
+### Main class
 
-- `Mediator`: implementação de `IMediator`.
+- `Mediator`: implementation of `IMediator`.
 
-### Injeção de dependência
+### Dependency injection
 
 - `TooarkDependencyInjection.AddTooarkMediator(IServiceCollection, params Assembly[])`
 - `TooarkDependencyInjection.AddTooarkMediator(IServiceCollection, Action<MediatorOptions>, params Assembly[])`
 - `TooarkDependencyInjection.AddTooarkMediatorBehavior<TBehavior>(IServiceCollection)`
 - `TooarkDependencyInjection.AddTooarkMediatorBehavior(IServiceCollection, Type)`
 
-### Opções
+### Options
 
 - `MediatorOptions`
-  - `NotifyPublishStrategy` (padrão: `ENotifyStrategy.ParallelWhenAll`)
-  - Registrado via padrão Options: chamadas múltiplas de `AddTooarkMediator` compõem as configurações em ordem de registro
-  - O `Mediator` recebe `IOptions<MediatorOptions>`. Para configurar fora do `AddTooarkMediator`, use
-    `services.Configure<MediatorOptions>(...)` — registrar `MediatorOptions` diretamente no container não tem efeito
+  - `NotifyPublishStrategy` (default: `ENotifyStrategy.ParallelWhenAll`)
+  - Registered through the Options pattern: multiple `AddTooarkMediator` calls compose the configuration in registration order
+  - `Mediator` receives `IOptions<MediatorOptions>`. To configure outside `AddTooarkMediator`, use
+    `services.Configure<MediatorOptions>(...)` — registering `MediatorOptions` directly in the container has no effect
 
-### Estratégias de publicação
+### Publishing strategies
 
-- `ENotifyStrategy.ParallelWhenAll` (padrão): inicia todos os handlers e aguarda a conclusão de todos
-  com `Task.WhenAll`. Melhor latência quando os handlers são independentes. Todos os handlers são
-  iniciados mesmo que algum falhe ao iniciar, e a primeira falha é propagada ao chamador.
-- `ENotifyStrategy.Sequential`: inicia cada handler somente após o anterior concluir, na ordem de
-  registro. Se um handler falhar, os seguintes não são executados (fail-fast). Use quando a ordem dos
-  efeitos colaterais importa ou os handlers compartilham recursos não thread-safe.
+- `ENotifyStrategy.ParallelWhenAll` (default): starts every handler and waits for all of them to complete
+  with `Task.WhenAll`. Best latency when the handlers are independent. Every handler is started even if one
+  fails to start, and the first failure is propagated to the caller.
+- `ENotifyStrategy.Sequential`: starts each handler only after the previous one completes, in registration
+  order. If a handler fails, the following ones do not run (fail-fast). Use it when the order of side effects
+  matters or the handlers share resources that are not thread-safe.
 
-### Pipeline de behaviors
+### Behavior pipeline
 
-`IPipelineBehavior<TRequest, TResponse>` envolve a execução do handler, permitindo tratar preocupações
-transversais — validação, log, transação, cache, autorização — sem repeti-las em cada handler. Cada
-behavior decide se invoca a etapa seguinte: não invocar interrompe o pipeline (curto-circuito) e a
-resposta do próprio behavior é devolvida ao chamador.
+`IPipelineBehavior<TRequest, TResponse>` wraps the handler execution, allowing cross-cutting concerns —
+validation, logging, transaction, caching, authorization — to be handled without repeating them in every
+handler. Each behavior decides whether to invoke the next step: not invoking it interrupts the pipeline
+(short-circuit) and the behavior's own response is returned to the caller.
 
-Os behaviors se aplicam apenas a requisições; notificações não passam pelo pipeline. O handler é
-resolvido antes da montagem da cadeia, então `Handler.NotFound` continua falhando antes de qualquer
-behavior executar. Sem behaviors registrados, o despacho permanece sendo a invocação direta do handler.
+Behaviors apply only to requests; notifications do not go through the pipeline. The handler is resolved
+before the chain is built, so `Handler.NotFound` still fails before any behavior runs. With no behaviors
+registered, dispatch remains the direct invocation of the handler.
 
-O `CancellationToken` é parâmetro obrigatório da etapa seguinte — repasse o token recebido para propagar
-o cancelamento, ou informe um token encadeado para aplicar um limite próprio.
+The `CancellationToken` is a required parameter of the next step — pass along the received token to
+propagate cancellation, or pass a linked token to apply your own limit.
 
-Um behavior genérico aberto pode restringir a quais requisições se aplica pela restrição de tipo. Um
-behavior declarado com `where TRequest : ICommand<TResponse>` envolve apenas comandos, e o container o
-ignora ao despachar consultas — sem necessidade de verificação de tipo em tempo de execução. O mesmo vale
-para restrições sobre interfaces próprias da aplicação.
+An open generic behavior can restrict which requests it applies to through its type constraint. A behavior
+declared with `where TRequest : ICommand<TResponse>` wraps commands only, and the container skips it when
+dispatching queries — with no need for a runtime type check. The same applies to constraints on the
+application's own interfaces.
 
-### Validação no registro
+### Registration validation
 
-Uma requisição é processada por um único handler. Se o scan ou o registro manual resultar em mais de um
-handler para a mesma requisição, `AddTooarkMediator` lança `InternalServerErrorException` com o código
-`Handler.Duplicated`, identificando a requisição e os handlers em conflito. Notificações continuam
-aceitando quantos handlers forem registrados.
+A request is processed by a single handler. If the scan or manual registration results in more than one
+handler for the same request, `AddTooarkMediator` throws `InternalServerErrorException` with the
+`Handler.Duplicated` code, identifying the request and the conflicting handlers. Notifications keep accepting
+as many handlers as are registered.
 
-### Desempenho do dispatch
+### Dispatch performance
 
-O despacho usa wrappers genéricos em cache estático: reflection ocorre apenas na primeira chamada de
-cada tipo de mensagem. As exceções lançadas pelos handlers chegam ao chamador diretamente (sem
-`TargetInvocationException`).
+Dispatch uses generic wrappers in a static cache: reflection happens only on the first call for each message
+type. Exceptions thrown by handlers reach the caller directly (no `TargetInvocationException`).
 
-### Handlers suportados
+### Supported handlers
 
 - `IRequestHandler<TRequest, TResponse>`
 - `ICommandHandler<TCommand, TResponse>`
@@ -130,17 +131,17 @@ cada tipo de mensagem. As exceções lançadas pelos handlers chegam ao chamador
 - `IQueryHandler<TQuery, TResponse>`
 - `INotifyHandler<TNotify>`
 
-### Behaviors suportados
+### Supported behaviors
 
 - `IPipelineBehavior<TRequest, TResponse>`
 
-Os handlers ficam no namespace `Tooark.Mediator.Handlers` e os behaviors em `Tooark.Mediator.Behaviors`.
+Handlers live in the `Tooark.Mediator.Handlers` namespace and behaviors in `Tooark.Mediator.Behaviors`.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Exemplo CQRS
+### CQRS example
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -162,12 +163,12 @@ public sealed class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, st
 {
   public Task<string> HandleAsync(GetUserByIdQuery request, CancellationToken cancellationToken = default)
   {
-    return Task.FromResult($"Usuário {request.Id}");
+    return Task.FromResult($"User {request.Id}");
   }
 }
 ```
 
-### Exemplo de uso com IMediator
+### Using IMediator
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -186,7 +187,7 @@ public sealed class UsersService(IMediator mediator)
 }
 ```
 
-### Exemplo de publicação de notificação
+### Publishing a notification
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -198,7 +199,7 @@ public sealed class UserCreatedNotifyHandler : INotifyHandler<UserCreatedNotify>
 {
   public Task HandleAsync(UserCreatedNotify notification, CancellationToken cancellationToken = default)
   {
-    Console.WriteLine($"Usuário criado: {notification.UserId}");
+    Console.WriteLine($"User created: {notification.UserId}");
     return Task.CompletedTask;
   }
 }
@@ -206,9 +207,9 @@ public sealed class UserCreatedNotifyHandler : INotifyHandler<UserCreatedNotify>
 await mediator.PublishAsync(new UserCreatedNotify(Guid.NewGuid()), cancellationToken);
 ```
 
-### Exemplo de behavior de pipeline
+### Pipeline behavior example
 
-Behavior genérico aberto, aplicado a todas as requisições:
+Open generic behavior, applied to every request:
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -223,18 +224,18 @@ public sealed class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior
     RequestHandlerDelegate<TResponse> next,
     CancellationToken cancellationToken = default)
   {
-    logger.LogInformation("Iniciando {Request}", typeof(TRequest).Name);
+    logger.LogInformation("Starting {Request}", typeof(TRequest).Name);
 
     var response = await next(cancellationToken);
 
-    logger.LogInformation("Concluído {Request}", typeof(TRequest).Name);
+    logger.LogInformation("Completed {Request}", typeof(TRequest).Name);
 
     return response;
   }
 }
 ```
 
-Behavior fechado, aplicado a uma requisição específica, que interrompe o pipeline quando a requisição é inválida:
+Closed behavior, applied to a specific request, which interrupts the pipeline when the request is invalid:
 
 ```csharp
 using Tooark.Exceptions;
@@ -251,7 +252,7 @@ public sealed class CreateUserValidationBehavior : IPipelineBehavior<CreateUserC
     var validation = new Validation()
       .IsNotNullOrEmpty(request.Name, nameof(request.Name), "User.NameRequired");
 
-    // Curto-circuito: o handler não é executado
+    // Short-circuit: the handler is not executed
     if (!validation.IsValid)
     {
       throw new BadRequestException(validation);
@@ -262,8 +263,8 @@ public sealed class CreateUserValidationBehavior : IPipelineBehavior<CreateUserC
 }
 ```
 
-Behavior de unidade de trabalho, movendo o `SaveChanges` do Entity Framework para a esteira — os handlers
-apenas descrevem as alterações e a persistência acontece uma única vez, ao final:
+Unit of work behavior, moving Entity Framework's `SaveChanges` into the pipeline — handlers only describe
+the changes and persistence happens once, at the end:
 
 ```csharp
 using Tooark.Mediator.Abstractions;
@@ -280,7 +281,7 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>(AppDbContext context
   {
     var response = await next(cancellationToken);
 
-    // Exceção do handler impede esta linha: nada é persistido
+    // An exception from the handler prevents this line: nothing is persisted
     await context.SaveChangesAsync(cancellationToken);
 
     return response;
@@ -288,16 +289,16 @@ public sealed class UnitOfWorkBehavior<TRequest, TResponse>(AppDbContext context
 }
 ```
 
-A restrição `where TRequest : ICommand<TResponse>` mantém as consultas fora da esteira — sem ela, toda
-leitura chamaria `SaveChanges` sem ter o que persistir. Um único `SaveChangesAsync` já é atômico, pois o
-Entity Framework envolve o lote em uma transação; `BeginTransaction` explícito só é necessário quando o
-handler persiste mais de uma vez ou combina o `DbContext` com outro recurso transacional.
+The `where TRequest : ICommand<TResponse>` constraint keeps queries out of the pipeline — without it, every
+read would call `SaveChanges` with nothing to persist. A single `SaveChangesAsync` is already atomic, since
+Entity Framework wraps the batch in a transaction; an explicit `BeginTransaction` is only needed when the
+handler persists more than once or combines the `DbContext` with another transactional resource.
 
-> O exemplo acima ilustra o padrão. Para Entity Framework Core, o pacote
-> [`Tooark.Mediator.EntityFrameworkCore`](https://www.nuget.org/packages/Tooark.Mediator.EntityFrameworkCore) entrega esse
-> behavior pronto, com tratamento de comandos aninhados e estratégia de transação explícita.
+> The example above illustrates the pattern. For Entity Framework Core, the
+> [`Tooark.Mediator.EntityFrameworkCore`](https://www.nuget.org/packages/Tooark.Mediator.EntityFrameworkCore)
+> package ships that behavior ready-made, with nested command handling and an explicit transaction strategy.
 
-Com esse behavior registrado, o handler não toca em persistência:
+With that behavior registered, the handler does not touch persistence:
 
 ```csharp
 public sealed class CreateUserHandler(AppDbContext context) : ICommandHandler<CreateUserCommand, Guid>
@@ -313,7 +314,7 @@ public sealed class CreateUserHandler(AppDbContext context) : ICommandHandler<Cr
 }
 ```
 
-Registro, na ordem em que devem executar — o primeiro registrado é o mais externo:
+Registration, in the order they must run — the first registered is the outermost:
 
 ```csharp
 using Tooark.Mediator.Injections;
@@ -324,34 +325,35 @@ builder.Services.AddTooarkMediatorBehavior<CreateUserValidationBehavior>();
 builder.Services.AddTooarkMediatorBehavior(typeof(UnitOfWorkBehavior<,>));
 ```
 
-A validação vem antes da unidade de trabalho: não faz sentido preparar a persistência para em seguida
-rejeitar a requisição.
+Validation comes before the unit of work: it makes no sense to prepare persistence and then reject the
+request.
 
-> Os behaviors não são descobertos pelo scan de assemblies: a ordem de execução é semântica e a ordem
-> retornada pelo scan não é garantida. O registro é sempre explícito.
+> Behaviors are not discovered by the assembly scan: the execution order is semantic and the order
+> returned by the scan is not guaranteed. Registration is always explicit.
 >
-> Dois pontos de atenção com a unidade de trabalho na esteira. Um comando despachado de dentro de outro
-> comando persiste no meio da operação do externo, que persiste novamente ao final — evite o aninhamento
-> ou trate a reentrância. E notificações não passam pelo pipeline: os handlers delas executam dentro do
-> handler do comando, portanto antes do `SaveChanges`, e o que escreverem no contexto é persistido junto.
+> Two points of attention with the unit of work in the pipeline. A command dispatched from within another
+> command persists in the middle of the outer one's operation, which persists again at the end — avoid
+> nesting or handle reentrancy. And notifications do not go through the pipeline: their handlers run inside
+> the command handler, therefore before `SaveChanges`, and whatever they write to the context is persisted
+> together.
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                                                                                          | Versão   | Descrição                             |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceções (ex.: `BadRequestException`) |
-| [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Contratos base do padrão Mediator     |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Abstrações de injeção de dependência  |
-| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 8.x/10.x | Padrão Options para `MediatorOptions` |
+| Package                                                                                                                                         | Version  | Description                             |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceptions (e.g. `BadRequestException`) |
+| [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Base contracts of the Mediator pattern  |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Dependency injection abstractions       |
+| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 8.x/10.x | Options pattern for `MediatorOptions`   |
 
 ---
 
-## 🪪 Contribuição
+## 🪪 Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Mediator](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Mediator](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

@@ -1,0 +1,48 @@
+# EditorConfig: https://editorconfig.org
+#
+# Regras de formatação do repositório. O fim de linha é LF por decisão registrada no .gitattributes; a
+# indentação de 2 espaços é a usada em todo o código C#, nos arquivos MSBuild, no JSON e nos workflows.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Markdown: dois espaços no fim da linha são quebra de linha
+[*.md]
+trim_trailing_whitespace = false
+
+# C#
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_prefer_braces = true:suggestion
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+
+# MSBuild e solução
+[*.{csproj,props,targets,slnx}]
+indent_size = 2
+
+# YAML (workflows, issue forms, Dependabot)
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON (recursos de tradução, appsettings)
+[*.json]
+indent_size = 2

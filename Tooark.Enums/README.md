@@ -1,114 +1,118 @@
 # Tooark.Enums
 
-Biblioteca que fornece tipos enumerados validados, permitindo a padronização para projetos .NET. Inclui métodos para conversão e validação de valores enumerados.
+Library that provides validated enumerated types, standardizing them for .NET projects. Includes methods to convert and validate enumerated values.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.pt-BR.md)
 
-- [Instalação](#instalação)
-- [Como funcionam](#como-funcionam)
-- [ECloudProvider](#1-provedor-de-cloud)
-- [EDocumentType](#2-tipo-de-documento)
-- [EFileType](#3-tipo-de-arquivo)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+## Contents
 
-## Instalação
+- [Installation](#installation)
+- [How they work](#how-they-work)
+- [ECloudProvider](#1-cloud-provider)
+- [EDocumentType](#2-document-type)
+- [EFileType](#3-file-type)
+- [Usage Examples](#usage-examples)
+- [Dependencies](#dependencies)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
 
 ```bash
 dotnet add package Tooark.Enums
 ```
 
-O pacote não tem configuração: os enumeradores são valores estáticos, usados diretamente.
+The package has no configuration: the enumerators are static values, used directly.
 
-## Como funcionam
+## How they work
 
-Os três tipos são classes com instâncias estáticas, e não `enum` do C#. Isso permite que cada valor carregue
-mais do que um número — descrição, padrão de formato, função de validação — ao custo de não poderem ser usados
-como argumento de atributo, que exige constante.
+The three types are classes with static instances, not C# `enum`s. That lets each value carry more than a
+number — description, format pattern, validation function — at the cost of not being usable as attribute
+arguments, which require constants.
 
-Todos expõem o mesmo conjunto de operações:
+All of them expose the same set of operations:
 
-| Operação                  | Comportamento                                                            |
-| ------------------------- | ------------------------------------------------------------------------ |
-| `ToString()`              | Devolve a descrição                                                      |
-| `ToInt()`                 | Devolve o id                                                             |
-| `(int)` implícito         | Mesmo que `ToInt()`                                                      |
-| `(string)` implícito      | Mesmo que `ToString()`                                                   |
-| `int` → enum implícito    | Resolve pelo id                                                          |
-| `string` → enum implícito | Resolve pela descrição, **sem diferenciar caixa nem espaços nas pontas** |
+| Operation                | Behavior                                                                   |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `ToString()`             | Returns the description                                                    |
+| `ToInt()`                | Returns the id                                                             |
+| implicit `(int)`         | Same as `ToInt()`                                                          |
+| implicit `(string)`      | Same as `ToString()`                                                       |
+| implicit `int` → enum    | Resolves by id                                                             |
+| implicit `string` → enum | Resolves by description, **ignoring case and leading/trailing whitespace** |
 
-Duas regras valem para os três:
+Two rules apply to all three:
 
-- **A descrição é normalizada.** `"aws"`, `"AWS"` e `" Aws "` resolvem para o mesmo valor.
-- **Id ou descrição não reconhecidos resolvem para o valor neutro** — `None` em `ECloudProvider` e
-  `EDocumentType`, `Unknown` em `EFileType` —, que é o membro previsto para isso. Já **converter uma
-  instância nula** para `int` ou `string` lança `InternalServerErrorException` com `Invalid.Parameter;null`:
-  não existe id nem descrição correta para devolver, e devolver zero seria inventar um dado.
+- **The description is normalized.** `"aws"`, `"AWS"` and `" Aws "` resolve to the same value.
+- **An unrecognized id or description resolves to the neutral value** — `None` in `ECloudProvider` and
+  `EDocumentType`, `Unknown` in `EFileType` —, which is the member meant for that. **Converting a null
+  instance** to `int` or `string`, on the other hand, throws `InternalServerErrorException` with
+  `Invalid.Parameter;null`: there is no correct id or description to return, and returning zero would be
+  making data up.
 
-## Enumeradores
+## Enumerators
 
-### 1. Provedor de Cloud
+### 1. Cloud Provider
 
-**Funcionalidade:** representa os provedores de cloud suportados.
+**Purpose:** represents the supported cloud providers.
 
-| Valor       | Id  | Descrição | Também aceita |
-| ----------- | --- | --------- | ------------- |
-| `None`      | 0   | `None`    | —             |
-| `Amazon`    | 1   | `AWS`     | `Amazon`      |
-| `Google`    | 2   | `GCP`     | `Google`      |
-| `Microsoft` | 3   | `Azure`   | `Microsoft`   |
+| Value       | Id  | Description | Also accepts |
+| ----------- | --- | ----------- | ------------ |
+| `None`      | 0   | `None`      | —            |
+| `Amazon`    | 1   | `AWS`       | `Amazon`     |
+| `Google`    | 2   | `GCP`       | `Google`     |
+| `Microsoft` | 3   | `Azure`     | `Microsoft`  |
 
-[**Exemplo de Uso**](#provedor-de-cloud)
+[**Usage Example**](#cloud-provider)
 
-### 2. Tipo de Documento
+### 2. Document Type
 
-**Funcionalidade:** representa os tipos de documento, cada um com o próprio formato e verificação.
+**Purpose:** represents the document types, each with its own format and check.
 
-| Valor        | Id  | Verificação                                               |
-| ------------ | --- | --------------------------------------------------------- |
-| `None`       | 0   | Aceita qualquer documento                                 |
-| `CPF`        | 1   | Formato e dígitos verificadores                           |
-| `RG`         | 2   | Formato e dígito verificador, quando informado            |
-| `CNH`        | 3   | Formato e dígitos verificadores                           |
-| `CNPJ`       | 4   | Formato e dígitos verificadores, aceita CNPJ alfanumérico |
-| `CPF_CNPJ`   | 5   | CPF ou CNPJ, ambos com dígitos                            |
-| `CPF_RG`     | 6   | CPF ou RG                                                 |
-| `CPF_RG_CNH` | 7   | CPF, RG ou CNH                                            |
+| Value        | Id  | Check                                                  |
+| ------------ | --- | ------------------------------------------------------ |
+| `None`       | 0   | Accepts any document                                   |
+| `CPF`        | 1   | Format and check digits                                |
+| `RG`         | 2   | Format and check digit, when provided                  |
+| `CNH`        | 3   | Format and check digits                                |
+| `CNPJ`       | 4   | Format and check digits, accepts the alphanumeric CNPJ |
+| `CPF_CNPJ`   | 5   | CPF or CNPJ, both with check digits                    |
+| `CPF_RG`     | 6   | CPF or RG                                              |
+| `CPF_RG_CNH` | 7   | CPF, RG or CNH                                         |
 
-**Métodos próprios:**
+**Own methods:**
 
-- `ToRegex()`: devolve o padrão de **formato** do tipo de documento.
-- `IsValid`: função que verifica os **dígitos verificadores**, aceitando o valor com ou sem máscara.
+- `ToRegex()`: returns the **format** pattern of the document type.
+- `IsValid`: function that verifies the **check digits**, accepting the value with or without mask.
 
-> As duas verificações são camadas distintas e se complementam: `ToRegex()` cuida da forma e `IsValid` cuida
-> do conteúdo. Uma validação completa aplica as duas, como fazem o value object `Document` do
-> `Tooark.ValueObjects` e o `DocumentValidationAttribute` do `Tooark.Attributes`. Chamada isolada, `IsValid`
-> aceita `529.982.247-25` e `52998224725` igualmente, e nunca lança para entrada inválida — devolve `false`.
+> The two checks are distinct layers that complement each other: `ToRegex()` handles the shape and `IsValid`
+> handles the content. A complete validation applies both, as the `Document` value object in
+> `Tooark.ValueObjects` and the `DocumentValidationAttribute` in `Tooark.Attributes` do. Called on its own,
+> `IsValid` accepts `529.982.247-25` and `52998224725` alike, and never throws for invalid input — it returns
+> `false`.
 
-O cálculo dos dígitos vem de `DocumentDigit`, no `Tooark.Validations`, o mesmo usado pelas validações daquele
-pacote — então `new Validation().IsCpf(...)` e `EDocumentType.CPF.IsValid(...)` sempre concordam.
+The digit calculation comes from `DocumentDigit`, in `Tooark.Validations`, the same one used by that package's
+validations — so `new Validation().IsCpf(...)` and `EDocumentType.CPF.IsValid(...)` always agree.
 
-[**Exemplo de Uso**](#tipo-de-documento)
+[**Usage Example**](#document-type)
 
-### 3. Tipo de Arquivo
+### 3. File Type
 
-**Funcionalidade:** representa as categorias de arquivo.
+**Purpose:** represents the file categories.
 
-| Valor      | Id  | Descrição  |
-| ---------- | --- | ---------- |
-| `Unknown`  | 0   | `Unknown`  |
-| `Document` | 1   | `Document` |
-| `Image`    | 2   | `Image`    |
-| `Video`    | 3   | `Video`    |
-| `Audio`    | 4   | `Audio`    |
+| Value      | Id  | Description |
+| ---------- | --- | ----------- |
+| `Unknown`  | 0   | `Unknown`   |
+| `Document` | 1   | `Document`  |
+| `Image`    | 2   | `Image`     |
+| `Video`    | 3   | `Video`     |
+| `Audio`    | 4   | `Audio`     |
 
-[**Exemplo de Uso**](#tipo-de-arquivo)
+[**Usage Example**](#file-type)
 
-## Exemplos de Uso
+## Usage Examples
 
-### Provedor de Cloud
+### Cloud Provider
 
 ```csharp
 using Tooark.Enums;
@@ -118,16 +122,16 @@ ECloudProvider provider = ECloudProvider.Amazon;
 Console.WriteLine(provider.ToString()); // AWS
 Console.WriteLine(provider.ToInt());    // 1
 
-// Conversões implícitas, úteis para persistir e ler de volta
+// Implicit conversions, handy to persist and read back
 int id = provider;                      // 1
 string description = provider;          // "AWS"
 
-// A descrição não diferencia caixa
-ECloudProvider daConfiguracao = "aws";  // Amazon
-ECloudProvider doBanco = 1;             // Amazon
+// The description is case-insensitive
+ECloudProvider fromConfiguration = "aws";  // Amazon
+ECloudProvider fromDatabase = 1;           // Amazon
 ```
 
-### Tipo de Documento
+### Document Type
 
 ```csharp
 using Tooark.Enums;
@@ -138,23 +142,23 @@ Console.WriteLine(docType.ToString()); // CPF
 Console.WriteLine(docType.ToInt());    // 1
 Console.WriteLine(docType.ToRegex());  // ^\d{3}\.\d{3}\.\d{3}-\d{2}$
 
-// IsValid confere os dígitos, com ou sem máscara
+// IsValid verifies the digits, with or without mask
 Console.WriteLine(docType.IsValid("529.982.247-25")); // True
 Console.WriteLine(docType.IsValid("52998224725"));    // True
 Console.WriteLine(docType.IsValid("529.982.247-24")); // False
 ```
 
-Validação completa, aplicando formato e dígitos:
+Complete validation, applying format and digits:
 
 ```csharp
 using System.Text.RegularExpressions;
 using Tooark.Enums;
 
-bool EhValido(string documento, EDocumentType tipo) =>
-  Regex.IsMatch(documento, tipo.ToRegex()) && tipo.IsValid(documento);
+bool IsValidDocument(string document, EDocumentType type) =>
+  Regex.IsMatch(document, type.ToRegex()) && type.IsValid(document);
 ```
 
-### Tipo de Arquivo
+### File Type
 
 ```csharp
 using Tooark.Enums;
@@ -164,21 +168,21 @@ EFileType fileType = EFileType.Image;
 Console.WriteLine(fileType.ToString()); // Image
 Console.WriteLine(fileType.ToInt());    // 2
 
-// Valor não reconhecido resolve para Unknown
-EFileType desconhecido = "planilha";    // Unknown
+// An unrecognized value resolves to Unknown
+EFileType unknown = "spreadsheet";      // Unknown
 ```
 
-## Dependências
+## Dependencies
 
-| Dependência                                                               | Versão | Uso                                     |
-| ------------------------------------------------------------------------- | ------ | --------------------------------------- |
-| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations) | 4.x    | `DocumentDigit` e os padrões de formato |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)   | 4.x    | Erro de conversão de instância nula     |
+| Dependency                                                                | Version | Usage                                   |
+| ------------------------------------------------------------------------- | ------- | --------------------------------------- |
+| [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations) | 4.x     | `DocumentDigit` and the format patterns |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)   | 4.x     | Null-instance conversion error          |
 
-## Contribuição
+## Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Enums](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Enums](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

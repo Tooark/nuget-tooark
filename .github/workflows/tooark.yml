@@ -120,6 +120,7 @@ jobs:
           dotnet pack Tooark.Entities/Tooark.Entities.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.ValueObjects/Tooark.ValueObjects.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release /p:NoWarn="1591"
+          dotnet pack Tooark.Securities.OpenId/Tooark.Securities.OpenId.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Observability/Tooark.Observability.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Mediator.Abstractions/Tooark.Mediator.Abstractions.csproj --configuration Release /p:NoWarn="1591"
           dotnet pack Tooark.Mediator/Tooark.Mediator.csproj --configuration Release /p:NoWarn="1591"
@@ -148,7 +149,7 @@ jobs:
         run: |
           git tag "v${{ env.VERSION }}"
           git push origin "v${{ env.VERSION }}"
-          
+
           # Lê o conteúdo do arquivo de release notes
           RELEASE_NOTES_FILE="Notes/v${{ env.VERSION }}.md"
           if [ -f "$RELEASE_NOTES_FILE" ]; then
@@ -156,10 +157,10 @@ jobs:
           else
             RELEASE_BODY="Automated release for version v${{ env.VERSION }}"
           fi
-          
+
           # Escapa o conteúdo para JSON
           RELEASE_BODY_JSON=$(echo "$RELEASE_BODY" | jq -Rs .)
-          
+
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
@@ -198,16 +199,19 @@ jobs:
 
       - name: Publish Tooark.ValueObjects to NuGet
         run: dotnet nuget push Tooark.ValueObjects/bin/Release/Tooark.ValueObjects.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
+
       - name: Publish Tooark.Securities to NuGet
         run: dotnet nuget push Tooark.Securities/bin/Release/Tooark.Securities.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
+
+      - name: Publish Tooark.Securities.OpenId to NuGet
+        run: dotnet nuget push Tooark.Securities.OpenId/bin/Release/Tooark.Securities.OpenId.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
+
       - name: Publish Tooark.Observability to NuGet
         run: dotnet nuget push Tooark.Observability/bin/Release/Tooark.Observability.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
+
       - name: Publish Tooark.Mediator.Abstractions to NuGet
         run: dotnet nuget push Tooark.Mediator.Abstractions/bin/Release/Tooark.Mediator.Abstractions.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
+
       - name: Publish Tooark.Mediator to NuGet
         run: dotnet nuget push Tooark.Mediator/bin/Release/Tooark.Mediator.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
 

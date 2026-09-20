@@ -1,0 +1,15 @@
+# ==============================================================================
+# Tooark — FUNDING configuration
+# ==============================================================================
+# Enables the "Sponsor" button on the GitHub repository page.
+# Handles live under the maintainer's personal accounts (Paulo Sergio de
+# Freitas Junior). Migrate to a Tooark org account once it is registered.
+#
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+# ==============================================================================
+
+# GitHub Sponsors — primary channel (username only, not the full URL).
+github: paulosfjunior
+
+# Ko-fi — one-off and recurring tips (username only, not the full URL).
+ko_fi: paulosfjunior

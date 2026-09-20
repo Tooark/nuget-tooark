@@ -1,90 +1,92 @@
 # Tooark.Exceptions
 
-Biblioteca que fornece exceções padronizadas para projetos .NET, com mapeamento para status HTTP e suporte a múltiplas formas de construção de mensagens de erro.
+Library that provides standardized exceptions for .NET projects, mapped to HTTP status codes and supporting several ways to build error messages.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.pt-BR.md)
 
-- [Instalação](#instalação)
-- [Visão Geral](#visão-geral)
-- [Recursos Suportados](#recursos-suportados)
-- [Mensagens de Erro](#mensagens-de-erro)
-- [Exceções Disponíveis](#exceções-disponíveis)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+## Contents
 
-## Instalação
+- [Installation](#installation)
+- [Overview](#overview)
+- [Supported Features](#supported-features)
+- [Error Messages](#error-messages)
+- [Available Exceptions](#available-exceptions)
+- [Usage Examples](#usage-examples)
+- [Dependencies](#dependencies)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Installation
 
 ```bash
 dotnet add package Tooark.Exceptions
 ```
 
-O pacote não tem configuração nem registro no container: as exceções são lançadas e capturadas diretamente.
+The package has no configuration and no container registration: the exceptions are thrown and caught directly.
 
-## Visão Geral
+## Overview
 
-Todas as exceções específicas do pacote herdam de `TooarkException`, que por sua vez herda de `Exception`.
-A classe base é **abstrata** e seus construtores são **protegidos** — ela não é instanciada diretamente, e
-sim estendida, seja pelas exceções do pacote, seja pelas da sua aplicação.
+Every specific exception of the package inherits from `TooarkException`, which in turn inherits from
+`Exception`. The base class is **abstract** and its constructors are **protected** — it is not instantiated
+directly, but extended, either by the package's exceptions or by your application's.
 
-A classe base concentra:
+The base class concentrates:
 
-- mensagens de erro (`GetErrorMessages()`);
-- notificações equivalentes (`GetNotifications()`);
-- contrato para código HTTP (`GetStatusCode()`).
+- error messages (`GetErrorMessages()`);
+- equivalent notifications (`GetNotifications()`);
+- the HTTP status code contract (`GetStatusCode()`).
 
-Duas garantias valem para qualquer construtor:
+Two guarantees hold for every constructor:
 
-- **As coleções são somente leitura.** `GetErrorMessages()` e `GetNotifications()` devolvem sempre a mesma
-  instância somente leitura, então nenhum código externo consegue esvaziar ou alterar o erro que a exceção
-  carrega — o que faria uma falha desaparecer no meio do tratamento.
-- **As coleções nunca ficam vazias.** Entrada nula, vazia ou sem mensagens registra uma chave conhecida em vez
-  de produzir uma exceção que se diz de erro mas não carrega erro algum. As duas leituras andam juntas: a
-  mesma posição descreve o mesmo erro em ambas.
+- **The collections are read-only.** `GetErrorMessages()` and `GetNotifications()` always return the same
+  read-only instance, so no external code can empty or alter the error the exception carries — which would
+  make a failure vanish in the middle of its handling.
+- **The collections are never empty.** Null, empty or message-less input records a known key instead of
+  producing an exception that claims to be an error but carries none. The two readings go together: the same
+  position describes the same error in both.
 
-## Recursos Suportados
+## Supported Features
 
-As classes de exceção suportam os seguintes construtores:
+The exception classes support the following constructors:
 
-| Construtor                                                  | Uso                                                          |
-| ----------------------------------------------------------- | ------------------------------------------------------------ |
-| `ExceptionType(string message)`                             | Mensagem única                                               |
-| `ExceptionType(string message, Exception innerException)`   | Mensagem única preservando a causa raiz                      |
-| `ExceptionType(IList<string> messages)`                     | Várias mensagens, para validação com mais de uma falha       |
-| `ExceptionType(Notification notification)`                  | Reaproveita notificações já agregadas na camada de validação |
-| `ExceptionType(string messageFormat, params object[] args)` | Mensagem dinâmica com marcadores `{0}`, `{1}`, etc.          |
+| Constructor                                                 | Usage                                                           |
+| ----------------------------------------------------------- | --------------------------------------------------------------- |
+| `ExceptionType(string message)`                             | Single message                                                  |
+| `ExceptionType(string message, Exception innerException)`   | Single message preserving the root cause                        |
+| `ExceptionType(IList<string> messages)`                     | Several messages, for validation with more than one failure     |
+| `ExceptionType(Notification notification)`                  | Reuses notifications already aggregated in the validation layer |
+| `ExceptionType(string messageFormat, params object[] args)` | Dynamic message with `{0}`, `{1}`, etc. placeholders            |
 
-> **Resolução de sobrecarga**: `new NotFoundException("Falha: {0}", exceptionObject)` liga ao construtor de
-> exceção interna, não ao de formatação, porque `Exception` é o parâmetro mais específico. Para formatar
-> usando uma exceção como argumento, converta-a antes (por exemplo `ex.Message`).
+> **Overload resolution**: `new NotFoundException("Failure: {0}", exceptionObject)` binds to the inner
+> exception constructor, not the formatting one, because `Exception` is the more specific parameter. To
+> format using an exception as argument, convert it first (for instance `ex.Message`).
 
-Ao usar a formatação, o formato incompatível com os parâmetros **não** lança: a mensagem é mantida como
-recebida. A exceção existe para reportar o erro original, e falhar na própria apresentação trocaria o erro
-real por uma `FormatException`. Mensagens com chaves literais, como JSON, caem nesse caso.
+When formatting, a format incompatible with the parameters does **not** throw: the message is kept as
+received. The exception exists to report the original error, and failing in its own presentation would trade
+the real error for a `FormatException`. Messages with literal braces, such as JSON, fall into this case.
 
-## Mensagens de Erro
+## Error Messages
 
-A classe estática `ExceptionErrorMessages` reúne as mensagens geradas pelo próprio pacote. São chaves de
-tradução, e não textos finais.
+The static class `ExceptionErrorMessages` gathers the messages generated by the package itself. They are
+translation keys, not final texts.
 
-| Constante              | Valor                          | Quando ocorre                                                   |
-| ---------------------- | ------------------------------ | --------------------------------------------------------------- |
-| `MessageIsNullOrEmpty` | `Exceptions.MessageNullEmpty`  | Mensagem nula, vazia ou composta apenas por espaços em branco   |
-| `ErrorsIsNullOrEmpty`  | `Exceptions.ErrorsNullOrEmpty` | Lista de mensagens ou notificação nula, ou sem nenhuma mensagem |
+| Constant               | Value                          | When it occurs                                                |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------- |
+| `MessageIsNullOrEmpty` | `Exceptions.MessageNullEmpty`  | Null, empty or whitespace-only message                        |
+| `ErrorsIsNullOrEmpty`  | `Exceptions.ErrorsNullOrEmpty` | Null message list or notification, or one without any message |
 
-**Tratamento de valores nulos:**
+**Null handling:**
 
-| Situação                                 | Comportamento                                            |
-| ---------------------------------------- | -------------------------------------------------------- |
-| `null` como mensagem única               | Registra `Exceptions.MessageNullEmpty`                   |
-| `null` ou lista vazia em `IList<string>` | Registra `Exceptions.ErrorsNullOrEmpty`                  |
-| `null` ou notificação sem itens          | Registra `Exceptions.ErrorsNullOrEmpty`                  |
-| Item nulo dentro da lista                | Vira `Exceptions.MessageNullEmpty` nas **duas** coleções |
+| Situation                               | Behavior                                                      |
+| --------------------------------------- | ------------------------------------------------------------- |
+| `null` as a single message              | Records `Exceptions.MessageNullEmpty`                         |
+| `null` or empty list in `IList<string>` | Records `Exceptions.ErrorsNullOrEmpty`                        |
+| `null` or notification without items    | Records `Exceptions.ErrorsNullOrEmpty`                        |
+| Null item inside the list               | Becomes `Exceptions.MessageNullEmpty` in **both** collections |
 
-## Exceções Disponíveis
+## Available Exceptions
 
-| Classe                          | Status HTTP                   |
+| Class                           | HTTP Status                   |
 | ------------------------------- | ----------------------------- |
 | `GetInfoException`              | 400 (`BadRequest`)            |
 | `BadRequestException`           | 400 (`BadRequest`)            |
@@ -102,44 +104,44 @@ tradução, e não textos finais.
 | `ServiceUnavailableException`   | 503 (`ServiceUnavailable`)    |
 | `GatewayTimeoutException`       | 504 (`GatewayTimeout`)        |
 
-> O parêntese indica o membro de `System.Net.HttpStatusCode`. Para o 413 o .NET mantém o nome antigo
-> `RequestEntityTooLarge`, embora o RFC 7231 chame o status de _Payload Too Large_.
+> The parenthesis shows the `System.Net.HttpStatusCode` member. For 413 .NET keeps the old name
+> `RequestEntityTooLarge`, although RFC 7231 calls the status _Payload Too Large_.
 
-## Exemplos de Uso
+## Usage Examples
 
-### 1) Mensagem simples
+### 1) Simple message
 
 ```csharp
-throw new BadRequestException("Payload inválido.");
+throw new BadRequestException("Invalid payload.");
 ```
 
-### 2) Múltiplas mensagens
+### 2) Multiple messages
 
 ```csharp
 throw new BadRequestException([
-  "Nome é obrigatório.",
-  "E-mail inválido."
+  "Name is required.",
+  "Invalid email."
 ]);
 ```
 
-### 3) Mensagem formatada
+### 3) Formatted message
 
 ```csharp
 var userId = 42;
-throw new NotFoundException("Usuário com ID {0} não encontrado.", userId);
+throw new NotFoundException("User with ID {0} not found.", userId);
 ```
 
-### 4) A partir de `Notification`
+### 4) From a `Notification`
 
-A criação de notificações é protegida, então quem notifica é o próprio objeto:
+Creating notifications is protected, so the notifying object is the one that notifies:
 
 ```csharp
 using Tooark.Notifications;
 
 public sealed class DomainNotification : Notification
 {
-  public void NotifyRequired(string campo) =>
-    AddNotification($"{campo} é obrigatório.", campo, "T.DOM1");
+  public void NotifyRequired(string field) =>
+    AddNotification($"{field} is required.", field, "T.DOM1");
 }
 
 var notification = new DomainNotification();
@@ -149,9 +151,9 @@ notification.NotifyRequired("Phone");
 throw new BadRequestException(notification);
 ```
 
-Os itens da notificação são preservados como estão, mantendo a chave e o código de cada um.
+The notification items are preserved as they are, keeping the key and the code of each one.
 
-### 5) Preservando a causa raiz
+### 5) Preserving the root cause
 
 ```csharp
 try
@@ -160,19 +162,19 @@ try
 }
 catch (HttpRequestException ex)
 {
-  // A exceção original continua acessível em InnerException, para diagnóstico
-  throw new BadGatewayException("Serviço de pagamentos indisponível.", ex);
+  // The original exception stays reachable in InnerException, for diagnostics
+  throw new BadGatewayException("Payment service unavailable.", ex);
 }
 ```
 
-### 6) Tratamento padronizado
+### 6) Standardized handling
 
 ```csharp
 using Tooark.Exceptions;
 
 try
 {
-  throw new ServiceUnavailableException("Serviço externo indisponível.");
+  throw new ServiceUnavailableException("External service unavailable.");
 }
 catch (TooarkException ex)
 {
@@ -181,53 +183,53 @@ catch (TooarkException ex)
   var notifications = ex.GetNotifications();
 
   Console.WriteLine($"Status: {(int)statusCode} - {statusCode}");
-  Console.WriteLine($"Primeiro erro: {errors[0]}");
-  Console.WriteLine($"Total de notificações: {notifications.Count}");
+  Console.WriteLine($"First error: {errors[0]}");
+  Console.WriteLine($"Notification count: {notifications.Count}");
 }
 ```
 
-`errors[0]` é seguro: as coleções nunca ficam vazias.
+`errors[0]` is safe: the collections are never empty.
 
-### 7) Conflito de estado (409)
+### 7) State conflict (409)
 
 ```csharp
-throw new ConflictException("Já existe um usuário com este e-mail.");
+throw new ConflictException("A user with this email already exists.");
 ```
 
-### 8) Payload muito grande (413)
+### 8) Payload too large (413)
 
 ```csharp
 throw new PayloadTooLargeException(
-  "Arquivo excede o limite permitido de {0} MB.",
+  "File exceeds the allowed limit of {0} MB.",
   10
 );
 ```
 
-### 9) Tipo de mídia não suportado (415)
+### 9) Unsupported media type (415)
 
 ```csharp
-throw new UnsupportedMediaTypeException("Content-Type 'text/plain' não é suportado.");
+throw new UnsupportedMediaTypeException("Content-Type 'text/plain' is not supported.");
 ```
 
-### 10) Entidade não processável (422)
+### 10) Unprocessable entity (422)
 
 ```csharp
 throw new UnprocessableEntityException([
-  "CPF inválido para a regra de negócio.",
-  "Data de nascimento incompatível com o cadastro."
+  "CPF invalid for the business rule.",
+  "Birth date incompatible with the registration."
 ]);
 ```
 
-### 11) Muitas requisições (429)
+### 11) Too many requests (429)
 
 ```csharp
-throw new TooManyRequestsException("Limite de requisições excedido. Tente novamente em alguns segundos.");
+throw new TooManyRequestsException("Request limit exceeded. Try again in a few seconds.");
 ```
 
-### 12) Criando a sua própria exceção
+### 12) Creating your own exception
 
-A hierarquia é aberta: basta herdar de `TooarkException` e informar o código HTTP. Todos os construtores da
-base ficam disponíveis, com as mesmas garantias de coleção somente leitura e nunca vazia.
+The hierarchy is open: inherit from `TooarkException` and provide the HTTP status code. Every base
+constructor becomes available, with the same read-only and never-empty collection guarantees.
 
 ```csharp
 using System.Net;
@@ -252,21 +254,21 @@ public class PaymentRequiredException : TooarkException
 }
 ```
 
-O `catch (TooarkException ex)` do tratamento padronizado passa a capturá-la junto com as demais.
+The `catch (TooarkException ex)` of the standardized handling now catches it together with the others.
 
-## Dependências
+## Dependencies
 
-| Pacote                                                                        | Versão | Uso                                 |
-| ----------------------------------------------------------------------------- | ------ | ----------------------------------- |
-| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | `Notification` e `NotificationItem` |
+| Package                                                                       | Version | Usage                                 |
+| ----------------------------------------------------------------------------- | ------- | ------------------------------------- |
+| [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x     | `Notification` and `NotificationItem` |
 
-O pacote não depende de ASP.NET Core: o código HTTP é exposto como `System.Net.HttpStatusCode`, do próprio
-runtime, e a tradução para a resposta fica a cargo da aplicação.
+The package does not depend on ASP.NET Core: the HTTP status code is exposed as `System.Net.HttpStatusCode`,
+from the runtime itself, and translating it into the response is up to the application.
 
-## Contribuição
+## Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Exceptions](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Exceptions](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

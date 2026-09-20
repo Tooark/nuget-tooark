@@ -1,0 +1,13 @@
+# Blank issues stay enabled because this repo has no Discussions space —
+# questions that do not fit the bug/feature templates go in a blank issue.
+blank_issues_enabled: true
+contact_links:
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/Tooark/nuget-tooark/security/advisories/new
+    about: Please use private security advisories, not public issues.
+  - name: 📦 Packages on NuGet
+    url: https://www.nuget.org/profiles/Tooark
+    about: Published versions, dependencies and per-package READMEs.
+  - name: 🌐 Tooark project
+    url: https://tooark.com
+    about: Learn about the broader Tooark family.

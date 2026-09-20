@@ -1,118 +1,119 @@
 # Tooark.AspNetCore
 
-Biblioteca que concentra o que o Tooark tem de específico de ASP.NET Core, mantendo os demais pacotes livres do requisito de runtime.
+Library that concentrates everything in Tooark that is specific to ASP.NET Core, keeping the other packages free of the runtime requirement.
 
-## Conteúdo
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md)
 
-- [Visão Geral](#visão-geral)
-- [Instalação](#-instalação)
-- [Componentes](#-componentes)
-- [Exemplos de Uso](#-exemplos-de-uso)
-- [Dependências](#-dependências)
-- [Contribuição](#-contribuição)
-- [Licença](#-licença)
+## Contents
 
-## Visão Geral
+- [Overview](#overview)
+- [Installation](#-installation)
+- [Components](#-components)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-O pacote `Tooark.AspNetCore` fornece:
+## Overview
 
-- extensões para tipos do ASP.NET Core, hoje o `ModelStateDictionary`;
-- o lugar para onde o requisito de ASP.NET Core foi movido, tirando-o dos pacotes de uso geral;
-- integração com o localizador do `Tooark.Extensions`, traduzindo as chaves de erro das validações;
-- o lugar previsto para os filtros e middlewares da família.
+The `Tooark.AspNetCore` package provides:
 
-**Por que o pacote existe.** O `Microsoft.AspNetCore.App` não é uma dependência NuGet comum: declará-lo faz a
-aplicação **exigir o runtime do ASP.NET Core instalado**, e esse requisito é contagioso — propaga para todo
-pacote que referencia, e para quem referencia esses.
+- extensions for ASP.NET Core types, today the `ModelStateDictionary`;
+- the place where the ASP.NET Core requirement was moved to, taking it out of the general-purpose packages;
+- integration with the `Tooark.Extensions` localizer, translating the validation error keys;
+- the intended home for the family's filters and middlewares.
 
-Até a v3 o requisito vinha do `Tooark.Extensions`, por causa de um único arquivo. Na prática,
-um worker service ou uma ferramenta de linha de comando que usasse o `Tooark.ValueObjects` recebia
-`Microsoft.AspNetCore.App` no próprio `runtimeconfig.json` e não subia em uma imagem
-`mcr.microsoft.com/dotnet/runtime`.
+**Why the package exists.** `Microsoft.AspNetCore.App` is not an ordinary NuGet dependency: declaring it makes
+the application **require the ASP.NET Core runtime to be installed**, and that requirement is contagious — it
+propagates to every package that references it, and to whoever references those.
 
-A partir da v4 o requisito mora aqui. Quem faz web referencia este pacote; quem não faz, não paga por ele.
+Until v3 the requirement came from `Tooark.Extensions`, because of a single file. In practice, a worker
+service or a command-line tool that used `Tooark.ValueObjects` got `Microsoft.AspNetCore.App` in its own
+`runtimeconfig.json` and would not start on a `mcr.microsoft.com/dotnet/runtime` image.
 
-| Pacote                                                                                                         | Exige o runtime do ASP.NET Core                                                    |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Tooark.AspNetCore`                                                                                            | **sim** — é o propósito dele                                                       |
-| `Tooark.Dtos`                                                                                                  | **sim** — `SearchDto`, `PaginationDto` e `ResponseDto` usam tipos do MVC e do Http |
-| `Tooark` (agregador)                                                                                           | **sim** — por referenciar os dois acima                                            |
-| `Tooark.Extensions`, `Tooark.Utils`, `Tooark.ValueObjects`, `Tooark.Entities`, `Tooark.Attributes` e os demais | não                                                                                |
+From v4 on the requirement lives here. Web projects reference this package; the others do not pay for it.
+
+| Package                                                                                                         | Requires the ASP.NET Core runtime                                               |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `Tooark.AspNetCore`                                                                                             | **yes** — it is its purpose                                                     |
+| `Tooark.Dtos`                                                                                                   | **yes** — `SearchDto`, `PaginationDto` and `ResponseDto` use MVC and Http types |
+| `Tooark` (aggregator)                                                                                           | **yes** — by referencing the two above                                          |
+| `Tooark.Extensions`, `Tooark.Utils`, `Tooark.ValueObjects`, `Tooark.Entities`, `Tooark.Attributes` and the rest | no                                                                              |
 
 ---
 
-## 🔧 Instalação
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.AspNetCore
 ```
 
-O pacote **não exige registro no container**: `GetErrors` é um método de extensão e funciona sem
-configuração. Quando os filtros e middlewares chegarem, eles trarão o registro correspondente.
+The package **does not require registration in the container**: `GetErrors` is an extension method and works
+without configuration. When the filters and middlewares arrive, they will bring their own registration.
 
-> **Requisito de runtime**: por declarar o framework compartilhado, quem consome este pacote precisa do
-> runtime do ASP.NET Core instalado. Em uma imagem Docker, use `mcr.microsoft.com/dotnet/aspnet` no lugar de
-> `mcr.microsoft.com/dotnet/runtime`. Uma aplicação web já usa essa imagem, então na prática nada muda.
+> **Runtime requirement**: because it declares the shared framework, whoever consumes this package needs the
+> ASP.NET Core runtime installed. In a Docker image, use `mcr.microsoft.com/dotnet/aspnet` instead of
+> `mcr.microsoft.com/dotnet/runtime`. A web application already uses that image, so in practice nothing changes.
 
 ---
 
-## 📦 Componentes
+## 📦 Components
 
-### Extensões de ModelState
+### ModelState extensions
 
-- `ModelStateExtension.GetErrors(ModelStateDictionary)`: devolve as mensagens de erro do ModelState.
+- `ModelStateExtension.GetErrors(ModelStateDictionary)`: returns the ModelState error messages.
 
-Percorre todas as entradas do `ModelStateDictionary` e reúne o `ErrorMessage` de cada erro em uma única
-lista. Um campo com mais de um erro contribui com todas as mensagens dele. A ordem é a do
-`ModelStateDictionary`, que enumera pela chave do campo, e não a ordem em que os erros foram registrados.
+Walks every entry of the `ModelStateDictionary` and gathers the `ErrorMessage` of each error into a single
+list. A field with more than one error contributes all of its messages. The order is the
+`ModelStateDictionary`'s, which enumerates by field key, not the order in which the errors were recorded.
 
-### Integração com as validações
+### Integration with the validations
 
-As mensagens devolvidas são o que os atributos do
-[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes) produzem: chaves de
-tradução no formato `Chave;Campo`, como `Field.Required;Email`. Elas viram texto pelo `IStringLocalizer` do
-[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions), que resolve o idioma
-pelo fluxo de execução da requisição.
+The returned messages are what the
+[`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes) attributes produce:
+translation keys in the `Key;Field` format, such as `Field.Required;Email`. They become text through the
+`IStringLocalizer` of [`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions),
+which resolves the language from the request's execution flow.
 
-Erros que o próprio model binding gera — um inteiro recebendo texto, por exemplo — vêm com a mensagem do
-framework, e não com uma chave. O localizador devolve esse texto inalterado e sinaliza
-`ResourceNotFound`, o que permite distinguir os dois casos quando isso importa.
+Errors generated by model binding itself — an integer receiving text, for instance — come with the framework's
+message, not with a key. The localizer returns that text unchanged and flags `ResourceNotFound`, which lets you
+tell the two cases apart when it matters.
 
-### Filtros e middlewares
+### Filters and middlewares
 
-Ainda não distribuídos. Quando existirem, entram neste pacote, nas pastas `Filters/` e `Middlewares/`.
-A família só divide pacote quando o **perfil de dependência** difere — foi o que motivou separar o
-`Tooark.Mediator.EntityFrameworkCore`, que puxa o Entity Framework Core, do `Tooark.Mediator`, que não o usa.
-Filtros, middlewares e as extensões daqui compartilham exatamente o mesmo perfil, então dividi-los em pacotes
-separados não reduziria nada.
+Not shipped yet. When they exist, they go in this package, under the `Filters/` and `Middlewares/` folders.
+The family only splits a package when the **dependency profile** differs — that is what motivated separating
+`Tooark.Mediator.EntityFrameworkCore`, which pulls Entity Framework Core, from `Tooark.Mediator`, which does not
+use it. Filters, middlewares and the extensions here share exactly the same profile, so splitting them into
+separate packages would reduce nothing.
 
 ### Namespaces
 
-As extensões ficam em `Tooark.AspNetCore.Extensions`.
+The extensions live in `Tooark.AspNetCore.Extensions`.
 
 ---
 
-## 📝 Exemplos de Uso
+## 📝 Usage Examples
 
-### Exemplo de leitura dos erros do ModelState
+### Reading the ModelState errors
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Tooark.AspNetCore.Extensions;
 
 [ApiController]
-[Route("pessoas")]
-public sealed class PessoaController : ControllerBase
+[Route("people")]
+public sealed class PersonController : ControllerBase
 {
   [HttpPost]
-  public IActionResult Criar([FromBody] CriarPessoaDto dto)
+  public IActionResult Create([FromBody] CreatePersonDto dto)
   {
     if (!ModelState.IsValid)
     {
       // ["Field.Invalid;Document", "Field.Invalid;Email"]
-      var erros = ModelState.GetErrors();
+      var errors = ModelState.GetErrors();
 
-      return BadRequest(erros);
+      return BadRequest(errors);
     }
 
     return Ok();
@@ -120,10 +121,10 @@ public sealed class PessoaController : ControllerBase
 }
 ```
 
-### Exemplo com as mensagens traduzidas
+### With translated messages
 
-As chaves viram texto pelo `IStringLocalizer`, que vem do
-[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions) e é registrado por lá:
+The keys become text through the `IStringLocalizer`, which comes from
+[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions) and is registered there:
 
 ```csharp
 using Tooark.Extensions.Injections;
@@ -137,18 +138,18 @@ using Microsoft.Extensions.Localization;
 using Tooark.AspNetCore.Extensions;
 
 [ApiController]
-[Route("pessoas")]
-public sealed class PessoaController(IStringLocalizer localizer) : ControllerBase
+[Route("people")]
+public sealed class PersonController(IStringLocalizer localizer) : ControllerBase
 {
   [HttpPost]
-  public IActionResult Criar([FromBody] CriarPessoaDto dto)
+  public IActionResult Create([FromBody] CreatePersonDto dto)
   {
     if (!ModelState.IsValid)
     {
-      // ["O campo Document é inválido", "O campo E-mail é inválido"]
-      var erros = ModelState.GetErrors().Select(erro => localizer[erro].Value);
+      // ["The Document field is invalid", "The E-mail field is invalid"]
+      var errors = ModelState.GetErrors().Select(error => localizer[error].Value);
 
-      return BadRequest(erros);
+      return BadRequest(errors);
     }
 
     return Ok();
@@ -156,12 +157,12 @@ public sealed class PessoaController(IStringLocalizer localizer) : ControllerBas
 }
 ```
 
-O DTO validado pelos atributos do `Tooark.Attributes`:
+The DTO validated by the `Tooark.Attributes` attributes:
 
 ```csharp
 using Tooark.Attributes;
 
-public sealed class CriarPessoaDto
+public sealed class CreatePersonDto
 {
   [EmailValidation]
   public string Email { get; set; } = null!;
@@ -171,8 +172,8 @@ public sealed class CriarPessoaDto
 }
 ```
 
-O nome que aparece na mensagem é o do atributo, não o da propriedade: por isso o campo `Cpf` produz
-`Field.Invalid;Document`, que é o padrão do `DocumentValidationAttribute`. Para alinhar os dois, informe o
+The name that appears in the message is the attribute's, not the property's: that is why the `Cpf` field
+produces `Field.Invalid;Document`, the default of `DocumentValidationAttribute`. To align the two, pass the
 `propertyName`:
 
 ```csharp
@@ -180,9 +181,9 @@ O nome que aparece na mensagem é o do atributo, não o da propriedade: por isso
 public string Cpf { get; set; } = null!;
 ```
 
-### Exemplo de filtro para não repetir a checagem
+### A filter to avoid repeating the check
 
-O mesmo bloco em todo endpoint pede um filtro. Enquanto o pacote não traz um pronto, ele cabe em poucas linhas:
+The same block in every endpoint calls for a filter. While the package does not ship one, it fits in a few lines:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -190,7 +191,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Localization;
 using Tooark.AspNetCore.Extensions;
 
-public sealed class ValidacaoFilter(IStringLocalizer localizer) : IActionFilter
+public sealed class ValidationFilter(IStringLocalizer localizer) : IActionFilter
 {
   public void OnActionExecuting(ActionExecutingContext context)
   {
@@ -199,9 +200,9 @@ public sealed class ValidacaoFilter(IStringLocalizer localizer) : IActionFilter
       return;
     }
 
-    var erros = context.ModelState.GetErrors().Select(erro => localizer[erro].Value);
+    var errors = context.ModelState.GetErrors().Select(error => localizer[error].Value);
 
-    context.Result = new BadRequestObjectResult(erros);
+    context.Result = new BadRequestObjectResult(errors);
   }
 
   public void OnActionExecuted(ActionExecutedContext context) { }
@@ -209,24 +210,24 @@ public sealed class ValidacaoFilter(IStringLocalizer localizer) : IActionFilter
 ```
 
 ```csharp
-builder.Services.AddControllers(options => options.Filters.Add<ValidacaoFilter>());
+builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 ```
 
 ---
 
-## 📋 Dependências
+## 📋 Dependencies
 
-| Pacote                                                                                                          | Versão   | Descrição                         |
-| --------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------- |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `ModelStateDictionary`            |
+| Package                                                                                                  | Version  | Description                |
+| -------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary`     |
 
 ---
 
-## 🪪 Contribuição
+## 🪪 Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.

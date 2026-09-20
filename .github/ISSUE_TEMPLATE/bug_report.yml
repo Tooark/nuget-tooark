@@ -1,0 +1,112 @@
+name: 🐛 Bug report
+description: Report a defect in one of the Tooark packages.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill out the sections below.
+        For **security vulnerabilities**, do NOT file a public issue — see [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am using the latest version of the package.
+          required: true
+        - label: This is not a security vulnerability (those go through the private channel).
+          required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which package?
+      options:
+        - Tooark (aggregator)
+        - Tooark.AspNetCore
+        - Tooark.Attributes
+        - Tooark.Dtos
+        - Tooark.Entities
+        - Tooark.Enums
+        - Tooark.Exceptions
+        - Tooark.Extensions
+        - Tooark.Mediator
+        - Tooark.Mediator.Abstractions
+        - Tooark.Mediator.EntityFrameworkCore
+        - Tooark.Notifications
+        - Tooark.Observability
+        - Tooark.Securities
+        - Tooark.Securities.OpenId
+        - Tooark.Utils
+        - Tooark.Validations
+        - Tooark.ValueObjects
+        - Repo tooling (build, workflows, scripts)
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: "e.g., 4.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Target framework
+      options:
+        - net10.0
+        - net8.0
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, runtime version, hosting (Kestrel, IIS, container, serverless…).
+      placeholder: "e.g., .NET 10.0.11 on Ubuntu 24.04, Docker, ASP.NET Core minimal API"
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest code snippet, configuration section (`appsettings.json`) and input that reproduce the problem.
+      render: csharp
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or stack trace
+      description: Paste the relevant output. ⚠️ Redact secrets, keys, tokens and personal data.
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context

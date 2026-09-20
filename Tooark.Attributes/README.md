@@ -1,199 +1,201 @@
 # Tooark.Attributes
 
-Biblioteca com validadores de atributos para propriedades ou campos, integrados ao `System.ComponentModel.DataAnnotations`.
+Library with attribute validators for properties or fields, integrated with `System.ComponentModel.DataAnnotations`.
 
-## Instalação
+🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.pt-BR.md)
+
+## Installation
 
 ```bash
 dotnet add package Tooark.Attributes
 ```
 
-## Conteúdo
+## Contents
 
-- [DocumentValidationAttribute](#1-validação-de-documento)
-- [EmailValidationAttribute](#2-validação-de-email)
-- [LinkVideoValidationAttribute](#3-validação-de-link-de-vídeo)
-- [PasswordValidationAttribute](#4-validação-de-senha)
-- [UrlValidationAttribute](#5-validação-de-url)
-- [ZipCodeValidationAttribute](#6-validação-de-código-postal)
-- [Comportamento comum](#comportamento-comum)
+- [DocumentValidationAttribute](#1-document-validation)
+- [EmailValidationAttribute](#2-email-validation)
+- [LinkVideoValidationAttribute](#3-video-link-validation)
+- [PasswordValidationAttribute](#4-password-validation)
+- [UrlValidationAttribute](#5-url-validation)
+- [ZipCodeValidationAttribute](#6-zip-code-validation)
+- [Common behavior](#common-behavior)
 
-## Atributos de Validação
+## Validation Attributes
 
-Todos os atributos aceitam `propertyName`, que define o nome do campo usado na mensagem de erro.
+Every attribute accepts `propertyName`, which sets the field name used in the error message.
 
-### 1. Validação de Documento
+### 1. Document Validation
 
-**Funcionalidade:**
-Valida o documento pelo formato, com expressão regular, e pelos dígitos verificadores.
+**Purpose:**
+Validates the document by format, with a regular expression, and by check digits.
 
-**Parâmetros:**
+**Parameters:**
 
-- `string type`: Tipo de documento a ser validado. Obrigatório.
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"Document"`.
+- `string type`: Type of document to validate. Required.
+- `string propertyName`: Field name in the error message. Default: `"Document"`.
 
-O tipo é recebido como **texto** porque argumento de atributo aceita apenas constante — um parâmetro do tipo `EDocumentType` impediria o atributo de ser aplicado (`CS0181`). Valores aceitos, sem diferenciar caixa: `CPF`, `RG`, `CNH`, `CNPJ`, `CPF_CNPJ`, `CPF_RG`, `CPF_RG_CNH` e `None`.
+The type is received as **text** because attribute arguments accept constants only — a parameter of type `EDocumentType` would prevent the attribute from being applied (`CS0181`). Accepted values, case-insensitive: `CPF`, `RG`, `CNH`, `CNPJ`, `CPF_CNPJ`, `CPF_RG`, `CPF_RG_CNH` and `None`.
 
-Um tipo não reconhecido é erro de configuração e faz o atributo lançar `InternalServerErrorException` na primeira validação, com a mensagem `Attributes.DocumentTypeUnknown;{tipo}`.
+An unrecognized type is a configuration error and makes the attribute throw `InternalServerErrorException` on the first validation, with the message `Attributes.DocumentTypeUnknown;{type}`.
 
-[**Exemplo de Uso**](#validação-de-documento)
+[**Usage Example**](#document-validation)
 
-### 2. Validação de Email
+### 2. Email Validation
 
-**Funcionalidade:**
-Valida se o valor é um endereço de email válido.
+**Purpose:**
+Validates whether the value is a valid email address.
 
-**Parâmetros:**
+**Parameters:**
 
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"Email"`.
+- `string propertyName`: Field name in the error message. Default: `"Email"`.
 
-[**Exemplo de Uso**](#validação-de-email)
+[**Usage Example**](#email-validation)
 
-### 3. Validação de Link de Vídeo
+### 3. Video Link Validation
 
-**Funcionalidade:**
-Valida se o valor é um link de vídeo de algum dos provedores habilitados.
+**Purpose:**
+Validates whether the value is a video link from one of the enabled providers.
 
-**Parâmetros:**
+**Parameters:**
 
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"Link"`.
-- `bool youtube`: Permite link do YouTube. Padrão: `true`.
-- `bool vimeo`: Permite link do Vimeo. Padrão: `true`.
-- `bool dailymotion`: Permite link do Dailymotion. Padrão: `true`.
+- `string propertyName`: Field name in the error message. Default: `"Link"`.
+- `bool youtube`: Allows YouTube links. Default: `true`.
+- `bool vimeo`: Allows Vimeo links. Default: `true`.
+- `bool dailymotion`: Allows Dailymotion links. Default: `true`.
 
-Desabilitar os três provedores é erro de configuração — nenhum link poderia ser aceito — e faz o atributo lançar `InternalServerErrorException` com a mensagem `Attributes.LinkVideoNoProvider;{campo}`.
+Disabling all three providers is a configuration error — no link could be accepted — and makes the attribute throw `InternalServerErrorException` with the message `Attributes.LinkVideoNoProvider;{field}`.
 
-[**Exemplo de Uso**](#validação-de-link-de-vídeo)
+[**Usage Example**](#video-link-validation)
 
-### 4. Validação de Senha
+### 4. Password Validation
 
-**Funcionalidade:**
-Valida se a senha atende aos critérios de complexidade configurados.
+**Purpose:**
+Validates whether the password meets the configured complexity criteria.
 
-**Parâmetros:**
+**Parameters:**
 
-- `bool lowercase`: Exige carácter minúsculo. Padrão: `true`.
-- `bool uppercase`: Exige carácter maiúsculo. Padrão: `true`.
-- `bool number`: Exige carácter numérico. Padrão: `true`.
-- `bool symbol`: Exige carácter especial. Padrão: `true`.
-- `int length`: Comprimento mínimo. Padrão: `8`. Valor não positivo assume `1`.
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"Password"`.
+- `bool lowercase`: Requires a lowercase character. Default: `true`.
+- `bool uppercase`: Requires an uppercase character. Default: `true`.
+- `bool number`: Requires a numeric character. Default: `true`.
+- `bool symbol`: Requires a special character. Default: `true`.
+- `int length`: Minimum length. Default: `8`. A non-positive value assumes `1`.
+- `string propertyName`: Field name in the error message. Default: `"Password"`.
 
-Os critérios valem exatamente como configurados. Desabilitar todos significa exigir **apenas o comprimento**, que é uma política legítima: senhas longas sem regra de composição.
+The criteria apply exactly as configured. Disabling all of them means requiring **only the length**, which is a legitimate policy: long passwords with no composition rule.
 
-[**Exemplo de Uso**](#validação-de-senha)
+[**Usage Example**](#password-validation)
 
-### 5. Validação de URL
+### 5. URL Validation
 
-**Funcionalidade:**
-Valida se o valor é uma URL válida nos protocolos de email (envio e recebimento), FTP, HTTP ou WebSocket.
+**Purpose:**
+Validates whether the value is a valid URL in the email (sending and receiving), FTP, HTTP or WebSocket protocols.
 
-**Parâmetros:**
+**Parameters:**
 
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"Url"`.
+- `string propertyName`: Field name in the error message. Default: `"Url"`.
 
-[**Exemplo de Uso**](#validação-de-url)
+[**Usage Example**](#url-validation)
 
-### 6. Validação de Código Postal
+### 6. Zip Code Validation
 
-**Funcionalidade:**
-Valida se o valor é um código postal válido.
+**Purpose:**
+Validates whether the value is a valid zip code.
 
-**Parâmetros:**
+**Parameters:**
 
-- `string propertyName`: Nome do campo na mensagem de erro. Padrão: `"ZipCode"`.
+- `string propertyName`: Field name in the error message. Default: `"ZipCode"`.
 
-[**Exemplo de Uso**](#validação-de-código-postal)
+[**Usage Example**](#zip-code-validation)
 
-## Comportamento comum
+## Common behavior
 
-Todos os atributos herdam de `TooarkValidationAttribute` e compartilham as regras abaixo.
+Every attribute inherits from `TooarkValidationAttribute` and shares the rules below.
 
-**Mensagens de erro.** A mensagem é devolvida no `ValidationResult` de cada validação, e nunca gravada em `ErrorMessage`. Isso importa porque o framework de validação reaproveita a mesma instância do atributo em todas as validações daquele campo, inclusive concorrentes: gravar no atributo misturaria a mensagem de uma requisição com a de outra.
+**Error messages.** The message is returned in the `ValidationResult` of each validation, and never written to `ErrorMessage`. That matters because the validation framework reuses the same attribute instance across every validation of that field, including concurrent ones: writing to the attribute would mix one request's message with another's.
 
-Sem configuração, a mensagem é uma chave de tradução no formato `Chave;Campo`:
+Without configuration, the message is a translation key in the `Key;Field` format:
 
-| Situação                      | Mensagem                 |
+| Situation                     | Message                  |
 | ----------------------------- | ------------------------ |
-| Campo não informado           | `Field.Required;{campo}` |
-| Valor não corresponde à regra | `Field.Invalid;{campo}`  |
+| Field not provided            | `Field.Required;{field}` |
+| Value does not match the rule | `Field.Invalid;{field}`  |
 
-Se você configurar `ErrorMessage` ou `ErrorMessageResourceName` no atributo, **essa mensagem é usada no lugar da chave**.
+If you configure `ErrorMessage` or `ErrorMessageResourceName` on the attribute, **that message is used instead of the key**.
 
-**Valor ausente.** Valor nulo, vazio ou composto apenas por espaços é reportado como `Field.Required`. Ou seja, os atributos **implicam obrigatoriedade** — eles não seguem a convenção do `DataAnnotations`, em que validadores que não são `[Required]` aceitam nulo. Para um campo opcional, valide fora do atributo ou aplique-o condicionalmente.
+**Missing value.** A null, empty or whitespace-only value is reported as `Field.Required`. In other words, the attributes **imply being required** — they do not follow the `DataAnnotations` convention, in which validators other than `[Required]` accept null. For an optional field, validate outside the attribute or apply it conditionally.
 
-**Valores que não são texto.** O valor é convertido com `ToString()` antes da validação, então um `Uri` ou um tipo próprio com `ToString()` adequado funciona.
+**Non-text values.** The value is converted with `ToString()` before validation, so a `Uri` or a custom type with a suitable `ToString()` works.
 
-**Tempo limite das expressões regulares.** Cada expressão regular roda com limite de 300 ms. Entrada que provoca retrocesso excessivo é **reprovada**, e não deixa a exceção subir do atributo.
+**Regular expression timeout.** Every regular expression runs with a 300 ms limit. Input that causes excessive backtracking is **rejected**, and the exception does not escape the attribute.
 
-**Erro de configuração.** Configuração impossível — tipo de documento desconhecido, link de vídeo sem provedor — lança `InternalServerErrorException` na primeira validação. Não é falha do dado, e sim do atributo aplicado no código; as chaves estão em `Tooark.Attributes.Messages.AttributeErrorMessages`.
+**Configuration error.** An impossible configuration — unknown document type, video link with no provider — throws `InternalServerErrorException` on the first validation. It is not a failure of the data but of the attribute applied in code; the keys are in `Tooark.Attributes.Messages.AttributeErrorMessages`.
 
-## Exemplo de Uso
+## Usage Example
 
-### Validação de Documento
+### Document Validation
 
 ```csharp
 using Tooark.Attributes;
 
-public class Pessoa
+public class Person
 {
   [DocumentValidation("CPF")]
   public string Cpf { get; set; } = null!;
 
-  [DocumentValidation("CPF_CNPJ", propertyName: "Documento")]
-  public string Documento { get; set; } = null!;
+  [DocumentValidation("CPF_CNPJ", propertyName: "Document")]
+  public string Document { get; set; } = null!;
 }
 ```
 
-### Validação de Email
+### Email Validation
 
 ```csharp
 using Tooark.Attributes;
 
-public class Contato
+public class Contact
 {
   [EmailValidation]
   public string Email { get; set; } = null!;
 
-  // Com mensagem própria, que tem precedência sobre a chave padrão
-  [EmailValidation(ErrorMessage = "Informe um e-mail corporativo")]
-  public string EmailCorporativo { get; set; } = null!;
+  // With a custom message, which takes precedence over the default key
+  [EmailValidation(ErrorMessage = "Provide a corporate email")]
+  public string CorporateEmail { get; set; } = null!;
 }
 ```
 
-### Validação de Link de Vídeo
+### Video Link Validation
 
 ```csharp
 using Tooark.Attributes;
 
-public class Aula
+public class Lesson
 {
   [LinkVideoValidation]
   public string Video { get; set; } = null!;
 
-  // Apenas YouTube, com nome de campo próprio na mensagem
-  [LinkVideoValidation("Apresentacao", youtube: true, vimeo: false, dailymotion: false)]
-  public string Apresentacao { get; set; } = null!;
+  // YouTube only, with a custom field name in the message
+  [LinkVideoValidation("Presentation", youtube: true, vimeo: false, dailymotion: false)]
+  public string Presentation { get; set; } = null!;
 }
 ```
 
-### Validação de Senha
+### Password Validation
 
 ```csharp
 using Tooark.Attributes;
 
-public class Credencial
+public class Credential
 {
   [PasswordValidation]
-  public string Senha { get; set; } = null!;
+  public string Password { get; set; } = null!;
 
-  // Frase secreta: sem regra de composição, com comprimento mínimo de 20
+  // Passphrase: no composition rule, minimum length of 20
   [PasswordValidation(false, false, false, false, 20)]
-  public string FraseSecreta { get; set; } = null!;
+  public string Passphrase { get; set; } = null!;
 }
 ```
 
-### Validação de URL
+### URL Validation
 
 ```csharp
 using Tooark.Attributes;
@@ -201,49 +203,49 @@ using Tooark.Attributes;
 public class Site
 {
   [UrlValidation]
-  public string Endereco { get; set; } = null!;
+  public string Address { get; set; } = null!;
 }
 ```
 
-### Validação de Código Postal
+### Zip Code Validation
 
 ```csharp
 using Tooark.Attributes;
 
-public class Endereco
+public class Address
 {
   [ZipCodeValidation]
-  public string Cep { get; set; } = null!;
+  public string ZipCode { get; set; } = null!;
 }
 ```
 
-### Lendo o resultado da validação
+### Reading the validation result
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
 
-var pessoa = new Pessoa { Cpf = "11111111111" };
-var resultados = new List<ValidationResult>();
+var person = new Person { Cpf = "11111111111" };
+var results = new List<ValidationResult>();
 
-Validator.TryValidateObject(pessoa, new ValidationContext(pessoa), resultados, true);
+Validator.TryValidateObject(person, new ValidationContext(person), results, true);
 
-foreach (var resultado in resultados)
+foreach (var result in results)
 {
-  // resultado.ErrorMessage -> "Field.Invalid;Document"
-  // resultado.MemberNames  -> ["Cpf"]
+  // result.ErrorMessage -> "Field.Invalid;Document"
+  // result.MemberNames  -> ["Cpf"]
 }
 ```
 
-## Dependências
+## Dependencies
 
 - [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)
 - [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
 - [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 
-## Contribuição
+## Contributing
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/issues).
+Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/issues) repository.
 
-## Licença
+## License
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
