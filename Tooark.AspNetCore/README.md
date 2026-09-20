@@ -1,6 +1,6 @@
 # Tooark.AspNetCore
 
-Library that concentrates everything in Tooark that is specific to ASP.NET Core, keeping the other packages free of the runtime requirement.
+Library that concentrates the ASP.NET Core specific pieces of Tooark, keeping the general-purpose packages free of the runtime requirement. Packages whose purpose is to integrate with ASP.NET Core (`Tooark.Dtos`, `Tooark.Observability`, `Tooark.Securities.OpenId`) declare the shared framework themselves.
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md)
 

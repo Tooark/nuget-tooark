@@ -27,72 +27,78 @@ falhe no outro indica diferença de comportamento entre os runtimes, e não um t
 
 ## ▶️ Executando
 
+A suíte roda pelo [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro)
+(MTP), o runner nativo do xunit.v3 4.x: `UseMicrosoftTestingPlatformRunner` está ligado no projeto e o
+`global.json` define `test.runner` como `Microsoft.Testing.Platform`, o que coloca o `dotnet test` no modo
+MTP. Nesse modo o projeto é informado com `--project`, e tudo depois de `--` vai para o runner de testes — a
+sintaxe antiga do VSTest, `--filter "FullyQualifiedName~..."`, não vale mais.
+
 ```bash
 # Todos os alvos
-dotnet test Tooark.Tests/Tooark.Tests.csproj
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
 # Um alvo só, durante o desenvolvimento
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0
 
-# Um pacote só
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
+# Um pacote só (namespace)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-namespace Tooark.Tests.ValueObjects
+
+# Uma classe só (o curinga substitui o prefixo do namespace)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-class "*CpfTests"
 
 # Um teste só
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Equals_ShouldBeFalse_WhenTypesDiffer"
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-method "*Equals_ShouldBeFalse_WhenTypesDiffer"
+
+# Relatório TRX (gravado no diretório de resultados)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -- --report-xunit-trx
 ```
+
+Vários valores do mesmo filtro cabem numa chave só (`--filter-class "*CpfTests" "*CnpjTests"`), e cada
+filtro tem o par `--filter-not-*`. A lista completa sai em `dotnet test --project Tooark.Tests/Tooark.Tests.csproj -- --help`.
 
 ---
 
 ## 📊 Cobertura
 
-### Tabela no console
+### Coletando
+
+A cobertura é coletada pelo [coverlet](https://github.com/coverlet-coverage/coverlet) por meio da sua
+extensão para o MTP, o `coverlet.MTP` (o `coverlet.msbuild` clássico só funciona no VSTest). Adicione
+`--coverlet` a qualquer execução:
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- \
+  --coverlet --coverlet-output-format cobertura
 ```
 
-Sai uma linha por pacote, com linhas, branches e métodos, mais o total e a média ao final. É o
-suficiente para o dia a dia.
+O `--coverlet-output-format` aceita `json`, `lcov`, `opencover`, `cobertura` e `teamcity`, e pode ser
+repetido. O JSON traz o detalhe necessário para descobrir **qual** caminho falta — escrever teste a
+partir da lacuna medida rende mais do que a partir de suposição.
 
-### Detalhe por linha e por branch
+Dois detalhes do coverlet.MTP que costumam confundir:
 
-```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
-  -p:CollectCoverage=true \
-  -p:CoverletOutputFormat=json \
-  -p:CoverletOutput=cobertura/
-```
+- o relatório vai para o **diretório de resultados**: `TestResults/` dentro do diretório de onde o
+  comando roda, ou onde `--results-directory` apontar. Use caminho absoluto quando o destino importar;
+- uma execução nunca sobrescreve um relatório existente: quando já há um, o arquivo novo ganha um
+  timestamp no nome (`coverage.cobertura.<timestamp>.xml`). Rodar os dois alvos no mesmo diretório
+  deixa, portanto, dois arquivos — use o glob (`coverage.cobertura*.xml`) e deixe o ReportGenerator
+  fundi-los.
 
-O JSON traz o detalhe necessário para descobrir **qual** caminho falta — escrever teste a partir da
-lacuna medida rende mais do que a partir de suposição.
+### Resumo e relatório HTML
 
-Dois detalhes do coverlet que costumam confundir:
-
-- o caminho relativo é resolvido a partir do diretório de onde o comando roda, e não do projeto de
-  teste. Use caminho absoluto quando o destino importar;
-- o nome do arquivo recebe o alvo, porque o projeto é multi-alvo: sai `coverage.net10.0.json`, e não
-  `coverage.json`.
-
-### Relatório HTML
-
-O `ReportGenerator` já é dependência do projeto. Gere a cobertura no formato `cobertura` e aponte o
-relatório para ela:
+O coverlet.MTP não imprime resumo no console. O `ReportGenerator` já é dependência do projeto; aponte-o
+para os arquivos Cobertura e peça o resumo em texto e o HTML de uma vez:
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
-  -p:CollectCoverage=true \
-  -p:CoverletOutputFormat=cobertura \
-  -p:CoverletOutput=cobertura/
-
 reportgenerator \
-  -reports:cobertura/coverage.net10.0.cobertura.xml \
-  -targetdir:cobertura/html \
-  -reporttypes:Html
+  -reports:"TestResults/coverage.cobertura*.xml" \
+  -targetdir:TestResults/coveragereport \
+  -reporttypes:"Html;TextSummary"
 ```
 
-Abra `cobertura/html/index.html`. Cada tipo ganha uma página com o código-fonte marcando linha
-coberta, linha descoberta e branch parcialmente coberta — é a forma mais rápida de ver o caminho que
-falta.
+O `TestResults/coveragereport/Summary.txt` traz os totais e um bloco por assembly — o suficiente para
+o dia a dia. O `index.html` dá a cada tipo uma página com o código-fonte marcando linha coberta, linha
+descoberta e branch parcialmente coberta — é a forma mais rápida de ver o caminho que falta.
 
 O comando `reportgenerator` vem da ferramenta global:
 
@@ -101,7 +107,11 @@ dotnet tool install -g dotnet-reportgenerator-globaltool
 ```
 
 Sem instalá-la, chame o executável que já veio com o pacote, em
-`~/.nuget/packages/reportgenerator/<versão>/tools/net10.0/ReportGenerator.exe`.
+`~/.nuget/packages/reportgenerator/<versão>/tools/net10.0/ReportGenerator.exe`. No VS Code, a tarefa
+`generate coverage report` (`.vscode/tasks.json`) roda a coleta e o relatório em sequência.
+
+O CI faz a mesma coleta em todo pull request, publica os arquivos Cobertura e o relatório como o
+artefato `coverage` e escreve o resumo na página do job.
 
 ### Meta
 

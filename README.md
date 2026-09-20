@@ -131,7 +131,8 @@ dotnet build --configuration Release
 # A single package
 dotnet build Tooark.Securities/Tooark.Securities.csproj --configuration Release
 
-# Pack a package locally (output in <package>/bin/Release/*.nupkg)
+# Pack a package locally (output in <package>/bin/Release/*.nupkg and *.snupkg with the symbols);
+# the pack also validates the public API against the last published version
 dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release
 ```
 
@@ -141,56 +142,55 @@ A single project, [`Tooark.Tests`](https://github.com/Tooark/nuget-tooark/tree/m
 every package, with one folder per package. It runs on both target frameworks; a test that passes on one and
 fails on the other points to a runtime difference, not to a flaky test.
 
+The suite runs on the [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro),
+the native runner of xunit.v3 4.x; `dotnet test` enters that mode through the `test.runner` setting in
+`global.json`. The project is passed with `--project`, and the arguments for the test runner (filters, reports,
+coverage) come after `--`:
+
 ```bash
 # Everything, both target frameworks
-dotnet test Tooark.Tests/Tooark.Tests.csproj
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
 # One target framework, during development
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0
 
-# One package
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
+# One package (namespace)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-namespace Tooark.Tests.ValueObjects
 
-# One test
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Equals_ShouldBeFalse_WhenTypesDiffer"
+# One class, one test (the wildcard stands for the namespace prefix)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-class "*CpfTests"
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-method "*Equals_ShouldBeFalse_WhenTypesDiffer"
 ```
 
 ### Test coverage
 
-Coverage is collected by [coverlet](https://github.com/coverlet-coverage/coverlet), already referenced by the
-test project.
-
-**Summary table in the console** — one line per package with lines, branches and methods:
+Coverage is collected by [coverlet](https://github.com/coverlet-coverage/coverlet) through its
+Microsoft.Testing.Platform extension (`coverlet.MTP`), already referenced by the test project. Add `--coverlet`
+to the run; the Cobertura file lands in `TestResults/` under the current directory (or wherever
+`--results-directory` points), and its name may carry a timestamp (`coverage.cobertura.<timestamp>.xml`),
+because a run never overwrites an existing report:
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- \
+  --coverlet --coverlet-output-format cobertura
 ```
 
-**HTML report** — generate the Cobertura file and render it with
-[ReportGenerator](https://github.com/danielpalme/ReportGenerator):
+**Summary and HTML report** — coverlet.MTP prints no summary in the console; render the file with
+[ReportGenerator](https://github.com/danielpalme/ReportGenerator) instead. The `reportgenerator` command comes
+from the global tool (`dotnet tool install -g dotnet-reportgenerator-globaltool`):
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
-  -p:CollectCoverage=true \
-  -p:CoverletOutputFormat=cobertura \
-  -p:CoverletOutput=cobertura/
-
 reportgenerator \
-  -reports:cobertura/coverage.net10.0.cobertura.xml \
-  -targetdir:cobertura/html \
-  -reporttypes:Html
+  -reports:"TestResults/coverage.cobertura*.xml" \
+  -targetdir:TestResults/coveragereport \
+  -reporttypes:"Html;TextSummary"
 ```
 
-Open `cobertura/html/index.html`: every type gets a page with the source marked as covered, uncovered or
-partially covered branch. The `reportgenerator` command comes from the global tool:
-
-```bash
-dotnet tool install -g dotnet-reportgenerator-globaltool
-```
-
-Two coverlet details worth knowing: the output path is resolved from the directory you run the command in,
-not from the test project; and because the project is multi-targeted the file name carries the target
-(`coverage.net10.0.cobertura.xml`, not `coverage.cobertura.xml`). The `cobertura/` folder is git-ignored.
+`TestResults/coveragereport/Summary.txt` has the totals per assembly; `index.html` gives every type a page
+with the source marked as covered, uncovered or partially covered branch. Running both target frameworks into
+the same directory leaves two files, and ReportGenerator merges them. The `TestResults/` folder is
+git-ignored. CI collects the same coverage on every pull request and publishes the report as an artifact,
+with a summary on the job page.
 
 **Goal:** 100% of lines, branches and methods on the packages already reviewed; where that was not possible,
 the reason is recorded in the release notes under `Notes/`.
@@ -198,9 +198,9 @@ the reason is recorded in the release notes under `Notes/`.
 ### Before opening a pull request
 
 [`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) has the full
-checklist — in short: `Release` build with no warnings, tests green on both target frameworks, new behavior
-covered by tests, new message keys translated in the three resource files of `Tooark.Extensions`, package
-READMEs (English and Portuguese) and release notes updated.
+checklist — in short: `dotnet format` clean, `Release` build with no warnings, tests green on both target
+frameworks, new behavior covered by tests, new message keys translated in the three resource files of
+`Tooark.Extensions`, package READMEs (English and Portuguese) and release notes updated.
 
 ---
 
@@ -212,7 +212,7 @@ Choose the channel by what you need:
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Report a **bug**                    | [Open a bug report](https://github.com/Tooark/nuget-tooark/issues/new?template=bug_report.yml) — package, version, target framework, minimal reproduction                                                 |
 | Suggest a **feature**               | [Open a feature request](https://github.com/Tooark/nuget-tooark/issues/new?template=feature_request.yml) — the problem first, then the solution                                                           |
-| Ask a **question**                  | [Open a blank issue](https://github.com/Tooark/nuget-tooark/issues/new) after searching the [existing ones](https://github.com/Tooark/nuget-tooark/issues)                                                |
+| Ask a **question**                  | [Start a discussion in Q&A](https://github.com/Tooark/nuget-tooark/discussions/new?category=q-a) after searching the [existing ones](https://github.com/Tooark/nuget-tooark/discussions)                  |
 | Report a **security vulnerability** | **Not** an issue — use the [private security advisory](https://github.com/Tooark/nuget-tooark/security/advisories/new), see [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md) |
 
 Response targets and other contact channels are in

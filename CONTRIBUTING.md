@@ -47,10 +47,10 @@ Each package lives in its own folder and follows the same structure:
 | `Tooark.<Package>/README.pt-BR.md` | Package docs in Portuguese, linked from the English one                |
 | `Tooark/`                          | Aggregator package that references every other package                 |
 | `Tooark.Tests/`                    | Single test project covering every package, one folder each            |
-| `Tooark.Benchmarks/`               | BenchmarkDotNet project (not part of the solution)                     |
 | `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)  |
 | `Media/`                           | Package icon and logo                                                  |
-| `scripts/`                         | Local SonarQube examples                                               |
+| `scripts/`                         | `check-package-pairs.sh` (run by CI) and local SonarQube examples      |
+| `.vscode/`                         | Editor task that renders the coverage report                           |
 
 Shared, repo-wide files:
 
@@ -60,7 +60,10 @@ Shared, repo-wide files:
 - [`Directory.Packages.props`](Directory.Packages.props) — central package
   management; runtime-bound packages are pinned per target framework
 - [`Tooark.slnx`](Tooark.slnx) — the solution
-- [`global.json`](global.json) — the .NET SDK version
+- [`global.json`](global.json) — the .NET SDK version and the `dotnet test`
+  runner (Microsoft.Testing.Platform)
+- [`.editorconfig`](.editorconfig) — formatting rules, verified by CI with
+  `dotnet format` and, for the style rules, by the build itself
 - [`.github/workflows/`](.github/workflows/) — CI on pull requests and the
   release pipeline on `main`
 
@@ -76,21 +79,26 @@ to run the security scanner locally.
 2. Create a branch named after the issue: `git checkout -b 46-feat/short-description`
    (issue number, type, short slug — see the history for examples).
 3. Make your changes.
-4. **Build and test locally** before pushing — warnings are errors:
+4. **Format, build and test locally** before pushing — warnings are errors and
+   CI rejects a file outside the `.editorconfig`:
 
    ```bash
+   dotnet format                      # fixes whitespace, BOM and final newline
    dotnet build --configuration Release
-   dotnet test Tooark.Tests/Tooark.Tests.csproj
+   dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
    # One target and one package, during development
-   dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
+   dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-namespace Tooark.Tests.ValueObjects
 
-   # Coverage table in the console
-   dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
+   # Coverage (Cobertura file under TestResults/)
+   dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --coverlet --coverlet-output-format cobertura
    ```
 
+   The suite runs on the Microsoft.Testing.Platform (`dotnet test` enters that
+   mode through `global.json`), so the project is passed with `--project` and
+   the test-runner arguments come after `--`.
    [`Tooark.Tests/README.md`](Tooark.Tests/README.md) explains the test
-   organization, coverage reports and the state-sensitive tests.
+   organization, filters, coverage reports and the state-sensitive tests.
 
 5. Every new behavior comes with tests, in the package's folder under
    `Tooark.Tests/`. Every new message key emitted by a package gets a
@@ -101,9 +109,11 @@ to run the security scanner locally.
    in `Notes/` (see [Releasing](#releasing)).
 7. Push and open a Pull Request against `main`.
 
-> Note: CI builds and runs the full test suite on both target frameworks for
-> every pull request. The release pipeline additionally runs the security
-> scanner before publishing. A failing build, test or scan blocks the merge.
+> Note: for every pull request, CI checks the formatting, checks that the
+> runtime-bound pins are paired, builds in `Release` and runs the full test
+> suite on both target frameworks. The `build-and-test` check is required by
+> the `main` branch ruleset, so a red pull request cannot be merged. The
+> release pipeline additionally runs the security scanner before publishing.
 
 ---
 
@@ -115,7 +125,9 @@ to run the security scanner locally.
   The [`.editorconfig`](.editorconfig) carries the formatting rules (2-space
   indentation, LF, file-scoped namespaces).
 - **Every public member has XML docs** (`GenerateDocumentationFile` is on and
-  warnings are errors).
+  warnings are errors, so a missing comment fails the build; `CS1591` is only
+  suppressed in `Tooark.Tests`, where the test name and the intent comment play
+  that role).
 - **Nullable is enabled** across the solution — no `!` to silence a real
   possibility of null.
 - **Fail fast, never silently.** A security-sensitive option with an invalid
@@ -130,9 +142,11 @@ to run the security scanner locally.
   options bound from a named section with an `Options.Section` constant.
 - **ASP.NET Core stays in the packages that need it.** Anything that requires
   the `Microsoft.AspNetCore.App` shared framework goes into a package that
-  declares it (`Tooark.AspNetCore`, `Tooark.Observability`,
+  declares it (`Tooark.AspNetCore`, `Tooark.Dtos`, `Tooark.Observability`,
   `Tooark.Securities.OpenId`); the others must keep running on the base
-  runtime.
+  runtime. The one deliberate exception is `Tooark.Utils`, which takes
+  `IFormFile` from the out-of-band `Microsoft.AspNetCore.Http` 2.x package
+  precisely to avoid the shared framework.
 - **Tests** use xUnit with the Arrange/Act/Assert layout and a one-line
   Portuguese comment describing each test.
 
@@ -146,10 +160,19 @@ to run the security scanner locally.
   behavior that consumers may rely on is a major, even when it looks like a
   fix — document it in the release notes under "Mudanças Incompatíveis".
 - Package versions are managed **centrally** in `Directory.Packages.props`.
-  Runtime-bound packages (`Microsoft.AspNetCore.*`, `Microsoft.Extensions.*`,
-  `Microsoft.EntityFrameworkCore*`) have one pin per target framework and
-  must be bumped in pairs (8.0.x and 10.0.x). Do not put a `Version` on a
-  `PackageReference`.
+  Runtime-bound packages (`Microsoft.AspNetCore.Authentication.*`,
+  `Microsoft.Extensions.*`, `Microsoft.EntityFrameworkCore*`,
+  `System.Security.Cryptography.Xml`) have one pin per target framework and
+  must be bumped **by hand, in pairs** (8.0.x and 10.0.x) after each .NET
+  servicing release. Dependabot is told to ignore them: it only evaluates the
+  first conditional group and would move the 8.0.x line alone.
+  `bash scripts/check-package-pairs.sh` (also run by CI) checks that both
+  groups list the same packages on the right lines. Do not put a `Version` on
+  a `PackageReference`.
+- **Package validation** runs on `dotnet pack` against the last published
+  version (`PackageValidationBaselineVersion`): removing or changing a public
+  member fails the pack. That is expected for a major release — update the
+  baseline in the same PR that bumps the major.
 - Prefer the official Tooark packages and the .NET framework over new
   third-party dependencies. Adding one needs a justification in the PR; a
   dependency that drags the ASP.NET Core shared framework into a base
@@ -215,10 +238,14 @@ Releases are fully automated by
 1. Bump `<Version>` in `Directory.Build.props` and write `Notes/v<version>.md`
    in the same PR as the last change of the release.
 2. Merge to `main`. If the tag `v<version>` does not exist yet, the workflow
-   builds, runs the tests, runs the security scanner, packs every package,
-   creates the tag and the GitHub Release (with the notes file as body) and
-   publishes every package to NuGet. If the tag already exists, the workflow
-   stops with a warning and publishes nothing.
+   builds, runs the tests, runs the security scanner, packs every package
+   (`.nupkg` and `.snupkg`), publishes them to NuGet and only then creates
+   the tag and the GitHub Release (with the notes file as body). If the tag
+   already exists, the workflow stops with a warning and publishes nothing.
+
+The order matters: because the tag is created last, a run that fails while
+publishing leaves no tag behind, and the next push to `main` simply retries
+(`--skip-duplicate` skips the packages that already went through).
 
 Do **not** hand-create tags or releases — the workflow derives them from
 `Directory.Build.props`.
@@ -230,14 +257,16 @@ Do **not** hand-create tags or releases — the workflow derives them from
 Before opening a PR, confirm:
 
 - [ ] Commits follow Conventional Commits
+- [ ] `dotnet format --verify-no-changes` passes
 - [ ] `dotnet build --configuration Release` passes with no warnings
-- [ ] `dotnet test Tooark.Tests/Tooark.Tests.csproj` passes on both target frameworks
+- [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes on both target frameworks
 - [ ] New behavior is covered by tests
 - [ ] New message keys are translated in `en-US`, `pt-BR` and `es-ES`
 - [ ] Package `README.md` and `README.pt-BR.md` updated **and in sync** when the public surface, options or behavior changed
 - [ ] Root `README.md` and `README.pt-BR.md` updated **and in sync** when the root docs changed
 - [ ] Links between Markdown files are absolute GitHub URLs
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
+- [ ] Runtime-bound pins changed in pairs (`bash scripts/check-package-pairs.sh` passes)
 - [ ] Breaking changes are called out in the release notes with a migration note
 - [ ] Linked to at least one issue (`Closes #123`) when applicable
 

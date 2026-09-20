@@ -1,3 +1,11 @@
+# Exemplo de análise local com SonarQube. Requer as ferramentas globais:
+#   dotnet tool install -g dotnet-sonarscanner
+#   dotnet tool install -g dotnet-coverage
+#
+# A cobertura é coletada pelo dotnet-coverage em volta do "dotnet test", no formato XML que o SonarQube lê
+# (sonar.cs.vscoveragexml.reportsPaths). Nenhum parâmetro do coverlet entra aqui: seriam dois coletores
+# gravando o mesmo arquivo.
+
 # Defina as variáveis do projeto e token do SonarQube
 $sonarProjectKey = "Tooark"
 $sonarHost = "<HOST-SONARQUBE>"
@@ -10,7 +18,7 @@ dotnet sonarscanner begin /k:$sonarProjectKey /d:sonar.host.url=$sonarHost /d:so
 dotnet build --no-incremental
 
 # Colete a cobertura de código
-dotnet-coverage collect "dotnet test --configuration Debug /p:CoverletOutputFormat=opencover /p:CoverletOutput='coverage.xml'" -f xml -o "coverage.xml"
+dotnet-coverage collect "dotnet test --project Tooark.Tests/Tooark.Tests.csproj --no-build" -f xml -o "coverage.xml"
 
 # Finalize a análise do SonarQube
 dotnet sonarscanner end /d:sonar.token=$sonarToken

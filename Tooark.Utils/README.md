@@ -275,7 +275,10 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 
 ## Dependencies
 
-- [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/)
+- [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/) 2.x — brings `IFormFile`
+  for `FileConvert` and `FileValid` without requiring the `Microsoft.AspNetCore.App` shared framework, so the
+  package also runs in console and worker applications. Inside an ASP.NET Core application the framework's
+  own assembly wins and `IFormFile` is the same type.
 - [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
 - [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 

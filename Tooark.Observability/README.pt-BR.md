@@ -707,6 +707,11 @@ public class MeuServico
 | `OpenTelemetry.Instrumentation.Process`                                 | Instrumentação automática Process       |
 | `OpenTelemetry.Instrumentation.Runtime`                                 | Métricas do runtime .NET                |
 
+> O `OpenTelemetry.Instrumentation.Process` só é publicado como pré-lançamento (`rc`) pelo projeto
+> OpenTelemetry. Este pacote fixa o `rc` correspondente à linha do OpenTelemetry em uso, e por isso o NuGet
+> mostra uma dependência pré-lançamento num pacote estável (aviso `NU5104`). É a única dependência
+> pré-lançamento da família Tooark.
+
 ---
 
 ## ⚠️ Observações Importantes

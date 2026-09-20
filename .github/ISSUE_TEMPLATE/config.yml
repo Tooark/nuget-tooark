@@ -1,7 +1,11 @@
-# Blank issues stay enabled because this repo has no Discussions space —
-# questions that do not fit the bug/feature templates go in a blank issue.
-blank_issues_enabled: true
+# Questions go to Discussions (Q&A); issues are reserved for bugs and feature
+# requests, which have their own forms. Blank issues stay disabled so nothing
+# lands without the fields the triage needs.
+blank_issues_enabled: false
 contact_links:
+  - name: 💬 Ask a question
+    url: https://github.com/Tooark/nuget-tooark/discussions/new?category=q-a
+    about: Usage questions and "how do I…" go to Discussions, not issues.
   - name: 🔒 Report a security vulnerability
     url: https://github.com/Tooark/nuget-tooark/security/advisories/new
     about: Please use private security advisories, not public issues.

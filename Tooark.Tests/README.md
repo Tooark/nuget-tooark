@@ -27,70 +27,76 @@ and fails on the other points to a behavior difference between the runtimes, not
 
 ## ▶️ Running
 
+The suite runs on the [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro)
+(MTP), the native runner of xunit.v3 4.x: `UseMicrosoftTestingPlatformRunner` is on in the project and
+`global.json` sets `test.runner` to `Microsoft.Testing.Platform`, which puts `dotnet test` in MTP mode. In
+that mode the project is passed with `--project`, and everything after `--` goes to the test runner — the
+old VSTest `--filter "FullyQualifiedName~..."` syntax no longer applies.
+
 ```bash
 # Every target
-dotnet test Tooark.Tests/Tooark.Tests.csproj
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
 # A single target, during development
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0
 
-# A single package
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
+# A single package (namespace)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-namespace Tooark.Tests.ValueObjects
+
+# A single class (the wildcard stands for the namespace prefix)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-class "*CpfTests"
 
 # A single test
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Equals_ShouldBeFalse_WhenTypesDiffer"
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- --filter-method "*Equals_ShouldBeFalse_WhenTypesDiffer"
+
+# TRX report (written to the results directory)
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -- --report-xunit-trx
 ```
+
+Several values of the same filter can be given in one switch (`--filter-class "*CpfTests" "*CnpjTests"`),
+and each filter has a `--filter-not-*` counterpart. The full list is in `dotnet test --project Tooark.Tests/Tooark.Tests.csproj -- --help`.
 
 ---
 
 ## 📊 Coverage
 
-### Table in the console
+### Collecting
+
+Coverage is collected by [coverlet](https://github.com/coverlet-coverage/coverlet) through its MTP
+extension, `coverlet.MTP` (the classic `coverlet.msbuild` only works under VSTest). Add `--coverlet` to
+any run:
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
+dotnet test --project Tooark.Tests/Tooark.Tests.csproj -f net10.0 -- \
+  --coverlet --coverlet-output-format cobertura
 ```
 
-Prints one line per package, with lines, branches and methods, plus the total and the average at the
-end. It is enough for day-to-day work.
+`--coverlet-output-format` accepts `json`, `lcov`, `opencover`, `cobertura` and `teamcity`, and can be
+repeated. The JSON carries the detail needed to find out **which** path is missing — writing a test from
+the measured gap pays more than writing it from a guess.
 
-### Detail per line and per branch
+Two coverlet.MTP details that tend to confuse:
 
-```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
-  -p:CollectCoverage=true \
-  -p:CoverletOutputFormat=json \
-  -p:CoverletOutput=cobertura/
-```
+- the report goes to the **results directory**: `TestResults/` under the directory the command runs in,
+  or wherever `--results-directory` points. Use an absolute path when the destination matters;
+- a run never overwrites an existing report: when one is already there, the new file gets a timestamp
+  in its name (`coverage.cobertura.<timestamp>.xml`). Running both targets into the same directory
+  therefore leaves two files — glob them (`coverage.cobertura*.xml`) and let ReportGenerator merge them.
 
-The JSON carries the detail needed to find out **which** path is missing — writing a test from the
-measured gap pays more than writing it from a guess.
+### Summary and HTML report
 
-Two coverlet details that tend to confuse:
-
-- the relative path is resolved from the directory the command runs in, not from the test project.
-  Use an absolute path when the destination matters;
-- the file name gets the target, because the project is multi-targeted: it comes out as
-  `coverage.net10.0.json`, not `coverage.json`.
-
-### HTML report
-
-`ReportGenerator` is already a dependency of the project. Generate the coverage in the `cobertura`
-format and point the report at it:
+coverlet.MTP prints no summary in the console. `ReportGenerator` is already a dependency of the project;
+point it at the Cobertura files and ask for the text summary and the HTML at once:
 
 ```bash
-dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 \
-  -p:CollectCoverage=true \
-  -p:CoverletOutputFormat=cobertura \
-  -p:CoverletOutput=cobertura/
-
 reportgenerator \
-  -reports:cobertura/coverage.net10.0.cobertura.xml \
-  -targetdir:cobertura/html \
-  -reporttypes:Html
+  -reports:"TestResults/coverage.cobertura*.xml" \
+  -targetdir:TestResults/coveragereport \
+  -reporttypes:"Html;TextSummary"
 ```
 
-Open `cobertura/html/index.html`. Every type gets a page with the source code marking covered lines,
+`TestResults/coveragereport/Summary.txt` has the totals and one block per assembly — enough for
+day-to-day work. `index.html` gives every type a page with the source code marking covered lines,
 uncovered lines and partially covered branches — it is the fastest way to see the missing path.
 
 The `reportgenerator` command comes from the global tool:
@@ -100,7 +106,11 @@ dotnet tool install -g dotnet-reportgenerator-globaltool
 ```
 
 Without installing it, call the executable that already came with the package, at
-`~/.nuget/packages/reportgenerator/<version>/tools/net10.0/ReportGenerator.exe`.
+`~/.nuget/packages/reportgenerator/<version>/tools/net10.0/ReportGenerator.exe`. In VS Code, the
+`generate coverage report` task (`.vscode/tasks.json`) runs the collection and the report in sequence.
+
+CI runs the same collection on every pull request, uploads the Cobertura files and the report as the
+`coverage` artifact and writes the summary on the job page.
 
 ### Goal
 
