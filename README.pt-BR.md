@@ -10,54 +10,55 @@
 [![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%2010.0-512BD4)](https://github.com/Tooark/nuget-tooark/blob/main/global.json)
 
-Modular building blocks for .NET applications: validations, value objects, notifications, security,
-observability, mediator and more — each one a package, all released together.
+Blocos modulares para aplicações .NET: validações, objetos de valor, notificações, segurança,
+observabilidade, mediator e mais — cada um em um pacote, todos lançados juntos.
 
-🌍 **Languages:** ![USA Flag](https://flagcdn.com/w20/us.png) **English (this file)** · [![Brazil Flag](https://flagcdn.com/w20/br.png) Português](https://github.com/Tooark/nuget-tooark/blob/main/README.pt-BR.md)
-
----
-
-## Table of contents
-
-- [About](#about)
-- [Installation](#installation)
-- [Packages](#packages)
-- [Documentation](#documentation)
-- [Local development](#local-development)
-- [Support](#support)
-- [Contributing](#contributing)
-- [License](#license)
+🌍 **Idiomas:** [![USA Flag](https://flagcdn.com/w20/us.png) English](https://github.com/Tooark/nuget-tooark/blob/main/README.md) · ![Brazil Flag](https://flagcdn.com/w20/br.png) **Português (este arquivo)**
 
 ---
 
-## About
+## Sumário
 
-Tooark is a library for .NET projects, offering a collection of modular packages that make it easier to build
-robust and scalable applications. Each package targets a specific need — validations, notifications, value
-objects, JWT and cryptography, OpenID Connect SSO, OpenTelemetry observability, a mediator pipeline — and can
-be installed on its own or through the `Tooark` aggregator, which references all of them.
-
-All packages target **.NET 8.0** and **.NET 10.0**, share a single version number and are published together
-to the [Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Instalação](#instalação)
+- [Pacotes](#pacotes)
+- [Documentação](#documentação)
+- [Desenvolvimento local](#desenvolvimento-local)
+- [Suporte](#suporte)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
 
 ---
 
-## Installation
+## Sobre o Projeto
 
-Everything at once, through the aggregator:
+Tooark é uma biblioteca voltada para projetos .NET, oferecendo uma coleção de pacotes modulares que facilitam
+o desenvolvimento de aplicações robustas e escaláveis. Cada pacote foi projetado para atender a uma necessidade
+específica — validações, notificações, objetos de valor, JWT e criptografia, SSO com OpenID Connect,
+observabilidade com OpenTelemetry, pipeline de mediator — e pode ser instalado sozinho ou pelo agregador
+`Tooark`, que referencia todos.
+
+Todos os pacotes têm como alvo o **.NET 8.0** e o **.NET 10.0**, compartilham um único número de versão e são
+publicados juntos no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/Tooark).
+
+---
+
+## Instalação
+
+Tudo de uma vez, pelo agregador:
 
 ```bash
 dotnet add package Tooark
 ```
 
-Or only what you need — every package can be installed individually (see the table below). The source code of
-each package lives in its own folder of this repository, together with its README.
+Ou apenas o que você precisa — cada pacote pode ser instalado individualmente (veja a tabela abaixo). O código
+de cada pacote fica na sua própria pasta deste repositório, junto com o README.
 
 ---
 
-## Packages
+## Pacotes
 
-| Package                               | Version                                                                                                                                            | Downloads                                                                                                                                           | Individual Install                                       |
+| Pacote                                | Versão                                                                                                                                             | Downloads                                                                                                                                           | Instalação individual                                    |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Tooark`                              | [![NuGet](https://img.shields.io/nuget/v/Tooark.svg)](https://nuget.org/packages/Tooark)                                                           | [![Nuget](https://img.shields.io/nuget/dt/Tooark.svg)](https://nuget.org/packages/Tooark)                                                           | `dotnet add package Tooark`                              |
 | `Tooark.AspNetCore`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.AspNetCore.svg)](https://nuget.org/packages/Tooark.AspNetCore)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.AspNetCore.svg)](https://nuget.org/packages/Tooark.AspNetCore)                                     | `dotnet add package Tooark.AspNetCore`                   |
@@ -80,34 +81,34 @@ each package lives in its own folder of this repository, together with its READM
 
 ---
 
-## Documentation
+## Documentação
 
-- **Per package** — every package folder has a `README.md` in English (the same file shown on the NuGet page)
-  and a `README.pt-BR.md` in Portuguese, e.g.
-  [`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md),
-  [`Tooark.Securities.OpenId`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.md),
-  [`Tooark.Observability`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.md).
-- **Release notes** — one file per version in
-  [`Notes/`](https://github.com/Tooark/nuget-tooark/tree/main/Notes); the latest is the body of the
+- **Por pacote** — cada pasta de pacote tem um `README.md` em inglês (o mesmo arquivo exibido na página do
+  NuGet) e um `README.pt-BR.md` em português, ex.:
+  [`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md),
+  [`Tooark.Securities.OpenId`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.pt-BR.md),
+  [`Tooark.Observability`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md).
+- **Notas de release** — um arquivo por versão em
+  [`Notes/`](https://github.com/Tooark/nuget-tooark/tree/main/Notes); a mais recente é o corpo da
   [GitHub Release](https://github.com/Tooark/nuget-tooark/releases).
-- **Tests** — [`Tooark.Tests/README.md`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Tests/README.md)
-  describes how the suite is organized and the test conventions.
+- **Testes** — [`Tooark.Tests/README.pt-BR.md`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Tests/README.pt-BR.md)
+  descreve a organização da suíte e as convenções de teste.
 
 ---
 
-## Local development
+## Desenvolvimento local
 
-### Prerequisites
+### Pré-requisitos
 
-- **.NET SDK 10.0.100 or later 10.x** — the version is pinned in
-  [`global.json`](https://github.com/Tooark/nuget-tooark/blob/main/global.json) with `rollForward: latestMinor`.
-  The solution builds and tests **both** `net8.0` and `net10.0`, so the **.NET 8 runtime** must also be
-  installed to run the `net8.0` tests (`dotnet --list-runtimes` shows what you have).
+- **.NET SDK 10.0.100 ou 10.x posterior** — a versão está fixada no
+  [`global.json`](https://github.com/Tooark/nuget-tooark/blob/main/global.json) com `rollForward: latestMinor`.
+  A solução compila e testa **os dois** alvos, `net8.0` e `net10.0`, então o **runtime do .NET 8** também
+  precisa estar instalado para rodar os testes em `net8.0` (`dotnet --list-runtimes` mostra o que você tem).
 - **Git**.
-- Optional: Docker, to run the same security scanner as the release pipeline locally (see
+- Opcional: Docker, para rodar localmente o mesmo scanner de segurança do pipeline de release (veja
   [Tooark/base-images](https://github.com/Tooark/base-images) → `samples/security-scanner-local.sh`).
 
-### Clone and restore
+### Clonar e restaurar
 
 ```bash
 git clone https://github.com/Tooark/nuget-tooark.git
@@ -115,58 +116,59 @@ cd nuget-tooark
 dotnet restore
 ```
 
-Package versions are managed centrally in
-[`Directory.Packages.props`](https://github.com/Tooark/nuget-tooark/blob/main/Directory.Packages.props);
-the shared version number and build settings live in
+As versões dos pacotes são gerenciadas centralmente no
+[`Directory.Packages.props`](https://github.com/Tooark/nuget-tooark/blob/main/Directory.Packages.props); o
+número de versão compartilhado e as configurações de build ficam no
 [`Directory.Build.props`](https://github.com/Tooark/nuget-tooark/blob/main/Directory.Build.props).
 
 ### Build
 
-Warnings are treated as errors, so build in `Release` before opening a pull request — it is what CI runs:
+Warnings são tratados como erros, então compile em `Release` antes de abrir um pull request — é o que o CI
+executa:
 
 ```bash
-# Whole solution, both target frameworks
+# Solução inteira, nos dois alvos
 dotnet build --configuration Release
 
-# A single package
+# Um único pacote
 dotnet build Tooark.Securities/Tooark.Securities.csproj --configuration Release
 
-# Pack a package locally (output in <package>/bin/Release/*.nupkg)
+# Empacotar localmente (saída em <pacote>/bin/Release/*.nupkg)
 dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release
 ```
 
-### Tests
+### Testes
 
-A single project, [`Tooark.Tests`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Tests), covers
-every package, with one folder per package. It runs on both target frameworks; a test that passes on one and
-fails on the other points to a runtime difference, not to a flaky test.
+Um único projeto, [`Tooark.Tests`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Tests), cobre
+todos os pacotes, com uma pasta por pacote. Ele roda nos dois alvos; um teste que passa em um e falha no
+outro aponta diferença entre os runtimes, e não um teste instável.
 
 ```bash
-# Everything, both target frameworks
+# Tudo, nos dois alvos
 dotnet test Tooark.Tests/Tooark.Tests.csproj
 
-# One target framework, during development
+# Um alvo só, durante o desenvolvimento
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0
 
-# One package
+# Um pacote só
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Tooark.Tests.ValueObjects"
 
-# One test
+# Um teste só
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 --filter "FullyQualifiedName~Equals_ShouldBeFalse_WhenTypesDiffer"
 ```
 
-### Test coverage
+### Cobertura de testes
 
-Coverage is collected by [coverlet](https://github.com/coverlet-coverage/coverlet), already referenced by the
-test project.
+A cobertura é coletada pelo [coverlet](https://github.com/coverlet-coverage/coverlet), já referenciado pelo
+projeto de testes.
 
-**Summary table in the console** — one line per package with lines, branches and methods:
+**Tabela resumida no console** — uma linha por pacote, com linhas, branches e métodos:
 
 ```bash
 dotnet test Tooark.Tests/Tooark.Tests.csproj -f net10.0 -p:CollectCoverage=true
 ```
 
-**HTML report** — generate the Cobertura file and render it with
+**Relatório HTML** — gere o arquivo Cobertura e renderize com o
 [ReportGenerator](https://github.com/danielpalme/ReportGenerator):
 
 ```bash
@@ -181,57 +183,58 @@ reportgenerator \
   -reporttypes:Html
 ```
 
-Open `cobertura/html/index.html`: every type gets a page with the source marked as covered, uncovered or
-partially covered branch. The `reportgenerator` command comes from the global tool:
+Abra `cobertura/html/index.html`: cada tipo ganha uma página com o código-fonte marcando linha coberta, linha
+descoberta e branch parcialmente coberta. O comando `reportgenerator` vem da ferramenta global:
 
 ```bash
 dotnet tool install -g dotnet-reportgenerator-globaltool
 ```
 
-Two coverlet details worth knowing: the output path is resolved from the directory you run the command in,
-not from the test project; and because the project is multi-targeted the file name carries the target
-(`coverage.net10.0.cobertura.xml`, not `coverage.cobertura.xml`). The `cobertura/` folder is git-ignored.
+Dois detalhes do coverlet que costumam confundir: o caminho de saída é resolvido a partir do diretório de onde
+o comando roda, e não do projeto de teste; e, como o projeto é multi-alvo, o nome do arquivo recebe o alvo
+(`coverage.net10.0.cobertura.xml`, e não `coverage.cobertura.xml`). A pasta `cobertura/` está no
+`.gitignore`.
 
-**Goal:** 100% of lines, branches and methods on the packages already reviewed; where that was not possible,
-the reason is recorded in the release notes under `Notes/`.
+**Meta:** 100% de linhas, branches e métodos nos pacotes já revisados; onde não foi possível, o motivo fica
+registrado nas notas da versão, em `Notes/`.
 
-### Before opening a pull request
+### Antes de abrir um pull request
 
-[`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) has the full
-checklist — in short: `Release` build with no warnings, tests green on both target frameworks, new behavior
-covered by tests, new message keys translated in the three resource files of `Tooark.Extensions`, package
-READMEs (English and Portuguese) and release notes updated.
+O [`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) tem o checklist
+completo — em resumo: build `Release` sem warnings, testes verdes nos dois alvos, comportamento novo coberto por
+testes, chaves de mensagem novas traduzidas nos três arquivos de recurso do `Tooark.Extensions`, READMEs dos
+pacotes (inglês e português) e notas de release atualizados.
 
 ---
 
-## Support
+## Suporte
 
-Choose the channel by what you need:
+Escolha o canal pelo que você precisa:
 
-| I want to…                          | Go to                                                                                                                                                                                                     |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Report a **bug**                    | [Open a bug report](https://github.com/Tooark/nuget-tooark/issues/new?template=bug_report.yml) — package, version, target framework, minimal reproduction                                                 |
-| Suggest a **feature**               | [Open a feature request](https://github.com/Tooark/nuget-tooark/issues/new?template=feature_request.yml) — the problem first, then the solution                                                           |
-| Ask a **question**                  | [Open a blank issue](https://github.com/Tooark/nuget-tooark/issues/new) after searching the [existing ones](https://github.com/Tooark/nuget-tooark/issues)                                                |
-| Report a **security vulnerability** | **Not** an issue — use the [private security advisory](https://github.com/Tooark/nuget-tooark/security/advisories/new), see [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md) |
+| Quero…                           | Onde                                                                                                                                                                                                             |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reportar um **bug**              | [Abrir um bug report](https://github.com/Tooark/nuget-tooark/issues/new?template=bug_report.yml) — pacote, versão, alvo, reprodução mínima                                                                       |
+| Sugerir uma **funcionalidade**   | [Abrir um feature request](https://github.com/Tooark/nuget-tooark/issues/new?template=feature_request.yml) — o problema primeiro, depois a solução                                                               |
+| Tirar uma **dúvida**             | [Abrir uma issue em branco](https://github.com/Tooark/nuget-tooark/issues/new) depois de procurar nas [existentes](https://github.com/Tooark/nuget-tooark/issues)                                                |
+| Reportar uma **vulnerabilidade** | **Não** abra issue — use o [advisory privado de segurança](https://github.com/Tooark/nuget-tooark/security/advisories/new), veja o [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md) |
 
-Response targets and other contact channels are in
+Prazos de resposta e outros canais de contato estão no
 [`SUPPORT.md`](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md).
 
 ---
 
-## Contributing
+## Contribuição
 
-Contributions are welcome! Please read
-[`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) (how to propose changes,
-coding and commit conventions, PR checklist) and the
+Contribuições são bem-vindas! Leia o
+[`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) (como propor mudanças,
+convenções de código e de commit, checklist de PR) e o
 [`CODE_OF_CONDUCT.md`](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md) (Contributor
-Covenant 2.1) before opening a pull request.
+Covenant 2.1) antes de abrir um pull request.
 
 ---
 
-## License
+## Licença
 
-This project is licensed under the
-[BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE). See the `LICENSE` file for
-details.
+Este projeto está licenciado sob a
+[Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE). Consulte o arquivo `LICENSE`
+para mais detalhes.
