@@ -11,6 +11,7 @@
   <Project Path="Tooark.Mediator/Tooark.Mediator.csproj" />
   <Project Path="Tooark.Notifications/Tooark.Notifications.csproj" />
   <Project Path="Tooark.Observability/Tooark.Observability.csproj" />
+  <Project Path="Tooark.Securities.OpenId/Tooark.Securities.OpenId.csproj" />
   <Project Path="Tooark.Securities/Tooark.Securities.csproj" />
   <Project Path="Tooark.Tests/Tooark.Tests.csproj" />
   <Project Path="Tooark.Utils/Tooark.Utils.csproj" />

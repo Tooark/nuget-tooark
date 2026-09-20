@@ -124,6 +124,9 @@ public class JsonStringLocalizerCoverageTests
   [InlineData("UnitOfWork.StrategyNotSupported;Desconhecida")]
   [InlineData("Cryptography.InvalidCipherText")]
   [InlineData("Options.Otlp.Endpoint.Invalid")]
+  [InlineData("Options.OpenId.Entra.MultiTenantRequiresValidIssuers;organizations")]
+  [InlineData("Options.OpenId.ClientSecretNotConfigured")]
+  [InlineData("OpenId.HostedDomain.Invalid")]
   [InlineData("Invalid.Parameter;null")]
   [InlineData("Record.Deleted")]
   public void LocalizedString_ShouldBeTranslatedInEveryLanguage(string chave)

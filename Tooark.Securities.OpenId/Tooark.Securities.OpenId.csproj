@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Securities.OpenId</PackageId>
+    <Title>Tooark.Securities.OpenId</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, security, openid, oidc, oauth, sso, entra, google, jwtbearer, .NET</PackageTags>
+    <Summary>OpenID Connect and SSO configuration presets (Entra, Google and generic providers) for ASP.NET Core.</Summary>
+    <PackageDescription>Package that standardizes how Tooark projects configure the native ASP.NET Core OpenIdConnect and JwtBearer handlers: authorization code with PKCE, token validation and claim mapping, with presets for Microsoft Entra ID and Google and a generic path for any OpenID Connect provider.</PackageDescription>
+    <Description>Library that configures the native ASP.NET Core OpenIdConnect and JwtBearer handlers with the Tooark defaults, providing SSO presets for Microsoft Entra ID and Google without provider SDKs.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      O pacote existe para configurar os handlers de autenticação do ASP.NET Core (cookie, OpenIdConnect e
+      JwtBearer), então o framework compartilhado é requisito por natureza — não há cenário de uso fora de
+      uma aplicação ASP.NET Core. Os pacotes de handler abaixo já o trazem por transitividade; a declaração
+      explícita apenas torna visível o que já era verdade.
+    -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+</Project>
