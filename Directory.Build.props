@@ -1,22 +1,44 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.2.0</Version>
+    <Version>4.2.1</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
+    <Copyright>Copyright (c) 2025 Tooark</Copyright>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageIcon>icon.jpg</PackageIcon>
     <RepositoryBaseUrl>https://github.com/Tooark/nuget-tooark</RepositoryBaseUrl>
     <RepositoryUrl>$(RepositoryBaseUrl)</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryBaseUrl)/tree/main/$(MSBuildProjectName)</PackageProjectUrl>
+    <PackageReleaseNotes>$(RepositoryBaseUrl)/blob/main/Notes/v$(Version).md</PackageReleaseNotes>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!--
+      As regras do .editorconfig com severidade "warning" (namespace file-scoped, using fora do namespace)
+      passam a ser verificadas no build, e não só no editor. Com TreatWarningsAsErrors, uma violação falha
+      a compilação. Espaço em branco, BOM e quebra de linha final são verificados no CI com "dotnet format".
+    -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!--
+      Todo membro público dos pacotes tem documentação XML: o CS1591 (membro público sem comentário) só é
+      suprimido no projeto de testes, onde o nome do teste e o comentário de intenção fazem esse papel.
+    -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!--
+      NU5104: pacote estável com dependência em pré-lançamento. O OpenTelemetry.Instrumentation.Process só é
+      publicado como rc (ver Directory.Packages.props); o aviso fica visível no pack, mas não bloqueia.
+    -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU5104</WarningsNotAsErrors>
     <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!--
+      Validação da API pública contra a última versão publicada no nuget.org: uma quebra acidental de
+      compatibilidade (membro removido, assinatura alterada, TFM a menos) falha o "dotnet pack". Ao subir a
+      versão major, atualize a baseline para a última versão da linha anterior ou remova-a temporariamente.
+    -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>4.2.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -29,12 +51,18 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <DebugType>none</DebugType>
-    <DebugSymbols>false</DebugSymbols>
+    <!--
+      Símbolos portáteis publicados no .snupkg, com SourceLink apontando para o commit no GitHub: quem consome
+      o pacote consegue depurar dentro do código do Tooark. Sem PDB, o SourceLink não teria efeito.
+    -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <Deterministic>true</Deterministic>
     <EnableSourceLink>true</EnableSourceLink>
-    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>

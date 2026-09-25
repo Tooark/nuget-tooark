@@ -408,7 +408,7 @@ internal static class InternalStringExtensions
   /// </summary>
   /// <param name="text">O texto a ser adicionado.</param>
   /// <param name="builder">O construtor de string do slug.</param>
-  /// <param name="lastWasHyphen">Indica se o último caractere adicionado foi um hífen.</param>  /// 
+  /// <param name="lastWasHyphen">Indica se o último caractere adicionado foi um hífen.</param>  ///
   private static void AppendDiacritics(string text, StringBuilder builder, ref bool lastWasHyphen)
   {
     // Adiciona cada caractere do texto

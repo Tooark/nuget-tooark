@@ -47,7 +47,7 @@ public class OtlpOptions
   /// Endpoint do coletor OTLP.
   /// </summary>
   /// <remarks>
-  /// Exemplo: 
+  /// Exemplo:
   /// - "http://localhost:4317" para gRPC
   /// - "http://localhost:4318" para HTTP/protobuf.
   /// </remarks>

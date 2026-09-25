@@ -1,4 +1,4 @@
-﻿using Tooark.Validations.Messages;
+using Tooark.Validations.Messages;
 
 namespace Tooark.Validations;
 
@@ -342,7 +342,7 @@ public partial class Validation
   /// Verifica se o valor é igual ao valor comparado. Com mensagem padrão.
   /// </summary>
   /// <typeparam name="T">Tipo a ser convertido.</typeparam>
-  /// <param name="value">Valor a ser validado.</param>  
+  /// <param name="value">Valor a ser validado.</param>
   /// <param name="comparer">Valor a ser comparado.</param>
   /// <param name="property">Propriedade a ser validada.</param>
   /// <returns>Validação.</returns>

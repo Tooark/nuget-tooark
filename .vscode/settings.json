@@ -1,9 +1,14 @@
 {
-  "dotnet-test-explorer.testProjectPath": "**/*Tests.csproj",
-  "dotnet-test-explorer.autoWatch": true,
-  "dotnet-test-explorer.autoExpandTree": true,
-  "dotnet-test-explorer.treeMode": "full",
-  "dotnet-test-explorer.showCodeLens": true,
-  "dotnet-test-explorer.runInParallel": true,
-  "dotnet-test-explorer.testArguments": "/p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./TestResults/lcov.info"
+  // A suíte roda pelo Microsoft.Testing.Platform (ver Tooark.Tests.csproj e global.json). O Test Explorer do
+  // C# Dev Kit descobre e executa testes nesse modo com a opção abaixo. A configuração antiga da extensão
+  // dotnet-test-explorer passava propriedades do coverlet.msbuild, que não coletam mais nada no MTP, e foi
+  // removida; a cobertura fica com a tarefa "generate coverage report" em tasks.json.
+  "dotnet.testWindow.useTestingPlatformProtocol": true,
+  "dotnet.defaultSolution": "Tooark.slnx",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  }
 }

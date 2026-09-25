@@ -26,7 +26,7 @@ public class GetInfoTests
       Name = "Nombre en Español",
       Title = "Título en Español",
       Description = "Descripción en Español",
-      Keywords = "Palabras clave en Español", 
+      Keywords = "Palabras clave en Español",
       Other = "Otros en es-ES"
     },
     new()
@@ -523,7 +523,7 @@ public class GetInfoTests
   public void Custom_ThrowsExceptionWhenLanguageCodePropertyDoesNotExist()
   {
     // Arrange
-    List<MLanguageOnlyName> list = [ new() { Name = "Name in English" } ];
+    List<MLanguageOnlyName> list = [new() { Name = "Name in English" }];
 
     // Act
     var exception = Assert.Throws<GetInfoException>(() => GetInfo.Custom(list, "Name"));
@@ -537,7 +537,7 @@ public class GetInfoTests
   public void Custom_ThrowsExceptionWhenLanguageCodePropertyOnlyExist()
   {
     // Arrange
-    List<MLanguageOnlyLanguageCode> list = [ new() { LanguageCode = "pt-BR" } ];
+    List<MLanguageOnlyLanguageCode> list = [new() { LanguageCode = "pt-BR" }];
 
     // Act
     var exception = Assert.Throws<GetInfoException>(() => GetInfo.Name(list));

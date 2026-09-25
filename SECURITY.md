@@ -62,10 +62,12 @@ Every release build runs the Tooark
 [`security-scanner`](https://github.com/Tooark/base-images) image (Trivy for
 dependencies and secrets) as a gate before anything is published; `HIGH` and
 `CRITICAL` findings block the release. Dependabot keeps NuGet and GitHub Actions
-dependencies up to date on a weekly schedule. Runtime-bound packages
-(`Microsoft.AspNetCore.*`, `Microsoft.EntityFrameworkCore`, …) are pinned per
-target framework in [`Directory.Packages.props`](Directory.Packages.props); a
-CVE in one of them is fixed by bumping that pin.
+dependencies up to date on a weekly schedule, and Dependabot security updates
+open a pull request as soon as an advisory matches a dependency. Runtime-bound
+packages (`Microsoft.AspNetCore.Authentication.*`, `Microsoft.Extensions.*`,
+`Microsoft.EntityFrameworkCore*`, …) are pinned per target framework in
+[`Directory.Packages.props`](Directory.Packages.props) and bumped by hand, in
+pairs; a CVE in one of them is fixed by bumping both pins.
 
 ## Scope
 

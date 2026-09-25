@@ -707,6 +707,11 @@ public class MyService
 | `OpenTelemetry.Instrumentation.Process`                                 | Automatic Process instrumentation      |
 | `OpenTelemetry.Instrumentation.Runtime`                                 | .NET runtime metrics                   |
 
+> `OpenTelemetry.Instrumentation.Process` is only published as a pre-release (`rc`) by the OpenTelemetry
+> project. This package pins it to the `rc` that matches the OpenTelemetry line in use, which is why NuGet
+> shows a pre-release dependency on a stable package (warning `NU5104`). It is the only pre-release dependency
+> in the Tooark family.
+
 ---
 
 ## ⚠️ Important Notes

@@ -2,13 +2,40 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "generate coverage report",
-      "command": "reportgenerator",
+      "label": "test with coverage",
+      "detail": "Roda a suíte em net10.0 pelo Microsoft.Testing.Platform e grava a cobertura (Cobertura) em TestResults/",
       "type": "shell",
+      "command": "dotnet",
       "args": [
-        "-reports:${workspaceFolder}/Tooark.Tests/TestResults/lcov.info",
-        "-targetdir:${workspaceFolder}/Tooark.Tests/TestResults/coveragereport"
+        "test",
+        "--project",
+        "Tooark.Tests/Tooark.Tests.csproj",
+        "-f",
+        "net10.0",
+        "--",
+        "--coverlet",
+        "--coverlet-output-format",
+        "cobertura",
+        "--results-directory",
+        "${workspaceFolder}/TestResults"
       ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    },
+    {
+      "label": "generate coverage report",
+      "detail": "Renderiza em HTML a cobertura gravada em TestResults/ (requer dotnet-reportgenerator-globaltool)",
+      "type": "shell",
+      "command": "reportgenerator",
+      "args": [
+        "-reports:${workspaceFolder}/TestResults/coverage.cobertura*.xml",
+        "-targetdir:${workspaceFolder}/TestResults/coveragereport",
+        "-reporttypes:Html"
+      ],
+      "dependsOn": ["test with coverage"],
       "problemMatcher": [],
       "group": {
         "kind": "test",

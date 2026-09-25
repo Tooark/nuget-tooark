@@ -1,7 +1,9 @@
 name: CI
 
-# Valida pull requests antes do merge: build em Release (warnings são erros) e a suíte completa de testes nos
-# dois alvos. A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main.
+# Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, build em Release
+# (warnings são erros) e a suíte completa de testes nos dois alvos, com cobertura. A publicação continua
+# exclusiva do workflow de release (tooark.yml), disparado no push em main. O job "build-and-test" é status
+# check obrigatório no ruleset da branch main: um pull request vermelho não pode ser mesclado.
 on:
   pull_request:
     branches:
@@ -33,16 +35,47 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      - name: Check formatting (.editorconfig)
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Check runtime-bound package pins are paired
+        run: bash scripts/check-package-pairs.sh
+
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      - name: Test
-        run: dotnet test Tooark.Tests/Tooark.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+      - name: Test (both target frameworks, with coverage)
+        run: >-
+          dotnet test --project Tooark.Tests/Tooark.Tests.csproj --configuration Release --no-build
+          --
+          --report-xunit-trx
+          --coverlet --coverlet-output-format cobertura
+          --results-directory "${{ github.workspace }}/TestResults"
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: test-results
-          path: "**/TestResults/*.trx"
+          path: TestResults/**/*.trx
+          if-no-files-found: ignore
+
+      - name: Coverage summary
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          # Um arquivo por alvo: coverage.cobertura.xml e coverage.cobertura.<timestamp>.xml (o coverlet.MTP
+          # não sobrescreve o existente). O ReportGenerator funde os dois num relatório só.
+          reportgenerator \
+            -reports:"TestResults/coverage.cobertura*.xml" \
+            -targetdir:coverage-report \
+            -reporttypes:"MarkdownSummaryGithub;Cobertura"
+          cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: |
+            coverage-report/
+            TestResults/coverage.cobertura*.xml
           if-no-files-found: ignore

@@ -36,7 +36,7 @@ public class InitialEntityTests
   {
     // Arrange
     var createdBy = Guid.NewGuid();
-    
+
     // Act
     var entity = new TestInitialEntity(createdBy);
 

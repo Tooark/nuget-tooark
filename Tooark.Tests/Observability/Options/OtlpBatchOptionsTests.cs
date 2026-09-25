@@ -96,7 +96,7 @@ public class OtlpBatchOptionsTests
     Assert.Equal(value, options.MaxExportBatchSize);
   }
 
-  
+
   // Teste para definir MaxQueueSize com valor inválido.
   [Theory]
   [InlineData(0)]
@@ -176,7 +176,7 @@ public class OtlpBatchOptionsTests
     // Assert
     Assert.Equal(2048, options.MaxExportBatchSize);
   }
-  
+
   #endregion
 
   #region Combined Configurations

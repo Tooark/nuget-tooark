@@ -1,4 +1,4 @@
-﻿using Tooark.Validations.Messages;
+using Tooark.Validations.Messages;
 
 namespace Tooark.Validations;
 
@@ -14,7 +14,7 @@ public partial class Validation
   /// <param name="value">Valor a ser formatado.</param>
   /// <returns>Valor formatado.</returns>
   private static string BooleanFormat(bool value) => $"{value}";
-  #endregion  
+  #endregion
 
   #region Validates
   /// <summary>

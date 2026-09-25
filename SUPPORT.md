@@ -8,11 +8,13 @@ This document explains where to get help based on what you're trying to do.
 
 ## 🤔 I have a question
 
-**Open an issue:** <https://github.com/Tooark/nuget-tooark/issues/new/choose>
+**Start a discussion in Q&A:** <https://github.com/Tooark/nuget-tooark/discussions/new?category=q-a>
 
-Please **search existing issues** first — your question may already be
-answered. Usage questions are usually answered by the package's `README.md` (English) or `README.pt-BR.md` (Portuguese)
-(every package folder has one, and it is also shown on the NuGet page).
+Please **search existing discussions and issues** first — your question may
+already be answered. Usage questions are usually answered by the package's
+`README.md` (English) or `README.pt-BR.md` (Portuguese) (every package folder
+has one, and it is also shown on the NuGet page). Issues are reserved for bug
+reports and feature requests.
 
 ---
 
@@ -75,7 +77,8 @@ targets:
 | ------------------------------------------------- | --------------------- |
 | GitHub Security Advisories (vulnerability report) | **72 hours**          |
 | GitHub Issues (bug report)                        | 3–7 days              |
-| GitHub Issues (feature request / question)        | 7–14 days             |
+| GitHub Issues (feature request)                   | 7–14 days             |
+| GitHub Discussions (question)                     | 7–14 days             |
 
 The best way to speed things up is to include everything we need to reproduce
 or understand your report in the first message.
@@ -98,5 +101,6 @@ benefits from the answer.
 
 - **Repository**: <https://github.com/Tooark/nuget-tooark>
 - **Issues**: <https://github.com/Tooark/nuget-tooark/issues>
+- **Discussions**: <https://github.com/Tooark/nuget-tooark/discussions>
 - **Packages on NuGet**: <https://www.nuget.org/profiles/Tooark>
 - **Tooark family**: <https://tooark.com>

@@ -54,7 +54,7 @@ public class EnumerableExtensionsTests
         UInt_64 = (ulong)sequence,
         Float = sequence,
         Double = sequence,
-        Decimal= sequence,
+        Decimal = sequence,
       };
 
       return category;

@@ -57,7 +57,7 @@ public class FileStorageTests
     // Assert
     Assert.Equal(link, FileStorageString);
   }
-  
+
   // Testa se os dados do arquivo do storage são válido para conversão implícita para uma string
   [Fact]
   public void FileStorage_ShouldConvertToStringImplicitly()

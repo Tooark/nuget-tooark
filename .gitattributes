@@ -4,9 +4,9 @@
 # diferença. Qualquer ferramenta que reescrevesse um arquivo CRLF produzia um diff de arquivo
 # inteiro, escondendo a alteração real dentro do ruído.
 #
-# Regra geral: o Git guarda tudo com LF e entrega LF no working tree, em qualquer sistema
-# operacional. As exceções abaixo são arquivos que outra ferramenta reescreve com CRLF, onde
-# forçar LF só produziria idas e voltas.
+# Regra: o Git guarda tudo com LF e entrega LF no working tree, em qualquer sistema operacional.
+# Hoje não há exceção. Se alguma ferramenta passar a reescrever um arquivo com CRLF, registre-o
+# aqui com "eol=crlf" em vez de brigar com ela a cada commit.
 
 * text=auto eol=lf
 

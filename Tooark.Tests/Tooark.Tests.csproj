@@ -2,11 +2,20 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Testes não levam documentação XML: o nome do teste e o comentário de intenção cumprem esse papel -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+
+    <!--
+      A suíte roda pelo Microsoft.Testing.Platform (MTP), o runner nativo do xunit.v3 4.x; o modo VSTest do
+      "dotnet test" deixou de ser suportado pelo MTP no SDK 10. O "dotnet test" entra no modo MTP pelo
+      global.json ("test": { "runner": "Microsoft.Testing.Platform" }). O xunit.runner.visualstudio e o
+      Microsoft.NET.Test.Sdk continuam referenciados para o Test Explorer do Visual Studio e para IDEs que
+      ainda descobrem testes pelo VSTest.
+    -->
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,10 +31,8 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" />
-    <PackageReference Include="coverlet.msbuild">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <!-- Cobertura como extensão do MTP ("dotnet test ... - -coverlet"); o coverlet.msbuild só funciona no VSTest -->
+    <PackageReference Include="coverlet.MTP" />
     <!-- SQLite em memória suporta transações reais, exercitando a unidade de trabalho como em produção -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" />

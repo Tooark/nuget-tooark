@@ -98,7 +98,7 @@ public class DocumentTests
     // Assert
     Assert.Equal(number, documentString);
   }
-  
+
   // Testa se o documento é válido para conversão implícita para uma string
   [Fact]
   public void Document_ShouldConvertToStringImplicitly()

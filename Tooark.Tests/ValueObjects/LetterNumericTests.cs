@@ -26,7 +26,7 @@ public class LetterNumericNumericTests
 
   // Teste se é uma string de apenas letras e números a partir de uma string de letras, números e símbolos (inválida)
   [Theory]
-  [InlineData("-1-2")]  
+  [InlineData("-1-2")]
   [InlineData("aB!@#$")]
   [InlineData("")]
   [InlineData(null)]

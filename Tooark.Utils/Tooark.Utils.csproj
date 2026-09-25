@@ -17,6 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      FileConvert e FileValid recebem IFormFile. O tipo vem do pacote Microsoft.AspNetCore.Http 2.x, o último
+      publicado fora do framework compartilhado, de propósito: assim o pacote continua utilizável em console,
+      worker e testes sem o Microsoft.AspNetCore.App. Numa aplicação ASP.NET Core o SDK resolve o conflito
+      em favor do assembly do framework, e o IFormFile é o mesmo tipo.
+    -->
     <PackageReference Include="Microsoft.AspNetCore.Http" />
   </ItemGroup>
 

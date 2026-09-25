@@ -89,7 +89,7 @@ public class PasswordValidationAttributeTests
   {
     // Arrange
     PasswordValidationAttribute _passwordParam = new(lower, upper, number, symbol, length);
-    
+
     // Act
     var result = _passwordParam.IsValid(password);
 
@@ -119,7 +119,7 @@ public class PasswordValidationAttributeTests
   {
     // Arrange
     PasswordValidationAttribute _passwordParam = new(lower, upper, number, symbol, length);
-    
+
     // Act
     var result = _passwordParam.IsValid(password);
 

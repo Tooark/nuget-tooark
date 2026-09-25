@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Tooark.Validations.Documents;
 using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
