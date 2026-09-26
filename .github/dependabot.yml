@@ -9,7 +9,8 @@
 #     coverlet, Microsoft.Testing.*) is grouped separately and may include
 #     majors, because those packages only move together.
 #   - Runtime-bound packages (Microsoft.AspNetCore.Authentication.*,
-#     Microsoft.Extensions.*, EF Core, System.Security.Cryptography.Xml) are
+#     Microsoft.AspNetCore.DataProtection*, Microsoft.Extensions.*, EF Core,
+#     System.Security.Cryptography.Xml) are
 #     NOT handled by Dependabot. They have one pin per target framework in
 #     conditional ItemGroups, and Dependabot only evaluates the first one: it
 #     bumped the 8.0.x line and left the 10.0.x line behind (PR #54). Those
@@ -60,6 +61,7 @@ updates:
     ignore:
       # Runtime-bound lines, pinned per target framework: bumped by hand, in pairs.
       - dependency-name: "Microsoft.AspNetCore.Authentication.*"
+      - dependency-name: "Microsoft.AspNetCore.DataProtection*"
       - dependency-name: "Microsoft.Extensions.*"
       - dependency-name: "Microsoft.EntityFrameworkCore*"
       - dependency-name: "System.Security.Cryptography.Xml"

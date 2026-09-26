@@ -425,6 +425,30 @@ builder.Services.AddTooarkOpenIdSso(builder.Configuration, "Keycloak", options =
 }
 ```
 
+### Várias instâncias ou contêineres
+
+O cookie de sessão, os cookies de correlação e o `state` do login são protegidos pelo Data Protection do
+ASP.NET Core. No padrão, cada instância tem as próprias chaves, e o login que começa numa instância e volta
+por outra falha com `Correlation failed` ou `Unable to unprotect the message.State`. Compartilhe o key ring
+com o `AddTooarkDataProtection` do
+[`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md):
+
+```csharp
+builder.Services.AddTooarkDataProtection(builder.Configuration);        // DataProtection → key ring compartilhado
+builder.Services.AddTooarkEntraSso(builder.Configuration);              // OpenId:Entra    → cookie + desafio
+```
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "app-web",
+    "KeysPath": "/var/dataprotection/keys",
+    "CertificatePath": "/var/dataprotection/certificado.pfx",
+    "CertificatePassword": "senha-do-certificado"
+  }
+}
+```
+
 ---
 
 ## 📋 Dependências
@@ -454,6 +478,8 @@ de autenticação do ASP.NET Core e não tem uso fora de uma aplicação ASP.NET
    código legado preso aos `ClaimTypes.*`.
 7. **`RequireHttpsMetadata = false` só em desenvolvimento** — e nunca no `appsettings.json` versionado; use
    `appsettings.Development.json`.
+8. **Key ring compartilhado com mais de uma instância** — sem ele, o login falha quando o balanceador troca de
+   instância no meio do fluxo; veja [Várias instâncias ou contêineres](#várias-instâncias-ou-contêineres).
 
 ---
 

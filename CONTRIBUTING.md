@@ -161,10 +161,10 @@ to run the security scanner locally.
   fix — document it in the release notes under "Mudanças Incompatíveis".
 - Package versions are managed **centrally** in `Directory.Packages.props`.
   Runtime-bound packages (`Microsoft.AspNetCore.Authentication.*`,
-  `Microsoft.Extensions.*`, `Microsoft.EntityFrameworkCore*`,
-  `System.Security.Cryptography.Xml`) have one pin per target framework and
-  must be bumped **by hand, in pairs** (8.0.x and 10.0.x) after each .NET
-  servicing release. Dependabot is told to ignore them: it only evaluates the
+  `Microsoft.AspNetCore.DataProtection*`, `Microsoft.Extensions.*`,
+  `Microsoft.EntityFrameworkCore*`, `System.Security.Cryptography.Xml`) have
+  one pin per target framework and must be bumped **by hand, in pairs**
+  (8.0.x and 10.0.x) after each .NET servicing release. Dependabot is told to ignore them: it only evaluates the
   first conditional group and would move the 8.0.x line alone.
   `bash scripts/check-package-pairs.sh` (also run by CI) checks that both
   groups list the same packages on the right lines. Do not put a `Version` on

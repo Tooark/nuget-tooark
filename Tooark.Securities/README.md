@@ -1,6 +1,6 @@
 # Tooark.Securities
 
-Security library for .NET applications, providing **AES cryptography** and **JWT authentication** services with support for multiple algorithms.
+Security library for .NET applications, providing **AES cryptography** and **JWT authentication** services with support for multiple algorithms, plus the configuration of ASP.NET Core **Data Protection**.
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md)
 
@@ -37,10 +37,11 @@ Security library for .NET applications, providing **AES cryptography** and **JWT
 
 ### Options
 
-| Class                 | Description                                                        |
-| --------------------- | ------------------------------------------------------------------ |
-| `JwtOptions`          | JWT settings (algorithm, keys, issuer(s), audience(s), expiration) |
-| `CryptographyOptions` | Cryptography settings (algorithm, secret or secretBase64)          |
+| Class                 | Description                                                            |
+| --------------------- | ---------------------------------------------------------------------- |
+| `JwtOptions`          | JWT settings (algorithm, keys, issuer(s), audience(s), expiration)     |
+| `CryptographyOptions` | Cryptography settings (algorithm, secret or secretBase64)              |
+| `KeyRingOptions`      | Data Protection key ring (application, storage, certificate, rotation) |
 
 ### Extensions
 
@@ -62,7 +63,7 @@ dotnet add package Tooark.Securities
 
 ### appsettings.json
 
-To configure the security services, add the `Jwt` and `Cryptography` sections to your `appsettings.json`:
+To configure the security services, add the `Jwt`, `Cryptography` and `DataProtection` sections to your `appsettings.json`:
 
 Example configuration for a JWT token with symmetric algorithms (uses _Secret_ for signing and validation):
 
@@ -163,6 +164,38 @@ Example with multiple issuers and audiences:
 > key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`. With `Secret`, the key is derived
 > via SHA256 (kept for compatibility).
 
+Example configuration for Data Protection (every key is optional — see
+[Data Protection - Key Ring](#-data-protection---key-ring)):
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "my-application",
+    "KeysPath": "/var/dataprotection/keys",
+    "CertificatePath": "/var/dataprotection/certificate.pfx",
+    "CertificatePassword": "certificate-password"
+  }
+}
+```
+
+#### `KeyRingOptions` properties
+
+| Property                        | Type                              | Default | Description                                                                       |
+| ------------------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `ApplicationName`               | string?                           | `null`  | Name that isolates the key ring. Same name and same storage share the keys        |
+| `KeysPath`                      | string?                           | `null`  | Key directory. Null keeps the ASP.NET Core default location                       |
+| `KeyLifetimeDays`               | int?                              | `null`  | Lifetime of each key in **days** (minimum 7). Null keeps the ASP.NET Core 90 days |
+| `DisableAutomaticKeyGeneration` | bool                              | `false` | Only reads the keys, never creates new ones (another app rotates the key ring)    |
+| `CertificatePath`               | string?                           | `null`  | RSA `.pfx` certificate, with private key, that protects the keys at rest          |
+| `CertificatePassword`           | string?                           | `null`  | Password of the `CertificatePath` certificate                                     |
+| `CertificateThumbprint`         | string?                           | `null`  | Certificate from the `My` store (user or machine), instead of `CertificatePath`   |
+| `ConfigureDataProtection`       | `Action<IDataProtectionBuilder>?` | `null`  | Callback with the native builder, run last. Code only                             |
+
+> No key is required: whatever is not provided follows the ASP.NET Core default. Validation only stops, at
+> startup, what would fail later: a lifetime below 7 days, `CertificatePath` together with
+> `CertificateThumbprint`, `CertificatePassword` without `CertificatePath`, and a certificate that is missing,
+> unreadable, without a private key or without an RSA key.
+
 ### Program.cs
 
 ```csharp
@@ -198,6 +231,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Adds the security services
 builder.Services.AddTooarkCryptography(builder.Configuration);
+
+var app = builder.Build();
+```
+
+Or, to add only Data Protection:
+
+```csharp
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Adds Data Protection with the key ring from the DataProtection section
+builder.Services.AddTooarkDataProtection(builder.Configuration);
 
 var app = builder.Build();
 ```
@@ -255,6 +301,50 @@ var app = builder.Build();
 
 > `CBCUnsafe` exists only to read old data encrypted with a zero IV: encrypting in this mode throws
 > (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`.
+
+---
+
+## 🔏 Data Protection - Key Ring
+
+ASP.NET Core Data Protection protects the short-lived payloads of the application — authentication cookie,
+OpenID Connect correlation cookies and `state`, antiforgery, TempData — without anyone configuring it. The
+default, however, writes the keys to the local disk of each instance: with more than one instance, or in a
+container that restarts without a volume, one instance cannot open what another protected (`Correlation failed`,
+`Unable to unprotect the message.State`, users signed out). `AddTooarkDataProtection` configures where the key
+ring lives, how the keys are protected and which application it isolates.
+
+The feature is optional and does not replace `ICryptographyService`:
+
+| Feature                | Use for                                     | Key                                          |
+| ---------------------- | ------------------------------------------- | -------------------------------------------- |
+| `ICryptographyService` | Data stored indefinitely (database columns) | Fixed, under the application's control       |
+| Data Protection        | Short-lived payloads (cookies, link tokens) | Rotates on its own, every 90 days by default |
+
+> Do not use Data Protection for long-lived data at rest: if the key ring is lost, everything it protected
+> becomes unreadable.
+
+### Storage and protection beyond the options
+
+The options cover what Data Protection offers without an extra package (directory and certificate). For Redis,
+Azure Blob Storage, a database or Azure Key Vault, install the provider package and use
+`ConfigureDataProtection`, which receives the native builder and runs last:
+
+```csharp
+builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
+{
+    options.ConfigureDataProtection = dataProtection => dataProtection
+        .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
+});
+```
+
+Nothing is locked: `services.AddDataProtection()` is still available before or after, and whatever is registered
+last wins.
+
+### With `AddTooarkSecurities`
+
+`AddTooarkSecurities` registers Data Protection when the `DataProtection` section exists and has at least one
+key. If the application also calls `AddTooarkDataProtection` — to pass `ConfigureDataProtection`, for example —
+the explicit call prevails in any order: `AddTooarkSecurities` does not reapply the section on top of it.
 
 ---
 
@@ -407,11 +497,11 @@ public IActionResult ValidateToken([FromHeader] string authorization)
 #### Using ICryptographyService
 
 ```csharp
-public class DataProtectionService
+public class SensitiveDataService
 {
     private readonly ICryptographyService _crypto;
 
-    public DataProtectionService(ICryptographyService crypto)
+    public SensitiveDataService(ICryptographyService crypto)
     {
         _crypto = crypto;
     }
@@ -470,6 +560,44 @@ public class UserService
 
 ---
 
+### Data Protection - Protecting a Link Token
+
+With Data Protection registered, any service can create its own protector. The purpose isolates each use: a
+protector with another purpose cannot open these tokens.
+
+```csharp
+public class InviteService
+{
+    private readonly IDataProtector _protector;
+
+    public InviteService(IDataProtectionProvider provider)
+    {
+        _protector = provider.CreateProtector("Invites");
+    }
+
+    public string CreateToken(Guid inviteId) => _protector.Protect(inviteId.ToString());
+
+    public Guid? ReadToken(string token)
+    {
+        try
+        {
+            return Guid.Parse(_protector.Unprotect(token));
+        }
+        catch (CryptographicException)
+        {
+            // Tampered token or one protected by another key ring
+            return null;
+        }
+    }
+}
+```
+
+> For a token that expires on its own, use `provider.CreateProtector("Invites").ToTimeLimitedDataProtector()` and
+> pass the lifetime to `Protect` (package `Microsoft.AspNetCore.DataProtection.Extensions`, already included in
+> ASP.NET Core).
+
+---
+
 ## 🔑 Generating Keys
 
 ### Key for HMAC (HS256/HS384/HS512)
@@ -516,14 +644,31 @@ openssl ecparam -genkey -name secp521r1 -noout -out ec_private.pem
 openssl pkcs8 -topk8 -nocrypt -in ec_private.pem -out ec_private_pkcs8.pem
 ```
 
+### Data Protection Certificate (.pfx)
+
+```bash
+# Self-signed 2048-bit RSA certificate, valid for 2 years
+openssl req -x509 -newkey rsa:2048 -sha256 -days 730 -nodes -subj "/CN=dataprotection" \
+  -keyout dataprotection.key -out dataprotection.crt
+
+# Bundle the certificate and the private key into PKCS#12
+openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
+  -out dataprotection.pfx -passout pass:certificate-password
+```
+
+> The certificate must be **RSA** (the XML encryption of the keys does not accept ECDSA). When replacing it, keep
+> the old one available with `UnprotectKeysWithAnyCertificate` in `ConfigureDataProtection` until the keys it
+> protected expire.
+
 ---
 
 ## 📋 Dependencies
 
-| Package                                                                                                                         | Version  | Description                             |
-| ------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceptions (e.g. `BadRequestException`) |
-| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | JWT authentication for ASP.NET Core     |
+| Package                                                                                                                         | Version  | Description                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceptions (e.g. `BadRequestException`)                           |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | JWT authentication for ASP.NET Core                               |
+| [`Microsoft.AspNetCore.DataProtection`](https://www.nuget.org/packages/Microsoft.AspNetCore.DataProtection)                     | 8.x/10.x | Data Protection, standalone package that runs on the base runtime |
 
 ---
 
@@ -543,36 +688,50 @@ openssl pkcs8 -topk8 -nocrypt -in ec_private.pem -out ec_private_pkcs8.pem
 3. **Prefer `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation
 4. **Generate random keys** - Use `openssl rand -base64 32` or `RandomNumberGenerator.GetBytes(32)`
 
+### Data Protection
+
+1. **Set `ApplicationName`** - Isolation stays the same on every instance, regardless of the install path
+2. **Share the key ring across instances** - A persistent volume in `KeysPath` or a storage through `ConfigureDataProtection`
+3. **Protect the keys at rest** - With `KeysPath` set and no certificate, the keys are written unencrypted, on any operating system
+4. **Do not use it for long-lived data** - Encrypted database columns belong to `ICryptographyService`
+
 ---
 
 ## ⚠️ Error Codes and Solutions
 
-| Service               | Message                                        | Description                           | Solution                                                      | Exception             |
-| --------------------- | ---------------------------------------------- | ------------------------------------- | ------------------------------------------------------------- | --------------------- |
-| `CryptographyService` | `Options.NotConfigured`                        | `Options` not configured              | Configure `CryptographyOptions`                               | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretNotConfigured`     | No key configured                     | Configure `Secret` or `SecretBase64` in `CryptographyOptions` | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretBase64Invalid`     | `SecretBase64` is not valid Base64    | Provide a valid Base64 value in `SecretBase64`                | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.SecretBase64InvalidSize` | `SecretBase64` is not 32 bytes        | Use a key of exactly 32 bytes (AES-256)                       | `InternalServerError` |
-| `CryptographyService` | `Options.Cryptography.AlgorithmDecryptOnly`    | `CBCUnsafe` used to encrypt           | Use `CBCUnsafe` only to decrypt legacy data                   | `InternalServerError` |
-| `CryptographyService` | `Cryptography.PlainTextNotProvided`            | `PlainText` not provided              | Provide the plain text to encrypt                             | `BadRequest`          |
-| `CryptographyService` | `Cryptography.CipherTextNotProvided`           | `CipherText` not provided             | Provide the encrypted text to decrypt                         | `BadRequest`          |
-| `CryptographyService` | `Cryptography.InvalidCipherText`               | Invalid `CipherText`                  | Provide a valid encrypted text to decrypt                     | `BadRequest`          |
-| `JwtTokenService`     | `Options.NotConfigured`                        | `Options` not configured              | Configure `JwtOptions`                                        | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.SecretNotConfigured`              | `Secret` not configured               | Configure `Secret` in `JwtOptions` for a symmetric token      | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.SecretTooShort`                   | `Secret` below the algorithm minimum  | Use at least 32/48/64 bytes for HS256/HS384/HS512             | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeysNotConfigured`                | `Private` and `Public` not configured | Configure the keys in `JwtOptions` for an asymmetric token    | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidSize`           | Invalid `Private` key size            | Use a `Private` key of at least 2048 bits                     | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidSize`            | Invalid `Public` key size             | Use a `Public` key of at least 2048 bits                      | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PrivateKey.InvalidCurve`          | Invalid `Private` key curve           | Use a `Private` key with the correct curve                    | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.PublicKey.InvalidCurve`           | Invalid `Public` key curve            | Use a `Public` key with the correct curve                     | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.InvalidKey`                       | Invalid key                           | [Use valid keys](#-generating-keys) for the chosen algorithm  | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.AlgorithmNotSupported`            | Unsupported algorithm                 | [Use a supported algorithm](#-jwt---supported-algorithms)     | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PrivateKey`      | `Private` key not configured          | Configure `PrivateKey` in `JwtOptions` to generate a token    | `InternalServerError` |
-| `JwtTokenService`     | `Options.Jwt.KeyNotConfigured;PublicKey`       | `Public` key not configured           | Configure `PublicKey` in `JwtOptions` to validate a token     | `InternalServerError` |
-| `JwtTokenService`     | `Token.Expired`                                | Expired token                         | Generate a new token                                          | N/A                   |
-| `JwtTokenService`     | `Token.InvalidSignature`                       | Token with an invalid signature       | Use only tokens with a valid signature                        | N/A                   |
-| `JwtTokenService`     | `Token.Invalid`                                | Invalid token                         | Use only valid tokens                                         | N/A                   |
-| `JwtTokenService`     | `InternalServerError`                          | Internal server error                 | Check the logs for details                                    | N/A                   |
+| Service                   | Message                                               | Description                                            | Solution                                                      | Exception             |
+| ------------------------- | ----------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------- | --------------------- |
+| `CryptographyService`     | `Options.NotConfigured`                               | `Options` not configured                               | Configure `CryptographyOptions`                               | `InternalServerError` |
+| `CryptographyService`     | `Options.Cryptography.SecretNotConfigured`            | No key configured                                      | Configure `Secret` or `SecretBase64` in `CryptographyOptions` | `InternalServerError` |
+| `CryptographyService`     | `Options.Cryptography.SecretBase64Invalid`            | `SecretBase64` is not valid Base64                     | Provide a valid Base64 value in `SecretBase64`                | `InternalServerError` |
+| `CryptographyService`     | `Options.Cryptography.SecretBase64InvalidSize`        | `SecretBase64` is not 32 bytes                         | Use a key of exactly 32 bytes (AES-256)                       | `InternalServerError` |
+| `CryptographyService`     | `Options.Cryptography.AlgorithmDecryptOnly`           | `CBCUnsafe` used to encrypt                            | Use `CBCUnsafe` only to decrypt legacy data                   | `InternalServerError` |
+| `CryptographyService`     | `Cryptography.PlainTextNotProvided`                   | `PlainText` not provided                               | Provide the plain text to encrypt                             | `BadRequest`          |
+| `CryptographyService`     | `Cryptography.CipherTextNotProvided`                  | `CipherText` not provided                              | Provide the encrypted text to decrypt                         | `BadRequest`          |
+| `CryptographyService`     | `Cryptography.InvalidCipherText`                      | Invalid `CipherText`                                   | Provide a valid encrypted text to decrypt                     | `BadRequest`          |
+| `AddTooarkDataProtection` | `Options.DataProtection.KeyLifetimeTooShort;7`        | `KeyLifetimeDays` below the minimum                    | Use at least 7 days, or leave it null for the default 90      | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificateAmbiguous`         | `CertificatePath` and `CertificateThumbprint` together | Provide only one of them                                      | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificatePathNotConfigured` | `CertificatePassword` without `CertificatePath`        | Provide `CertificatePath` or remove the password              | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificateNotFound;{value}`  | File or thumbprint not found                           | Check the path, or install the certificate in the `My` store  | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificateInvalid`           | Unreadable `.pfx` or wrong password                    | Check the file and `CertificatePassword`                      | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificateWithoutPrivateKey` | Certificate without a private key                      | Export the `.pfx` with the private key                        | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.CertificateNotRsa`            | Certificate without an RSA key                         | Use an RSA certificate                                        | `InternalServerError` |
+| `JwtTokenService`         | `Options.NotConfigured`                               | `Options` not configured                               | Configure `JwtOptions`                                        | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.SecretNotConfigured`                     | `Secret` not configured                                | Configure `Secret` in `JwtOptions` for a symmetric token      | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.SecretTooShort`                          | `Secret` below the algorithm minimum                   | Use at least 32/48/64 bytes for HS256/HS384/HS512             | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.KeysNotConfigured`                       | `Private` and `Public` not configured                  | Configure the keys in `JwtOptions` for an asymmetric token    | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.PrivateKey.InvalidSize`                  | Invalid `Private` key size                             | Use a `Private` key of at least 2048 bits                     | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.PublicKey.InvalidSize`                   | Invalid `Public` key size                              | Use a `Public` key of at least 2048 bits                      | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.PrivateKey.InvalidCurve`                 | Invalid `Private` key curve                            | Use a `Private` key with the correct curve                    | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.PublicKey.InvalidCurve`                  | Invalid `Public` key curve                             | Use a `Public` key with the correct curve                     | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.InvalidKey`                              | Invalid key                                            | [Use valid keys](#-generating-keys) for the chosen algorithm  | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.AlgorithmNotSupported`                   | Unsupported algorithm                                  | [Use a supported algorithm](#-jwt---supported-algorithms)     | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.KeyNotConfigured;PrivateKey`             | `Private` key not configured                           | Configure `PrivateKey` in `JwtOptions` to generate a token    | `InternalServerError` |
+| `JwtTokenService`         | `Options.Jwt.KeyNotConfigured;PublicKey`              | `Public` key not configured                            | Configure `PublicKey` in `JwtOptions` to validate a token     | `InternalServerError` |
+| `JwtTokenService`         | `Token.Expired`                                       | Expired token                                          | Generate a new token                                          | N/A                   |
+| `JwtTokenService`         | `Token.InvalidSignature`                              | Token with an invalid signature                        | Use only tokens with a valid signature                        | N/A                   |
+| `JwtTokenService`         | `Token.Invalid`                                       | Invalid token                                          | Use only valid tokens                                         | N/A                   |
+| `JwtTokenService`         | `InternalServerError`                                 | Internal server error                                  | Check the logs for details                                    | N/A                   |
 
 ---
 

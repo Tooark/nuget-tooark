@@ -5,7 +5,7 @@
     <PackageId>Tooark.Securities</PackageId>
     <Title>Tooark.Securities</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>tooark, toolkit, security, cryptography, token, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, security, cryptography, token, dataprotection, .NET</PackageTags>
     <Summary>Management of predefined and validated Security Objects for .NET projects.</Summary>
     <PackageDescription>Package for managing predefined and validated Security Objects for .NET applications.</PackageDescription>
     <Description>Library managing predefined and validated Security Objects, ensuring data integrity and consistency for .NET projects.</Description>
@@ -13,6 +13,12 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!--
+      Pacote avulso do Data Protection, e não o framework compartilhado: ele roda no runtime base, então a
+      configuração do key ring também serve a workers e aplicações de console que precisam abrir os mesmos
+      payloads (cookies, tokens) de uma aplicação ASP.NET Core.
+    -->
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" />
   </ItemGroup>
 
   <ItemGroup>

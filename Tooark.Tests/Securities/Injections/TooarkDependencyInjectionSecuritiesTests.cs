@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Securities.Injections;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
@@ -120,6 +122,69 @@ public class TooarkDependencyInjectionSecuritiesTests
     // Assert
     Assert.Null(jwtService);
     Assert.Null(cryptographyService);
+  }
+
+  // Teste para verificar se o método AddTooarkSecurities registra o Data Protection quando a seção existe.
+  [Fact]
+  public void AddTooarkSecurities_WithDataProtectionConfiguration_ShouldAddDataProtection()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{KeyRingOptions.Section}:ApplicationName", "tooark-app" }
+      })
+      .Build();
+
+    // Act
+    services.AddTooarkSecurities(configuration);
+    using var provider = services.BuildServiceProvider();
+    var dataProtection = provider.GetRequiredService<IOptions<DataProtectionOptions>>().Value;
+
+    // Assert
+    Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IDataProtectionProvider));
+    Assert.Equal("tooark-app", dataProtection.ApplicationDiscriminator);
+  }
+
+  // Teste para verificar se o método AddTooarkSecurities não registra o Data Protection quando a seção não existe.
+  [Fact]
+  public void AddTooarkSecurities_WithoutDataProtectionConfiguration_ShouldNotAddDataProtection()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>())
+      .Build();
+
+    // Act
+    services.AddTooarkSecurities(configuration);
+
+    // Assert
+    Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IDataProtectionProvider));
+  }
+
+  // Teste para verificar se uma chamada explícita a AddTooarkDataProtection tem prioridade sobre a seção.
+  [Fact]
+  public void AddTooarkSecurities_AfterAddTooarkDataProtection_ShouldKeepExplicitOptions()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{KeyRingOptions.Section}:ApplicationName", "from-section" }
+      })
+      .Build();
+
+    // Act
+    services.AddTooarkDataProtection(configuration, options => options.ApplicationName = "from-code");
+    services.AddTooarkSecurities(configuration);
+    using var provider = services.BuildServiceProvider();
+    var dataProtection = provider.GetRequiredService<IOptions<DataProtectionOptions>>().Value;
+
+    // Assert
+    Assert.Equal("from-code", dataProtection.ApplicationDiscriminator);
   }
 
   // Teste para verificar se o método AddTooarkSecurities retorna a mesma instância de IServiceCollection.

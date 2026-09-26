@@ -427,6 +427,30 @@ builder.Services.AddTooarkOpenIdSso(builder.Configuration, "Keycloak", options =
 }
 ```
 
+### Multiple instances or containers
+
+The session cookie, the correlation cookies and the login `state` are protected by ASP.NET Core Data
+Protection. By default each instance has its own keys, and a login that starts on one instance and comes back
+through another fails with `Correlation failed` or `Unable to unprotect the message.State`. Share the key ring
+with `AddTooarkDataProtection` from
+[`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md):
+
+```csharp
+builder.Services.AddTooarkDataProtection(builder.Configuration);        // DataProtection → shared key ring
+builder.Services.AddTooarkEntraSso(builder.Configuration);              // OpenId:Entra    → cookie + challenge
+```
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "app-web",
+    "KeysPath": "/var/dataprotection/keys",
+    "CertificatePath": "/var/dataprotection/certificate.pfx",
+    "CertificatePassword": "certificate-password"
+  }
+}
+```
+
 ---
 
 ## 📋 Dependencies
@@ -457,6 +481,8 @@ authentication handlers and has no use outside an ASP.NET Core application.
    tied to `ClaimTypes.*`.
 7. **`RequireHttpsMetadata = false` only in development** — and never in the versioned `appsettings.json`; use
    `appsettings.Development.json`.
+8. **A shared key ring with more than one instance** — without it, the login fails when the load balancer
+   switches instances in the middle of the flow; see [Multiple instances or containers](#multiple-instances-or-containers).
 
 ---
 

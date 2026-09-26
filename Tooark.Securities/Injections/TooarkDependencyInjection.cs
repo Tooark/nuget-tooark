@@ -29,6 +29,12 @@ public static partial class TooarkDependencyInjection
       AddTooarkCryptography(services, configuration);
     }
 
+    // Verifica se a seção do Data Protection existe; uma chamada explícita a AddTooarkDataProtection tem prioridade
+    if (configuration.GetSection(KeyRingOptions.Section).Exists() && !IsDataProtectionRegistered(services))
+    {
+      AddTooarkDataProtection(services, configuration);
+    }
+
     return services;
   }
 }

@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.2.1</Version>
+    <Version>4.3.0</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
     <Copyright>Copyright (c) 2025 Tooark</Copyright>
@@ -38,7 +38,7 @@
       versão major, atualize a baseline para a última versão da linha anterior ou remova-a temporariamente.
     -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>4.2.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>4.2.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
