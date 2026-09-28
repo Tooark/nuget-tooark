@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
@@ -64,9 +65,12 @@ public class KeyRingOptionsTests : IDisposable
     Assert.Null(options.KeysPath);
     Assert.Null(options.KeyLifetimeDays);
     Assert.False(options.DisableAutomaticKeyGeneration);
+    Assert.Null(options.RequirePersistentKeyStorage);
     Assert.Null(options.CertificatePath);
     Assert.Null(options.CertificatePassword);
     Assert.Null(options.CertificateThumbprint);
+    Assert.Null(options.ReadKeys);
+    Assert.Null(options.WriteKey);
     Assert.Null(options.ConfigureDataProtection);
   }
 
@@ -166,6 +170,64 @@ public class KeyRingOptionsTests : IDisposable
 
     // Assert
     Assert.Contains($"Options.DataProtection.CertificateNotFound;{path}", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que apenas um dos callbacks de armazenamento falha
+  [Theory]
+  [InlineData(true)]
+  [InlineData(false)]
+  public void Validate_WithOnlyOneKeyCallback_ShouldThrow(bool withRead)
+  {
+    // Arrange
+    var options = withRead
+      ? new KeyRingOptions { ReadKeys = _ => Task.FromResult<IEnumerable<string>>([]) }
+      : new KeyRingOptions { WriteKey = (_, _, _) => Task.CompletedTask };
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(options.Validate);
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyCallbacksIncomplete", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que KeysPath junto com os callbacks de armazenamento falha
+  [Fact]
+  public void Validate_WithKeyCallbacksAndKeysPath_ShouldThrow()
+  {
+    // Arrange
+    var options = new KeyRingOptions
+    {
+      KeysPath = _directory,
+      ReadKeys = _ => Task.FromResult<IEnumerable<string>>([]),
+      WriteKey = (_, _, _) => Task.CompletedTask
+    };
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(options.Validate);
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageAmbiguous", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que os callbacks de armazenamento viram o repositório de chaves
+  [Fact]
+  public void ConfigureBuilder_WithKeyCallbacks_ShouldSetRepository()
+  {
+    // Arrange
+    var options = new KeyRingOptions
+    {
+      ReadKeys = _ => Task.FromResult<IEnumerable<string>>([]),
+      WriteKey = (_, _, _) => Task.CompletedTask
+    };
+
+    // Act
+    var ex = Record.Exception(options.Validate);
+    var keyManagement = Apply(options);
+
+    // Assert
+    Assert.Null(ex);
+    Assert.NotNull(keyManagement.XmlRepository);
+    Assert.IsNotType<FileSystemXmlRepository>(keyManagement.XmlRepository);
   }
 
   #endregion

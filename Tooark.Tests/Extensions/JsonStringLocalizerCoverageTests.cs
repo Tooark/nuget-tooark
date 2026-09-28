@@ -129,6 +129,9 @@ public class JsonStringLocalizerCoverageTests
   [InlineData("OpenId.HostedDomain.Invalid")]
   [InlineData("Options.DataProtection.KeyLifetimeTooShort;7")]
   [InlineData("Options.DataProtection.CertificateNotFound;/certs/dataprotection.pfx")]
+  [InlineData("Options.DataProtection.KeyStorageNotConfigured")]
+  [InlineData("Options.DataProtection.KeyCallbacksIncomplete")]
+  [InlineData("Options.DataProtection.KeyStorageAmbiguous")]
   [InlineData("Invalid.Parameter;null")]
   [InlineData("Record.Deleted")]
   public void LocalizedString_ShouldBeTranslatedInEveryLanguage(string chave)

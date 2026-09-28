@@ -171,6 +171,7 @@ Example configuration for Data Protection (every key is optional — see
 {
   "DataProtection": {
     "ApplicationName": "my-application",
+    "RequirePersistentKeyStorage": true,
     "KeysPath": "/var/dataprotection/keys",
     "CertificatePath": "/var/dataprotection/certificate.pfx",
     "CertificatePassword": "certificate-password"
@@ -180,21 +181,26 @@ Example configuration for Data Protection (every key is optional — see
 
 #### `KeyRingOptions` properties
 
-| Property                        | Type                              | Default | Description                                                                       |
-| ------------------------------- | --------------------------------- | ------- | --------------------------------------------------------------------------------- |
-| `ApplicationName`               | string?                           | `null`  | Name that isolates the key ring. Same name and same storage share the keys        |
-| `KeysPath`                      | string?                           | `null`  | Key directory. Null keeps the ASP.NET Core default location                       |
-| `KeyLifetimeDays`               | int?                              | `null`  | Lifetime of each key in **days** (minimum 7). Null keeps the ASP.NET Core 90 days |
-| `DisableAutomaticKeyGeneration` | bool                              | `false` | Only reads the keys, never creates new ones (another app rotates the key ring)    |
-| `CertificatePath`               | string?                           | `null`  | RSA `.pfx` certificate, with private key, that protects the keys at rest          |
-| `CertificatePassword`           | string?                           | `null`  | Password of the `CertificatePath` certificate                                     |
-| `CertificateThumbprint`         | string?                           | `null`  | Certificate from the `My` store (user or machine), instead of `CertificatePath`   |
-| `ConfigureDataProtection`       | `Action<IDataProtectionBuilder>?` | `null`  | Callback with the native builder, run last. Code only                             |
+| Property                        | Type                                                 | Default | Description                                                                       |
+| ------------------------------- | ---------------------------------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `ApplicationName`               | string?                                              | `null`  | Name that isolates the key ring. Same name and same storage share the keys        |
+| `KeysPath`                      | string?                                              | `null`  | Key directory. Null keeps the ASP.NET Core default location                       |
+| `KeyLifetimeDays`               | int?                                                 | `null`  | Lifetime of each key in **days** (minimum 7). Null keeps the ASP.NET Core 90 days |
+| `DisableAutomaticKeyGeneration` | bool                                                 | `false` | Only reads the keys, never creates new ones (another app rotates the key ring)    |
+| `RequirePersistentKeyStorage`   | bool?                                                | `null`  | With `true`, the app does not start without a key storage. Null keeps it off      |
+| `CertificatePath`               | string?                                              | `null`  | RSA `.pfx` certificate, with private key, that protects the keys at rest          |
+| `CertificatePassword`           | string?                                              | `null`  | Password of the `CertificatePath` certificate                                     |
+| `CertificateThumbprint`         | string?                                              | `null`  | Certificate from the `My` store (user or machine), instead of `CertificatePath`   |
+| `ReadKeys`                      | `Func<IServiceProvider, Task<IEnumerable<string>>>?` | `null`  | Reads the XML of every key from the custom storage. Code only                     |
+| `WriteKey`                      | `Func<IServiceProvider, string, string, Task>?`      | `null`  | Writes a new key (name and XML) to the custom storage. Code only                  |
+| `ConfigureDataProtection`       | `Action<IDataProtectionBuilder>?`                    | `null`  | Callback with the native builder, run last. Code only                             |
 
 > No key is required: whatever is not provided follows the ASP.NET Core default. Validation only stops, at
 > startup, what would fail later: a lifetime below 7 days, `CertificatePath` together with
-> `CertificateThumbprint`, `CertificatePassword` without `CertificatePath`, and a certificate that is missing,
-> unreadable, without a private key or without an RSA key.
+> `CertificateThumbprint`, `CertificatePassword` without `CertificatePath`, a certificate that is missing,
+> unreadable, without a private key or without an RSA key, only one of the `ReadKeys` and `WriteKey` callbacks,
+> and the callbacks together with `KeysPath`. The key storage lock (`RequirePersistentKeyStorage`)
+> is opt-in: see [Clusters, containers and autoscaling](#clusters-containers-and-autoscaling).
 
 ### Program.cs
 
@@ -325,7 +331,8 @@ The feature is optional and does not replace `ICryptographyService`:
 
 ### Storage and protection beyond the options
 
-The options cover what Data Protection offers without an extra package (directory and certificate). For Redis,
+The options cover what Data Protection offers without an extra package: directory, certificate and
+[custom storage through callbacks](#custom-storage-with-readkeys-and-writekey). For Redis,
 Azure Blob Storage, a database or Azure Key Vault, install the provider package and use
 `ConfigureDataProtection`, which receives the native builder and runs last:
 
@@ -339,6 +346,276 @@ builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
 
 Nothing is locked: `services.AddDataProtection()` is still available before or after, and whatever is registered
 last wins.
+
+### Custom storage with `ReadKeys` and `WriteKey`
+
+To keep the keys in a database, a storage or a vault without installing a provider package, provide two
+functions: `ReadKeys`, which returns the XML of every key, and `WriteKey`, which writes a new key. They replace
+`KeysPath` (setting both fails at startup) and satisfy the `RequirePersistentKeyStorage` lock.
+
+- Each call receives the service provider of its own scope: scoped services, such as a `DbContext`, are resolved
+  directly.
+- `WriteKey` receives the key name (`key-{guid}`, unique) and the XML. With a certificate configured, the XML
+  arrives already encrypted, and the storage never sees the key in the clear.
+- ASP.NET Core calls the storage synchronously, and Tooark waits for the task. Calls are rare: reads when the key
+  ring loads (at startup and every 24 hours) and after a key is created; writes on the first run and on every
+  rotation (90 days by default).
+- An exception in the callbacks reaches whoever uses Data Protection. Let it propagate: handling the failure and
+  returning an empty list makes ASP.NET Core create new keys (see the table below).
+- The callbacks exist in code only, like `ConfigureDataProtection`.
+
+#### ✅ Do: a table in the application database
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Server=...;Database=my-api;..."
+  },
+  "DataProtection": {
+    "ApplicationName": "my-api",
+    "RequirePersistentKeyStorage": true,
+    "CertificatePath": "/run/secrets/dataprotection.pfx"
+  }
+}
+```
+
+```csharp
+using Microsoft.EntityFrameworkCore;
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
+{
+    // Every key, expired ones included: they still open what they protected
+    options.ReadKeys = async services =>
+    {
+        var db = services.GetRequiredService<AppDbContext>();
+
+        return await db.DataProtectionKeys.Select(key => key.Xml).ToListAsync();
+    };
+
+    // Insert only: each key has a unique name and is never changed or deleted
+    options.WriteKey = async (services, name, xml) =>
+    {
+        var db = services.GetRequiredService<AppDbContext>();
+
+        db.DataProtectionKeys.Add(new DataProtectionKeyRecord { Name = name, Xml = xml });
+        await db.SaveChangesAsync();
+    };
+});
+
+var app = builder.Build();
+
+app.Run();
+```
+
+The table is a regular entity of the application `DbContext`, created by a migration before the first startup:
+
+```csharp
+public class DataProtectionKeyRecord
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Xml { get; set; } = string.Empty;
+}
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+{
+    public DbSet<DataProtectionKeyRecord> DataProtectionKeys => Set<DataProtectionKeyRecord>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Unique name: a second write with the same name fails instead of overwriting the key
+        modelBuilder.Entity<DataProtectionKeyRecord>().HasIndex(key => key.Name).IsUnique();
+    }
+}
+```
+
+The outcome: every instance reads the same keys, a recreated pod still opens the old tokens, and each rotation
+adds a row to the table, keeping the previous ones. The certificate password comes from outside
+`appsettings.json`, through the `DataProtection__CertificatePassword` environment variable.
+
+#### ❌ Don't: callbacks that lose keys
+
+> ⚠️ **These callbacks lose data, and the lock does not notice:** as far as it knows, a storage is configured.
+
+```csharp
+// ❌ In-memory list: each instance has its own, and it is gone on every restart
+var keys = new List<string>();
+
+builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
+{
+    options.ReadKeys = _ => Task.FromResult<IEnumerable<string>>(keys);
+    options.WriteKey = (_, _, xml) =>
+    {
+        keys.Add(xml);
+        return Task.CompletedTask;
+    };
+});
+```
+
+```csharp
+// ❌ A single row, overwritten on every new key: the previous key disappears
+options.ReadKeys = async services =>
+{
+    var db = services.GetRequiredService<AppDbContext>();
+    var current = await db.DataProtectionKeys.SingleOrDefaultAsync();
+
+    return current is null ? [] : [current.Xml];
+};
+
+options.WriteKey = async (services, name, xml) =>
+{
+    var db = services.GetRequiredService<AppDbContext>();
+    var current = await db.DataProtectionKeys.SingleOrDefaultAsync();
+
+    if (current is null)
+    {
+        db.DataProtectionKeys.Add(new DataProtectionKeyRecord { Name = name, Xml = xml });
+    }
+    else
+    {
+        current.Name = name;
+        current.Xml = xml;
+    }
+
+    await db.SaveChangesAsync();
+};
+```
+
+| Mistake                                                         | What happens                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Keeping the keys in memory (list, `IMemoryCache`, static field) | Each instance has its own keys, and they are gone on restart: `The key {…} was not found in the key ring` on the other instance and after every deploy. It is the same as configuring no storage                                                    |
+| Overwriting the key instead of inserting                        | It works until the first rotation (90 days by default) and passes any short test. On rotation the previous key disappears: seconds later, when the key ring reloads, everything it protected stops opening, from sessions and tokens to stored data |
+| Reading only the latest key, or filtering out expired ones      | The same effect as the previous row, even with the table intact                                                                                                                                                                                     |
+| Deleting old keys (cleanup routine, TTL, cache with expiration) | What they protected becomes unreadable. For data at rest, the loss is permanent                                                                                                                                                                     |
+| Handling the read failure and returning an empty list           | With no keys, ASP.NET Core creates and writes new keys, and what was protected before does not open on that instance. Let the exception propagate                                                                                                   |
+
+### Clusters, containers and autoscaling
+
+With no storage configured, ASP.NET Core writes the keys to the user profile, which in a container lives inside
+the instance itself. The application starts normally and only logs a warning. The problem shows up when the pod
+is recreated or a second instance joins: users signed out, OpenID Connect sign-in failing and, for whatever was
+protected at rest, unreadable data.
+
+`RequirePersistentKeyStorage` turns that warning into a startup failure. With `true`, the application does not
+start without a key storage (`Options.DataProtection.KeyStorageNotConfigured`): `KeysPath`, the `ReadKeys` and
+`WriteKey` callbacks, a `PersistKeysTo*` in `ConfigureDataProtection` or one chained to `services.AddDataProtection()`, before or after
+`AddTooarkDataProtection`. The check runs when the host starts and, without a host, on the first use of Data
+Protection.
+
+> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior. It is
+> planned to be on by default in containers in v5.0. An API that uses no cookies (JWT only) does not depend on
+> persistent keys: set `false` to keep it off after that change too.
+
+#### ❌ Don't: keys tied to the instance
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "my-api"
+  }
+}
+```
+
+```csharp
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddTooarkDataProtection(builder.Configuration);
+
+var app = builder.Build();
+
+app.Run();
+```
+
+> ⚠️ **This configuration loses data.** With no `KeysPath` and no external storage, each container creates its
+> own key in `~/.aspnet/DataProtection-Keys`, inside itself. Nothing fails on registration or at startup: the log
+> only warns `Storing keys in a directory '…' that may not be persisted outside of the container. Protected data
+will be unavailable when container is destroyed.`
+
+| When                                               | What happens                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The request reaches another instance               | The other instance does not have the key: `The key {…} was not found in the key ring`. The session cookie is discarded and the user goes back to sign-in, OpenID Connect sign-in fails with `Correlation failed` or `Unable to unprotect the message.State`, and antiforgery forms are rejected |
+| Deploy, restart, recreated pod or autoscaling down | The key goes away with the container, and every session drops at once                                                                                                                                                                                                                           |
+| A protected value was stored in the database       | **Lost for good**: no new instance has the key, and there is no way to recover it                                                                                                                                                                                                               |
+
+With `"RequirePersistentKeyStorage": true`, this same configuration does not start: the error shows up on deploy, not
+later, with users already signed in.
+
+#### ❌ Don't: `KeysPath` without a shared volume
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "my-api",
+    "RequirePersistentKeyStorage": true,
+    "KeysPath": "/var/dataprotection/keys"
+  }
+}
+```
+
+> ⚠️ **The lock passes and the data is lost just the same.** The directory exists, but without a mounted volume
+> it sits in each container's writable layer: the outcome is the one from the previous example. The same goes for
+> a volume that only one pod mounts, such as a per-replica StatefulSet volume or a `ReadWriteOnce` disk. The lock
+> checks that a storage exists, not that it outlives the instance.
+
+#### ✅ Do: a shared, protected key ring
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "my-api",
+    "RequirePersistentKeyStorage": true,
+    "KeysPath": "/var/dataprotection/keys",
+    "CertificatePath": "/run/secrets/dataprotection.pfx"
+  }
+}
+```
+
+```csharp
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Shared key ring: same ApplicationName, same directory and same certificate on every instance
+builder.Services.AddTooarkDataProtection(builder.Configuration);
+
+var app = builder.Build();
+
+app.Run();
+```
+
+- `/var/dataprotection/keys` is a volume shared by every instance: NFS, Azure Files or EFS, and in Kubernetes a
+  `PersistentVolumeClaim` with `ReadWriteMany`.
+- `/run/secrets/dataprotection.pfx` is the certificate mounted as a secret, and the password comes from outside
+  `appsettings.json`, through the `DataProtection__CertificatePassword` environment variable. To create the
+  certificate, see [Data Protection Certificate (.pfx)](#data-protection-certificate-pfx).
+- The outcome: one instance opens what another protected, a recreated pod still opens the old tokens, and the
+  keys are stored encrypted on the volume.
+
+Without a shared volume, replace `KeysPath` with the `ReadKeys` and `WriteKey` callbacks (see
+[Custom storage with `ReadKeys` and `WriteKey`](#custom-storage-with-readkeys-and-writekey)) or with a provider
+in `ConfigureDataProtection`. The lock accepts all of them.
+
+#### Other risks
+
+The lock does not check these. Before running more than one instance, also check:
+
+- **Redis without persistence** — without AOF or RDB, or with a `maxmemory-policy` that evicts keys
+  (`allkeys-lru`), Redis loses the key ring. Use persistence and `noeviction`.
+- **Key certificate** — if the `.pfx` is lost, or replaced without keeping the old one, the key ring becomes
+  unreadable. Keep it with the application secrets and keep the old one in `UnprotectKeysWithAnyCertificate`
+  while there are keys protected by it.
+- **Storage cleanup** — Data Protection does not delete expired keys: they still open what they protected. Keep
+  the storage out of cleanup routines and TTLs.
+- **`ApplicationName`** — without it, isolation depends on the application path, which can change with the
+  image. Set the same value on every instance.
 
 ### With `AddTooarkSecurities`
 
@@ -691,9 +968,11 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 ### Data Protection
 
 1. **Set `ApplicationName`** - Isolation stays the same on every instance, regardless of the install path
-2. **Share the key ring across instances** - A persistent volume in `KeysPath` or a storage through `ConfigureDataProtection`
-3. **Protect the keys at rest** - With `KeysPath` set and no certificate, the keys are written unencrypted, on any operating system
-4. **Do not use it for long-lived data** - Encrypted database columns belong to `ICryptographyService`
+2. **Share the key ring across instances** - A persistent volume in `KeysPath`, the `ReadKeys` and `WriteKey` callbacks or a storage through `ConfigureDataProtection`
+3. **Turn on `RequirePersistentKeyStorage` in containers** - The application no longer starts with the keys tied to the instance
+4. **In the callbacks, only insert and read everything** - An overwritten, filtered or deleted key makes what it protected unreadable
+5. **Protect the keys at rest** - With `KeysPath` or callbacks and no certificate, the keys are written unencrypted, on any operating system
+6. **Do not use it for long-lived data** - Encrypted database columns belong to `ICryptographyService`
 
 ---
 
@@ -716,6 +995,9 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 | `AddTooarkDataProtection` | `Options.DataProtection.CertificateInvalid`           | Unreadable `.pfx` or wrong password                    | Check the file and `CertificatePassword`                      | `InternalServerError` |
 | `AddTooarkDataProtection` | `Options.DataProtection.CertificateWithoutPrivateKey` | Certificate without a private key                      | Export the `.pfx` with the private key                        | `InternalServerError` |
 | `AddTooarkDataProtection` | `Options.DataProtection.CertificateNotRsa`            | Certificate without an RSA key                         | Use an RSA certificate                                        | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.KeyStorageNotConfigured`      | Lock on and no key storage configured                  | Set a shared `KeysPath`, the callbacks or an external storage | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.KeyCallbacksIncomplete`       | Only one of the `ReadKeys` and `WriteKey` callbacks    | Provide both callbacks                                        | `InternalServerError` |
+| `AddTooarkDataProtection` | `Options.DataProtection.KeyStorageAmbiguous`          | `KeysPath` together with `ReadKeys` and `WriteKey`     | Provide a single key storage                                  | `InternalServerError` |
 | `JwtTokenService`         | `Options.NotConfigured`                               | `Options` not configured                               | Configure `JwtOptions`                                        | `InternalServerError` |
 | `JwtTokenService`         | `Options.Jwt.SecretNotConfigured`                     | `Secret` not configured                                | Configure `Secret` in `JwtOptions` for a symmetric token      | `InternalServerError` |
 | `JwtTokenService`         | `Options.Jwt.SecretTooShort`                          | `Secret` below the algorithm minimum                   | Use at least 32/48/64 bytes for HS256/HS384/HS512             | `InternalServerError` |

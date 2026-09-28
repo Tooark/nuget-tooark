@@ -444,12 +444,17 @@ builder.Services.AddTooarkEntraSso(builder.Configuration);              // OpenI
 {
   "DataProtection": {
     "ApplicationName": "app-web",
+    "RequirePersistentKeyStorage": true,
     "KeysPath": "/var/dataprotection/keys",
     "CertificatePath": "/var/dataprotection/certificate.pfx",
     "CertificatePassword": "certificate-password"
   }
 }
 ```
+
+With `RequirePersistentKeyStorage`, the application does not start without the key storage. The other risks of
+multiple instances are in
+[Clusters, containers and autoscaling](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md#clusters-containers-and-autoscaling).
 
 ---
 

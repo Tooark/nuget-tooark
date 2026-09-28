@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.DataProtection.Repositories;
@@ -304,6 +305,319 @@ public class TooarkDependencyInjectionDataProtectionTests : IDisposable
 
     // Act & Assert
     Assert.ThrowsAny<CryptographicException>(() => protector.Unprotect(payload));
+  }
+
+  #endregion
+
+  #region Key Storage
+
+  /// <summary>
+  /// Repositório de chaves em memória, no papel de um armazenamento externo (banco, Redis, storage).
+  /// </summary>
+  private sealed class InMemoryXmlRepository : IXmlRepository
+  {
+    /// <summary>
+    /// Chaves gravadas.
+    /// </summary>
+    private readonly List<XElement> _elements = [];
+
+    /// <inheritdoc/>
+    public IReadOnlyCollection<XElement> GetAllElements() => [.. _elements];
+
+    /// <inheritdoc/>
+    public void StoreElement(XElement element, string friendlyName) => _elements.Add(element);
+  }
+
+  // Teste para verificar que, com a trava ligada e sem armazenamento, o host não sobe
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageWithoutStorage_ShouldThrowOnStart()
+  {
+    // Arrange
+    using var provider = BuildProvider(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "true"
+    }));
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(validator.Validate);
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que, sem host, a trava barra o primeiro uso do Data Protection
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageWithoutStorage_ShouldThrowOnFirstUse()
+  {
+    // Arrange
+    using var provider = BuildProvider(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "true"
+    }));
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(() => provider.GetDataProtector("tests").Protect("payload"));
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que KeysPath satisfaz a trava
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageAndKeysPath_ShouldStart()
+  {
+    // Arrange
+    using var provider = BuildProvider(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "true",
+      ["KeysPath"] = _directory
+    }));
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+    Assert.Equal("payload", provider.GetDataProtector("tests").Unprotect(provider.GetDataProtector("tests").Protect("payload")));
+  }
+
+  // Teste para verificar que um armazenamento próprio, passado em ConfigureDataProtection, satisfaz a trava
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageAndCustomRepository_ShouldStoreKeysThere()
+  {
+    // Arrange
+    var repository = new InMemoryXmlRepository();
+    using var provider = BuildProvider(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "true"
+    }), options => options.ConfigureDataProtection = builder =>
+      builder.Services.Configure<KeyManagementOptions>(keyManagement => keyManagement.XmlRepository = repository));
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+    provider.GetDataProtector("tests").Protect("payload");
+
+    // Assert
+    Assert.Null(ex);
+    Assert.Single(repository.GetAllElements());
+  }
+
+  // Teste para verificar que o armazenamento registrado depois, direto no builder nativo, também satisfaz a trava
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageAndStorageRegisteredLater_ShouldStart()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    services.AddTooarkDataProtection(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "true"
+    }));
+    services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(_directory));
+    using var provider = services.BuildServiceProvider();
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+  }
+
+  // Teste para verificar que, sem a trava, o Data Protection segue o padrão do ASP.NET Core
+  [Theory]
+  [InlineData(null)]
+  [InlineData("false")]
+  public void AddTooarkDataProtection_WithoutRequiredStorage_ShouldKeepAspNetCoreDefaults(string? required)
+  {
+    // Arrange
+    var values = new Dictionary<string, string?>();
+
+    if (required is not null)
+    {
+      values["RequirePersistentKeyStorage"] = required;
+    }
+
+    // Act
+    using var provider = BuildProvider(BuildConfiguration(values));
+    var keyManagement = provider.GetRequiredService<IOptions<KeyManagementOptions>>().Value;
+
+    // Assert
+    Assert.Null(provider.GetService<IStartupValidator>());
+    Assert.Null(keyManagement.XmlRepository);
+  }
+
+  // Teste para verificar que a última chamada define a trava, inclusive para desligá-la
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageDisabledByLaterCall_ShouldStart()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var configuration = BuildConfiguration([]);
+    services.AddTooarkDataProtection(configuration, options => options.RequirePersistentKeyStorage = true);
+    services.AddTooarkDataProtection(configuration, options => options.RequirePersistentKeyStorage = false);
+    using var provider = services.BuildServiceProvider();
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+  }
+
+  #endregion
+
+  #region Key Callbacks
+
+  /// <summary>
+  /// Armazenamento próprio da aplicação, no papel de uma tabela: nome único e XML de cada chave.
+  /// </summary>
+  private sealed class KeyTable
+  {
+    /// <summary>
+    /// Chaves gravadas, por nome.
+    /// </summary>
+    public Dictionary<string, string> Rows { get; } = [];
+  }
+
+  /// <summary>
+  /// Serviço com escopo que acessa a tabela, no papel de um <c>DbContext</c>.
+  /// </summary>
+  /// <param name="table">Tabela compartilhada.</param>
+  private sealed class KeyTableContext(KeyTable table)
+  {
+    /// <summary>
+    /// Tabela compartilhada.
+    /// </summary>
+    public KeyTable Table { get; } = table;
+  }
+
+  /// <summary>
+  /// Monta um provider com o Data Protection guardando as chaves na tabela pelos callbacks.
+  /// </summary>
+  /// <param name="table">Tabela compartilhada entre as instâncias.</param>
+  /// <param name="values">Valores adicionais da seção.</param>
+  /// <returns>Provider de serviços, com validação de escopo ligada.</returns>
+  private static ServiceProvider BuildProviderWithCallbacks(KeyTable table, Dictionary<string, string?>? values = null)
+  {
+    var services = new ServiceCollection();
+    services.AddSingleton(table);
+    services.AddScoped<KeyTableContext>();
+    services.AddTooarkDataProtection(BuildConfiguration(values ?? new() { ["ApplicationName"] = "tooark-app" }), options =>
+    {
+      options.ReadKeys = async provider =>
+      {
+        await Task.Yield();
+
+        return [.. provider.GetRequiredService<KeyTableContext>().Table.Rows.Values];
+      };
+      options.WriteKey = async (provider, name, xml) =>
+      {
+        await Task.Yield();
+
+        provider.GetRequiredService<KeyTableContext>().Table.Rows.Add(name, xml);
+      };
+    });
+
+    return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+  }
+
+  // Teste para verificar que a chave nova é gravada pelo callback, com nome único e o XML da chave
+  [Fact]
+  public void AddTooarkDataProtection_WithKeyCallbacks_ShouldWriteKeyThroughCallback()
+  {
+    // Arrange
+    var table = new KeyTable();
+    using var provider = BuildProviderWithCallbacks(table);
+
+    // Act
+    provider.GetDataProtector("tests").Protect("payload");
+
+    // Assert
+    var row = Assert.Single(table.Rows);
+    Assert.StartsWith("key-", row.Key);
+    Assert.StartsWith("<key ", row.Value);
+  }
+
+  // Teste para verificar que outra instância lê a chave pelo callback e abre o payload
+  [Fact]
+  public void AddTooarkDataProtection_WithKeyCallbacks_ShouldUnprotectAcrossInstances()
+  {
+    // Arrange
+    var table = new KeyTable();
+    using var first = BuildProviderWithCallbacks(table);
+    var payload = first.GetDataProtector("tests").Protect("payload");
+
+    // Act
+    using var second = BuildProviderWithCallbacks(table);
+    var result = second.GetDataProtector("tests").Unprotect(payload);
+
+    // Assert
+    Assert.Equal("payload", result);
+    Assert.Single(table.Rows);
+  }
+
+  // Teste para verificar que, com certificado, o callback recebe a chave já cifrada
+  [Fact]
+  public void AddTooarkDataProtection_WithKeyCallbacksAndCertificate_ShouldWriteEncryptedKey()
+  {
+    // Arrange
+    var table = new KeyTable();
+    using var provider = BuildProviderWithCallbacks(table, new()
+    {
+      ["ApplicationName"] = "tooark-app",
+      ["CertificatePath"] = CreateCertificateFile(_directory),
+      ["CertificatePassword"] = CertificatePassword
+    });
+
+    // Act
+    provider.GetDataProtector("tests").Protect("payload");
+
+    // Assert
+    var row = Assert.Single(table.Rows);
+    Assert.Contains("encryptedSecret", row.Value);
+  }
+
+  // Teste para verificar que os callbacks satisfazem a trava do armazenamento de chaves
+  [Fact]
+  public void AddTooarkDataProtection_WithRequiredStorageAndKeyCallbacks_ShouldStart()
+  {
+    // Arrange
+    using var provider = BuildProviderWithCallbacks(new KeyTable(), new()
+    {
+      ["RequirePersistentKeyStorage"] = "true"
+    });
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+  }
+
+  // Teste para verificar que uma falha no callback de gravação chega a quem protege, e não é engolida
+  [Fact]
+  public void AddTooarkDataProtection_WithFailingWriteKey_ShouldThrow()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    services.AddTooarkDataProtection(BuildConfiguration([]), options =>
+    {
+      options.ReadKeys = _ => Task.FromResult<IEnumerable<string>>([]);
+      options.WriteKey = (_, _, _) => throw new InvalidOperationException("storage offline");
+    });
+    using var provider = services.BuildServiceProvider();
+
+    // Act
+    var ex = Record.Exception(() => provider.GetDataProtector("tests").Protect("payload"));
+
+    // Assert
+    Assert.NotNull(ex);
+    Assert.Contains("storage offline", ex.ToString());
   }
 
   #endregion
