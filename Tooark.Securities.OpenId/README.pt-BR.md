@@ -442,12 +442,17 @@ builder.Services.AddTooarkEntraSso(builder.Configuration);              // OpenI
 {
   "DataProtection": {
     "ApplicationName": "app-web",
+    "RequirePersistentKeyStorage": true,
     "KeysPath": "/var/dataprotection/keys",
     "CertificatePath": "/var/dataprotection/certificado.pfx",
     "CertificatePassword": "senha-do-certificado"
   }
 }
 ```
+
+Com `RequirePersistentKeyStorage`, a aplicação não sobe sem o armazenamento das chaves. Os demais riscos de
+várias instâncias estão em
+[Clusters, contêineres e autoscale](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md#clusters-contêineres-e-autoscale).
 
 ---
 

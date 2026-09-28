@@ -1,7 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.DataProtection.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 
 namespace Tooark.Securities.Options;
@@ -73,6 +78,22 @@ public class KeyRingOptions
   public bool DisableAutomaticKeyGeneration { get; set; } = false;
 
   /// <summary>
+  /// Indica se a aplicação exige um armazenamento de chaves configurado, e falha no startup sem ele.
+  /// </summary>
+  /// <remarks>
+  /// Sem armazenamento configurado, o ASP.NET Core grava as chaves no perfil do usuário ou apenas em memória e só
+  /// registra um aviso. Em contêiner, o perfil fica dentro da instância, e as chaves morrem com ela: usuários
+  /// deslogados e tudo o que foi protegido ilegível. Com <c>true</c>, a aplicação não sobe sem um armazenamento,
+  /// seja <see cref="KeysPath"/>, os callbacks <see cref="ReadKeys"/> e <see cref="WriteKey"/>, um
+  /// <c>PersistKeysTo*</c> em <see cref="ConfigureDataProtection"/> ou um encadeado ao
+  /// <c>services.AddDataProtection()</c>. A trava confere que o armazenamento existe, não que ele sobrevive à
+  /// instância: <see cref="KeysPath"/> precisa apontar para um volume persistente e compartilhado, e os callbacks,
+  /// para um armazenamento fora da instância.
+  /// Nulo mantém o padrão, hoje desligado; informe <c>false</c> para mantê-la desligada mesmo que o padrão mude.
+  /// </remarks>
+  public bool? RequirePersistentKeyStorage { get; set; } = null;
+
+  /// <summary>
   /// Caminho do certificado PKCS#12 (<c>.pfx</c>) que protege as chaves em repouso.
   /// </summary>
   /// <remarks>
@@ -100,6 +121,31 @@ public class KeyRingOptions
   #region Callbacks
 
   /// <summary>
+  /// Callback que lê todas as chaves do armazenamento próprio da aplicação (banco, storage, vault).
+  /// </summary>
+  /// <remarks>
+  /// Informado junto com <see cref="WriteKey"/>, no lugar de <see cref="KeysPath"/>, guarda o key ring onde a
+  /// aplicação quiser, sem pacote de provedor. Devolve o XML de todas as chaves gravadas, inclusive as expiradas,
+  /// que continuam abrindo o que protegeram. Recebe o provedor de serviços de um escopo criado para a chamada:
+  /// serviços com escopo, como o <c>DbContext</c>, são resolvidos direto. O ASP.NET Core lê o armazenamento de
+  /// forma síncrona e o Tooark aguarda a tarefa; as leituras são raras, ao carregar o key ring (no startup e a
+  /// cada 24 horas) e depois de criar uma chave. Só em código.
+  /// </remarks>
+  public Func<IServiceProvider, Task<IEnumerable<string>>>? ReadKeys { get; set; }
+
+  /// <summary>
+  /// Callback que grava uma chave nova no armazenamento próprio da aplicação (banco, storage, vault).
+  /// </summary>
+  /// <remarks>
+  /// Informado junto com <see cref="ReadKeys"/>. Recebe o provedor de serviços do escopo da chamada, o nome da
+  /// chave (<c>key-{guid}</c>, único) e o XML da chave, já cifrado quando há certificado configurado. A gravação
+  /// só insere: uma chave nunca é alterada nem apagada, e sobrescrever ou descartar chaves antigas torna ilegível o
+  /// que elas protegeram. É chamado a cada chave nova, na primeira execução e a cada rotação (90 dias por padrão).
+  /// Só em código.
+  /// </remarks>
+  public Func<IServiceProvider, string, string, Task>? WriteKey { get; set; }
+
+  /// <summary>
   /// Callback para configuração adicional do Data Protection, executado após os padrões Tooark.
   /// </summary>
   /// <remarks>
@@ -121,12 +167,26 @@ public class KeyRingOptions
   /// <exception cref="InternalServerErrorException">Quando <see cref="CertificatePath"/> e <see cref="CertificateThumbprint"/> são informados juntos.</exception>
   /// <exception cref="InternalServerErrorException">Quando <see cref="CertificatePassword"/> é informado sem <see cref="CertificatePath"/>.</exception>
   /// <exception cref="InternalServerErrorException">Quando o arquivo de <see cref="CertificatePath"/> não existe.</exception>
+  /// <exception cref="InternalServerErrorException">Quando apenas um entre <see cref="ReadKeys"/> e <see cref="WriteKey"/> é informado.</exception>
+  /// <exception cref="InternalServerErrorException">Quando <see cref="KeysPath"/> e os callbacks de armazenamento são informados juntos.</exception>
   public void Validate()
   {
     // O ASP.NET Core recusa vidas úteis menores, mas só ao montar as opções, longe do ponto de configuração
     if (KeyLifetimeDays < MinimumKeyLifetimeDays)
     {
       throw new InternalServerErrorException($"Options.DataProtection.KeyLifetimeTooShort;{MinimumKeyLifetimeDays}");
+    }
+
+    // Leitura sem gravação perde toda chave nova; gravação sem leitura gera uma chave nova a cada início
+    if ((ReadKeys is null) != (WriteKey is null))
+    {
+      throw new InternalServerErrorException("Options.DataProtection.KeyCallbacksIncomplete");
+    }
+
+    // Dois armazenamentos: nunca escolhe um deles silenciosamente
+    if (ReadKeys is not null && !string.IsNullOrWhiteSpace(KeysPath))
+    {
+      throw new InternalServerErrorException("Options.DataProtection.KeyStorageAmbiguous");
     }
 
     // Duas fontes de certificado: nunca escolhe uma delas silenciosamente
@@ -173,10 +233,14 @@ public class KeyRingOptions
       builder.SetApplicationName(ApplicationName);
     }
 
-    // Armazenamento das chaves
+    // Armazenamento das chaves: diretório ou callbacks da aplicação
     if (!string.IsNullOrWhiteSpace(KeysPath))
     {
       builder.PersistKeysToFileSystem(new DirectoryInfo(KeysPath));
+    }
+    else if (ReadKeys is not null && WriteKey is not null)
+    {
+      PersistKeysToCallbacks(builder, ReadKeys, WriteKey);
     }
 
     // Proteção das chaves em repouso
@@ -207,6 +271,27 @@ public class KeyRingOptions
   #endregion
 
   #region Private Methods
+
+  /// <summary>
+  /// Guarda as chaves pelos callbacks de leitura e gravação da aplicação.
+  /// </summary>
+  /// <remarks>
+  /// O repositório precisa do provedor de serviços, que só existe depois do registro: por isso entra por um
+  /// <see cref="IConfigureOptions{TOptions}"/>, o mesmo caminho do <c>PersistKeysToDbContext</c>.
+  /// </remarks>
+  /// <param name="builder">Builder do Data Protection.</param>
+  /// <param name="read">Callback de leitura de todas as chaves.</param>
+  /// <param name="write">Callback de gravação de uma chave nova.</param>
+  private static void PersistKeysToCallbacks(
+    IDataProtectionBuilder builder,
+    Func<IServiceProvider, Task<IEnumerable<string>>> read,
+    Func<IServiceProvider, string, string, Task> write
+  )
+  {
+    builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>>(services =>
+      new ConfigureOptions<KeyManagementOptions>(options =>
+        options.XmlRepository = new CallbackXmlRepository(services, read, write)));
+  }
 
   /// <summary>
   /// Indica se <see cref="CertificatePath"/> foi informado.
@@ -289,4 +374,63 @@ public class KeyRingOptions
   }
 
   #endregion
+}
+
+/// <summary>
+/// Repositório de chaves que delega a leitura e a gravação aos callbacks da aplicação.
+/// </summary>
+/// <param name="services">Provedor de serviços raiz, usado para criar um escopo por chamada.</param>
+/// <param name="read">Callback de leitura de todas as chaves.</param>
+/// <param name="write">Callback de gravação de uma chave nova.</param>
+internal sealed class CallbackXmlRepository(
+  IServiceProvider services,
+  Func<IServiceProvider, Task<IEnumerable<string>>> read,
+  Func<IServiceProvider, string, string, Task> write
+) : IXmlRepository
+{
+  /// <summary>
+  /// Lê todas as chaves pelo callback de leitura.
+  /// </summary>
+  /// <returns>Elementos XML das chaves gravadas.</returns>
+  public IReadOnlyCollection<XElement> GetAllElements()
+  {
+    var keys = Run(read);
+
+    return [.. keys.Select(key => XElement.Parse(key))];
+  }
+
+  /// <summary>
+  /// Grava uma chave nova pelo callback de gravação.
+  /// </summary>
+  /// <param name="element">Elemento XML da chave, já cifrado quando há certificado configurado.</param>
+  /// <param name="friendlyName">Nome único da chave (<c>key-{guid}</c>).</param>
+  public void StoreElement(XElement element, string friendlyName)
+  {
+    var xml = element.ToString(SaveOptions.DisableFormatting);
+
+    Run(async provider =>
+    {
+      await write(provider, friendlyName, xml).ConfigureAwait(false);
+
+      return true;
+    });
+  }
+
+  /// <summary>
+  /// Executa um callback num escopo próprio e aguarda o resultado.
+  /// </summary>
+  /// <remarks>
+  /// O <see cref="IXmlRepository"/> é síncrono. A tarefa roda no pool de threads para que a espera não trave num
+  /// contexto de sincronização da aplicação, e cada chamada ganha um escopo para os serviços com escopo.
+  /// </remarks>
+  /// <typeparam name="T">Tipo do resultado do callback.</typeparam>
+  /// <param name="callback">Callback a executar.</param>
+  /// <returns>Resultado do callback.</returns>
+  private T Run<T>(Func<IServiceProvider, Task<T>> callback) =>
+    Task.Run(async () =>
+    {
+      await using var scope = services.CreateAsyncScope();
+
+      return await callback(scope.ServiceProvider).ConfigureAwait(false);
+    }).GetAwaiter().GetResult();
 }

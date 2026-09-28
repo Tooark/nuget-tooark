@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Tooark.Exceptions;
 using Tooark.Securities.Injections;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
@@ -145,6 +146,29 @@ public class TooarkDependencyInjectionSecuritiesTests
     // Assert
     Assert.Contains(services, descriptor => descriptor.ServiceType == typeof(IDataProtectionProvider));
     Assert.Equal("tooark-app", dataProtection.ApplicationDiscriminator);
+  }
+
+  // Teste para verificar se a trava do armazenamento de chaves da seção vale também pelo AddTooarkSecurities.
+  [Fact]
+  public void AddTooarkSecurities_WithRequiredKeyStorageWithoutStorage_ShouldThrowOnStart()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{KeyRingOptions.Section}:RequirePersistentKeyStorage", "true" }
+      })
+      .Build();
+
+    // Act
+    services.AddTooarkSecurities(configuration);
+    using var provider = services.BuildServiceProvider();
+    var validator = provider.GetRequiredService<IStartupValidator>();
+    var ex = Assert.Throws<InternalServerErrorException>(validator.Validate);
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageNotConfigured", ex.GetErrorMessages());
   }
 
   // Teste para verificar se o método AddTooarkSecurities não registra o Data Protection quando a seção não existe.
