@@ -239,6 +239,10 @@ Com o código do erro na frente da mensagem:
 return BadRequest(new ResponseDto<Pessoa>(pessoa.Notification, withCode: true));
 ```
 
+As falhas de ModelState dos controllers com `[ApiController]` podem responder com este mesmo corpo: é o que faz
+o `AddTooarkModelStateEnvelope`, do
+[`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md#resposta-de-validação).
+
 ### Endpoint com página maior
 
 ```csharp
