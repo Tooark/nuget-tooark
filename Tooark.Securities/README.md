@@ -33,7 +33,7 @@ Security library for .NET applications, providing **AES cryptography** and **JWT
 | Class          | Description                                     |
 | -------------- | ----------------------------------------------- |
 | `JwtTokenDto`  | Data for creating a token (id, login, security) |
-| `UserTokenDto` | Result of the token validation                  |
+| `UserTokenDto` | Result of the token validation, with the claims |
 
 ### Options
 
@@ -754,6 +754,80 @@ public IActionResult ValidateToken([FromHeader] string authorization)
         IntId = result.GetIntId
     });
 }
+```
+
+#### Reading extra claims
+
+The extra claims passed to `Create` come back in `UserTokenDto`. The `Claims` property holds every claim
+in the token — the user's, the extra ones and the ones registered by the issuer (`exp`, `iat`, `iss`,
+`aud`) — and the methods below read a claim by type. Like `Id`, `Login` and `Security`, a missing claim
+does not throw:
+
+| Method              | Returns                                                                   |
+| ------------------- | ------------------------------------------------------------------------- |
+| `GetClaim(type)`    | The claim's first value, or empty when it does not exist                  |
+| `GetClaim<T>(type)` | The converted value (`Guid`, `int`, `bool`, `decimal`...), or the default |
+| `GetClaims(type)`   | Every value of the claim (roles, permissions), or an empty list           |
+| `HasClaim(type)`    | Whether the claim exists in the token, even with an empty value           |
+
+```csharp
+// Creation: the extra claims go into the token
+var extraClaims = new[]
+{
+    new Claim("tenant", tenantId.ToString()),
+    new Claim("role", "admin"),
+    new Claim("role", "user")
+};
+
+var token = _jwtService.Create(tokenData, extraClaims: extraClaims);
+
+// Validation: the same claims come out in UserTokenDto
+var result = await _jwtService.ValidateAsync(token);
+
+var tenant = result.GetClaim<Guid>("tenant"); // Guid.Empty when missing or invalid
+var roles = result.GetClaims("role");         // ["admin", "user"]
+```
+
+> A claim repeated at creation becomes an array in the payload and comes back as one claim per value: use
+> `GetClaims` to read them all. `GetClaim<T>` converts with the invariant culture, so decimal numbers use
+> a dot (`1234.56`).
+
+To give the application's own claims a name and a type, keep the names in `UserTokenDto` extensions in
+the application project. The rest of the code reads properties, without repeating strings:
+
+```csharp
+public static class AppClaims
+{
+    public const string Tenant = "tenant";
+    public const string Role = "role";
+}
+
+public static class UserTokenDtoExtensions
+{
+    public static Guid GetTenantId(this UserTokenDto user) => user.GetClaim<Guid>(AppClaims.Tenant);
+
+    public static IReadOnlyList<string> GetRoles(this UserTokenDto user) => user.GetClaims(AppClaims.Role);
+}
+
+// Usage
+var tenantId = result.GetTenantId();
+```
+
+With C# 14 (.NET 10 SDK), the same shortcuts can be extension properties:
+
+```csharp
+public static class UserTokenDtoExtensions
+{
+    extension(UserTokenDto user)
+    {
+        public Guid TenantId => user.GetClaim<Guid>(AppClaims.Tenant);
+
+        public IReadOnlyList<string> Roles => user.GetClaims(AppClaims.Role);
+    }
+}
+
+// Usage
+var tenantId = result.TenantId;
 ```
 
 ---

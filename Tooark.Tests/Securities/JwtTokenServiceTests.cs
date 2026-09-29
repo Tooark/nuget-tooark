@@ -700,6 +700,55 @@ public class JwtTokenServiceTests
     // Assert
     Assert.NotNull(token);
     Assert.Equal("", result.ErrorToken);
+    Assert.Equal("value", result.GetClaim("custom"));
+  }
+
+  // Teste de ida e volta das claims extras: o que entra no Create sai no ValidateAsync
+  [Fact]
+  public async Task ValidateAsync_WithExtraClaims_ShouldReturnExtraClaims()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetAsymmetricESOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var tenant = Guid.NewGuid();
+    var extraClaims = new[]
+    {
+      new System.Security.Claims.Claim("tenant", tenant.ToString()),
+      new System.Security.Claims.Claim("role", "admin"),
+      new System.Security.Claims.Claim("role", "user"),
+      new System.Security.Claims.Claim("level", "3", System.Security.Claims.ClaimValueTypes.Integer32)
+    };
+    var token = service.Create(GetTokenDto(), extraClaims: extraClaims);
+
+    // Act
+    var result = await service.ValidateAsync(token);
+
+    // Assert
+    Assert.Equal("", result.ErrorToken);
+    Assert.Equal("1", result.Id);
+    Assert.Equal(tenant, result.GetClaim<Guid>("tenant"));
+    Assert.Equal(["admin", "user"], result.GetClaims("role"));
+    Assert.Equal(3, result.GetClaim<int>("level"));
+    Assert.True(result.HasClaim("exp"));
+  }
+
+  // Teste: claim extra com o nome de uma claim do usuário não substitui o valor do JwtTokenDto
+  [Fact]
+  public async Task ValidateAsync_WithExtraClaimNamedId_ShouldKeepTokenDtoId()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    var service = new JwtTokenService(options, GetMockLogger());
+    var extraClaims = new[] { new System.Security.Claims.Claim("id", "999") };
+    var token = service.Create(GetTokenDto(), extraClaims: extraClaims);
+
+    // Act
+    var result = await service.ValidateAsync(token);
+
+    // Assert - a claim repetida vira array no payload e o DTO lê o primeiro valor
+    Assert.Equal("", result.ErrorToken);
+    Assert.Equal("1", result.Id);
+    Assert.Equal(["1", "999"], result.GetClaims("id"));
   }
 
   // Teste de criação e validação sem Issuer e Audience configurados

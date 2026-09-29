@@ -246,4 +246,138 @@ public class UserTokenDtoTests
     Assert.Equal("user", dto.Login);
     Assert.Equal(string.Empty, dto.Security);
   }
+
+  // Teste: claims extras do token ficam disponíveis no DTO
+  [Fact]
+  public void Claims_ShouldExposeExtraClaims()
+  {
+    // Arrange
+    var token = new JwtSecurityToken(claims:
+    [
+      new Claim("id", "1"),
+      new Claim("login", "user"),
+      new Claim("security", "2"),
+      new Claim("department", "IT")
+    ]);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal(4, dto.Claims.Count);
+    Assert.Equal("IT", dto.GetClaim("department"));
+    Assert.True(dto.HasClaim("department"));
+  }
+
+  // Teste: claims extras chegam pelo construtor com JsonWebToken (handler atual)
+  [Fact]
+  public void Claims_WithJsonWebToken_ShouldExposeExtraClaims()
+  {
+    // Arrange
+    var handler = new JwtSecurityTokenHandler();
+    var encoded = handler.WriteToken(new JwtSecurityToken(claims:
+    [
+      new Claim("id", "1"),
+      new Claim("department", "IT")
+    ]));
+    var token = new Microsoft.IdentityModel.JsonWebTokens.JsonWebToken(encoded);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal("1", dto.Id);
+    Assert.Equal("IT", dto.GetClaim("department"));
+  }
+
+  // Teste: claim ausente resulta em vazio, sem lançar exceção
+  [Fact]
+  public void GetClaim_ReturnsEmpty_WhenMissing()
+  {
+    // Arrange
+    var dto = new UserTokenDto(CreateToken("1", "user", "sec"));
+
+    // Act & Assert
+    Assert.Equal(string.Empty, dto.GetClaim("department"));
+    Assert.Empty(dto.GetClaims("department"));
+    Assert.False(dto.HasClaim("department"));
+  }
+
+  // Teste: claim presente com valor vazio é diferente de claim ausente
+  [Fact]
+  public void HasClaim_ReturnsTrue_WhenValueIsEmpty()
+  {
+    // Arrange
+    var dto = new UserTokenDto(new JwtSecurityToken(claims: [new Claim("department", "")]));
+
+    // Act & Assert
+    Assert.True(dto.HasClaim("department"));
+    Assert.Equal(string.Empty, dto.GetClaim("department"));
+  }
+
+  // Teste: claim com vários valores devolve todos, na ordem do token
+  [Fact]
+  public void GetClaims_ReturnsAllValues_WhenMultiValued()
+  {
+    // Arrange
+    var dto = new UserTokenDto(new JwtSecurityToken(claims:
+    [
+      new Claim("role", "admin"),
+      new Claim("role", "user")
+    ]));
+
+    // Act
+    var roles = dto.GetClaims("role");
+
+    // Assert
+    Assert.Equal(["admin", "user"], roles);
+    Assert.Equal("admin", dto.GetClaim("role"));
+  }
+
+  // Teste: conversão tipada de claims válidas
+  [Fact]
+  public void GetClaimTyped_ReturnsParsedValue_WhenValid()
+  {
+    // Arrange
+    var tenant = Guid.NewGuid();
+    var dto = new UserTokenDto(new JwtSecurityToken(claims:
+    [
+      new Claim("tenant", tenant.ToString()),
+      new Claim("level", "3"),
+      new Claim("active", "true"),
+      new Claim("limit", "1234.56")
+    ]));
+
+    // Act & Assert
+    Assert.Equal(tenant, dto.GetClaim<Guid>("tenant"));
+    Assert.Equal(3, dto.GetClaim<int>("level"));
+    Assert.True(dto.GetClaim<bool>("active"));
+    Assert.Equal(1234.56m, dto.GetClaim<decimal>("limit"));
+  }
+
+  // Teste: conversão tipada devolve o padrão do tipo quando a claim é ausente ou inválida
+  [Fact]
+  public void GetClaimTyped_ReturnsDefault_WhenMissingOrInvalid()
+  {
+    // Arrange
+    var dto = new UserTokenDto(new JwtSecurityToken(claims: [new Claim("tenant", "not-a-guid")]));
+
+    // Act & Assert
+    Assert.Equal(Guid.Empty, dto.GetClaim<Guid>("tenant"));
+    Assert.Equal(0, dto.GetClaim<int>("level"));
+    Assert.False(dto.GetClaim<bool>("active"));
+  }
+
+  // Teste: DTO de erro não possui claims
+  [Fact]
+  public void Claims_IsEmpty_WhenError()
+  {
+    // Act
+    var dto = new UserTokenDto("Token.Invalid");
+
+    // Assert
+    Assert.Empty(dto.Claims);
+    Assert.Equal(string.Empty, dto.GetClaim("id"));
+    Assert.Equal(Guid.Empty, dto.GetClaim<Guid>("id"));
+  }
 }
