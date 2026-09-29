@@ -19,6 +19,7 @@ Library that concentrates the ASP.NET Core specific pieces of Tooark, keeping th
 The `Tooark.AspNetCore` package provides:
 
 - extensions for ASP.NET Core types, today the `ModelStateDictionary`;
+- the `ResponseDto` body for validation failures in `[ApiController]` controllers, with `AddTooarkModelStateEnvelope`;
 - the place where the ASP.NET Core requirement was moved to, taking it out of the general-purpose packages;
 - integration with the `Tooark.Extensions` localizer, translating the validation error keys;
 - the intended home for the family's filters and middlewares.
@@ -48,8 +49,16 @@ From v4 on the requirement lives here. Web projects reference this package; the 
 dotnet add package Tooark.AspNetCore
 ```
 
-The package **does not require registration in the container**: `GetErrors` is an extension method and works
-without configuration. When the filters and middlewares arrive, they will bring their own registration.
+`GetErrors` is an extension method and works without configuration. The [validation response](#validation-response)
+is the only piece with a registration, and it is **opt-in**: it changes the body of every validation failure in
+the API, so neither the package nor the `AddTooarkService` of the `Tooark` aggregator turns it on by itself.
+
+```csharp
+using Tooark.AspNetCore.Injections;
+
+builder.Services.AddControllers();
+builder.Services.AddTooarkModelStateEnvelope();
+```
 
 > **Runtime requirement**: because it declares the shared framework, whoever consumes this package needs the
 > ASP.NET Core runtime installed. In a Docker image, use `mcr.microsoft.com/dotnet/aspnet` instead of
@@ -64,8 +73,62 @@ without configuration. When the filters and middlewares arrive, they will bring 
 - `ModelStateExtension.GetErrors(ModelStateDictionary)`: returns the ModelState error messages.
 
 Walks every entry of the `ModelStateDictionary` and gathers the `ErrorMessage` of each error into a single
-list. A field with more than one error contributes all of its messages. The order is the
-`ModelStateDictionary`'s, which enumerates by field key, not the order in which the errors were recorded.
+list. A field with more than one error contributes all of its messages, together and in the order they were
+recorded. Between fields, the order is the `ModelStateDictionary`'s: it comes from the keys, not from the order
+in which the fields were validated, but it is not alphabetical either — today, top-level fields come before
+nested ones and shorter keys before longer ones (`Cpf` before `Email`). Do not rely on the position of an error
+in the list.
+
+An error without text — recorded with just an exception, or with a blank message — becomes the key
+`Field.Invalid;{key}`, or `BadRequest` when it is not tied to a field. ASP.NET Core records errors with just an
+exception when the exception message is not safe for the client — a malformed JSON body with
+`AllowInputFormatterExceptionMessages = false`, for instance — and when `MaxModelValidationErrors` is reached.
+The exception message is never used. Up to v4.5.0 these errors came back with their empty or blank text.
+
+### Validation response
+
+- `TooarkDependencyInjection.AddTooarkModelStateEnvelope(IServiceCollection)`: makes a validation failure in an
+  `[ApiController]` controller answer with a `ResponseDto<object>`, instead of ASP.NET Core's
+  `ValidationProblemDetails`.
+
+In a controller with `[ApiController]`, ASP.NET Core checks the ModelState before the action runs and, when it
+is invalid, answers 400 with the body built by `ApiBehaviorOptions.InvalidModelStateResponseFactory`. The method
+replaces that factory with one that answers 400 with a
+[`ResponseDto<object>`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Dtos): `Data` null and `Errors`
+with the messages of `GetErrors`, already translated by the `ResponseDto` itself. Keys become text, and the
+model binding messages arrive unchanged.
+
+What changes for the client:
+
+|              | `ValidationProblemDetails` (ASP.NET Core default) | `ResponseDto<object>` (with the envelope) |
+| ------------ | ------------------------------------------------- | ----------------------------------------- |
+| Content type | `application/problem+json`                        | `application/json`                        |
+| Errors       | per field: `{"Email": ["..."]}`, not translated   | a single list: `["..."]`, translated      |
+| Other fields | `type`, `title`, `status`, `traceId`              | `data`, `pagination`, `metadata`          |
+
+**Registration order does not matter.** `AddControllers` sets the default factory while the options are being
+built, and would win if it came after a plain `Configure`. The envelope is applied after every configuration
+(`PostConfigure`), so it wins whether it is registered before or after `AddControllers`. For the same reason, a
+factory of the application's own set with `ConfigureApiBehaviorOptions` is replaced: an application that needs
+its own factory does not call this method. Calling it twice is harmless.
+
+**Where it does not apply.** Only where ASP.NET Core calls the factory:
+
+- controllers without `[ApiController]`, which have no automatic check: use `GetErrors` in the action or a
+  [filter](#a-filter-for-controllers-without-apicontroller);
+- `SuppressModelStateInvalidFilter = true`, which turns the automatic check off;
+- minimal APIs, which have no ModelState.
+
+**OpenAPI.** The method changes the response, not the API description. A `[ProducesResponseType(400)]` without a
+type is still documented as `ProblemDetails`, the error type ASP.NET Core assumes for `[ApiController]`. To make
+the documentation match the response, declare the error type once in the project with the controllers:
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.Dtos;
+
+[assembly: ProducesErrorResponseType(typeof(ResponseDto<object>))]
+```
 
 ### Integration with the validations
 
@@ -81,7 +144,9 @@ tell the two cases apart when it matters.
 
 ### Filters and middlewares
 
-Not shipped yet. When they exist, they go in this package, under the `Filters/` and `Middlewares/` folders.
+Not shipped yet. The validation response is not a filter: ASP.NET Core already calls a factory at the point where
+it decides the body of a validation failure, and replacing that factory was enough. When filters and middlewares
+exist, they go in this package, under the `Filters/` and `Middlewares/` folders.
 The family only splits a package when the **dependency profile** differs — that is what motivated separating
 `Tooark.Mediator.EntityFrameworkCore`, which pulls Entity Framework Core, from `Tooark.Mediator`, which does not
 use it. Filters, middlewares and the extensions here share exactly the same profile, so splitting them into
@@ -89,19 +154,84 @@ separate packages would reduce nothing.
 
 ### Namespaces
 
-The extensions live in `Tooark.AspNetCore.Extensions`.
+The extensions live in `Tooark.AspNetCore.Extensions`, and the registration in `Tooark.AspNetCore.Injections`.
 
 ---
 
 ## 📝 Usage Examples
 
-### Reading the ModelState errors
+### Standard response for validation failures
+
+```csharp
+using Tooark.AspNetCore.Injections;
+
+builder.Services.AddControllers();
+builder.Services.AddTooarkModelStateEnvelope();
+```
+
+The DTO validated by the `Tooark.Attributes` attributes:
+
+```csharp
+using Tooark.Attributes;
+
+public sealed class CreatePersonDto
+{
+  [EmailValidation]
+  public string Email { get; set; } = null!;
+
+  [DocumentValidation("CPF")]
+  public string Cpf { get; set; } = null!;
+}
+```
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("people")]
+public sealed class PersonController : ControllerBase
+{
+  [HttpPost]
+  public IActionResult Create([FromBody] CreatePersonDto dto)
+  {
+    // Only reached with a valid ModelState: [ApiController] answers 400 before the action runs
+    return Ok();
+  }
+}
+```
+
+`POST /people` with `{"email": "x", "cpf": "123"}`, in `en-US`:
+
+```json
+{
+  "data": null,
+  "errors": ["Field Document is invalid", "Field Email is invalid"],
+  "pagination": null,
+  "metadata": []
+}
+```
+
+A model binding failure — text in a numeric field, an empty body — comes in the same body, with the framework's
+message in `errors`.
+
+The name that appears in the message is the attribute's, not the property's: that is why the `Cpf` field
+produces `Field.Invalid;Document`, the default of `DocumentValidationAttribute`. To align the two, pass the
+`propertyName`:
+
+```csharp
+[DocumentValidation("CPF", propertyName: "Cpf")]
+public string Cpf { get; set; } = null!;
+```
+
+### Reading the ModelState errors in the action
+
+Without `[ApiController]`, ASP.NET Core does not check the ModelState before the action, and the action does it.
+In a controller with the attribute this check never runs: the framework answers 400 first.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Tooark.AspNetCore.Extensions;
 
-[ApiController]
 [Route("people")]
 public sealed class PersonController : ControllerBase
 {
@@ -137,7 +267,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Tooark.AspNetCore.Extensions;
 
-[ApiController]
 [Route("people")]
 public sealed class PersonController(IStringLocalizer localizer) : ControllerBase
 {
@@ -146,7 +275,7 @@ public sealed class PersonController(IStringLocalizer localizer) : ControllerBas
   {
     if (!ModelState.IsValid)
     {
-      // ["The Document field is invalid", "The E-mail field is invalid"]
+      // ["Field Document is invalid", "Field Email is invalid"]
       var errors = ModelState.GetErrors().Select(error => localizer[error].Value);
 
       return BadRequest(errors);
@@ -157,52 +286,26 @@ public sealed class PersonController(IStringLocalizer localizer) : ControllerBas
 }
 ```
 
-The DTO validated by the `Tooark.Attributes` attributes:
+### A filter for controllers without `[ApiController]`
 
-```csharp
-using Tooark.Attributes;
-
-public sealed class CreatePersonDto
-{
-  [EmailValidation]
-  public string Email { get; set; } = null!;
-
-  [DocumentValidation("CPF")]
-  public string Cpf { get; set; } = null!;
-}
-```
-
-The name that appears in the message is the attribute's, not the property's: that is why the `Cpf` field
-produces `Field.Invalid;Document`, the default of `DocumentValidationAttribute`. To align the two, pass the
-`propertyName`:
-
-```csharp
-[DocumentValidation("CPF", propertyName: "Cpf")]
-public string Cpf { get; set; } = null!;
-```
-
-### A filter to avoid repeating the check
-
-The same block in every endpoint calls for a filter. While the package does not ship one, it fits in a few lines:
+The same check in every endpoint calls for a filter. The package does not ship one, because in `[ApiController]`
+controllers the validation response already does the job. For controllers without the attribute it fits in a few
+lines, and with `ResponseDto` it answers with the same body:
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Localization;
 using Tooark.AspNetCore.Extensions;
+using Tooark.Dtos;
 
-public sealed class ValidationFilter(IStringLocalizer localizer) : IActionFilter
+public sealed class ValidationFilter : IActionFilter
 {
   public void OnActionExecuting(ActionExecutingContext context)
   {
-    if (context.ModelState.IsValid)
+    if (!context.ModelState.IsValid)
     {
-      return;
+      context.Result = new BadRequestObjectResult(new ResponseDto<object>(context.ModelState.GetErrors()));
     }
-
-    var errors = context.ModelState.GetErrors().Select(error => localizer[error].Value);
-
-    context.Result = new BadRequestObjectResult(errors);
   }
 
   public void OnActionExecuted(ActionExecutedContext context) { }
@@ -217,10 +320,11 @@ builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>
 
 ## 📋 Dependencies
 
-| Package                                                                                                  | Version  | Description                |
-| -------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary`     |
+| Package                                                                                                  | Version  | Description                                        |
+| -------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------- |
+| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                              | 4.x      | `ResponseDto`, the body of the validation response |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization                         |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary` and `ApiBehaviorOptions`    |
 
 ---
 
