@@ -1,0 +1,75 @@
+name: Pages
+
+# Publica o site de documentação em https://tooark.com/nuget-tooark/. As páginas dos pacotes vêm dos READMEs
+# (docs/build.py) e a referência de API, das docs XML; nada é escrito duas vezes. Este workflow não toca a
+# publicação no NuGet: uma falha na documentação nunca segura uma release.
+#
+# O deploy por artefato precisa que o Pages use a fonte "GitHub Actions" (Settings > Pages), uma única vez. A
+# API não configura isso, e a primeira execução falha com "Pages site not found" até alguém fazer.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/README.md"
+      - "**/README.pt-BR.md"
+      - "**/*.cs"
+      - "docs/**"
+      - "Media/tooark.svg"
+      - "Directory.Build.props"
+      - ".config/dotnet-tools.json"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# id-token: write é o que permite ao deploy-pages provar que o deploy veio deste workflow. contents continua
+# somente leitura: o job publica, nunca faz commit.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez, e nunca cancelar um em andamento: um deploy cancelado pode deixar o site pela metade.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish the documentation site
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Restore
+        run: |
+          dotnet restore
+          dotnet tool restore
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      # Gera docs/_site: inglês na raiz, português em pt-BR/ e a API nos dois. Falha em qualquer aviso do DocFX
+      # (link quebrado, âncora inexistente) e quando um pacote empacotável não está nos grupos do site.
+      - name: Build the site
+        run: python3 docs/build.py
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

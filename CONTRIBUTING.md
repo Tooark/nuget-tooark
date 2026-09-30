@@ -48,6 +48,7 @@ Each package lives in its own folder and follows the same structure:
 | `Tooark/`                          | Aggregator package that references every other package but the storage and secrets providers   |
 | `Tooark.Tests/`                    | Single test project covering every package, one folder each                                    |
 | `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)                          |
+| `docs/`                            | Documentation site: `build.py` renders the READMEs with DocFX; landing pages and theme         |
 | `Media/`                           | Package icon and logo                                                                          |
 | `scripts/`                         | `check-package-pairs.sh` and `check-release-packages.sh` (run by CI), local SonarQube examples |
 | `.vscode/`                         | Editor task that renders the coverage report                                                   |
@@ -247,6 +248,16 @@ unsigned commits. A commit already made without it is fixed with
 - Release notes live in `Notes/vX.Y.Z.md`, in Portuguese, and follow the
   existing layout (summary, breaking changes, added, changed, fixed, impact,
   additional information). The file becomes the body of the GitHub Release.
+- **The documentation site** ([tooark.com/nuget-tooark](https://tooark.com/nuget-tooark/))
+  is generated from the READMEs by [`docs/build.py`](docs/build.py) with
+  DocFX, and published by [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+  on every push to `main` that touches the docs or the code. Only the landing
+  pages and the API introduction are written by hand, in `docs/en/` and
+  `docs/pt-BR/`; everything else comes from the READMEs and the XML docs, so
+  fix the README, not the site. A new package goes into `GROUPS` in
+  `docs/build.py` (`python docs/build.py --check`, also run by CI). To preview
+  locally: `dotnet tool restore`, then `python docs/build.py` (add `--no-api`
+  for a quick text review) and serve `docs/_site/`.
 
 ---
 
@@ -294,6 +305,7 @@ Before opening a PR, confirm:
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
 - [ ] Runtime-bound pins changed in pairs (`bash scripts/check-package-pairs.sh` passes)
 - [ ] A new package is in the `PACKAGES` list of `.github/workflows/tooark.yml` (`bash scripts/check-release-packages.sh` passes)
+- [ ] A new package is in `GROUPS` of `docs/build.py` (`python docs/build.py --check` passes)
 - [ ] Breaking changes are called out in the release notes with a migration note
 - [ ] Linked to at least one issue (`Closes #123`) when applicable
 

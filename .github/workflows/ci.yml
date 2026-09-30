@@ -1,7 +1,8 @@
 name: CI
 
 # Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, lista de pacotes
-# do release, build em Release (warnings são erros) e a suíte completa de testes nos dois alvos, com cobertura.
+# do release e grupos do site de documentação, build em Release (warnings são erros) e a suíte completa de
+# testes nos dois alvos, com cobertura.
 # A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main. O job
 # "build-and-test" é status check obrigatório no ruleset da branch main: um pull request vermelho não pode ser
 # mesclado.
@@ -44,6 +45,9 @@ jobs:
 
       - name: Check every packable project is in the release list
         run: bash scripts/check-release-packages.sh
+
+      - name: Check every packable project is in the documentation site
+        run: python3 docs/build.py --check
 
       - name: Build
         run: dotnet build --configuration Release --no-restore

@@ -1,0 +1,251 @@
+/* Identidade do Tooark sobre o template moderno do DocFX (Bootstrap 5.3): a paleta e a fonte do tooark.com,
+   com o âmbar como cor principal. No tema claro o link usa o âmbar escuro, porque o âmbar puro sobre branco
+   não chega ao contraste mínimo de texto. */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+:root {
+  --tk-amber: #f59e0b;
+  --tk-amber-hover: #d97706;
+  --bs-font-sans-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bs-font-monospace: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --tk-radius: 16px;
+}
+
+[data-bs-theme="light"] {
+  --bs-link-color: #b45309;
+  --bs-link-color-rgb: 180, 83, 9;
+  --bs-link-hover-color: #92400e;
+  --bs-link-hover-color-rgb: 146, 64, 14;
+  --bs-primary: #b45309;
+  --bs-primary-rgb: 180, 83, 9;
+  --tk-accent: #b45309;
+  --tk-accent-soft: #fef3c7;
+  --tk-card: #fafaf9;
+  --tk-border: #e7e5e4;
+  --tk-muted: #57534e;
+}
+
+[data-bs-theme="dark"] {
+  --bs-body-bg: #0a0a0b;
+  --bs-body-bg-rgb: 10, 10, 11;
+  --bs-body-color: #fafafa;
+  --bs-body-color-rgb: 250, 250, 250;
+  --bs-secondary-color: #a1a1aa;
+  --bs-tertiary-bg: #111113;
+  --bs-secondary-bg: #18181b;
+  --bs-border-color: #27272a;
+  --bs-link-color: #f59e0b;
+  --bs-link-color-rgb: 245, 158, 11;
+  --bs-link-hover-color: #fbbf24;
+  --bs-link-hover-color-rgb: 251, 191, 36;
+  --bs-primary: #f59e0b;
+  --bs-primary-rgb: 245, 158, 11;
+  --tk-accent: #f59e0b;
+  --tk-accent-soft: rgba(245, 158, 11, 0.12);
+  --tk-card: #18181b;
+  --tk-border: #27272a;
+  --tk-muted: #a1a1aa;
+}
+
+body {
+  font-family: var(--bs-font-sans-serif);
+}
+
+/* O logo é escuro (#282828): no tema escuro, invertido. */
+[data-bs-theme="dark"] #logo,
+[data-bs-theme="dark"] .tk-hero-logo {
+  filter: invert(1);
+}
+
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+#logo {
+  width: 32px;
+  height: 32px;
+}
+
+article h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+article h2 {
+  font-weight: 700;
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--tk-border);
+}
+
+article table {
+  font-size: 0.925rem;
+}
+
+.tk-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Página inicial */
+
+.tk-hero {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+  padding: 3.5rem 0 2rem;
+}
+
+.tk-hero h1 {
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0.25rem 0 0.75rem;
+  border: 0;
+}
+
+.tk-hero-logo {
+  flex: none;
+}
+
+.tk-eyebrow {
+  margin: 0;
+  color: var(--tk-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tk-lead {
+  max-width: 46rem;
+  color: var(--tk-muted);
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.tk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.tk-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid var(--tk-border);
+  border-radius: 10px;
+  color: var(--bs-body-color);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.tk-button:hover {
+  border-color: var(--tk-accent);
+  color: var(--bs-body-color);
+}
+
+/* Texto quase preto sobre o âmbar: contraste alto nos dois temas. */
+.tk-button-primary,
+.tk-button-primary:hover {
+  background: var(--tk-amber);
+  border-color: var(--tk-amber);
+  color: #0a0a0b;
+}
+
+.tk-button-primary:hover {
+  background: var(--tk-amber-hover);
+  border-color: var(--tk-amber-hover);
+}
+
+.tk-install {
+  max-width: 46rem;
+  margin-bottom: 1rem;
+  color: var(--tk-muted);
+}
+
+.tk-group h2 {
+  margin: 2.75rem 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.tk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.tk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  background: var(--tk-card);
+  color: var(--bs-body-color);
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.tk-card:hover,
+.tk-card:focus-visible {
+  border-color: var(--tk-accent);
+  color: var(--bs-body-color);
+  transform: translateY(-2px);
+}
+
+.tk-card-title {
+  font-family: var(--bs-font-monospace);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.tk-card-text {
+  color: var(--tk-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tk-card-text code {
+  font-size: 0.85em;
+}
+
+.tk-community {
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 576px) {
+  .tk-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding-top: 1.5rem;
+  }
+
+  .tk-hero-logo {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-card,
+  .tk-button {
+    transition: none;
+  }
+
+  .tk-card:hover,
+  .tk-card:focus-visible {
+    transform: none;
+  }
+}
