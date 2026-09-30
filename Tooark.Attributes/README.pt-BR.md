@@ -1,6 +1,6 @@
 # Tooark.Attributes
 
-Biblioteca com validadores de atributos para propriedades ou campos, integrados ao `System.ComponentModel.DataAnnotations`.
+Biblioteca com validadores de atributos para propriedades, campos ou parâmetros, integrados ao `System.ComponentModel.DataAnnotations`.
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.md) · 🇧🇷 **Português (este arquivo)**
 
@@ -124,6 +124,13 @@ Se você configurar `ErrorMessage` ou `ErrorMessageResourceName` no atributo, **
 
 **Valor ausente.** Valor nulo, vazio ou composto apenas por espaços é reportado como `Field.Required`. Ou seja, os atributos **implicam obrigatoriedade** — eles não seguem a convenção do `DataAnnotations`, em que validadores que não são `[Required]` aceitam nulo. Para um campo opcional, valide fora do atributo ou aplique-o condicionalmente.
 
+**Onde aplicar.** Os atributos valem em propriedade, campo e parâmetro, como os do `DataAnnotations`. Em um record posicional, aplique o atributo sem alvo, no parâmetro do construtor (`record Dto([EmailValidation] string Email)`). É ali que o MVC procura a validação de um record, e ele lança `InvalidOperationException` quando a encontra na propriedade gerada (`[property: EmailValidation]`). O parâmetro de uma action também aceita o atributo (`[FromQuery][EmailValidation] string email`). O `Validator.TryValidateObject` segue o caminho inverso: só lê propriedades, e ignora o atributo no parâmetro do construtor. Um record validado fora do MVC precisa do atributo na propriedade, que o MVC recusa, então o mesmo record não atende aos dois caminhos.
+
+**Obrigatoriedade implícita do ASP.NET Core.** Com `<Nullable>enable</Nullable>`, o MVC trata todo tipo de referência não anulável como se tivesse `[Required]`, com a mensagem do framework (`The Email field is required.`), que não é chave de tradução e chega ao cliente como está. Como o atributo já reporta o valor ausente, um campo não anulável ausente recebe as duas mensagens. Para ficar só com a chave do atributo, registre o `AddTooarkValidationAttributes()` do [`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md#atributos-do-tooark-na-validação-do-mvc). O MVC deixa de inferir o `[Required]` só nos membros com atributo do Tooark, e mantém a inferência nos demais e o `[Required]` declarado. Sem o `Tooark.AspNetCore`, há duas saídas manuais:
+
+- declare o campo como anulável (`[EmailValidation] string? Email`). O MVC não infere o `[Required]`, e o atributo continua recusando o valor ausente. Vale só para aquele campo; o custo é o tipo anulável no código que lê o DTO;
+- ou desligue a inferência na aplicação inteira, com `SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true` nas `MvcOptions`. Alcança todos os DTOs: um campo sem atributo do Tooark deixa de ser obrigatório até receber `[Required]` explícito.
+
 **Valores que não são texto.** O valor é convertido com `ToString()` antes da validação, então um `Uri` ou um tipo próprio com `ToString()` adequado funciona.
 
 **Tempo limite das expressões regulares.** Cada expressão regular roda com limite de 300 ms. Entrada que provoca retrocesso excessivo é **reprovada**, e não deixa a exceção subir do atributo.
@@ -216,6 +223,31 @@ public class Endereco
 {
   [ZipCodeValidation]
   public string Cep { get; set; } = null!;
+}
+```
+
+### Records e parâmetros de action
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.Attributes;
+
+// Record posicional: o atributo vai no parâmetro do construtor, sem alvo
+public sealed record CriarContatoDto(
+  [EmailValidation] string Email,
+  [DocumentValidation("CPF")] string Cpf
+);
+
+[ApiController]
+[Route("contatos")]
+public sealed class ContatoController : ControllerBase
+{
+  [HttpPost]
+  public IActionResult Criar([FromBody] CriarContatoDto dto) => Ok();
+
+  // Parâmetro de action validado direto pelo atributo
+  [HttpGet]
+  public IActionResult Buscar([FromQuery][EmailValidation] string email) => Ok();
 }
 ```
 

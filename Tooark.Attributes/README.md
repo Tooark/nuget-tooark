@@ -1,6 +1,6 @@
 # Tooark.Attributes
 
-Library with attribute validators for properties or fields, integrated with `System.ComponentModel.DataAnnotations`.
+Library with attribute validators for properties, fields or parameters, integrated with `System.ComponentModel.DataAnnotations`.
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.pt-BR.md)
 
@@ -124,6 +124,13 @@ If you configure `ErrorMessage` or `ErrorMessageResourceName` on the attribute, 
 
 **Missing value.** A null, empty or whitespace-only value is reported as `Field.Required`. In other words, the attributes **imply being required** — they do not follow the `DataAnnotations` convention, in which validators other than `[Required]` accept null. For an optional field, validate outside the attribute or apply it conditionally.
 
+**Where to apply.** The attributes are valid on properties, fields and parameters, like the `DataAnnotations` ones. On a positional record, apply the attribute with no target, on the constructor parameter (`record Dto([EmailValidation] string Email)`). That is where MVC looks for a record's validation, and it throws `InvalidOperationException` when it finds it on the generated property (`[property: EmailValidation]`). An action parameter also accepts the attribute (`[FromQuery][EmailValidation] string email`). `Validator.TryValidateObject` goes the other way: it only reads properties, and ignores the attribute on the constructor parameter. A record validated outside MVC needs the attribute on the property, which MVC rejects, so the same record cannot serve both paths.
+
+**ASP.NET Core implicit required.** With `<Nullable>enable</Nullable>`, MVC treats every non-nullable reference type as if it had `[Required]`, with the framework's message (`The Email field is required.`), which is not a translation key and reaches the client as is. Since the attribute already reports the missing value, a missing non-nullable field gets both messages. To keep only the attribute's key, register `AddTooarkValidationAttributes()` from [`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.md#tooark-attributes-in-mvc-validation). MVC stops inferring `[Required]` only on members with a Tooark attribute, and keeps the inference on the others and the declared `[Required]`. Without `Tooark.AspNetCore`, there are two manual ways out:
+
+- declare the field as nullable (`[EmailValidation] string? Email`). MVC does not infer `[Required]`, and the attribute still rejects the missing value. It applies to that field only; the cost is the nullable type in the code that reads the DTO;
+- or turn the inference off for the whole application, with `SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true` in `MvcOptions`. It reaches every DTO: a field without a Tooark attribute is no longer required until it gets an explicit `[Required]`.
+
 **Non-text values.** The value is converted with `ToString()` before validation, so a `Uri` or a custom type with a suitable `ToString()` works.
 
 **Regular expression timeout.** Every regular expression runs with a 300 ms limit. Input that causes excessive backtracking is **rejected**, and the exception does not escape the attribute.
@@ -216,6 +223,31 @@ public class Address
 {
   [ZipCodeValidation]
   public string ZipCode { get; set; } = null!;
+}
+```
+
+### Records and action parameters
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.Attributes;
+
+// Positional record: the attribute goes on the constructor parameter, with no target
+public sealed record CreateContactDto(
+  [EmailValidation] string Email,
+  [DocumentValidation("CPF")] string Cpf
+);
+
+[ApiController]
+[Route("contacts")]
+public sealed class ContactController : ControllerBase
+{
+  [HttpPost]
+  public IActionResult Create([FromBody] CreateContactDto dto) => Ok();
+
+  // Action parameter validated directly by the attribute
+  [HttpGet]
+  public IActionResult Find([FromQuery][EmailValidation] string email) => Ok();
 }
 ```
 

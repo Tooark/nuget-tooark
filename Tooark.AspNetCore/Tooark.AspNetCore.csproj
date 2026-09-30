@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Tooark.Attributes\Tooark.Attributes.csproj" />
     <ProjectReference Include="..\Tooark.Dtos\Tooark.Dtos.csproj" />
     <ProjectReference Include="..\Tooark.Extensions\Tooark.Extensions.csproj" />
   </ItemGroup>
