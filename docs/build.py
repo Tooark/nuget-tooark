@@ -254,6 +254,12 @@ def summary(package, lang):
     return sentence
 
 
+def breakable(name):
+    """Ponto de quebra depois de cada ponto: um nome longo (Tooark.Mediator.EntityFrameworkCore) quebra entre os
+    segmentos, em vez de vazar do cartão."""
+    return name.replace(".", ".<wbr>")
+
+
 def inline_html(markdown):
     out = html.escape(markdown, quote=False)
     out = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", out)
@@ -265,7 +271,7 @@ def cards(lang):
     for names, packages in GROUPS:
         items = "\n".join(
             f'<a class="tk-card" href="packages/{page(package)}">'
-            f'<span class="tk-card-title">{package}</span>'
+            f'<span class="tk-card-title">{breakable(package)}</span>'
             f'<span class="tk-card-text">{inline_html(summary(package, lang))}</span></a>'
             for package in packages
         )

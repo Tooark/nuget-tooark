@@ -223,10 +223,21 @@ article table {
   transform: translateY(-2px);
 }
 
+/* O build põe um ponto de quebra depois de cada ponto dos nomes; o overflow-wrap só entra quando nem um
+   segmento cabe na coluna. min-width: 0 deixa o item da grade encolher abaixo da largura do nome. */
+.tk-card {
+  min-width: 0;
+}
+
 .tk-card-title {
   font-family: var(--bs-font-monospace);
   font-size: 0.95rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.tk-card-text code {
+  overflow-wrap: anywhere;
 }
 
 .tk-card-text {
