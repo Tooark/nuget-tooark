@@ -20,6 +20,7 @@ O pacote `Tooark.AspNetCore` fornece:
 
 - extensões para tipos do ASP.NET Core, hoje o `ModelStateDictionary`;
 - o corpo `ResponseDto` para as falhas de validação dos controllers com `[ApiController]`, com `AddTooarkModelStateEnvelope`;
+- a validação dos atributos do `Tooark.Attributes` no MVC sem a mensagem duplicada do campo ausente, com `AddTooarkValidationAttributes`;
 - o lugar para onde o requisito de ASP.NET Core foi movido, tirando-o dos pacotes de uso geral;
 - integração com o localizador do `Tooark.Extensions`, traduzindo as chaves de erro das validações;
 - o lugar previsto para os filtros e middlewares da família.
@@ -51,14 +52,16 @@ dotnet add package Tooark.AspNetCore
 ```
 
 `GetErrors` é um método de extensão e funciona sem configuração. A [resposta de validação](#resposta-de-validação)
-é a única peça com registro, e ela é **opcional**: muda o corpo de toda falha de validação da API, então nem o
-pacote nem o `AddTooarkService` do agregador `Tooark` a ligam por conta própria.
+e a [validação dos atributos](#atributos-do-tooark-na-validação-do-mvc) têm registro, e os dois são
+**opcionais**: nem o pacote nem o `AddTooarkService` do agregador `Tooark` os ligam por conta própria. A resposta
+muda o corpo de toda falha de validação da API, e a validação dos atributos muda as mensagens de um campo ausente.
 
 ```csharp
 using Tooark.AspNetCore.Injections;
 
 builder.Services.AddControllers();
 builder.Services.AddTooarkModelStateEnvelope();
+builder.Services.AddTooarkValidationAttributes();
 ```
 
 > **Requisito de runtime**: por declarar o framework compartilhado, quem consome este pacote precisa do
@@ -131,6 +134,38 @@ using Tooark.Dtos;
 [assembly: ProducesErrorResponseType(typeof(ResponseDto<object>))]
 ```
 
+### Atributos do Tooark na validação do MVC
+
+- `TooarkDependencyInjection.AddTooarkValidationAttributes(IServiceCollection)`: faz o MVC deixar de inferir
+  `[Required]` nos membros validados por um atributo do
+  [`Tooark.Attributes`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Attributes).
+
+Com `<Nullable>enable</Nullable>`, o MVC trata todo tipo de referência não anulável como se tivesse `[Required]`,
+com a mensagem do framework (`The Email field is required.`), que não é chave de tradução. Os atributos do
+`Tooark.Attributes` já reportam o valor ausente com a chave `Field.Required`, então, sem o registro, um campo
+ausente recebe as duas mensagens. Com o registro, fica só a chave do atributo:
+
+| Membro ausente                             | Sem o registro                                          | Com o registro                |
+| ------------------------------------------ | ------------------------------------------------------- | ----------------------------- |
+| `[EmailValidation] string Email`           | `The Email field is required.` e `Field.Required;Email` | `Field.Required;Email`        |
+| `string Nome`, sem atributo do Tooark      | `The Nome field is required.`                           | `The Nome field is required.` |
+| `[Required][EmailValidation] string Email` | as duas mensagens                                       | as duas mensagens             |
+
+**O alcance é o dos atributos do Tooark.** O `[Required]` inferido só sai de um membro que tem atributo do
+Tooark. Um `[Required]` declarado no membro fica, porque é escolha de quem escreveu o DTO, e os membros sem
+atributo do Tooark mantêm a inferência. Essa é a diferença para o
+`SuppressImplicitRequiredAttributeForNonNullableReferenceTypes`, que desliga a inferência em todos os DTOs da
+aplicação. O membro continua marcado como obrigatório nos metadados do MVC, o que é verdade: o atributo recusa o
+valor ausente.
+
+**A ordem do registro não importa.** O provedor que infere o `[Required]` entra nas opções do MVC com o
+`AddControllers`. O registro é aplicado depois de todas as configurações (`PostConfigure`), então roda depois
+desse provedor, chamado antes ou depois do `AddControllers`. Chamá-lo duas vezes não repete o registro.
+
+**Onde se aplica.** Na validação do MVC: record posicional, classe e parâmetro de action, em controllers com ou
+sem `[ApiController]` e com ou sem o [envelope](#resposta-de-validação). As minimal APIs não passam pelas opções
+do MVC.
+
 ### Integração com as validações
 
 As mensagens devolvidas são o que os atributos do
@@ -142,6 +177,10 @@ pelo fluxo de execução da requisição.
 Erros que o próprio model binding gera — um inteiro recebendo texto, por exemplo — vêm com a mensagem do
 framework, e não com uma chave. O localizador devolve esse texto inalterado e sinaliza
 `ResourceNotFound`, o que permite distinguir os dois casos quando isso importa.
+
+Um campo não anulável ausente pode trazer as duas mensagens: a chave `Field.Required` do atributo e o `[Required]`
+que o MVC infere, com o texto do framework. O `AddTooarkValidationAttributes` deixa só a chave: veja
+[Atributos do Tooark na validação do MVC](#atributos-do-tooark-na-validação-do-mvc).
 
 ### Filtros e middlewares
 
@@ -155,7 +194,7 @@ separados não reduziria nada.
 
 ### Namespaces
 
-As extensões ficam em `Tooark.AspNetCore.Extensions`, e o registro em `Tooark.AspNetCore.Injections`.
+As extensões ficam em `Tooark.AspNetCore.Extensions`, e os registros em `Tooark.AspNetCore.Injections`.
 
 ---
 
@@ -223,6 +262,39 @@ O nome que aparece na mensagem é o do atributo, não o da propriedade: por isso
 [DocumentValidation("CPF", propertyName: "Cpf")]
 public string Cpf { get; set; } = null!;
 ```
+
+### Exemplo de campo ausente sem a mensagem do framework
+
+```csharp
+using Tooark.AspNetCore.Injections;
+
+builder.Services.AddControllers();
+builder.Services.AddTooarkModelStateEnvelope();
+builder.Services.AddTooarkValidationAttributes();
+```
+
+Um record posicional, com o atributo no parâmetro do construtor:
+
+```csharp
+using Tooark.Attributes;
+
+public sealed record CriarContatoDto([EmailValidation] string Email, string Nome);
+```
+
+`POST /contatos` com `{"nome": "Ana"}`, em `pt-BR`:
+
+```json
+{
+  "data": null,
+  "errors": ["O campo E-mail é obrigatório"],
+  "pagination": null,
+  "metadata": []
+}
+```
+
+Sem o `AddTooarkValidationAttributes`, `errors` traria também `"The Email field is required."`.
+Com `{"email": "ana@teste.com"}`, o `Nome` ausente responde `"The Nome field is required."`: o campo não tem
+atributo do Tooark, e a inferência do MVC continua valendo para ele.
 
 ### Exemplo de leitura dos erros do ModelState na action
 
@@ -321,11 +393,12 @@ builder.Services.AddControllers(options => options.Filters.Add<ValidacaoFilter>(
 
 ## 📋 Dependências
 
-| Pacote                                                                                                          | Versão   | Descrição                                       |
-| --------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- |
-| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                                     | 4.x      | `ResponseDto`, o corpo da resposta de validação |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro               |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `ModelStateDictionary` e `ApiBehaviorOptions`   |
+| Pacote                                                                                                          | Versão   | Descrição                                                      |
+| --------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
+| [`Tooark.Attributes`](https://www.nuget.org/packages/Tooark.Attributes)                                         | 4.x      | Os atributos reconhecidos pelo `AddTooarkValidationAttributes` |
+| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                                     | 4.x      | `ResponseDto`, o corpo da resposta de validação                |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro                              |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `ModelStateDictionary`, `ApiBehaviorOptions` e `MvcOptions`    |
 
 ---
 
