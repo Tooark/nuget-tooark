@@ -40,6 +40,10 @@ body:
         - Tooark.Notifications
         - Tooark.Observability
         - Tooark.Sanitizers
+        - Tooark.Secrets
+        - Tooark.Secrets.Aws
+        - Tooark.Secrets.Gcp
+        - Tooark.Secrets.Vault
         - Tooark.Securities
         - Tooark.Securities.OpenId
         - Tooark.Storage

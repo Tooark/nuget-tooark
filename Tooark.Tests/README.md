@@ -17,8 +17,8 @@ Test suite of every Tooark package. It is not published to nuget.org (`IsPackabl
 ## Overview
 
 A single project covers every package, with one folder per package. It references the `Tooark`
-aggregator, `Tooark.AspNetCore` and the storage providers, which the aggregator does not bring, so it reaches
-the whole public surface without one reference per package.
+aggregator, `Tooark.AspNetCore` and the storage and secrets providers, which the aggregator does not bring, so
+it reaches the whole public surface without one reference per package.
 
 The tests run on the repository's **two targets**, `net8.0` and `net10.0`. A test that passes on one
 and fails on the other points to a behavior difference between the runtimes, not to a flaky test.
@@ -135,6 +135,7 @@ One folder per package, mirroring the structure of the package under test:
 | `Notifications/` | `Tooark.Notifications`                                                            |
 | `Observability/` | `Tooark.Observability`                                                            |
 | `Sanitizers/`    | `Tooark.Sanitizers`                                                               |
+| `Secrets/`       | `Tooark.Secrets`, `.Aws` (`Aws/`), `.Gcp` (`Gcp/`) and `.Vault` (`Vault/`)        |
 | `Securities/`    | `Tooark.Securities` and `Tooark.Securities.OpenId` (`OpenId/`)                    |
 | `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) and `Tooark.Storage.Gcp` (`Gcp/`) |
 | `Utils/`         | `Tooark.Utils`                                                                    |

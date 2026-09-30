@@ -7,6 +7,10 @@
   <!-- Pacotes independentes da versão do runtime (mesma versão em todos os TFMs). Atualizados pelo Dependabot. -->
   <ItemGroup>
     <PackageVersion Include="AWSSDK.S3" Version="4.0.103.4" />
+    <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.100.14" />
+    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104" />
+    <PackageVersion Include="Google.Cloud.ParameterManager.V1" Version="1.1.0" />
+    <PackageVersion Include="Google.Cloud.SecretManager.V1" Version="2.8.0" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.13" />
