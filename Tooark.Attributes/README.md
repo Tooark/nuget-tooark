@@ -4,23 +4,37 @@ Library with attribute validators for properties, fields or parameters, integrat
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.pt-BR.md)
 
-## Installation
+---
+
+## 📑 Contents
+
+- [Installation](#-installation)
+- [Validation Attributes](#-validation-attributes)
+  - [DocumentValidationAttribute](#1-document-validation)
+  - [EmailValidationAttribute](#2-email-validation)
+  - [LinkVideoValidationAttribute](#3-video-link-validation)
+  - [PasswordValidationAttribute](#4-password-validation)
+  - [UrlValidationAttribute](#5-url-validation)
+  - [ZipCodeValidationAttribute](#6-zip-code-validation)
+- [Common behavior](#-common-behavior)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
+
+---
+
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Attributes
 ```
 
-## Contents
+---
 
-- [DocumentValidationAttribute](#1-document-validation)
-- [EmailValidationAttribute](#2-email-validation)
-- [LinkVideoValidationAttribute](#3-video-link-validation)
-- [PasswordValidationAttribute](#4-password-validation)
-- [UrlValidationAttribute](#5-url-validation)
-- [ZipCodeValidationAttribute](#6-zip-code-validation)
-- [Common behavior](#common-behavior)
-
-## Validation Attributes
+## ✅ Validation Attributes
 
 Every attribute accepts `propertyName`, which sets the field name used in the error message.
 
@@ -107,7 +121,9 @@ Validates whether the value is a valid zip code.
 
 [**Usage Example**](#zip-code-validation)
 
-## Common behavior
+---
+
+## 🧠 Common behavior
 
 Every attribute inherits from `TooarkValidationAttribute` and shares the rules below.
 
@@ -137,7 +153,9 @@ If you configure `ErrorMessage` or `ErrorMessageResourceName` on the attribute, 
 
 **Configuration error.** An impossible configuration — unknown document type, video link with no provider — throws `InternalServerErrorException` on the first validation. It is not a failure of the data but of the attribute applied in code; the keys are in `Tooark.Attributes.Messages.AttributeErrorMessages`.
 
-## Usage Example
+---
+
+## 📝 Usage Examples
 
 ### Document Validation
 
@@ -268,16 +286,49 @@ foreach (var result in results)
 }
 ```
 
-## Dependencies
+---
+
+## 📋 Dependencies
 
 - [`Tooark.Enums`](https://www.nuget.org/packages/Tooark.Enums)
 - [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
 - [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 
-## Contributing
+---
 
-Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/issues) repository.
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the development
+workflow, the coding and commit conventions and the pull request checklist. Bugs and feature requests go through
+the [issue templates](https://github.com/Tooark/nuget-tooark/issues/new/choose) of the
+[Tooark](https://github.com/Tooark/nuget-tooark) repository.
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
+
+## 📄 License
+
+This project is licensed under the [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

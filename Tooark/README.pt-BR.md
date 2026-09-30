@@ -4,7 +4,21 @@ Biblioteca com todos os recursos e funcionalidades do Tooark voltadas para proje
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Instalação
+---
+
+## 📑 Conteúdo
+
+- [Instalação](#-instalação)
+- [Configuração](#️-configuração)
+- [Recursos disponíveis](#-recursos-disponíveis)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
+
+---
+
+## 🔧 Instalação
 
 ```bash
 dotnet add package Tooark
@@ -17,7 +31,9 @@ A exceção são os provedores de storage e de segredos (`Tooark.Storage.Aws`, `
 `Tooark.Secrets.Aws`, `Tooark.Secrets.Gcp` e `Tooark.Secrets.Vault`): o agregador traz só as abstrações do
 `Tooark.Storage` e do `Tooark.Secrets`, e a aplicação instala o provedor que usa.
 
-## Configuração
+---
+
+## ⚙️ Configuração
 
 As traduções acompanham o assembly, então não há nada a configurar para elas funcionarem.
 
@@ -115,7 +131,9 @@ IConfiguration configuration = new ConfigurationBuilder()
 services.AddTooarkService(configuration);
 ```
 
-## Recursos disponíveis
+---
+
+## ✨ Recursos disponíveis
 
 ### [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.pt-BR.md)
 
@@ -197,10 +215,41 @@ Descrição: Este pacote fornece funcionalidades de validação para dados e ent
 
 Descrição: Este pacote define objetos de valor utilizados na aplicação.
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

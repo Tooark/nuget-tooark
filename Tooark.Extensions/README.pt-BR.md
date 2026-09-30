@@ -4,13 +4,36 @@ Biblioteca para gerenciar extensões e utilitários, facilitando o desenvolvimen
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Instalação
+---
+
+## 📑 Conteúdo
+
+- [Instalação](#-instalação)
+- [Configuração](#️-configuração)
+- [Extensões](#-extensões)
+  - [EnumerableExtensions](#1-extensão-de-enumeráveis)
+  - [AddJsonStringLocalizer](#2-configuração-do-jsonstringlocalizer-extensão-localiza-string-dentro-de-json)
+  - [JsonStringLocalizerExtensions](#3-extensão-localiza-string-dentro-de-json-extensão-para-istringlocalizer)
+  - [StringExtensions](#4-extensões-de-string)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Catálogo de mensagens](#-catálogo-de-mensagens)
+- [Dependências](#-dependências)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
+
+---
+
+## 🔧 Instalação
 
 ```bash
 dotnet add package Tooark.Extensions
 ```
 
-## Configuração
+---
+
+## ⚙️ Configuração
 
 Os arquivos de idioma acompanham o assembly, então **não há nada a configurar** para as traduções
 funcionarem — nem em aplicação, nem em contêiner, nem em publicação single-file.
@@ -25,15 +48,9 @@ using Tooark.Extensions.Injections;
 services.AddTooarkExtensions();
 ```
 
-## Conteúdo
+---
 
-- [EnumerableExtensions](#1-extensão-de-enumeráveis)
-- [AddJsonStringLocalizer](#2-configuração-do-jsonstringlocalizer-extensão-localiza-string-dentro-de-json)
-- [JsonStringLocalizerExtensions](#3-extensão-localiza-string-dentro-de-json-extensão-para-istringlocalizer)
-- [StringExtensions](#4-extensões-de-string)
-- [Catálogo de mensagens](#catálogo-de-mensagens)
-
-## Extensões
+## 🧩 Extensões
 
 As extensões disponíveis são:
 
@@ -93,7 +110,9 @@ Extensões para manipulação de strings.
 
 [**Exemplos de Uso**](#extensões-de-string)
 
-## Exemplos de Uso
+---
+
+## 📝 Exemplos de Uso
 
 ### Extensão de Enumeráveis
 
@@ -265,7 +284,9 @@ string value = "hello-world";
 string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 ```
 
-## Catálogo de mensagens
+---
+
+## 🌐 Catálogo de mensagens
 
 Os arquivos de recurso cobrem **todas as mensagens emitidas pelos pacotes Tooark**: validações, atributos,
 exceções, notificações, mediador, unidade de trabalho, criptografia, JWT, OpenID Connect, observabilidade,
@@ -311,7 +332,9 @@ pode acrescentar chaves próprias. As traduções são lidas uma vez por idioma,
 
 O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo identifica o que vem do pacote.
 
-## Dependências
+---
+
+## 📋 Dependências
 
 | Dependência                                                                                             | Versão   | Uso                                          |
 | ------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
@@ -324,10 +347,41 @@ O arquivo do consumidor **não** leva o `.default` no nome — esse sufixo ident
 > [`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore), e este pacote voltou a
 > ser de uso geral: funciona em console, worker e função serverless sem o runtime do ASP.NET Core instalado.
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

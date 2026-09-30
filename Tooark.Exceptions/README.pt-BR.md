@@ -4,27 +4,25 @@ Biblioteca que fornece exceções padronizadas para projetos .NET, com mapeament
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Conteúdo
+---
 
-- [Instalação](#instalação)
-- [Visão Geral](#visão-geral)
-- [Recursos Suportados](#recursos-suportados)
-- [Mensagens de Erro](#mensagens-de-erro)
-- [Exceções Disponíveis](#exceções-disponíveis)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+## 📑 Conteúdo
 
-## Instalação
+- [Visão Geral](#-visão-geral)
+- [Instalação](#-instalação)
+- [Recursos Suportados](#-recursos-suportados)
+- [Mensagens de Erro](#-mensagens-de-erro)
+- [Exceções Disponíveis](#-exceções-disponíveis)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
 
-```bash
-dotnet add package Tooark.Exceptions
-```
+---
 
-O pacote não tem configuração nem registro no container: as exceções são lançadas e capturadas diretamente.
-
-## Visão Geral
+## 📖 Visão Geral
 
 Todas as exceções específicas do pacote herdam de `TooarkException`, que por sua vez herda de `Exception`.
 A classe base é **abstrata** e seus construtores são **protegidos** — ela não é instanciada diretamente, e
@@ -45,7 +43,19 @@ Duas garantias valem para qualquer construtor:
   de produzir uma exceção que se diz de erro mas não carrega erro algum. As duas leituras andam juntas: a
   mesma posição descreve o mesmo erro em ambas.
 
-## Recursos Suportados
+---
+
+## 🔧 Instalação
+
+```bash
+dotnet add package Tooark.Exceptions
+```
+
+O pacote não tem configuração nem registro no container: as exceções são lançadas e capturadas diretamente.
+
+---
+
+## ✨ Recursos Suportados
 
 As classes de exceção suportam os seguintes construtores:
 
@@ -65,7 +75,9 @@ Ao usar a formatação, o formato incompatível com os parâmetros **não** lan�
 recebida. A exceção existe para reportar o erro original, e falhar na própria apresentação trocaria o erro
 real por uma `FormatException`. Mensagens com chaves literais, como JSON, caem nesse caso.
 
-## Mensagens de Erro
+---
+
+## 💬 Mensagens de Erro
 
 A classe estática `ExceptionErrorMessages` reúne as mensagens geradas pelo próprio pacote. São chaves de
 tradução, e não textos finais.
@@ -84,7 +96,9 @@ tradução, e não textos finais.
 | `null` ou notificação sem itens          | Registra `Exceptions.ErrorsNullOrEmpty`                  |
 | Item nulo dentro da lista                | Vira `Exceptions.MessageNullEmpty` nas **duas** coleções |
 
-## Exceções Disponíveis
+---
+
+## 🚨 Exceções Disponíveis
 
 | Classe                          | Status HTTP                   |
 | ------------------------------- | ----------------------------- |
@@ -107,7 +121,9 @@ tradução, e não textos finais.
 > O parêntese indica o membro de `System.Net.HttpStatusCode`. Para o 413 o .NET mantém o nome antigo
 > `RequestEntityTooLarge`, embora o RFC 7231 chame o status de _Payload Too Large_.
 
-## Exemplos de Uso
+---
+
+## 📝 Exemplos de Uso
 
 ### 1) Mensagem simples
 
@@ -256,7 +272,9 @@ public class PaymentRequiredException : TooarkException
 
 O `catch (TooarkException ex)` do tratamento padronizado passa a capturá-la junto com as demais.
 
-## Dependências
+---
+
+## 📋 Dependências
 
 | Pacote                                                                        | Versão | Uso                                 |
 | ----------------------------------------------------------------------------- | ------ | ----------------------------------- |
@@ -265,10 +283,41 @@ O `catch (TooarkException ex)` do tratamento padronizado passa a capturá-la jun
 O pacote não depende de ASP.NET Core: o código HTTP é exposto como `System.Net.HttpStatusCode`, do próprio
 runtime, e a tradução para a resposta fica a cargo da aplicação.
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Exceptions](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

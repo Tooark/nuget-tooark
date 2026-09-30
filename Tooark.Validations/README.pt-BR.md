@@ -4,36 +4,44 @@ Biblioteca para validação de tipos e padrões, fornecendo métodos para garant
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Validations/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Conteúdo
+---
 
-- [Validação de Boolean](#1-booleano)
-- [Validação de Datas](#2-datas)
-- [Validação de Decimal](#3-decimal)
-- [Validação de Documentos](#4-documentos)
-- [Validação de Double](#5-double)
-- [Validação de Email](#6-email)
-- [Validação de Float](#7-float)
-- [Validação de Guid](#8-guid)
-- [Validação de Int](#9-int)
-- [Validação de Link de Vídeo](#10-link-de-vídeo)
-- [Validação de Listas](#11-listas)
-- [Validação de Long](#12-long)
-- [Validação de Rede (Network)](#13-rede-network)
-- [Validação de Objeto](#14-objeto)
-- [Validação de Protocolo](#15-protocolo)
-- [Validação de Regex](#16-regex)
-- [Validação de String](#17-string)
-- [Validação de TimeSpan](#18-timespan)
-- [Validação de Tipo](#19-tipos)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Métodos Disponíveis](#métodos-disponíveis)
-- [Mensagens de Erro](#mensagens-de-erro)
-- [Códigos de Erro](#códigos-de-erro)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+## 📑 Conteúdo
 
-## Instalação
+- [Instalação](#-instalação)
+- [Validações](#-validações)
+  - [Validação de Boolean](#1-booleano)
+  - [Validação de Datas](#2-datas)
+  - [Validação de Decimal](#3-decimal)
+  - [Validação de Documentos](#4-documentos)
+  - [Validação de Double](#5-double)
+  - [Validação de Email](#6-email)
+  - [Validação de Float](#7-float)
+  - [Validação de Guid](#8-guid)
+  - [Validação de Int](#9-int)
+  - [Validação de Link de Vídeo](#10-link-de-vídeo)
+  - [Validação de Listas](#11-listas)
+  - [Validação de Long](#12-long)
+  - [Validação de Rede (Network)](#13-rede-network)
+  - [Validação de Objeto](#14-objeto)
+  - [Validação de Protocolo](#15-protocolo)
+  - [Validação de Regex](#16-regex)
+  - [Validação de String](#17-string)
+  - [Validação de TimeSpan](#18-timespan)
+  - [Validação de Tipo](#19-tipos)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Métodos Disponíveis](#-métodos-disponíveis)
+- [Mensagens de Erro](#-mensagens-de-erro)
+- [Códigos de Erro](#️-códigos-de-erro)
+- [Dependências](#-dependências)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
+
+---
+
+## 🔧 Instalação
 
 ```bash
 dotnet add package Tooark.Validations
@@ -43,7 +51,9 @@ O pacote não tem configuração: `Validation` é usada por composição, criand
 verificações, ou por herança, em classes que já derivam de `Notification` — como as entidades e os value
 objects do Tooark.
 
-## Validações
+---
+
+## ✅ Validações
 
 As validações disponíveis são:
 
@@ -254,7 +264,9 @@ Validações para tipos de string.
 
 [**Exemplo de Uso**](#tipos)
 
-## Exemplos de Uso
+---
+
+## 📝 Exemplos de Uso
 
 ### Booleano
 
@@ -673,7 +685,9 @@ var validation = new Validation()
     .IsCultureIgnoreCase(value, property, "Tem que ser uma cultura ignorando case sensitive.");
 ```
 
-## Métodos Disponíveis
+---
+
+## 📚 Métodos Disponíveis
 
 A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validação, incluindo:
 
@@ -756,7 +770,9 @@ A biblioteca `Tooark.Validations` oferece uma ampla gama de métodos de validaç
 
 Para uma lista completa de métodos e suas descrições, consulte a documentação XML gerada com a biblioteca.
 
-## Mensagens de Erro
+---
+
+## 💬 Mensagens de Erro
 
 A classe estática `ValidationErrorMessages` reúne as mensagens padrão das validações. Cada método devolve uma
 **chave de tradução**, e não o texto final, no formato `Validation.{Regra};{Propriedade}` — a propriedade tem
@@ -769,7 +785,9 @@ ValidationErrorMessages.BooleanIsFalse("Ativo");   // "Validation.IsNotFalse;Ati
 As sobrecargas sem o parâmetro `message` usam essas chaves; as sobrecargas com `message` usam o texto que
 você informar, sem passar por elas.
 
-## Códigos de Erro
+---
+
+## ⚠️ Códigos de Erro
 
 Cada notificação carrega um código que identifica a família da validação. Os códigos em uso:
 
@@ -798,16 +816,49 @@ Duas observações importantes para quem filtra notificações por código:
 - **`T.VLD.DOC1` cobre somente os documentos com dígito verificador**: `IsCpf`, `IsCnpj`, `IsCpfCnpj`,
   `IsCpfRg` e `IsCpfRgCnh`. Na v3.3.4 essas validações usavam `T.VLD.RGX1`.
 
-## Dependências
+---
+
+## 📋 Dependências
 
 | Dependência                                                                   | Versão | Uso                                  |
 | ----------------------------------------------------------------------------- | ------ | ------------------------------------ |
 | [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x    | `Notification`, base de `Validation` |
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Validations](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

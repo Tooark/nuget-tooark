@@ -4,23 +4,37 @@ Biblioteca de funções utilitárias gerais que auxiliam no desenvolvimento, inc
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Utils/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Instalação
+---
+
+## 📑 Conteúdo
+
+- [Instalação](#-instalação)
+- [Utilitários](#-utilitários)
+  - [FileConvert](#1-conversão-de-arquivos-e-extração-de-extensões)
+  - [FileValid](#2-validação-de-arquivos)
+  - [GenerateString](#3-geração-de-strings)
+  - [GetInfo](#4-busca-de-informações)
+  - [Language](#5-idiomas)
+  - [Normalize](#6-normalização)
+  - [UtilErrorMessages](#7-mensagens-de-erro)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
+
+---
+
+## 🔧 Instalação
 
 ```bash
 dotnet add package Tooark.Utils
 ```
 
-## Conteúdo
+---
 
-- [FileConvert](#1-conversão-de-arquivos-e-extração-de-extensões)
-- [FileValid](#2-validação-de-arquivos)
-- [GenerateString](#3-geração-de-strings)
-- [GetInfo](#4-busca-de-informações)
-- [Language](#5-idiomas)
-- [Normalize](#6-normalização)
-- [UtilErrorMessages](#7-mensagens-de-erro)
-
-## Utilitários
+## 🧰 Utilitários
 
 Os utilitários disponíveis são:
 
@@ -167,7 +181,9 @@ Chaves de tradução das mensagens de erro geradas pelo próprio pacote, em `Too
 
 As traduções acompanham os recursos do [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions).
 
-## Exemplo de Uso
+---
+
+## 📝 Exemplos de Uso
 
 ### Conversão de Arquivos e Extração de Extensões
 
@@ -273,7 +289,9 @@ string normalizedValue = Normalize.Value("Olá Mundo!"); // OLAMUNDO
 string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 ```
 
-## Dependências
+---
+
+## 📋 Dependências
 
 - [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/) 2.x — traz o `IFormFile`
   para o `FileConvert` e o `FileValid` sem exigir o framework compartilhado `Microsoft.AspNetCore.App`, então o
@@ -282,10 +300,41 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 - [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
 - [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Utils](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

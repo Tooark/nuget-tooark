@@ -4,13 +4,36 @@ Library that manages extensions and utilities, easing the development and mainte
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.pt-BR.md)
 
-## Installation
+---
+
+## 📑 Contents
+
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Extensions](#-extensions)
+  - [EnumerableExtensions](#1-enumerable-extension)
+  - [AddJsonStringLocalizer](#2-jsonstringlocalizer-configuration-json-string-localization-extension)
+  - [JsonStringLocalizerExtensions](#3-json-string-localization-extension-extension-for-istringlocalizer)
+  - [StringExtensions](#4-string-extensions)
+- [Usage Examples](#-usage-examples)
+- [Message catalog](#-message-catalog)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
+
+---
+
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Extensions
 ```
 
-## Configuration
+---
+
+## ⚙️ Configuration
 
 The language files ship with the assembly, so **there is nothing to configure** for the translations to
 work — not in the application, not in a container, not in a single-file publish.
@@ -25,15 +48,9 @@ using Tooark.Extensions.Injections;
 services.AddTooarkExtensions();
 ```
 
-## Contents
+---
 
-- [EnumerableExtensions](#1-enumerable-extension)
-- [AddJsonStringLocalizer](#2-jsonstringlocalizer-configuration-json-string-localization-extension)
-- [JsonStringLocalizerExtensions](#3-json-string-localization-extension-extension-for-istringlocalizer)
-- [StringExtensions](#4-string-extensions)
-- [Message catalog](#message-catalog)
-
-## Extensions
+## 🧩 Extensions
 
 The available extensions are:
 
@@ -93,7 +110,9 @@ Extensions for string manipulation.
 
 [**Usage Examples**](#string-extensions)
 
-## Usage Examples
+---
+
+## 📝 Usage Examples
 
 ### Enumerable Extension
 
@@ -265,7 +284,9 @@ string value = "hello-world";
 string snakeCaseValue = value.FromKebabToSnakeCase(); // hello_world
 ```
 
-## Message catalog
+---
+
+## 🌐 Message catalog
 
 The resource files cover **every message emitted by the Tooark packages**: validations, attributes,
 exceptions, notifications, mediator, unit of work, cryptography, JWT, OpenID Connect, observability,
@@ -312,7 +333,9 @@ add your own keys. The translations are read once per language, on first use.
 The consumer's file does **not** carry `.default` in its name — that suffix identifies what comes from the
 package.
 
-## Dependencies
+---
+
+## 📋 Dependencies
 
 | Dependency                                                                                              | Version  | Usage                                             |
 | ------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
@@ -326,10 +349,41 @@ package.
 > general-purpose again: it works in console, worker and serverless function without the ASP.NET Core runtime
 > installed.
 
-## Contributing
+---
 
-Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/issues) repository.
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the development
+workflow, the coding and commit conventions and the pull request checklist. Bugs and feature requests go through
+the [issue templates](https://github.com/Tooark/nuget-tooark/issues/new/choose) of the
+[Tooark](https://github.com/Tooark/nuget-tooark) repository.
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
+
+## 📄 License
+
+This project is licensed under the [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

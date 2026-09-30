@@ -4,36 +4,44 @@ Library for validating types and patterns, providing methods that ensure data in
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Validations/README.pt-BR.md)
 
-## Contents
+---
 
-- [Boolean Validation](#1-boolean)
-- [Date Validation](#2-dates)
-- [Decimal Validation](#3-decimal)
-- [Document Validation](#4-documents)
-- [Double Validation](#5-double)
-- [Email Validation](#6-email)
-- [Float Validation](#7-float)
-- [Guid Validation](#8-guid)
-- [Int Validation](#9-int)
-- [Video Link Validation](#10-video-link)
-- [List Validation](#11-lists)
-- [Long Validation](#12-long)
-- [Network Validation](#13-network)
-- [Object Validation](#14-object)
-- [Protocol Validation](#15-protocol)
-- [Regex Validation](#16-regex)
-- [String Validation](#17-string)
-- [TimeSpan Validation](#18-timespan)
-- [Type Validation](#19-types)
-- [Usage Examples](#usage-examples)
-- [Available Methods](#available-methods)
-- [Error Messages](#error-messages)
-- [Error Codes](#error-codes)
-- [Dependencies](#dependencies)
-- [Contributing](#contributing)
-- [License](#license)
+## 📑 Contents
 
-## Installation
+- [Installation](#-installation)
+- [Validations](#-validations)
+  - [Boolean Validation](#1-boolean)
+  - [Date Validation](#2-dates)
+  - [Decimal Validation](#3-decimal)
+  - [Document Validation](#4-documents)
+  - [Double Validation](#5-double)
+  - [Email Validation](#6-email)
+  - [Float Validation](#7-float)
+  - [Guid Validation](#8-guid)
+  - [Int Validation](#9-int)
+  - [Video Link Validation](#10-video-link)
+  - [List Validation](#11-lists)
+  - [Long Validation](#12-long)
+  - [Network Validation](#13-network)
+  - [Object Validation](#14-object)
+  - [Protocol Validation](#15-protocol)
+  - [Regex Validation](#16-regex)
+  - [String Validation](#17-string)
+  - [TimeSpan Validation](#18-timespan)
+  - [Type Validation](#19-types)
+- [Usage Examples](#-usage-examples)
+- [Available Methods](#-available-methods)
+- [Error Messages](#-error-messages)
+- [Error Codes](#️-error-codes)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
+
+---
+
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Validations
@@ -43,7 +51,9 @@ The package has no configuration: `Validation` is used by composition, creating 
 checks, or by inheritance, in classes that already derive from `Notification` — such as the Tooark entities
 and value objects.
 
-## Validations
+---
+
+## ✅ Validations
 
 The available validations are:
 
@@ -254,7 +264,9 @@ Validations for string types.
 
 [**Usage Example**](#types)
 
-## Usage Examples
+---
+
+## 📝 Usage Examples
 
 ### Boolean
 
@@ -673,7 +685,9 @@ var validation = new Validation()
     .IsCultureIgnoreCase(value, property, "Must be a culture, ignoring case.");
 ```
 
-## Available Methods
+---
+
+## 📚 Available Methods
 
 The `Tooark.Validations` library offers a wide range of validation methods, including:
 
@@ -756,7 +770,9 @@ The `Tooark.Validations` library offers a wide range of validation methods, incl
 
 For the full list of methods and their descriptions, see the XML documentation generated with the library.
 
-## Error Messages
+---
+
+## 💬 Error Messages
 
 The static class `ValidationErrorMessages` gathers the default validation messages. Each method returns a
 **translation key**, not the final text, in the `Validation.{Rule};{Property}` format — the property has its
@@ -769,7 +785,9 @@ ValidationErrorMessages.BooleanIsFalse("Active");   // "Validation.IsNotFalse;Ac
 The overloads without the `message` parameter use those keys; the overloads with `message` use the text you
 provide, without going through them.
 
-## Error Codes
+---
+
+## ⚠️ Error Codes
 
 Every notification carries a code that identifies the validation family. The codes in use:
 
@@ -798,16 +816,49 @@ Two important notes for whoever filters notifications by code:
 - **`T.VLD.DOC1` covers only the documents with check digits**: `IsCpf`, `IsCnpj`, `IsCpfCnpj`, `IsCpfRg`
   and `IsCpfRgCnh`. In v3.3.4 those validations used `T.VLD.RGX1`.
 
-## Dependencies
+---
+
+## 📋 Dependencies
 
 | Dependency                                                                    | Version | Usage                                |
 | ----------------------------------------------------------------------------- | ------- | ------------------------------------ |
 | [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications) | 4.x     | `Notification`, base of `Validation` |
 
-## Contributing
+---
 
-Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Validations](https://github.com/Tooark/nuget-tooark/issues) repository.
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the development
+workflow, the coding and commit conventions and the pull request checklist. Bugs and feature requests go through
+the [issue templates](https://github.com/Tooark/nuget-tooark/issues/new/choose) of the
+[Tooark](https://github.com/Tooark/nuget-tooark) repository.
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
+
+## 📄 License
+
+This project is licensed under the [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

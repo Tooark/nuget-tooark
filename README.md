@@ -17,20 +17,21 @@ observability, mediator and more — each one a package, all released together.
 
 ---
 
-## Table of contents
+## 📑 Table of contents
 
-- [About](#about)
-- [Installation](#installation)
-- [Packages](#packages)
-- [Documentation](#documentation)
-- [Local development](#local-development)
-- [Support](#support)
-- [Contributing](#contributing)
-- [License](#license)
+- [About](#-about)
+- [Installation](#-installation)
+- [Packages](#-packages)
+- [Documentation](#-documentation)
+- [Local development](#-local-development)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
 
 ---
 
-## About
+## 📖 About
 
 Tooark is a library for .NET projects, offering a collection of modular packages that make it easier to build
 robust and scalable applications. Each package targets a specific need — validations, notifications, value
@@ -43,7 +44,7 @@ to the [Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
 
 ---
 
-## Installation
+## 🔧 Installation
 
 Everything at once, through the aggregator:
 
@@ -56,7 +57,7 @@ each package lives in its own folder of this repository, together with its READM
 
 ---
 
-## Packages
+## 📦 Packages
 
 | Package                               | Version                                                                                                                                            | Downloads                                                                                                                                           | Individual Install                                       |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -89,7 +90,7 @@ each package lives in its own folder of this repository, together with its READM
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 - **Per package** — every package folder has a `README.md` in English (the same file shown on the NuGet page)
   and a `README.pt-BR.md` in Portuguese, e.g.
@@ -104,7 +105,7 @@ each package lives in its own folder of this repository, together with its READM
 
 ---
 
-## Local development
+## 💻 Local development
 
 ### Prerequisites
 
@@ -213,9 +214,34 @@ frameworks, new behavior covered by tests, new message keys translated in the th
 
 ---
 
-## Support
+## 🤝 Contributing
 
-Choose the channel by what you need:
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the repository
+layout, the development workflow, the coding and commit conventions, the DCO sign-off and the release process.
+
+Quick notes:
+
+- Read the package's README before opening a PR — each one documents its options, behavior and error codes
+- Follow the code style in [`.editorconfig`](https://github.com/Tooark/nuget-tooark/blob/main/.editorconfig):
+  `dotnet format --verify-no-changes` must pass
+- Run the `Release` build and the tests on both target frameworks locally before submitting changes
+- Sign off every commit (`git commit -s`) — a CI check enforces it
+
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md) (Contributor Covenant 2.1).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel and the
+  response targets
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+Shortcuts to each channel:
 
 | I want to…                          | Go to                                                                                                                                                                                                     |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -224,22 +250,20 @@ Choose the channel by what you need:
 | Ask a **question**                  | [Start a discussion in Q&A](https://github.com/Tooark/nuget-tooark/discussions/new?category=q-a) after searching the [existing ones](https://github.com/Tooark/nuget-tooark/discussions)                  |
 | Report a **security vulnerability** | **Not** an issue — use the [private security advisory](https://github.com/Tooark/nuget-tooark/security/advisories/new), see [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md) |
 
-Response targets and other contact channels are in
-[`SUPPORT.md`](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md).
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please read
-[`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) (how to propose changes,
-coding and commit conventions, PR checklist) and the
-[`CODE_OF_CONDUCT.md`](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md) (Contributor
-Covenant 2.1) before opening a pull request.
-
----
-
-## License
+## 📄 License
 
 This project is licensed under the
 [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE). See the `LICENSE` file for

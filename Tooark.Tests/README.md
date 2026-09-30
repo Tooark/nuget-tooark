@@ -4,9 +4,11 @@ Test suite of every Tooark package. It is not published to nuget.org (`IsPackabl
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Tests/README.pt-BR.md)
 
-## Contents
+---
 
-- [Overview](#overview)
+## 📑 Contents
+
+- [Overview](#-overview)
 - [Running](#️-running)
 - [Coverage](#-coverage)
 - [Organization](#-organization)
@@ -14,7 +16,9 @@ Test suite of every Tooark package. It is not published to nuget.org (`IsPackabl
 - [Shared Resources](#-shared-resources)
 - [Tests Sensitive to Global State](#️-tests-sensitive-to-global-state)
 
-## Overview
+---
+
+## 📖 Overview
 
 A single project covers every package, with one folder per package. It references the `Tooark`
 aggregator, `Tooark.AspNetCore` and the storage and secrets providers, which the aggregator does not bring, so
@@ -116,6 +120,8 @@ CI runs the same collection on every pull request, uploads the Cobertura files a
 
 100% of lines, branches and methods on the reviewed packages. Where that was not possible, the reason
 is recorded in the release notes, under `Notes/`.
+
+---
 
 ## 📁 Organization
 

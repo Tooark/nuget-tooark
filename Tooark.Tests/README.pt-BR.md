@@ -4,9 +4,11 @@ Suíte de testes de todos os pacotes Tooark. Não é publicada no nuget.org (`Is
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Tests/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Conteúdo
+---
 
-- [Visão Geral](#visão-geral)
+## 📑 Conteúdo
+
+- [Visão Geral](#-visão-geral)
 - [Executando](#️-executando)
 - [Cobertura](#-cobertura)
 - [Organização](#-organização)
@@ -14,7 +16,9 @@ Suíte de testes de todos os pacotes Tooark. Não é publicada no nuget.org (`Is
 - [Recursos Compartilhados](#-recursos-compartilhados)
 - [Testes Sensíveis a Estado Global](#️-testes-sensíveis-a-estado-global)
 
-## Visão Geral
+---
+
+## 📖 Visão Geral
 
 Um único projeto cobre todos os pacotes, com uma pasta por pacote. Ele referencia o agregador
 `Tooark`, o `Tooark.AspNetCore` e os provedores de storage e de segredos, que o agregador não traz, então
@@ -117,6 +121,8 @@ artefato `coverage` e escreve o resumo na página do job.
 
 100% de linhas, branches e métodos nos pacotes revisados. Onde não foi possível, o motivo fica
 registrado nas notas da versão, em `Notes/`.
+
+---
 
 ## 📁 Organização
 
