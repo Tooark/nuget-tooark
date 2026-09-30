@@ -8,6 +8,8 @@ The model, the common options and the conversion of names into keys are in the
 [`Tooark.Secrets` README](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.md). This README covers
 what is specific to Google Cloud.
 
+📖 **Docs:** [Tooark.Secrets.Gcp on the site](https://tooark.com/nuget-tooark/packages/tooark.secrets.gcp.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets.Gcp/README.pt-BR.md)
 
 ---

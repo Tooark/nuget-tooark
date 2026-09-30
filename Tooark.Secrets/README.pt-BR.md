@@ -12,6 +12,8 @@ O pacote **não tem SDK de nuvem**: cada cofre fica no próprio pacote.
 | [`Tooark.Secrets.Gcp`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Secrets.Gcp)     | Google Secret Manager     | Google Parameter Manager | Application Default Credentials |
 | [`Tooark.Secrets.Vault`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Secrets.Vault) | KV v2 do Vault ou OpenBao | o mesmo KV               | Token, AppRole ou Kubernetes    |
 
+📖 **Documentação:** [Tooark.Secrets no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.secrets.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

@@ -2,6 +2,8 @@
 
 Library with the base contracts of the Mediator pattern for .NET projects, used by implementations such as `Tooark.Mediator`.
 
+📖 **Docs:** [Tooark.Mediator.Abstractions on the site](https://tooark.com/nuget-tooark/packages/tooark.mediator.abstractions.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.Abstractions/README.pt-BR.md)
 
 ---

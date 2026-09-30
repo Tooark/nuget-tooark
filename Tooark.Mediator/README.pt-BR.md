@@ -2,6 +2,8 @@
 
 Biblioteca com implementação de Mediator para projetos .NET, focada em CQRS/CQS com baixo acoplamento entre camadas.
 
+📖 **Documentação:** [Tooark.Mediator no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.mediator.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

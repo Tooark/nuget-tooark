@@ -2,6 +2,8 @@
 
 Library for managing and maintaining base DTOs in .NET projects.
 
+📖 **Docs:** [Tooark.Dtos on the site](https://tooark.com/nuget-tooark/packages/tooark.dtos.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Dtos/README.pt-BR.md)
 
 ---

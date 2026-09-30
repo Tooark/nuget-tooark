@@ -11,6 +11,8 @@ O modelo, as opções comuns e a conversão de nomes em chaves estão no
 [README do `Tooark.Secrets`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.pt-BR.md). Este
 README trata do que é próprio do Vault.
 
+📖 **Documentação:** [Tooark.Secrets.Vault no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.secrets.vault.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets.Vault/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

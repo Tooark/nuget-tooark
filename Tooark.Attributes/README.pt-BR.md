@@ -2,6 +2,8 @@
 
 Biblioteca com validadores de atributos para propriedades, campos ou parâmetros, integrados ao `System.ComponentModel.DataAnnotations`.
 
+📖 **Documentação:** [Tooark.Attributes no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.attributes.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

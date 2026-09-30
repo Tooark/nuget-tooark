@@ -2,6 +2,8 @@
 
 Library that moves Entity Framework Core persistence into the `Tooark.Mediator` pipeline, keeping handlers free of `SaveChanges`.
 
+📖 **Docs:** [Tooark.Mediator.EntityFrameworkCore on the site](https://tooark.com/nuget-tooark/packages/tooark.mediator.entityframeworkcore.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Mediator.EntityFrameworkCore/README.pt-BR.md)
 
 ---

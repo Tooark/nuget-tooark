@@ -10,6 +10,8 @@ HTML is not sanitized by hand-written code: the service wraps
 tags and event attributes make the bypass surface too large. The URL and wysiwyg JSON rules are the package's own,
 small and tested against the known bypasses.
 
+📖 **Docs:** [Tooark.Sanitizers on the site](https://tooark.com/nuget-tooark/packages/tooark.sanitizers.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.pt-BR.md)
 
 ---

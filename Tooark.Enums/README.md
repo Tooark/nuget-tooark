@@ -2,6 +2,8 @@
 
 Library that provides validated enumerated types, standardizing them for .NET projects. Includes methods to convert and validate enumerated values.
 
+📖 **Docs:** [Tooark.Enums on the site](https://tooark.com/nuget-tooark/packages/tooark.enums.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.pt-BR.md)
 
 ---

@@ -2,6 +2,8 @@
 
 Biblioteca de segurança para aplicações .NET, fornecendo serviços de **criptografia AES** e **autenticação JWT** com suporte a múltiplos algoritmos, além da configuração do **Data Protection** do ASP.NET Core.
 
+📖 **Documentação:** [Tooark.Securities no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.securities.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

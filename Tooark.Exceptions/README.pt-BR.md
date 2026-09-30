@@ -2,6 +2,8 @@
 
 Biblioteca que fornece exceções padronizadas para projetos .NET, com mapeamento para status HTTP e suporte a múltiplas formas de construção de mensagens de erro.
 
+📖 **Documentação:** [Tooark.Exceptions no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.exceptions.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

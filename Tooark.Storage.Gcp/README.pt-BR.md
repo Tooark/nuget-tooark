@@ -8,6 +8,8 @@ O contrato, as opções comuns e os erros compartilhados estão no
 [README do `Tooark.Storage`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage/README.pt-BR.md). Este
 README trata do que é próprio do Google Cloud.
 
+📖 **Documentação:** [Tooark.Storage.Gcp no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.storage.gcp.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage.Gcp/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

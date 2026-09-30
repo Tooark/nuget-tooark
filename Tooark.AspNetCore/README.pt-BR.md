@@ -2,6 +2,8 @@
 
 Biblioteca que concentra o que o Tooark tem de específico de ASP.NET Core, mantendo os pacotes de uso geral livres do requisito de runtime. Os pacotes cujo propósito é integrar com o ASP.NET Core (`Tooark.Dtos`, `Tooark.Observability`, `Tooark.Securities.OpenId`) declaram o framework compartilhado por conta própria.
 
+📖 **Documentação:** [Tooark.AspNetCore no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.aspnetcore.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---
