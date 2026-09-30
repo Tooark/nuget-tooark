@@ -8,6 +8,8 @@ The contract, the common options and the shared errors are in the
 [`Tooark.Storage` README](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage/README.md). This README covers
 what is specific to AWS.
 
+📖 **Docs:** [Tooark.Storage.Aws on the site](https://tooark.com/nuget-tooark/packages/tooark.storage.aws.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage.Aws/README.pt-BR.md)
 
 ---

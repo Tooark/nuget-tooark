@@ -13,6 +13,8 @@
 Blocos modulares para aplicações .NET: validações, objetos de valor, notificações, segurança,
 observabilidade, mediator e mais — cada um em um pacote, todos lançados juntos.
 
+📖 **Documentação:** [tooark.com/nuget-tooark/pt-BR](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html) · [Notas de release](https://github.com/Tooark/nuget-tooark/tree/main/Notes)
+
 🌍 **Idiomas:** [![USA Flag](https://flagcdn.com/w20/us.png) English](https://github.com/Tooark/nuget-tooark/blob/main/README.md) · ![Brazil Flag](https://flagcdn.com/w20/br.png) **Português (este arquivo)**
 
 ---

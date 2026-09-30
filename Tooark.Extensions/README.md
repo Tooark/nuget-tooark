@@ -2,6 +2,8 @@
 
 Library that manages extensions and utilities, easing the development and maintenance of .NET projects.
 
+📖 **Docs:** [Tooark.Extensions on the site](https://tooark.com/nuget-tooark/packages/tooark.extensions.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.pt-BR.md)
 
 ---

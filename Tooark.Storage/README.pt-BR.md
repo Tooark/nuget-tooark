@@ -12,6 +12,8 @@ da nuvem que usa.
 
 O Azure Blob Storage está previsto como `Tooark.Storage.Azure`.
 
+📖 **Documentação:** [Tooark.Storage no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.storage.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

@@ -2,6 +2,8 @@
 
 Library of value objects that validate themselves on construction, for .NET projects.
 
+📖 **Docs:** [Tooark.ValueObjects on the site](https://tooark.com/nuget-tooark/packages/tooark.valueobjects.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.ValueObjects/README.pt-BR.md)
 
 ---

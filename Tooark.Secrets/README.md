@@ -12,6 +12,8 @@ The package has **no cloud SDK**: each store lives in its own package.
 | [`Tooark.Secrets.Gcp`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Secrets.Gcp)     | Google Secret Manager  | Google Parameter Manager | Application Default Credentials |
 | [`Tooark.Secrets.Vault`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Secrets.Vault) | Vault or OpenBao KV v2 | the same KV              | Token, AppRole or Kubernetes    |
 
+📖 **Docs:** [Tooark.Secrets on the site](https://tooark.com/nuget-tooark/packages/tooark.secrets.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.pt-BR.md)
 
 ---

@@ -10,6 +10,8 @@ verification of its own: that territory belongs to OpenIddict, Duende and Keyclo
 **configuration standard**: `code` flow with PKCE, token validation and claim mapping that are the same across
 every project.
 
+📖 **Docs:** [Tooark.Securities.OpenId on the site](https://tooark.com/nuget-tooark/packages/tooark.securities.openid.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.pt-BR.md)
 
 ---

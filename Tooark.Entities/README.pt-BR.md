@@ -2,6 +2,8 @@
 
 Biblioteca com entidades base para aplicações .NET, incluindo suporte a identificadores únicos, auditoria, controle de versão e exclusão lógica.
 
+📖 **Documentação:** [Tooark.Entities no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.entities.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

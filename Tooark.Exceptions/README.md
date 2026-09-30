@@ -2,6 +2,8 @@
 
 Library that provides standardized exceptions for .NET projects, mapped to HTTP status codes and supporting several ways to build error messages.
 
+📖 **Docs:** [Tooark.Exceptions on the site](https://tooark.com/nuget-tooark/packages/tooark.exceptions.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.pt-BR.md)
 
 ---

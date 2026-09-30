@@ -231,6 +231,10 @@ unsigned commits. A commit already made without it is fixed with
   READMEs use emoji flags (`🇺🇸`/`🇧🇷`) because NuGet does not render images
   from arbitrary domains; the root README follows the family style with flag
   images.
+- **Docs line just above it** (`📖 **Docs:**` / `📖 **Documentação:**`),
+  pointing to the package page on the site, to all packages and to the API
+  reference, in the README's language. `docs/build.py` drops both lines from
+  the site pages.
 - **Links between Markdown files are absolute GitHub URLs**
   (`https://github.com/Tooark/nuget-tooark/blob/main/...`), never relative:
   a package README is published on NuGet, where a relative link has nothing to

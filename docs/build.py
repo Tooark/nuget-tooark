@@ -193,7 +193,9 @@ def clean(lines):
 def package_page(package, lang):
     text = (ROOT / package / LANGS[lang]["readme"]).read_text(encoding="utf-8")
     preamble, secs = sections(text.split("\n"))
-    preamble = [l for l in preamble if not l.startswith(("🌍 **Languages:**", "🌍 **Idiomas:**"))]
+    # O seletor de idioma e o link para o próprio site só fazem sentido no GitHub e no NuGet.
+    preamble = [l for l in preamble if not l.startswith(
+        ("🌍 **Languages:**", "🌍 **Idiomas:**", "📖 **Docs:**", "📖 **Documentação:**"))]
     body = list(preamble)
     for title, lines in secs:
         if split_title(title) in DROP_SECTIONS:

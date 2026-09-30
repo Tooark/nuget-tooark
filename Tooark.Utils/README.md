@@ -2,6 +2,8 @@
 
 Library of general utility functions that help development, including methods for handling strings, files, languages and localized lists.
 
+📖 **Docs:** [Tooark.Utils on the site](https://tooark.com/nuget-tooark/packages/tooark.utils.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Utils/README.pt-BR.md)
 
 ---

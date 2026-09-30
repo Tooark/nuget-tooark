@@ -2,6 +2,8 @@
 
 Library with base entities for .NET applications, including support for unique identifiers, auditing, versioning and soft delete.
 
+📖 **Docs:** [Tooark.Entities on the site](https://tooark.com/nuget-tooark/packages/tooark.entities.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities/README.pt-BR.md)
 
 ---

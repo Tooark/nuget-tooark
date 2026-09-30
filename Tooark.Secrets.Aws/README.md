@@ -8,6 +8,8 @@ The model, the common options and the conversion of names into keys are in the
 [`Tooark.Secrets` README](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.md). This README covers
 what is specific to AWS.
 
+📖 **Docs:** [Tooark.Secrets.Aws on the site](https://tooark.com/nuget-tooark/packages/tooark.secrets.aws.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets.Aws/README.pt-BR.md)
 
 ---

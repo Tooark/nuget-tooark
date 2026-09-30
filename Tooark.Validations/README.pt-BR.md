@@ -2,6 +2,8 @@
 
 Biblioteca para validação de tipos e padrões, fornecendo métodos para garantir a integridade e conformidade dos dados para projetos .NET.
 
+📖 **Documentação:** [Tooark.Validations no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.validations.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Validations/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

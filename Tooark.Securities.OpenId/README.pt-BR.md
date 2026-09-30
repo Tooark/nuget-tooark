@@ -9,6 +9,8 @@ implementa nenhum fluxo do protocolo. Não há SDK de provedor, servidor de auto
 verificação PKCE própria: esse território é do OpenIddict, Duende e Keycloak. O valor está no **padrão de
 configuração**: fluxo `code` com PKCE, validação de token e mapeamento de claims iguais em todos os projetos.
 
+📖 **Documentação:** [Tooark.Securities.OpenId no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.securities.openid.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

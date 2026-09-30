@@ -2,6 +2,8 @@
 
 Library with every Tooark resource and feature aimed at .NET projects.
 
+📖 **Docs:** [Tooark on the site](https://tooark.com/nuget-tooark/packages/tooark.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.pt-BR.md)
 
 ---

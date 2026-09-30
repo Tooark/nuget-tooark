@@ -2,6 +2,8 @@
 
 Biblioteca para criação e gerenciamento de notificações e alertas, facilitando a comunicação e monitoramento para projetos .NET.
 
+📖 **Documentação:** [Tooark.Notifications no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.notifications.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Notifications/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

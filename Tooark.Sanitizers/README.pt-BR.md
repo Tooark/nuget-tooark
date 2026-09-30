@@ -10,6 +10,8 @@ O HTML não é sanitizado por código próprio: o serviço embrulha o
 atributos de evento dão uma superfície de bypass grande demais. As regras de URL e do JSON do wysiwyg são próprias,
 pequenas e testadas contra os bypasses conhecidos.
 
+📖 **Documentação:** [Tooark.Sanitizers no site](https://tooark.com/nuget-tooark/pt-BR/packages/tooark.sanitizers.html) · [Todos os pacotes](https://tooark.com/nuget-tooark/pt-BR/) · [Referência da API](https://tooark.com/nuget-tooark/pt-BR/api/index.html)
+
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.md) · 🇧🇷 **Português (este arquivo)**
 
 ---

@@ -2,6 +2,8 @@
 
 Observability library for .NET applications, providing a simplified integration with **OpenTelemetry** to collect **traces**, **metrics** and **logs**, configured through `appsettings.json` with sensible defaults.
 
+📖 **Docs:** [Tooark.Observability on the site](https://tooark.com/nuget-tooark/packages/tooark.observability.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
+
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md)
 
 ---
