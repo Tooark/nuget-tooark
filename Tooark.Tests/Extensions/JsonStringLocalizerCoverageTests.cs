@@ -132,6 +132,10 @@ public class JsonStringLocalizerCoverageTests
   [InlineData("Options.DataProtection.KeyStorageNotConfigured")]
   [InlineData("Options.DataProtection.KeyCallbacksIncomplete")]
   [InlineData("Options.DataProtection.KeyStorageAmbiguous")]
+  [InlineData("Options.Sanitizers.SchemeInvalid;java script")]
+  [InlineData("Options.Sanitizers.SchemeNotAllowed;javascript")]
+  [InlineData("Options.Sanitizers.Html.TagNotAllowed;script")]
+  [InlineData("Options.Sanitizers.Html.AttributeNotAllowed;onclick")]
   [InlineData("Invalid.Parameter;null")]
   [InlineData("Record.Deleted")]
   public void LocalizedString_ShouldBeTranslatedInEveryLanguage(string chave)

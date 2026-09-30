@@ -33,6 +33,7 @@ body:
         - Tooark.Mediator / Abstractions / EntityFrameworkCore
         - Tooark.Notifications
         - Tooark.Observability
+        - Tooark.Sanitizers
         - Tooark.Securities
         - Tooark.Securities.OpenId
         - Tooark.Utils

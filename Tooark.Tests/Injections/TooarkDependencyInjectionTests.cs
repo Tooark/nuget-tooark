@@ -12,6 +12,7 @@ using Tooark.Mediator.Handlers;
 using Tooark.Mediator.Injections;
 using Tooark.Mediator.Options;
 using Tooark.Observability.Options;
+using Tooark.Sanitizers.Interfaces;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
 
@@ -108,6 +109,30 @@ public class TooarkDependencyInjectionTests
 
     var dtoLocalizer = serviceProvider.GetService<IStringLocalizer<Dto>>();
     Assert.NotNull(dtoLocalizer);
+  }
+
+  // Testa se o método AddTooarkService registra os sanitizadores, com ou sem configuração
+  [Fact]
+  public void AddTooarkService_ShouldRegisterSanitizers()
+  {
+    // Arrange
+    var configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?> { ["Sanitizers:Url:AllowRelative"] = "true" })
+      .Build();
+    var semConfiguracao = new ServiceCollection();
+    var comConfiguracao = new ServiceCollection();
+
+    // Act
+    semConfiguracao.AddTooarkService(configuration: null);
+    comConfiguracao.AddTooarkService(configuration);
+    using var providerSem = semConfiguracao.BuildServiceProvider();
+    using var providerCom = comConfiguracao.BuildServiceProvider();
+
+    // Assert
+    Assert.NotNull(providerSem.GetService<IHtmlSanitizerService>());
+    Assert.NotNull(providerSem.GetService<IWysiwygSanitizerService>());
+    Assert.False(providerSem.GetRequiredService<IUrlSanitizerService>().IsSafe("/pagina"));
+    Assert.True(providerCom.GetRequiredService<IUrlSanitizerService>().IsSafe("/pagina"));
   }
 
   // Testa se o método AddTooarkService não registra Securities quando configuration é null

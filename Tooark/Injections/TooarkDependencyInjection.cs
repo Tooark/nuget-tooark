@@ -7,6 +7,7 @@ using Tooark.Extensions.Injections;
 using Tooark.Mediator.Injections;
 using Tooark.Observability.Injections;
 using Tooark.Observability.Options;
+using Tooark.Sanitizers.Injections;
 using Tooark.Securities.Injections;
 using Tooark.Securities.Options;
 using Tooark.ValueObjects.Injections;
@@ -24,9 +25,9 @@ public static partial class TooarkDependencyInjection
   /// Adiciona as injeções de dependência dos projetos Tooark.
   /// </summary>
   /// <remarks>
-  /// Registra o <c>Tooark.Dtos</c>, o <c>Tooark.Extensions</c>, o <c>Tooark.ValueObjects</c> e o
-  /// <c>Tooark.Mediator</c>, e acrescenta o <c>Tooark.Securities</c> e o <c>Tooark.Observability</c>
-  /// quando as seções de configuração correspondentes existem.
+  /// Registra o <c>Tooark.Dtos</c>, o <c>Tooark.Extensions</c>, o <c>Tooark.ValueObjects</c>, o
+  /// <c>Tooark.Mediator</c> e o <c>Tooark.Sanitizers</c>, e acrescenta o <c>Tooark.Securities</c> e o
+  /// <c>Tooark.Observability</c> quando as seções de configuração correspondentes existem.
   /// <para>
   /// Sem <paramref name="assemblies"/>, os manipuladores do mediador são procurados no assembly que
   /// chamou este método. Informe os assemblies quando os manipuladores estiverem em outro projeto,
@@ -65,6 +66,16 @@ public static partial class TooarkDependencyInjection
 
     // Adiciona as injeções de dependência Mediator
     services.AddTooarkMediator(handlerAssemblies);
+
+    // Adiciona os sanitizadores, que têm padrão seguro e leem a seção Sanitizers quando ela existe
+    if (configuration is not null)
+    {
+      services.AddTooarkSanitizers(configuration);
+    }
+    else
+    {
+      services.AddTooarkSanitizers();
+    }
 
     // Verifica se as configurações para JWT Token ou Criptografia existem
     if (configuration is not null)

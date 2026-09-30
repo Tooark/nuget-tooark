@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Sanitizers</PackageId>
+    <Title>Tooark.Sanitizers</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, sanitizer, xss, html, url, wysiwyg, tiptap, security, .NET</PackageTags>
+    <Summary>HTML, URL and Tooark WYSIWYG content sanitizers for .NET projects.</Summary>
+    <PackageDescription>Package with HTML, URL and Tooark WYSIWYG (Tiptap JSON) sanitizers for .NET applications, configured through options and registered with dependency injection.</PackageDescription>
+    <Description>Library that sanitizes HTML with an allowlist on top of HtmlSanitizer, URLs with a scheme allowlist, and the Tiptap JSON content of the @tooark/wysiwyg component with the same rules it applies in the browser.</Description>
+    <!--
+      Pacote novo na v4.7.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
+      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
+    -->
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlSanitizer" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+</Project>
