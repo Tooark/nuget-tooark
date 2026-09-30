@@ -55,6 +55,7 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 - [ ] Links between Markdown files are absolute GitHub URLs (package READMEs are rendered on NuGet)
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
 - [ ] Runtime-bound dependency pins changed in pairs (8.0.x and 10.0.x) in `Directory.Packages.props` (`bash scripts/check-package-pairs.sh` passes)
+- [ ] A new package is in the `PACKAGES` list of `.github/workflows/tooark.yml` (`bash scripts/check-release-packages.sh` passes)
 
 ## Security notes
 

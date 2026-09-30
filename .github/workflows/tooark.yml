@@ -16,9 +16,11 @@ permissions:
   contents: read
 
 env:
-  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.9
+  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.10
   NUGET_SOURCE: https://api.nuget.org/v3/index.json
-  # Projetos empacotados, em ordem de dependência (o mesmo conjunto do agregador Tooark).
+  # Projetos empacotados, em ordem de dependência: o agregador Tooark, tudo o que ele referencia e os provedores
+  # de storage e de segredos, que ficam fora do agregador. Todo projeto empacotável da solução precisa estar
+  # aqui; o CI confere com scripts/check-release-packages.sh.
   PACKAGES: >-
     Tooark.Notifications
     Tooark.Validations
@@ -37,6 +39,14 @@ env:
     Tooark.Mediator.Abstractions
     Tooark.Mediator
     Tooark.Mediator.EntityFrameworkCore
+    Tooark.Sanitizers
+    Tooark.Storage
+    Tooark.Storage.Aws
+    Tooark.Storage.Gcp
+    Tooark.Secrets
+    Tooark.Secrets.Aws
+    Tooark.Secrets.Gcp
+    Tooark.Secrets.Vault
     Tooark
 
 jobs:

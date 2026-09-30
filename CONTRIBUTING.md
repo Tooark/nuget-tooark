@@ -40,17 +40,17 @@ changes, report bugs, and submit code.
 
 Each package lives in its own folder and follows the same structure:
 
-| Path                               | Purpose                                                                                      |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| `Tooark.<Package>/`                | One project per package (`Tooark.Validations`, `Tooark.Securities`, …)                       |
-| `Tooark.<Package>/README.md`       | Package docs in English, packed into the NuGet package                                       |
-| `Tooark.<Package>/README.pt-BR.md` | Package docs in Portuguese, linked from the English one                                      |
-| `Tooark/`                          | Aggregator package that references every other package but the storage and secrets providers |
-| `Tooark.Tests/`                    | Single test project covering every package, one folder each                                  |
-| `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)                        |
-| `Media/`                           | Package icon and logo                                                                        |
-| `scripts/`                         | `check-package-pairs.sh` (run by CI) and local SonarQube examples                            |
-| `.vscode/`                         | Editor task that renders the coverage report                                                 |
+| Path                               | Purpose                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `Tooark.<Package>/`                | One project per package (`Tooark.Validations`, `Tooark.Securities`, …)                         |
+| `Tooark.<Package>/README.md`       | Package docs in English, packed into the NuGet package                                         |
+| `Tooark.<Package>/README.pt-BR.md` | Package docs in Portuguese, linked from the English one                                        |
+| `Tooark/`                          | Aggregator package that references every other package but the storage and secrets providers   |
+| `Tooark.Tests/`                    | Single test project covering every package, one folder each                                    |
+| `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)                          |
+| `Media/`                           | Package icon and logo                                                                          |
+| `scripts/`                         | `check-package-pairs.sh` and `check-release-packages.sh` (run by CI), local SonarQube examples |
+| `.vscode/`                         | Editor task that renders the coverage report                                                   |
 
 Shared, repo-wide files:
 
@@ -247,6 +247,12 @@ The order matters: because the tag is created last, a run that fails while
 publishing leaves no tag behind, and the next push to `main` simply retries
 (`--skip-duplicate` skips the packages that already went through).
 
+The workflow packs only the projects in its `PACKAGES` list. A new package goes
+into that list in the same PR that creates it — otherwise it is not published,
+and whoever depends on it (the aggregator, a provider) ships with a dependency
+missing from nuget.org. `bash scripts/check-release-packages.sh` (also run by
+CI) fails when a packable project is missing from the list.
+
 Do **not** hand-create tags or releases — the workflow derives them from
 `Directory.Build.props`.
 
@@ -267,6 +273,7 @@ Before opening a PR, confirm:
 - [ ] Links between Markdown files are absolute GitHub URLs
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
 - [ ] Runtime-bound pins changed in pairs (`bash scripts/check-package-pairs.sh` passes)
+- [ ] A new package is in the `PACKAGES` list of `.github/workflows/tooark.yml` (`bash scripts/check-release-packages.sh` passes)
 - [ ] Breaking changes are called out in the release notes with a migration note
 - [ ] Linked to at least one issue (`Closes #123`) when applicable
 

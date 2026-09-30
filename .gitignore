@@ -496,6 +496,7 @@ scripts/**
 !scripts/example-run-sonarqube-local.ps1
 !scripts/example-run-sonarqube-local.sh
 !scripts/check-package-pairs.sh
+!scripts/check-release-packages.sh
 
 # Arquivo de documentação gerado pelo build
 # Sai em bin/ e obj/, que já são ignorados; a regra cobre apenas o que escapar para fora deles

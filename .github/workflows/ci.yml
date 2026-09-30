@@ -1,9 +1,10 @@
 name: CI
 
-# Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, build em Release
-# (warnings são erros) e a suíte completa de testes nos dois alvos, com cobertura. A publicação continua
-# exclusiva do workflow de release (tooark.yml), disparado no push em main. O job "build-and-test" é status
-# check obrigatório no ruleset da branch main: um pull request vermelho não pode ser mesclado.
+# Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, lista de pacotes
+# do release, build em Release (warnings são erros) e a suíte completa de testes nos dois alvos, com cobertura.
+# A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main. O job
+# "build-and-test" é status check obrigatório no ruleset da branch main: um pull request vermelho não pode ser
+# mesclado.
 on:
   pull_request:
     branches:
@@ -40,6 +41,9 @@ jobs:
 
       - name: Check runtime-bound package pins are paired
         run: bash scripts/check-package-pairs.sh
+
+      - name: Check every packable project is in the release list
+        run: bash scripts/check-release-packages.sh
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
