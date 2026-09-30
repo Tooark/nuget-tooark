@@ -261,7 +261,12 @@ unsigned commits. A commit already made without it is fixed with
   fix the README, not the site. A new package goes into `GROUPS` in
   `docs/build.py` (`python docs/build.py --check`, also run by CI). To preview
   locally: `dotnet tool restore`, then `python docs/build.py` (add `--no-api`
-  for a quick text review) and serve `docs/_site/`.
+  for a quick text review) and serve `docs/_site/`. The site runs under the
+  Content Security Policy that Cloudflare applies to tooark.com: no inline
+  script or event handler and no image from another domain (a README badge,
+  for instance). `docs/build.py` moves the template's inline script to a file
+  and fails the build when anything else breaks the policy; the icon font
+  needs `font-src 'self'`, set for `/nuget-tooark/*` on Cloudflare.
 
 ---
 

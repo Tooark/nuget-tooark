@@ -13,12 +13,14 @@ Uso:
 
 Requer o docfx do manifesto de ferramentas (dotnet tool restore).
 """
+import hashlib
 import html
 import json
 import re
 import shutil
 import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -219,10 +221,15 @@ def overview_page(lang):
             body += ["", f"## {title}", *lines]
     out = []
     for line in clean(body):
-        # Na tabela de pacotes, o nome vira link para a página do pacote.
-        m = re.match(r"^\| `(Tooark(?:\.[A-Za-z]+)*)` +\|", line)
-        if m:
-            line = line.replace(f"`{m.group(1)}`", f"[`{m.group(1)}`]({page(m.group(1))})", 1)
+        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.startswith("|") else []
+        if len(cells) == 4:
+            # Tabela de pacotes: sem as colunas de badge (img.shields.io, que a CSP do tooark.com não libera) e
+            # com o nome como link para a página do pacote.
+            name, install = cells[0], cells[3]
+            m = re.fullmatch(r"`(Tooark(?:\.[A-Za-z]+)*)`", name)
+            if m:
+                name = f"[`{m.group(1)}`]({page(m.group(1))})"
+            line = f"| {name} | {install} |"
         out.append(rewrite_links(line, lang))
     return "\n".join(out) + "\n"
 
@@ -290,10 +297,12 @@ def docfx_config(lang, with_api):
     footer = {
         "en": "Tooark · <a href=\"https://github.com/Tooark/nuget-tooark/blob/main/LICENSE\">BSD 3-Clause License</a>"
               " · <a href=\"https://www.nuget.org/profiles/Tooark\">NuGet</a>"
-              " · <a href=\"https://tooark.com\">tooark.com</a>",
+              " · <a href=\"https://tooark.com\">tooark.com</a>"
+              " · <a href=\"https://github.com/sponsors/paulosfjunior\">Sponsor</a>",
         "pt-BR": "Tooark · <a href=\"https://github.com/Tooark/nuget-tooark/blob/main/LICENSE\">Licença BSD 3-Clause</a>"
                  " · <a href=\"https://www.nuget.org/profiles/Tooark\">NuGet</a>"
-                 " · <a href=\"https://tooark.com\">tooark.com</a>",
+                 " · <a href=\"https://tooark.com\">tooark.com</a>"
+                 " · <a href=\"https://github.com/sponsors/paulosfjunior\">Sponsor</a>"
     }[lang]
     content = ["*.md", "toc.yml", "packages/*.md", "packages/toc.yml"]
     if with_api:
@@ -309,7 +318,7 @@ def docfx_config(lang, with_api):
                 "_appName": "Tooark",
                 "_appTitle": "Tooark",
                 "_appLogoPath": "images/tooark.svg",
-                "_appFaviconPath": "images/tooark.svg",
+                "_appFaviconPath": "images/favicon.svg",
                 "_appFooter": footer,
                 "_lang": lang,
                 "_enableSearch": True,
@@ -354,6 +363,7 @@ def build_lang(lang, api_dir):
                                                      encoding="utf-8")
     (work / "images").mkdir(exist_ok=True)
     shutil.copy(ROOT / "Media" / "tooark.svg", work / "images" / "tooark.svg")
+    shutil.copy(ROOT / "Media" / "favicon.svg", work / "images" / "favicon.svg")
 
     index = (work / "index.md").read_text(encoding="utf-8")
     index = index.replace("<!-- tooark:packages -->", cards(lang)).replace("<!-- tooark:version -->", version())
@@ -381,8 +391,58 @@ def build_lang(lang, api_dir):
     (work / "docfx.json").write_text(json.dumps(docfx_config(lang, bool(api_dir)), indent=2, ensure_ascii=False),
                                      encoding="utf-8")
     run("dotnet", "tool", "run", "docfx", "build", work / "docfx.json", "--warningsAsErrors")
+    fit_csp(work / "_site")
     # Os source maps do JavaScript do template só servem para depurar o próprio template: fora do site.
     shutil.copytree(work / "_site", cfg["out"], dirs_exist_ok=True, ignore=shutil.ignore_patterns("*.map"))
+
+
+INLINE_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)([^>]*)>(.*?)</script>", re.S)
+
+
+def fit_csp(site):
+    """Ajusta a saída do DocFX à CSP do tooark.com (script-src 'self', img-src 'self' data:), que o Cloudflare
+    aplica ao domínio inteiro: script inline, handler inline e imagem de outro domínio são bloqueados.
+
+    - O script inline do template (o que aplica o tema antes da pintura) vira um arquivo em public/, carregado
+      no mesmo ponto do <head>, sem async: o tema continua aplicado antes da primeira pintura.
+    - Os toc.html são do template antigo (o moderno lê o toc.json) e trazem um onkeypress inline: saem.
+    - O AnchorJS só injeta o @font-face da fonte em data: (font-src bloqueia) quando não acha um
+      <style class="anchorjs"> no <head>; um vazio é inserido, e as regras dele estão no main.css.
+    - Depois dos ajustes, o build falha se sobrar qualquer uma dessas três coisas.
+    """
+    for toc in site.rglob("toc.html"):
+        toc.unlink()
+    scripts = {}
+    for page in site.rglob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        prefix = "../" * (len(page.relative_to(site).parts) - 1)
+
+        def externalize(m):
+            body = m.group(2)
+            name = f"tk-inline-{hashlib.sha256(body.encode('utf-8')).hexdigest()[:12]}.js"
+            scripts[name] = body
+            return f'<script{m.group(1)} src="{prefix}public/{name}"></script>'
+
+        new = INLINE_SCRIPT.sub(externalize, text)
+        if "</head>" in new and 'class="anchorjs"' not in new:
+            new = new.replace("</head>", '  <style class="anchorjs"></style>\n  </head>', 1)
+        if new != text:
+            page.write_text(new, encoding="utf-8")
+    for name, body in scripts.items():
+        (site / "public" / name).write_text(textwrap.dedent(body).strip() + "\n", encoding="utf-8")
+
+    problems = []
+    for page in site.rglob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        where = page.relative_to(site).as_posix()
+        if INLINE_SCRIPT.search(text):
+            problems.append(f"{where}: script inline")
+        if re.search(r"\son[a-z]+=\"", text):
+            problems.append(f"{where}: handler inline (on...=)")
+        for src in re.findall(r"<img[^>]+src=\"(https?:[^\"]+)\"", text):
+            problems.append(f"{where}: imagem externa {src}")
+    if problems:
+        sys.exit("A saída fere a CSP do tooark.com:\n  " + "\n  ".join(problems[:30]))
 
 
 def main():

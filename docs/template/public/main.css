@@ -84,6 +84,25 @@ article table {
   font-size: 0.925rem;
 }
 
+/* O AnchorJS (ícone de link dos títulos) injeta um @font-face com a fonte em data:, que a CSP do tooark.com
+   (font-src) bloqueia. O build põe um <style class="anchorjs"> vazio no <head>, e com ele o AnchorJS pula a
+   injeção; as regras dele ficam aqui, com um "#" na fonte do texto no lugar do glifo. */
+.anchorjs-link {
+  opacity: 0;
+  text-decoration: none;
+  font: 0/0 a !important;
+}
+
+:hover > .anchorjs-link,
+.anchorjs-link:focus {
+  opacity: 1;
+}
+
+.anchorjs-link::after {
+  content: "#";
+  font: 600 1rem/1 var(--bs-font-sans-serif);
+}
+
 .tk-lang {
   display: inline-flex;
   align-items: center;
