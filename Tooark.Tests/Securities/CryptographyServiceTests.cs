@@ -438,24 +438,49 @@ public class CryptographyServiceTests
     Assert.Equal(plainText, decrypted);
   }
 
-  // Testa a descriptografia com dados adulterados
+  // Testa a descriptografia com o padding adulterado
   [Fact]
-  public void Decrypt_CBC_WithTamperedData_ShouldThrowException()
+  public void Decrypt_CBC_WithTamperedPadding_ShouldThrowException()
   {
     // Arrange
+    const int blocoAes = 16;
     var options = MEOptions.Options.Create(GetCbcOptions());
     var service = new CryptographyService(options);
-    var plainText = "Hello, World!";
+    var plainText = "Hello, World!"; // 13 bytes: um bloco, completado com três bytes 0x03 de padding
     var encrypted = service.Encrypt(plainText);
 
-    // Tamper with the encrypted data
+    // No CBC, cada byte do bloco anterior entra por XOR no byte correspondente do bloco seguinte. Inverter o último
+    // byte antes do bloco final (aqui, o último do IV) troca o último byte decifrado de 0x03 para 0xFC, um padding
+    // PKCS7 impossível, então a recusa é certa. Inverter o último byte do próprio bloco final embaralharia o bloco
+    // inteiro, e em cerca de uma vez a cada 256 ele terminaria em 0x01, um padding válido, sem exceção alguma.
     var bytes = Convert.FromBase64String(encrypted);
-    bytes[^1] ^= 0xFF; // Flip bits in the last byte
+    bytes[^(blocoAes + 1)] ^= 0xFF;
     var tampered = Convert.ToBase64String(bytes);
 
     // Act & Assert - dados adulterados retornam sempre a mesma exceção (sem distinção de causa)
     var ex = Assert.Throws<BadRequestException>(() => service.Decrypt(tampered));
     Assert.Contains("Cryptography.InvalidCipherText", ex.GetErrorMessages());
+  }
+
+  // Testa que o CBC não detecta adulteração fora do padding: ele não autentica, e por isso o padrão é o GCM
+  [Fact]
+  public void Decrypt_CBC_WithTamperedContent_ShouldNotDetectTampering()
+  {
+    // Arrange
+    var options = MEOptions.Options.Create(GetCbcOptions());
+    var service = new CryptographyService(options);
+    var encrypted = service.Encrypt("Hello, World!");
+
+    // Inverter bits no primeiro byte do IV inverte os mesmos bits no primeiro byte decifrado: H vira J
+    var bytes = Convert.FromBase64String(encrypted);
+    bytes[0] ^= (byte)('H' ^ 'J');
+    var tampered = Convert.ToBase64String(bytes);
+
+    // Act
+    var decrypted = service.Decrypt(tampered);
+
+    // Assert
+    Assert.Equal("Jello, World!", decrypted);
   }
 
   #endregion
