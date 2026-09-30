@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Storage</PackageId>
+    <Title>Tooark.Storage</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, storage, object storage, bucket, signed url, cloud, .NET</PackageTags>
+    <Summary>Cloud object storage abstractions for .NET projects.</Summary>
+    <PackageDescription>Package with the object storage abstractions shared by the Tooark storage providers: the IStorageService contract, the object DTO, the options and the base class with the common validations.</PackageDescription>
+    <Description>Library with the provider-independent object storage contract (upload, download, delete, metadata and signed URLs), without any cloud SDK. The providers live in Tooark.Storage.Aws and Tooark.Storage.Gcp.</Description>
+    <!--
+      Pacote novo na v4.7.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
+      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
+    -->
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+  </ItemGroup>
+
+</Project>

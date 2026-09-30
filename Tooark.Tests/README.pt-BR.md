@@ -17,8 +17,8 @@ Suíte de testes de todos os pacotes Tooark. Não é publicada no nuget.org (`Is
 ## Visão Geral
 
 Um único projeto cobre todos os pacotes, com uma pasta por pacote. Ele referencia o agregador
-`Tooark` e o `Tooark.AspNetCore`, então alcança toda a superfície pública sem uma referência por
-pacote.
+`Tooark`, o `Tooark.AspNetCore` e os provedores de storage, que o agregador não traz, então alcança toda a
+superfície pública sem uma referência por pacote.
 
 Os testes rodam nos **dois alvos** do repositório, `net8.0` e `net10.0`. Um teste que passe em um e
 falhe no outro indica diferença de comportamento entre os runtimes, e não um teste instável.
@@ -122,24 +122,25 @@ registrado nas notas da versão, em `Notes/`.
 
 Uma pasta por pacote, espelhando a estrutura do projeto testado:
 
-| Pasta            | Pacote testado                                               |
-| ---------------- | ------------------------------------------------------------ |
-| `AspNetCore/`    | `Tooark.AspNetCore`                                          |
-| `Attributes/`    | `Tooark.Attributes`                                          |
-| `Dtos/`          | `Tooark.Dtos`                                                |
-| `Entities/`      | `Tooark.Entities`                                            |
-| `Enums/`         | `Tooark.Enums`                                               |
-| `Exceptions/`    | `Tooark.Exceptions`                                          |
-| `Extensions/`    | `Tooark.Extensions`                                          |
-| `Injections/`    | `Tooark` (o agregador)                                       |
-| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore`  |
-| `Notifications/` | `Tooark.Notifications`                                       |
-| `Observability/` | `Tooark.Observability`                                       |
-| `Sanitizers/`    | `Tooark.Sanitizers`                                          |
-| `Securities/`    | `Tooark.Securities` e `Tooark.Securities.OpenId` (`OpenId/`) |
-| `Utils/`         | `Tooark.Utils`                                               |
-| `Validations/`   | `Tooark.Validations`                                         |
-| `ValueObjects/`  | `Tooark.ValueObjects`                                        |
+| Pasta            | Pacote testado                                                                  |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `AspNetCore/`    | `Tooark.AspNetCore`                                                             |
+| `Attributes/`    | `Tooark.Attributes`                                                             |
+| `Dtos/`          | `Tooark.Dtos`                                                                   |
+| `Entities/`      | `Tooark.Entities`                                                               |
+| `Enums/`         | `Tooark.Enums`                                                                  |
+| `Exceptions/`    | `Tooark.Exceptions`                                                             |
+| `Extensions/`    | `Tooark.Extensions`                                                             |
+| `Injections/`    | `Tooark` (o agregador)                                                          |
+| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore`                     |
+| `Notifications/` | `Tooark.Notifications`                                                          |
+| `Observability/` | `Tooark.Observability`                                                          |
+| `Sanitizers/`    | `Tooark.Sanitizers`                                                             |
+| `Securities/`    | `Tooark.Securities` e `Tooark.Securities.OpenId` (`OpenId/`)                    |
+| `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) e `Tooark.Storage.Gcp` (`Gcp/`) |
+| `Utils/`         | `Tooark.Utils`                                                                  |
+| `Validations/`   | `Tooark.Validations`                                                            |
+| `ValueObjects/`  | `Tooark.ValueObjects`                                                           |
 
 Duas pastas não contêm testes:
 

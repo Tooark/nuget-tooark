@@ -27,6 +27,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Tooark\Tooark.csproj" />
     <ProjectReference Include="..\Tooark.AspNetCore\Tooark.AspNetCore.csproj" />
+    <!-- Os provedores de storage ficam fora do agregador, que traz só as abstrações -->
+    <ProjectReference Include="..\Tooark.Storage.Aws\Tooark.Storage.Aws.csproj" />
+    <ProjectReference Include="..\Tooark.Storage.Gcp\Tooark.Storage.Gcp.csproj" />
   </ItemGroup>
 
   <ItemGroup>
