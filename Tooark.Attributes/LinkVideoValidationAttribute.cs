@@ -17,7 +17,7 @@ namespace Tooark.Attributes;
 /// <param name="youtube">Permite link do YouTube. Padrão: true.</param>
 /// <param name="vimeo">Permite link do Vimeo. Padrão: true.</param>
 /// <param name="dailymotion">Permite link do Dailymotion. Padrão: true.</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class LinkVideoValidationAttribute(
   string propertyName = "Link",
   bool youtube = true,

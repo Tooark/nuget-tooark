@@ -10,7 +10,7 @@ namespace Tooark.Attributes;
 /// Valor ausente é reportado como campo obrigatório.
 /// </remarks>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "ZipCode".</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class ZipCodeValidationAttribute(string propertyName = "ZipCode") : TooarkValidationAttribute(propertyName)
 {
   #region Methods

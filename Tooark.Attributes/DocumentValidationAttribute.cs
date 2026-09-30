@@ -22,7 +22,7 @@ namespace Tooark.Attributes;
 /// </remarks>
 /// <param name="type">Tipo de documento a ser validado.</param>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Document".</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class DocumentValidationAttribute(string type, string propertyName = "Document") : TooarkValidationAttribute(propertyName)
 {
   #region Private Fields

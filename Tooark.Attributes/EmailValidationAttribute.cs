@@ -12,7 +12,7 @@ namespace Tooark.Attributes;
 /// apenas quando houver valor, ou valide o campo fora do atributo.
 /// </remarks>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Email".</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class EmailValidationAttribute(string propertyName = "Email") : TooarkValidationAttribute(propertyName)
 {
   #region Methods
