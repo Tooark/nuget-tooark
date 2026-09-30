@@ -47,14 +47,25 @@ publicados juntos no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/
 
 ## 🔧 Instalação
 
-Tudo de uma vez, pelo agregador:
+O agregador `Tooark` traz todos os pacotes, menos os provedores de storage e de segredos:
 
 ```bash
 dotnet add package Tooark
 ```
 
+Esses provedores são instalados à parte, só o da nuvem que você usa:
+
+```bash
+dotnet add package Tooark.Storage.Aws   # ou Tooark.Storage.Gcp
+dotnet add package Tooark.Secrets.Aws   # ou Tooark.Secrets.Gcp, Tooark.Secrets.Vault
+```
+
 Ou apenas o que você precisa — cada pacote pode ser instalado individualmente (veja a tabela abaixo). O código
 de cada pacote fica na sua própria pasta deste repositório, junto com o README.
+
+Instalar pelo agregador não registra tudo: o `AddTooarkService` deixa de fora a unidade de trabalho, o SSO com
+OpenID Connect, o storage e os segredos, que se configuram à parte — veja a
+[configuração do agregador](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.pt-BR.md#️-configuração).
 
 ---
 
