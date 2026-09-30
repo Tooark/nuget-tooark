@@ -44,7 +44,7 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 
 ## Checklist
 
-- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
+- [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) and are signed off (`git commit -s`)
 - [ ] `dotnet format --verify-no-changes` passes (`.editorconfig`)
 - [ ] `dotnet build --configuration Release` passes with no warnings
 - [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes on `net8.0` and `net10.0`
