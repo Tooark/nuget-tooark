@@ -11,7 +11,7 @@ namespace Tooark.Attributes;
 /// Valor ausente é reportado como campo obrigatório.
 /// </remarks>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Url".</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class UrlValidationAttribute(string propertyName = "Url") : TooarkValidationAttribute(propertyName)
 {
   #region Methods

@@ -16,7 +16,7 @@ namespace Tooark.Attributes;
 /// <param name="symbol">Exige carácter especial. Padrão: true.</param>
 /// <param name="length">Comprimento mínimo da senha. Padrão: 8. Valor não positivo assume 1.</param>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro. Padrão: "Password".</param>
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
 public class PasswordValidationAttribute(
   bool lowercase = true,
   bool uppercase = true,
