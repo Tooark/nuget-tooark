@@ -19,6 +19,7 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 - [ ] `Tooark.Notifications`
 - [ ] `Tooark.Observability`
 - [ ] `Tooark.Sanitizers`
+- [ ] `Tooark.Secrets` / `Tooark.Secrets.Aws` / `Tooark.Secrets.Gcp` / `Tooark.Secrets.Vault`
 - [ ] `Tooark.Securities`
 - [ ] `Tooark.Securities.OpenId`
 - [ ] `Tooark.Storage` / `Tooark.Storage.Aws` / `Tooark.Storage.Gcp`

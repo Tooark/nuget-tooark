@@ -13,8 +13,9 @@ dotnet add package Tooark
 O agregador traz todos os pacotes Tooark de uma vez. Instale os pacotes individualmente quando quiser
 apenas parte deles — a superfície é a mesma.
 
-A exceção são os provedores de storage (`Tooark.Storage.Aws` e `Tooark.Storage.Gcp`): o agregador traz só as
-abstrações do `Tooark.Storage`, e a aplicação instala o provedor da nuvem que usa.
+A exceção são os provedores de storage e de segredos (`Tooark.Storage.Aws`, `Tooark.Storage.Gcp`,
+`Tooark.Secrets.Aws`, `Tooark.Secrets.Gcp` e `Tooark.Secrets.Vault`): o agregador traz só as abstrações do
+`Tooark.Storage` e do `Tooark.Secrets`, e a aplicação instala o provedor que usa.
 
 ## Configuração
 
@@ -98,6 +99,22 @@ using Tooark.Storage.Aws.Injections;
 services.AddTooarkStorageAws(configuration); // lê Storage
 ```
 
+### Segredos
+
+O cofre é uma fonte de configuração, adicionada antes de a configuração chegar ao `AddTooarkService`, e o
+provedor não vem no agregador:
+
+```csharp
+using Tooark.Secrets.Aws.Injections;
+
+IConfiguration configuration = new ConfigurationBuilder()
+  .AddJsonFile("appsettings.json")
+  .AddTooarkSecretsAws() // lê Secrets do appsettings.json
+  .Build();
+
+services.AddTooarkService(configuration);
+```
+
 ## Recursos disponíveis
 
 ### [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.pt-BR.md)
@@ -151,6 +168,10 @@ Descrição: Este pacote fornece ferramentas para monitoramento e observabilidad
 ### [Tooark.Sanitizers](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.pt-BR.md)
 
 Descrição: Este pacote sanitiza HTML com lista de permissão, URLs com lista de esquemas e o conteúdo do editor `@tooark/wysiwyg`, com as mesmas regras que o componente aplica no navegador.
+
+### [Tooark.Secrets](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.pt-BR.md)
+
+Descrição: Este pacote carrega segredos e parâmetros de cofres (AWS, Google Cloud, Vault e OpenBao) na configuração e lê segredos em execução. Os provedores, `Tooark.Secrets.Aws`, `Tooark.Secrets.Gcp` e `Tooark.Secrets.Vault`, são instalados à parte.
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md)
 

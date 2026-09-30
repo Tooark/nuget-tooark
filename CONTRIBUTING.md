@@ -40,17 +40,17 @@ changes, report bugs, and submit code.
 
 Each package lives in its own folder and follows the same structure:
 
-| Path                               | Purpose                                                                          |
-| ---------------------------------- | -------------------------------------------------------------------------------- |
-| `Tooark.<Package>/`                | One project per package (`Tooark.Validations`, `Tooark.Securities`, …)           |
-| `Tooark.<Package>/README.md`       | Package docs in English, packed into the NuGet package                           |
-| `Tooark.<Package>/README.pt-BR.md` | Package docs in Portuguese, linked from the English one                          |
-| `Tooark/`                          | Aggregator package that references every other package but the storage providers |
-| `Tooark.Tests/`                    | Single test project covering every package, one folder each                      |
-| `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)            |
-| `Media/`                           | Package icon and logo                                                            |
-| `scripts/`                         | `check-package-pairs.sh` (run by CI) and local SonarQube examples                |
-| `.vscode/`                         | Editor task that renders the coverage report                                     |
+| Path                               | Purpose                                                                                      |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| `Tooark.<Package>/`                | One project per package (`Tooark.Validations`, `Tooark.Securities`, …)                       |
+| `Tooark.<Package>/README.md`       | Package docs in English, packed into the NuGet package                                       |
+| `Tooark.<Package>/README.pt-BR.md` | Package docs in Portuguese, linked from the English one                                      |
+| `Tooark/`                          | Aggregator package that references every other package but the storage and secrets providers |
+| `Tooark.Tests/`                    | Single test project covering every package, one folder each                                  |
+| `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)                        |
+| `Media/`                           | Package icon and logo                                                                        |
+| `scripts/`                         | `check-package-pairs.sh` (run by CI) and local SonarQube examples                            |
+| `.vscode/`                         | Editor task that renders the coverage report                                                 |
 
 Shared, repo-wide files:
 

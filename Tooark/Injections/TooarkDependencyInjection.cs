@@ -42,6 +42,10 @@ public static partial class TooarkDependencyInjection
   /// O storage também fica de fora: o agregador traz só as abstrações do <c>Tooark.Storage</c>, e o provedor
   /// (<c>Tooark.Storage.Aws</c> ou <c>Tooark.Storage.Gcp</c>) é instalado e registrado pela aplicação.
   /// </para>
+  /// <para>
+  /// Os segredos também: o agregador traz só as abstrações do <c>Tooark.Secrets</c>. O cofre é uma fonte de
+  /// configuração, adicionada pela aplicação antes de a configuração chegar a este método.
+  /// </para>
   /// </remarks>
   /// <param name="services">A coleção de serviços para adicionar o serviço.</param>
   /// <param name="configuration">A configuração da aplicação.</param>

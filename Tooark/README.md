@@ -13,8 +13,9 @@ dotnet add package Tooark
 The aggregator brings every Tooark package at once. Install the packages individually when you only want
 some of them — the surface is the same.
 
-The exception is the storage providers (`Tooark.Storage.Aws` and `Tooark.Storage.Gcp`): the aggregator brings
-only the `Tooark.Storage` abstractions, and the application installs the provider of the cloud it uses.
+The exception is the storage and secrets providers (`Tooark.Storage.Aws`, `Tooark.Storage.Gcp`,
+`Tooark.Secrets.Aws`, `Tooark.Secrets.Gcp` and `Tooark.Secrets.Vault`): the aggregator brings only the
+`Tooark.Storage` and `Tooark.Secrets` abstractions, and the application installs the provider it uses.
 
 ## Configuration
 
@@ -98,6 +99,22 @@ using Tooark.Storage.Aws.Injections;
 services.AddTooarkStorageAws(configuration); // reads Storage
 ```
 
+### Secrets
+
+The store is a configuration source, added before the configuration reaches `AddTooarkService`, and the
+provider does not come with the aggregator:
+
+```csharp
+using Tooark.Secrets.Aws.Injections;
+
+IConfiguration configuration = new ConfigurationBuilder()
+  .AddJsonFile("appsettings.json")
+  .AddTooarkSecretsAws() // reads Secrets from appsettings.json
+  .Build();
+
+services.AddTooarkService(configuration);
+```
+
 ## Available features
 
 ### [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.md)
@@ -151,6 +168,10 @@ Description: This package provides tools for monitoring and observability of the
 ### [Tooark.Sanitizers](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.md)
 
 Description: This package sanitizes HTML with an allowlist, URLs with a scheme allowlist and the `@tooark/wysiwyg` editor content, with the same rules the component applies in the browser.
+
+### [Tooark.Secrets](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Secrets/README.md)
+
+Description: This package loads secrets and parameters from vaults (AWS, Google Cloud, Vault and OpenBao) into the configuration and reads secrets at runtime. The providers, `Tooark.Secrets.Aws`, `Tooark.Secrets.Gcp` and `Tooark.Secrets.Vault`, are installed separately.
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md)
 
