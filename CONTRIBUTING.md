@@ -64,8 +64,9 @@ Shared, repo-wide files:
   runner (Microsoft.Testing.Platform)
 - [`.editorconfig`](.editorconfig) — formatting rules, verified by CI with
   `dotnet format` and, for the style rules, by the build itself
-- [`.github/workflows/`](.github/workflows/) — CI on pull requests and the
-  release pipeline on `main`
+- [`.github/workflows/`](.github/workflows/) — CI on pull requests
+  (`ci.yml`), the sign-off check (`dco.yml`) and the release pipeline on
+  `main` (`tooark.yml`)
 
 ---
 
@@ -201,6 +202,21 @@ docs: documenta as novas constantes públicas nos READMEs dos pacotes
 chore(release): define a data de lançamento da v4.1.0
 ```
 
+Every commit is **signed off** ([DCO](https://developercertificate.org/)): the
+`-s` flag adds the `Signed-off-by` trailer with the name and e-mail of your Git
+configuration, certifying that you have the right to submit the change under
+the project's license:
+
+```bash
+git commit -s -m "fix(validations): corrige a mensagem padrão de IsLinkVideo"
+```
+
+The [`DCO`](.github/workflows/dco.yml) workflow checks every commit of a pull
+request for the trailer (merge commits are skipped) and fails with the list of
+unsigned commits. A commit already made without it is fixed with
+`git commit --amend -s --no-edit` (the last one) or
+`git rebase --signoff <base> && git push --force-with-lease` (a whole branch).
+
 ---
 
 ## Documentation standards
@@ -262,7 +278,7 @@ Do **not** hand-create tags or releases — the workflow derives them from
 
 Before opening a PR, confirm:
 
-- [ ] Commits follow Conventional Commits
+- [ ] Commits follow Conventional Commits and are signed off (`git commit -s`)
 - [ ] `dotnet format --verify-no-changes` passes
 - [ ] `dotnet build --configuration Release` passes with no warnings
 - [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes on both target frameworks
