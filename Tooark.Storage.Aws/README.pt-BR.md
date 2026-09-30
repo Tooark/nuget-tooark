@@ -10,7 +10,9 @@ README trata do que é próprio da AWS.
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage.Aws/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Conteúdo
+---
+
+## 📑 Conteúdo
 
 - [Instalação](#-instalação)
 - [Configuração](#️-configuração)
@@ -20,7 +22,9 @@ README trata do que é próprio da AWS.
 - [Dependências](#-dependências)
 - [Boas Práticas](#-boas-práticas)
 - [Códigos de Erro e Soluções](#️-códigos-de-erro-e-soluções)
-- [Contribuição](#-contribuição)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
 - [Licença](#-licença)
 
 ---
@@ -172,12 +176,39 @@ erros das operações estão no
 
 ---
 
-## 🪪 Contribuição
+## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório
-[Tooark](https://github.com/Tooark/nuget-tooark/issues).
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
+
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo
-[LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

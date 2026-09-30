@@ -4,6 +4,27 @@ Observability library for .NET applications, providing a simplified integration 
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md)
 
+---
+
+## 📑 Contents
+
+- [Package Contents](#-package-contents)
+- [Installation](#-installation)
+- [Configuration](#️-configuration)
+- [Configuration Options](#-configuration-options)
+- [Default Behavior](#-default-behavior)
+- [Collector Integration](#-collector-integration)
+- [Serverless Environments](#-serverless-environments)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Important Notes](#️-important-notes)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
+
+---
+
 ## 📦 Package Contents
 
 ### Configuration Classes (Options)
@@ -730,10 +751,39 @@ public class MyService
 
 ---
 
-## 🪪 Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Observability](https://github.com/Tooark/nuget-tooark/issues) repository.
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the development
+workflow, the coding and commit conventions and the pull request checklist. Bugs and feature requests go through
+the [issue templates](https://github.com/Tooark/nuget-tooark/issues/new/choose) of the
+[Tooark](https://github.com/Tooark/nuget-tooark) repository.
+
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
 
 ## 📄 License
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
+This project is licensed under the [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

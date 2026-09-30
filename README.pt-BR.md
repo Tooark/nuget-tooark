@@ -17,20 +17,21 @@ observabilidade, mediator e mais — cada um em um pacote, todos lançados junto
 
 ---
 
-## Sumário
+## 📑 Sumário
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Instalação](#instalação)
-- [Pacotes](#pacotes)
-- [Documentação](#documentação)
-- [Desenvolvimento local](#desenvolvimento-local)
-- [Suporte](#suporte)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Instalação](#-instalação)
+- [Pacotes](#-pacotes)
+- [Documentação](#-documentação)
+- [Desenvolvimento local](#-desenvolvimento-local)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
 
 ---
 
-## Sobre o Projeto
+## 📖 Sobre o Projeto
 
 Tooark é uma biblioteca voltada para projetos .NET, oferecendo uma coleção de pacotes modulares que facilitam
 o desenvolvimento de aplicações robustas e escaláveis. Cada pacote foi projetado para atender a uma necessidade
@@ -44,7 +45,7 @@ publicados juntos no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/
 
 ---
 
-## Instalação
+## 🔧 Instalação
 
 Tudo de uma vez, pelo agregador:
 
@@ -57,7 +58,7 @@ de cada pacote fica na sua própria pasta deste repositório, junto com o README
 
 ---
 
-## Pacotes
+## 📦 Pacotes
 
 | Pacote                                | Versão                                                                                                                                             | Downloads                                                                                                                                           | Instalação individual                                    |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -90,7 +91,7 @@ de cada pacote fica na sua própria pasta deste repositório, junto com o README
 
 ---
 
-## Documentação
+## 📚 Documentação
 
 - **Por pacote** — cada pasta de pacote tem um `README.md` em inglês (o mesmo arquivo exibido na página do
   NuGet) e um `README.pt-BR.md` em português, ex.:
@@ -105,7 +106,7 @@ de cada pacote fica na sua própria pasta deste repositório, junto com o README
 
 ---
 
-## Desenvolvimento local
+## 💻 Desenvolvimento local
 
 ### Pré-requisitos
 
@@ -215,9 +216,35 @@ comportamento novo coberto por testes, chaves de mensagem novas traduzidas nos t
 
 ---
 
-## Suporte
+## 🤝 Contribuindo
 
-Escolha o canal pelo que você precisa:
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o layout do
+repositório, o fluxo de desenvolvimento, as convenções de código e de commit, o sign-off DCO e o processo de
+release.
+
+Notas rápidas:
+
+- Leia o README do pacote antes de abrir um PR — cada um documenta as opções, o comportamento e os códigos de erro
+- Siga o estilo de código do [`.editorconfig`](https://github.com/Tooark/nuget-tooark/blob/main/.editorconfig):
+  o `dotnet format --verify-no-changes` precisa passar
+- Rode localmente o build `Release` e os testes nos dois alvos antes de enviar as mudanças
+- Assine todo commit com sign-off (`git commit -s`) — um check da CI exige
+
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md) (Contributor Covenant 2.1).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo e os
+  prazos de resposta
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+Atalhos para cada canal:
 
 | Quero…                           | Onde                                                                                                                                                                                                             |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -226,22 +253,20 @@ Escolha o canal pelo que você precisa:
 | Tirar uma **dúvida**             | [Abrir uma discussão em Q&A](https://github.com/Tooark/nuget-tooark/discussions/new?category=q-a) depois de procurar nas [existentes](https://github.com/Tooark/nuget-tooark/discussions)                        |
 | Reportar uma **vulnerabilidade** | **Não** abra issue — use o [advisory privado de segurança](https://github.com/Tooark/nuget-tooark/security/advisories/new), veja o [`SECURITY.md`](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md) |
 
-Prazos de resposta e outros canais de contato estão no
-[`SUPPORT.md`](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md).
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
 
 ---
 
-## Contribuição
-
-Contribuições são bem-vindas! Leia o
-[`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) (como propor mudanças,
-convenções de código e de commit, checklist de PR) e o
-[`CODE_OF_CONDUCT.md`](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md) (Contributor
-Covenant 2.1) antes de abrir um pull request.
-
----
-
-## Licença
+## 📄 Licença
 
 Este projeto está licenciado sob a
 [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE). Consulte o arquivo `LICENSE`

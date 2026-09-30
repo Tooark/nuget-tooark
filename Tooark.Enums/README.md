@@ -4,19 +4,26 @@ Library that provides validated enumerated types, standardizing them for .NET pr
 
 🌍 **Languages:** 🇺🇸 **English (this file)** · [🇧🇷 Português](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.pt-BR.md)
 
-## Contents
+---
 
-- [Installation](#installation)
-- [How they work](#how-they-work)
-- [ECloudProvider](#1-cloud-provider)
-- [EDocumentType](#2-document-type)
-- [EFileType](#3-file-type)
-- [Usage Examples](#usage-examples)
-- [Dependencies](#dependencies)
-- [Contributing](#contributing)
-- [License](#license)
+## 📑 Contents
 
-## Installation
+- [Installation](#-installation)
+- [How they work](#-how-they-work)
+- [Enumerators](#-enumerators)
+  - [ECloudProvider](#1-cloud-provider)
+  - [EDocumentType](#2-document-type)
+  - [EFileType](#3-file-type)
+- [Usage Examples](#-usage-examples)
+- [Dependencies](#-dependencies)
+- [Contributing](#-contributing)
+- [Help & Security](#-help--security)
+- [Support](#-support)
+- [License](#-license)
+
+---
+
+## 🔧 Installation
 
 ```bash
 dotnet add package Tooark.Enums
@@ -24,7 +31,9 @@ dotnet add package Tooark.Enums
 
 The package has no configuration: the enumerators are static values, used directly.
 
-## How they work
+---
+
+## 💡 How they work
 
 The three types are classes with static instances, not C# `enum`s. That lets each value carry more than a
 number — description, format pattern, validation function — at the cost of not being usable as attribute
@@ -50,7 +59,9 @@ Two rules apply to all three:
   `Invalid.Parameter;null`: there is no correct id or description to return, and returning zero would be
   making data up.
 
-## Enumerators
+---
+
+## 🔢 Enumerators
 
 ### 1. Cloud Provider
 
@@ -110,7 +121,9 @@ validations — so `new Validation().IsCpf(...)` and `EDocumentType.CPF.IsValid(
 
 [**Usage Example**](#file-type)
 
-## Usage Examples
+---
+
+## 📝 Usage Examples
 
 ### Cloud Provider
 
@@ -172,17 +185,50 @@ Console.WriteLine(fileType.ToInt());    // 2
 EFileType unknown = "spreadsheet";      // Unknown
 ```
 
-## Dependencies
+---
+
+## 📋 Dependencies
 
 | Dependency                                                                | Version | Usage                                   |
 | ------------------------------------------------------------------------- | ------- | --------------------------------------- |
 | [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations) | 4.x     | `DocumentDigit` and the format patterns |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)   | 4.x     | Null-instance conversion error          |
 
-## Contributing
+---
 
-Contributions are welcome! Feel free to open issues and pull requests in the [Tooark.Enums](https://github.com/Tooark/nuget-tooark/issues) repository.
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Start with
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — it covers the development
+workflow, the coding and commit conventions and the pull request checklist. Bugs and feature requests go through
+the [issue templates](https://github.com/Tooark/nuget-tooark/issues/new/choose) of the
+[Tooark](https://github.com/Tooark/nuget-tooark) repository.
 
-This project is licensed under the BSD 3-Clause License. See the [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) file for details.
+By participating you agree to the
+[Code of Conduct](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Help & Security
+
+- ❓ **Questions, bugs, feature ideas** — see
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) for the right channel
+- 🔒 **Security vulnerabilities** — do **not** open a public issue; follow
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Support
+
+If Tooark helps your projects, consider supporting its development:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Every contribution helps keep the project maintained and improving. Thank you! 🙏
+
+---
+
+## 📄 License
+
+This project is licensed under the [BSD 3-Clause License](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

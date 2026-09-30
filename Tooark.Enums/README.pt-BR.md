@@ -4,19 +4,26 @@ Biblioteca que fornece tipos enumerados validados, permitindo a padronização p
 
 🌍 **Idiomas:** [🇺🇸 English](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.md) · 🇧🇷 **Português (este arquivo)**
 
-## Conteúdo
+---
 
-- [Instalação](#instalação)
-- [Como funcionam](#como-funcionam)
-- [ECloudProvider](#1-provedor-de-cloud)
-- [EDocumentType](#2-tipo-de-documento)
-- [EFileType](#3-tipo-de-arquivo)
-- [Exemplos de Uso](#exemplos-de-uso)
-- [Dependências](#dependências)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
+## 📑 Conteúdo
 
-## Instalação
+- [Instalação](#-instalação)
+- [Como funcionam](#-como-funcionam)
+- [Enumeradores](#-enumeradores)
+  - [ECloudProvider](#1-provedor-de-cloud)
+  - [EDocumentType](#2-tipo-de-documento)
+  - [EFileType](#3-tipo-de-arquivo)
+- [Exemplos de Uso](#-exemplos-de-uso)
+- [Dependências](#-dependências)
+- [Contribuindo](#-contribuindo)
+- [Ajuda & Segurança](#-ajuda--segurança)
+- [Apoie](#-apoie)
+- [Licença](#-licença)
+
+---
+
+## 🔧 Instalação
 
 ```bash
 dotnet add package Tooark.Enums
@@ -24,7 +31,9 @@ dotnet add package Tooark.Enums
 
 O pacote não tem configuração: os enumeradores são valores estáticos, usados diretamente.
 
-## Como funcionam
+---
+
+## 💡 Como funcionam
 
 Os três tipos são classes com instâncias estáticas, e não `enum` do C#. Isso permite que cada valor carregue
 mais do que um número — descrição, padrão de formato, função de validação — ao custo de não poderem ser usados
@@ -49,7 +58,9 @@ Duas regras valem para os três:
   instância nula** para `int` ou `string` lança `InternalServerErrorException` com `Invalid.Parameter;null`:
   não existe id nem descrição correta para devolver, e devolver zero seria inventar um dado.
 
-## Enumeradores
+---
+
+## 🔢 Enumeradores
 
 ### 1. Provedor de Cloud
 
@@ -108,7 +119,9 @@ pacote — então `new Validation().IsCpf(...)` e `EDocumentType.CPF.IsValid(...
 
 [**Exemplo de Uso**](#tipo-de-arquivo)
 
-## Exemplos de Uso
+---
+
+## 📝 Exemplos de Uso
 
 ### Provedor de Cloud
 
@@ -170,17 +183,50 @@ Console.WriteLine(fileType.ToInt());    // 2
 EFileType desconhecido = "planilha";    // Unknown
 ```
 
-## Dependências
+---
+
+## 📋 Dependências
 
 | Dependência                                                               | Versão | Uso                                     |
 | ------------------------------------------------------------------------- | ------ | --------------------------------------- |
 | [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations) | 4.x    | `DocumentDigit` e os padrões de formato |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)   | 4.x    | Erro de conversão de instância nula     |
 
-## Contribuição
+---
 
-Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório [Tooark.Enums](https://github.com/Tooark/nuget-tooark/issues).
+## 🤝 Contribuindo
 
-## Licença
+Contribuições são bem-vindas! Comece pelo
+[CONTRIBUTING.md](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) — ele cobre o fluxo de
+desenvolvimento, as convenções de código e de commit e o checklist de pull request. Bugs e pedidos de
+funcionalidade entram pelos [templates de issue](https://github.com/Tooark/nuget-tooark/issues/new/choose) do
+repositório [Tooark](https://github.com/Tooark/nuget-tooark).
 
-Este projeto está licenciado sob a licença BSD 3-Clause. Veja o arquivo [LICENSE](https://raw.githubusercontent.com/Tooark/nuget-tooark/refs/heads/main/LICENSE) para mais detalhes.
+Ao participar, você concorda com o
+[Código de Conduta](https://github.com/Tooark/nuget-tooark/blob/main/CODE_OF_CONDUCT.md).
+
+---
+
+## 🆘 Ajuda & Segurança
+
+- ❓ **Dúvidas, bugs e ideias** — veja o
+  [SUPPORT.md](https://github.com/Tooark/nuget-tooark/blob/main/SUPPORT.md) para escolher o canal certo
+- 🔒 **Vulnerabilidades de segurança** — **não** abra issue pública; siga o
+  [SECURITY.md](https://github.com/Tooark/nuget-tooark/blob/main/SECURITY.md)
+
+---
+
+## 💖 Apoie
+
+Se o Tooark ajuda nos seus projetos, considere apoiar o desenvolvimento:
+
+- 💙 [GitHub Sponsors](https://github.com/sponsors/paulosfjunior)
+- ☕ [Ko-fi](https://ko-fi.com/paulosfjunior)
+
+Cada contribuição ajuda a manter o projeto ativo e em evolução. Obrigado! 🙏
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a [Licença BSD 3-Clause](https://github.com/Tooark/nuget-tooark/blob/main/LICENSE).

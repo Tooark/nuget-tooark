@@ -235,11 +235,15 @@ unsigned commits. A commit already made without it is fixed with
   a package README is published on NuGet, where a relative link has nothing to
   point to. Switching the language from the NuGet page opens the file on
   GitHub. Anchors within the same file (`#section`) stay relative.
-- Each package README has the same sections: contents, installation,
-  configuration (options table), examples, dependencies, best practices,
-  error codes, contribution and license. Copy the structure of a recent
-  package (`Tooark.Securities.OpenId`, `Tooark.Observability`) when creating
-  a new one.
+- Each package README has the same sections, in this order, every `##`
+  heading with its icon and a `---` between sections: 📑 contents, 📖
+  overview, 🔧 installation, ⚙️ configuration (options table), the package's
+  own sections, 📝 examples, 📋 dependencies, 🎯 best practices, ⚠️ error
+  codes, and the fixed closing block — 🤝 contributing, 🆘 help & security,
+  💖 support and 📄 license. Copy the structure of a recent package
+  (`Tooark.Securities.OpenId`, `Tooark.Storage`) when creating a new one, and
+  keep the contents list in step with the headings (anchors of headings with
+  ⚙️ or ⚠️ start with `#️-`, because of the emoji's variation selector).
 - Release notes live in `Notes/vX.Y.Z.md`, in Portuguese, and follow the
   existing layout (summary, breaking changes, added, changed, fixed, impact,
   additional information). The file becomes the body of the GitHub Release.
