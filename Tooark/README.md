@@ -13,6 +13,9 @@ dotnet add package Tooark
 The aggregator brings every Tooark package at once. Install the packages individually when you only want
 some of them — the surface is the same.
 
+The exception is the storage providers (`Tooark.Storage.Aws` and `Tooark.Storage.Gcp`): the aggregator brings
+only the `Tooark.Storage` abstractions, and the application installs the provider of the cloud it uses.
+
 ## Configuration
 
 The translations ship with the assembly, so there is nothing to configure for them to work.
@@ -84,6 +87,17 @@ services.AddTooarkEntraSso(configuration);   // reads OpenId:Entra
 services.AddTooarkGoogleSso(configuration);  // reads OpenId:Google
 ```
 
+### Storage
+
+Also stays out of `AddTooarkService`, and the provider does not come with the aggregator: install the package
+of the cloud you use and register it:
+
+```csharp
+using Tooark.Storage.Aws.Injections;
+
+services.AddTooarkStorageAws(configuration); // reads Storage
+```
+
 ## Available features
 
 ### [Tooark.Attributes](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Attributes/README.md)
@@ -145,6 +159,10 @@ Description: This package offers security features, including cryptography and a
 ### [Tooark.Securities.OpenId](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.md)
 
 Description: This package configures the native ASP.NET Core OpenID Connect handlers, with SSO presets for Microsoft Entra ID and Google.
+
+### [Tooark.Storage](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Storage/README.md)
+
+Description: This package defines the cloud object storage contract (upload, download, delete, metadata and signed URLs). The providers, `Tooark.Storage.Aws` and `Tooark.Storage.Gcp`, are installed separately.
 
 ### [Tooark.Utils](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Utils/README.md)
 

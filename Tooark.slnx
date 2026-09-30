@@ -14,6 +14,9 @@
   <Project Path="Tooark.Sanitizers/Tooark.Sanitizers.csproj" />
   <Project Path="Tooark.Securities.OpenId/Tooark.Securities.OpenId.csproj" />
   <Project Path="Tooark.Securities/Tooark.Securities.csproj" />
+  <Project Path="Tooark.Storage.Aws/Tooark.Storage.Aws.csproj" />
+  <Project Path="Tooark.Storage.Gcp/Tooark.Storage.Gcp.csproj" />
+  <Project Path="Tooark.Storage/Tooark.Storage.csproj" />
   <Project Path="Tooark.Tests/Tooark.Tests.csproj" />
   <Project Path="Tooark.Utils/Tooark.Utils.csproj" />
   <Project Path="Tooark.Validations/Tooark.Validations.csproj" />

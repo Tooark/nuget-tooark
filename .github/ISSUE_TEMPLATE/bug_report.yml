@@ -42,6 +42,9 @@ body:
         - Tooark.Sanitizers
         - Tooark.Securities
         - Tooark.Securities.OpenId
+        - Tooark.Storage
+        - Tooark.Storage.Aws
+        - Tooark.Storage.Gcp
         - Tooark.Utils
         - Tooark.Validations
         - Tooark.ValueObjects

@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Tooark.ValueObjects\Tooark.ValueObjects.csproj" />
     <ProjectReference Include="..\Tooark.Sanitizers\Tooark.Sanitizers.csproj" />
     <ProjectReference Include="..\Tooark.Securities\Tooark.Securities.csproj" />
+    <ProjectReference Include="..\Tooark.Storage\Tooark.Storage.csproj" />
     <ProjectReference Include="..\Tooark.Securities.OpenId\Tooark.Securities.OpenId.csproj" />
     <ProjectReference Include="..\Tooark.Observability\Tooark.Observability.csproj" />
     <ProjectReference Include="..\Tooark.Mediator.Abstractions\Tooark.Mediator.Abstractions.csproj" />

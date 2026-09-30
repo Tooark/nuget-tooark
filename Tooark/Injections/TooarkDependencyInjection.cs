@@ -38,6 +38,10 @@ public static partial class TooarkDependencyInjection
   /// A unidade de trabalho fica de fora, porque <c>AddTooarkMediatorUnitOfWork</c> precisa do tipo do
   /// contexto do Entity Framework. Registre-a na aplicação quando for usá-la.
   /// </para>
+  /// <para>
+  /// O storage também fica de fora: o agregador traz só as abstrações do <c>Tooark.Storage</c>, e o provedor
+  /// (<c>Tooark.Storage.Aws</c> ou <c>Tooark.Storage.Gcp</c>) é instalado e registrado pela aplicação.
+  /// </para>
   /// </remarks>
   /// <param name="services">A coleção de serviços para adicionar o serviço.</param>
   /// <param name="configuration">A configuração da aplicação.</param>
