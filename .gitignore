@@ -505,6 +505,9 @@ scripts/**
 # Documentação XML gerada na raiz dos projetos (<Projeto>/<Projeto>.xml)
 Tooark*/Tooark*.xml
 
+# Site de documentação gerado pelo docs/build.py (a área de trabalho, docs/obj/, já cai na regra de obj/)
+docs/_site/
+
 ## Report files
 **/reports/*.json
 

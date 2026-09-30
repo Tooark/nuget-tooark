@@ -103,6 +103,9 @@ OpenID Connect SSO, storage and secrets, which are set up on their own — see t
 
 ## 📚 Documentation
 
+- **Site** — [tooark.com/nuget-tooark](https://tooark.com/nuget-tooark/) brings every package guide together, with
+  search and the API reference, in English and
+  [Portuguese](https://tooark.com/nuget-tooark/pt-BR/). It is generated from the READMEs below.
 - **Per package** — every package folder has a `README.md` in English (the same file shown on the NuGet page)
   and a `README.pt-BR.md` in Portuguese, e.g.
   [`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md),

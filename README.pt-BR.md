@@ -104,6 +104,9 @@ OpenID Connect, o storage e os segredos, que se configuram à parte — veja a
 
 ## 📚 Documentação
 
+- **Site** — o [tooark.com/nuget-tooark/pt-BR](https://tooark.com/nuget-tooark/pt-BR/) reúne os guias de todos os
+  pacotes, com busca e a referência da API, em português e em [inglês](https://tooark.com/nuget-tooark/). Ele
+  é gerado a partir dos READMEs abaixo.
 - **Por pacote** — cada pasta de pacote tem um `README.md` em inglês (o mesmo arquivo exibido na página do
   NuGet) e um `README.pt-BR.md` em português, ex.:
   [`Tooark.Securities`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md),
