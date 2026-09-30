@@ -34,8 +34,8 @@ IConfiguration configuration = new ConfigurationBuilder()
 services.AddTooarkService(configuration);
 ```
 
-That single call registers `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects` and
-`Tooark.Mediator`, and adds `Tooark.Securities` and `Tooark.Observability` when the corresponding
+That single call registers `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects`, `Tooark.Mediator`
+and `Tooark.Sanitizers`, and adds `Tooark.Securities` and `Tooark.Observability` when the corresponding
 configuration sections exist.
 
 ### Where the mediator handlers are looked up
@@ -133,6 +133,10 @@ Description: This package moves Entity Framework Core persistence into the Media
 ### [Tooark.Observability](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.md)
 
 Description: This package provides tools for monitoring and observability of the application.
+
+### [Tooark.Sanitizers](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.md)
+
+Description: This package sanitizes HTML with an allowlist, URLs with a scheme allowlist and the `@tooark/wysiwyg` editor content, with the same rules the component applies in the browser.
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.md)
 

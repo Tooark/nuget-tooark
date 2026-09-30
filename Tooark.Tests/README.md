@@ -134,6 +134,7 @@ One folder per package, mirroring the structure of the package under test:
 | `Mediator/`      | `Tooark.Mediator`, `.Abstractions` and `.EntityFrameworkCore`  |
 | `Notifications/` | `Tooark.Notifications`                                         |
 | `Observability/` | `Tooark.Observability`                                         |
+| `Sanitizers/`    | `Tooark.Sanitizers`                                            |
 | `Securities/`    | `Tooark.Securities` and `Tooark.Securities.OpenId` (`OpenId/`) |
 | `Utils/`         | `Tooark.Utils`                                                 |
 | `Validations/`   | `Tooark.Validations`                                           |

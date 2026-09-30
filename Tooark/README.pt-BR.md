@@ -34,8 +34,8 @@ IConfiguration configuration = new ConfigurationBuilder()
 services.AddTooarkService(configuration);
 ```
 
-Essa única chamada registra `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects` e
-`Tooark.Mediator`, e acrescenta `Tooark.Securities` e `Tooark.Observability` quando as seções de
+Essa única chamada registra `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects`, `Tooark.Mediator`
+e `Tooark.Sanitizers`, e acrescenta `Tooark.Securities` e `Tooark.Observability` quando as seções de
 configuração correspondentes existem.
 
 ### Onde os manipuladores do mediador são procurados
@@ -133,6 +133,10 @@ Descrição: Este pacote move a persistência do Entity Framework Core para o pi
 ### [Tooark.Observability](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md)
 
 Descrição: Este pacote fornece ferramentas para monitoramento e observabilidade da aplicação.
+
+### [Tooark.Sanitizers](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.pt-BR.md)
+
+Descrição: Este pacote sanitiza HTML com lista de permissão, URLs com lista de esquemas e o conteúdo do editor `@tooark/wysiwyg`, com as mesmas regras que o componente aplica no navegador.
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md)
 

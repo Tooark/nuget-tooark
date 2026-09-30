@@ -135,6 +135,7 @@ Uma pasta por pacote, espelhando a estrutura do projeto testado:
 | `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore`  |
 | `Notifications/` | `Tooark.Notifications`                                       |
 | `Observability/` | `Tooark.Observability`                                       |
+| `Sanitizers/`    | `Tooark.Sanitizers`                                          |
 | `Securities/`    | `Tooark.Securities` e `Tooark.Securities.OpenId` (`OpenId/`) |
 | `Utils/`         | `Tooark.Utils`                                               |
 | `Validations/`   | `Tooark.Validations`                                         |

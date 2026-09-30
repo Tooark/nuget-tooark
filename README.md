@@ -34,8 +34,9 @@ observability, mediator and more — each one a package, all released together.
 
 Tooark is a library for .NET projects, offering a collection of modular packages that make it easier to build
 robust and scalable applications. Each package targets a specific need — validations, notifications, value
-objects, JWT and cryptography, OpenID Connect SSO, OpenTelemetry observability, a mediator pipeline — and can
-be installed on its own or through the `Tooark` aggregator, which references all of them.
+objects, JWT and cryptography, OpenID Connect SSO, OpenTelemetry observability, a mediator pipeline, HTML and
+URL sanitization — and can be installed on its own or through the `Tooark` aggregator, which references all of
+them.
 
 All packages target **.NET 8.0** and **.NET 10.0**, share a single version number and are published together
 to the [Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
@@ -72,6 +73,7 @@ each package lives in its own folder of this repository, together with its READM
 | `Tooark.Mediator.EntityFrameworkCore` | [![NuGet](https://img.shields.io/nuget/v/Tooark.Mediator.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Mediator.EntityFrameworkCore) | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Mediator.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Mediator.EntityFrameworkCore) | `dotnet add package Tooark.Mediator.EntityFrameworkCore` |
 | `Tooark.Notifications`                | [![NuGet](https://img.shields.io/nuget/v/Tooark.Notifications.svg)](https://nuget.org/packages/Tooark.Notifications)                               | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Notifications.svg)](https://nuget.org/packages/Tooark.Notifications)                               | `dotnet add package Tooark.Notifications`                |
 | `Tooark.Observability`                | [![NuGet](https://img.shields.io/nuget/v/Tooark.Observability.svg)](https://nuget.org/packages/Tooark.Observability)                               | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Observability.svg)](https://nuget.org/packages/Tooark.Observability)                               | `dotnet add package Tooark.Observability`                |
+| `Tooark.Sanitizers`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Sanitizers.svg)](https://nuget.org/packages/Tooark.Sanitizers)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Sanitizers.svg)](https://nuget.org/packages/Tooark.Sanitizers)                                     | `dotnet add package Tooark.Sanitizers`                   |
 | `Tooark.Securities`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Securities.svg)](https://nuget.org/packages/Tooark.Securities)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Securities.svg)](https://nuget.org/packages/Tooark.Securities)                                     | `dotnet add package Tooark.Securities`                   |
 | `Tooark.Securities.OpenId`            | [![NuGet](https://img.shields.io/nuget/v/Tooark.Securities.OpenId.svg)](https://nuget.org/packages/Tooark.Securities.OpenId)                       | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Securities.OpenId.svg)](https://nuget.org/packages/Tooark.Securities.OpenId)                       | `dotnet add package Tooark.Securities.OpenId`            |
 | `Tooark.Utils`                        | [![NuGet](https://img.shields.io/nuget/v/Tooark.Utils.svg)](https://nuget.org/packages/Tooark.Utils)                                               | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Utils.svg)](https://nuget.org/packages/Tooark.Utils)                                               | `dotnet add package Tooark.Utils`                        |

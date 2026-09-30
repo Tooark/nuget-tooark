@@ -18,6 +18,7 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 - [ ] `Tooark.Mediator` / `Tooark.Mediator.Abstractions` / `Tooark.Mediator.EntityFrameworkCore`
 - [ ] `Tooark.Notifications`
 - [ ] `Tooark.Observability`
+- [ ] `Tooark.Sanitizers`
 - [ ] `Tooark.Securities`
 - [ ] `Tooark.Securities.OpenId`
 - [ ] `Tooark.Utils`
