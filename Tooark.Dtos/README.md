@@ -248,7 +248,11 @@ return BadRequest(new ResponseDto<Person>(person.Notification, withCode: true));
 
 The ModelState failures of `[ApiController]` controllers can answer with this same body: that is what
 `AddTooarkModelStateEnvelope` does, in
-[`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.AspNetCore#validation-response).
+[`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.md#validation-response).
+With the `Tooark.Attributes` attributes on the DTOs, register
+[`AddTooarkValidationAttributes`](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.md#tooark-attributes-in-mvc-validation)
+along with it: without it, a missing field arrives with the attribute's message and with the one of the
+`[Required]` that MVC infers.
 
 ### Endpoint with a larger page
 

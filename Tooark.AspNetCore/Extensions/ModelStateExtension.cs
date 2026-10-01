@@ -15,6 +15,12 @@ public static class ModelStateExtension
   /// <c>Field.Invalid;{campo}</c>, ou <c>BadRequest</c> quando não está ligado a um campo. A mensagem da
   /// exceção não é usada: o próprio ASP.NET Core só registra o texto de uma exceção quando ele é seguro para
   /// chegar ao cliente.
+  /// <para>
+  /// As mensagens vêm como da validação que as registrou. Um campo não anulável com atributo do
+  /// <c>Tooark.Attributes</c>, quando ausente, traz a chave <c>Field.Required</c> e o texto do <c>[Required]</c>
+  /// que o MVC infere, até a aplicação registrar o
+  /// <see cref="Injections.TooarkDependencyInjection.AddTooarkValidationAttributes"/>.
+  /// </para>
   /// </remarks>
   /// <param name="modelState">O <see cref="ModelStateDictionary"/> a ser verificado.</param>
   /// <returns>Uma lista de erros de validação.</returns>

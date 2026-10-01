@@ -118,6 +118,14 @@ What changes for the client:
 | Errors       | per field: `{"Email": ["..."]}`, not translated   | a single list: `["..."]`, translated      |
 | Other fields | `type`, `title`, `status`, `traceId`              | `data`, `pagination`, `metadata`          |
 
+**The envelope does not choose the messages.** It changes the body of the response, not what validation records
+in the ModelState. With `<Nullable>enable</Nullable>`, a non-nullable field with a `Tooark.Attributes` attribute
+arrives missing with two messages: the `Field.Required` key, translated, and the `The Email field is required.`
+of the `[Required]` that MVC infers, which is not a translation key and arrives as the framework writes it. That
+is a defect of neither the envelope nor the attribute: the framework's message is removed by
+[`AddTooarkValidationAttributes`](#tooark-attributes-in-mvc-validation), a separate registration. An application
+that validates its DTOs with the Tooark attributes calls both.
+
 **Registration order does not matter.** `AddControllers` sets the default factory while the options are being
 built, and would win if it came after a plain `Configure`. The envelope is applied after every configuration
 (`PostConfigure`), so it wins whether it is registered before or after `AddControllers`. For the same reason, a
@@ -173,6 +181,10 @@ provider, whether called before or after `AddControllers`. Calling it twice does
 **Where it applies.** In MVC validation: positional record, class and action parameter, in controllers with or
 without `[ApiController]` and with or without the [envelope](#validation-response). Minimal APIs do not go through
 the MVC options.
+
+**The envelope does not turn it on.** `AddTooarkModelStateEnvelope` and this registration are independent, and
+neither calls the other: this one chooses the messages of a missing field, and the envelope, the body in which
+they reach the client.
 
 ### Integration with the validations
 
@@ -261,6 +273,11 @@ public sealed class PersonController : ControllerBase
 
 A model binding failure — text in a numeric field, an empty body — comes in the same body, with the framework's
 message in `errors`.
+
+With only the envelope registered, a missing field carries two messages: without `email` in the body, `errors`
+gets `"Field Email is required"` and also `"The Email field is required."`, the `[Required]` that MVC infers. The
+[next example](#missing-field-without-the-frameworks-message) adds `AddTooarkValidationAttributes`, which keeps
+only the first.
 
 The name that appears in the message is the attribute's, not the property's: that is why the `Cpf` field
 produces `Field.Invalid;Document`, the default of `DocumentValidationAttribute`. To align the two, pass the

@@ -16,6 +16,11 @@ namespace Tooark.Attributes;
 /// do atributo em todas as validações daquele membro, inclusive concorrentes: escrever nela mistura a
 /// mensagem de uma validação com a de outra e descarta a mensagem que o consumidor tenha configurado.
 /// </para>
+/// <para>
+/// No MVC com <c>Nullable</c> habilitado, o membro não anulável ausente recebe também a mensagem do
+/// <see cref="RequiredAttribute"/> que o framework infere, ao lado da chave <c>Field.Required</c>. O
+/// <c>AddTooarkValidationAttributes</c>, do pacote <c>Tooark.AspNetCore</c>, deixa só a chave.
+/// </para>
 /// </remarks>
 /// <param name="propertyName">Nome do campo usado na mensagem de erro.</param>
 public abstract class TooarkValidationAttribute(string propertyName) : ValidationAttribute

@@ -118,6 +118,14 @@ O que muda para o cliente:
 | Erros               | por campo: `{"Email": ["..."]}`, sem tradução       | uma lista única: `["..."]`, traduzida  |
 | Demais propriedades | `type`, `title`, `status`, `traceId`                | `data`, `pagination`, `metadata`       |
 
+**O envelope não escolhe as mensagens.** Ele muda o corpo da resposta, não o que a validação registra no
+ModelState. Com `<Nullable>enable</Nullable>`, um campo não anulável com atributo do `Tooark.Attributes` chega
+ausente com duas mensagens: a chave `Field.Required`, traduzida, e o `The Email field is required.` do
+`[Required]` que o MVC infere, que não é chave de tradução e chega como o framework o escreve. Não é defeito do
+envelope nem do atributo: quem retira a mensagem do framework é o
+[`AddTooarkValidationAttributes`](#atributos-do-tooark-na-validação-do-mvc), um registro à parte. A aplicação
+que valida os DTOs com os atributos do Tooark chama os dois.
+
 **A ordem do registro não importa.** O `AddControllers` atribui a factory padrão enquanto as opções são montadas,
 e venceria se viesse depois de um `Configure` comum. O envelope é aplicado depois de todas as configurações
 (`PostConfigure`), então vence tanto registrado antes quanto depois do `AddControllers`. Pelo mesmo motivo, uma
@@ -173,6 +181,10 @@ desse provedor, chamado antes ou depois do `AddControllers`. Chamá-lo duas veze
 **Onde se aplica.** Na validação do MVC: record posicional, classe e parâmetro de action, em controllers com ou
 sem `[ApiController]` e com ou sem o [envelope](#resposta-de-validação). As minimal APIs não passam pelas opções
 do MVC.
+
+**Não é ligado pelo envelope.** O `AddTooarkModelStateEnvelope` e este registro são independentes, e nenhum dos
+dois chama o outro: este escolhe as mensagens do campo ausente, e o envelope, o corpo em que elas chegam ao
+cliente.
 
 ### Integração com as validações
 
@@ -261,6 +273,11 @@ public sealed class PessoaController : ControllerBase
 
 Uma falha do model binding — texto em um campo numérico, um corpo vazio — chega no mesmo corpo, com a mensagem
 do framework em `errors`.
+
+Só com o envelope registrado, um campo ausente traz duas mensagens: sem o `email` no corpo, `errors` recebe
+`"O campo E-mail é obrigatório"` e também `"The Email field is required."`, o `[Required]` que o MVC infere. O
+[exemplo seguinte](#exemplo-de-campo-ausente-sem-a-mensagem-do-framework) acrescenta o
+`AddTooarkValidationAttributes`, que deixa só a primeira.
 
 O nome que aparece na mensagem é o do atributo, não o da propriedade: por isso o campo `Cpf` produz
 `Field.Invalid;Document`, que é o padrão do `DocumentValidationAttribute`. Para alinhar os dois, informe o

@@ -31,9 +31,18 @@ public static partial class TooarkDependencyInjection
   /// sem <see cref="ApiBehaviorOptions.SuppressModelStateInvalidFilter"/>. Controllers sem o atributo e as
   /// minimal APIs não passam por ela.
   /// </para>
+  /// <para>
+  /// Muda o corpo da resposta, não as mensagens que a validação registra. Com <c>Nullable</c> habilitado, um
+  /// campo não anulável com atributo do <c>Tooark.Attributes</c> chega ausente com duas mensagens: a chave
+  /// <c>Field.Required</c>, traduzida, e o texto do <see cref="RequiredAttribute"/> que o MVC infere, que não é
+  /// chave de tradução e chega como o framework o escreve. Quem retira a segunda é o
+  /// <see cref="AddTooarkValidationAttributes"/>, um registro à parte: a aplicação que valida os DTOs com os
+  /// atributos do Tooark chama os dois.
+  /// </para>
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
   /// <returns>A coleção de serviços com a resposta de validação configurada.</returns>
+  /// <seealso cref="AddTooarkValidationAttributes"/>
   public static IServiceCollection AddTooarkModelStateEnvelope(this IServiceCollection services)
   {
     // Substitui a factory depois das configurações, inclusive a do AddControllers
@@ -64,9 +73,14 @@ public static partial class TooarkDependencyInjection
   /// importa, e chamar mais de uma vez não repete o registro. Vale para a validação do MVC, com ou sem
   /// <see cref="ApiControllerAttribute"/>. As minimal APIs não passam pelas opções do MVC.
   /// </para>
+  /// <para>
+  /// Não depende do <see cref="AddTooarkModelStateEnvelope"/>, e nenhum dos dois liga o outro: este escolhe as
+  /// mensagens do campo ausente, e o envelope, o corpo em que elas chegam ao cliente.
+  /// </para>
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
   /// <returns>A coleção de serviços com a validação dos atributos configurada.</returns>
+  /// <seealso cref="AddTooarkModelStateEnvelope"/>
   public static IServiceCollection AddTooarkValidationAttributes(this IServiceCollection services)
   {
     // Acrescenta o provedor depois das configurações, para rodar depois do provedor do DataAnnotations
