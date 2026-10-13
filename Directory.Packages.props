@@ -31,8 +31,8 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
     <PackageVersion Include="ReportGenerator" Version="5.5.11" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.1" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 
   <!--
