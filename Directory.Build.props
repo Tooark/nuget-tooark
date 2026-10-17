@@ -1,10 +1,10 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.7.0</Version>
+    <Version>4.7.1</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
-    <Copyright>Copyright (c) 2025 Tooark</Copyright>
+    <Copyright>Copyright (c) 2026 Tooark</Copyright>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageIcon>icon.jpg</PackageIcon>
