@@ -9,11 +9,6 @@
     <Summary>Google Cloud Storage provider for the Tooark storage abstractions.</Summary>
     <PackageDescription>Package that implements the Tooark IStorageService on Google Cloud Storage, with V4 signed URLs for reading and writing.</PackageDescription>
     <Description>Library with the Google Cloud Storage provider of Tooark.Storage: upload, download, delete, metadata and V4 signed URLs, with a service account key from the options or Application Default Credentials.</Description>
-    <!--
-      Pacote novo na v4.7.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
-      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
-    -->
-    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup>
