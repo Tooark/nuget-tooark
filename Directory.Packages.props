@@ -6,29 +6,29 @@
 
   <!-- Pacotes independentes da versão do runtime (mesma versão em todos os TFMs). Atualizados pelo Dependabot. -->
   <ItemGroup>
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.3" />
-    <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.100.17" />
-    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.3" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.4" />
+    <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.100.19" />
+    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.4" />
     <PackageVersion Include="Google.Cloud.ParameterManager.V1" Version="1.1.0" />
     <PackageVersion Include="Google.Cloud.SecretManager.V1" Version="2.8.0" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
     <PackageVersion Include="HtmlSanitizer" Version="9.2.1039" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.13" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Moq" Version="4.21.0" />
-    <PackageVersion Include="OpenTelemetry" Version="1.19.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.19.1" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.19.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.19.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
+    <PackageVersion Include="OpenTelemetry" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.0" />
     <!--
       Só existe em pré-lançamento: o projeto OpenTelemetry nunca publicou uma versão estável desta
       instrumentação. Fica no rc da mesma linha dos demais pacotes OpenTelemetry e gera o aviso NU5104 no
       pack (liberado no Directory.Build.props). Ao subir a linha do OpenTelemetry, suba este junto.
     -->
     <PackageVersion Include="OpenTelemetry.Instrumentation.Process" Version="1.19.0-rc.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.0" />
     <PackageVersion Include="ReportGenerator" Version="5.5.11" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
