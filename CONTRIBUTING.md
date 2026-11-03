@@ -279,13 +279,31 @@ Releases are fully automated by
    in the same PR as the last change of the release.
 2. Merge to `main`. If the tag `v<version>` does not exist yet, the workflow
    builds, runs the tests, runs the security scanner, packs every package
-   (`.nupkg` and `.snupkg`), publishes them to NuGet and only then creates
-   the tag and the GitHub Release (with the notes file as body). If the tag
-   already exists, the workflow stops with a warning and publishes nothing.
+   (`.nupkg` and `.snupkg`), publishes them to NuGet through Trusted
+   Publishing and only then creates the tag and the GitHub Release (with the
+   notes file as body). If the tag already exists, the workflow stops with a
+   warning and publishes nothing.
 
 The order matters: because the tag is created last, a run that fails while
 publishing leaves no tag behind, and the next push to `main` simply retries
 (`--skip-duplicate` skips the packages that already went through).
+
+Each stage is a separate job with the least permission it needs: `build`
+(restore, build, tests, security scan, pack), `publish` (push to NuGet) and
+`release` (tag and GitHub Release). A failed `publish` can be retried with
+**Re-run failed jobs**, which reuses the packages already built in that run.
+
+Publishing uses [NuGet Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing):
+there is no NuGet API key stored in the repository. The `publish` job exchanges
+a GitHub OIDC token for a short-lived nuget.org key through `NuGet/login`. Two
+things must stay in place for it to work:
+
+- A trusted publishing policy on nuget.org, owned by the account that owns the
+  packages, with repository owner `Tooark`, repository `nuget-tooark` and
+  workflow file `tooark.yml`. Renaming the workflow file breaks publishing
+  until the policy is updated.
+- The repository secret `NUGET_USER`, holding the nuget.org profile name (not
+  the email address) of the user who created the policy.
 
 The workflow packs only the projects in its `PACKAGES` list. A new package goes
 into that list in the same PR that creates it — otherwise it is not published,

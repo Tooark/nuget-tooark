@@ -6,6 +6,15 @@ name: Build and deploy package
 # Ordem deliberada: os pacotes são publicados ANTES de a tag e a release existirem. Se uma publicação falhar
 # no meio, nada foi marcado como lançado e o próximo push em main tenta de novo; "--skip-duplicate" ignora os
 # pacotes que já subiram. Só depois de tudo publicado a tag v<versão> e a GitHub Release são criadas.
+#
+# Publicação por Trusted Publishing, sem API key guardada no repositório: o job publish troca o token OIDC do
+# GitHub por uma chave temporária do nuget.org (NuGet/login). O nuget.org só emite a chave se a política
+# cadastrada lá apontar para este repositório e para este arquivo; renomear o tooark.yml exige atualizar a
+# política.
+#
+# Cada etapa roda num job próprio, com a menor permissão possível. O build executa código de terceiros
+# (restore, testes, scanner) e por isso não pode emitir token OIDC; o publish não faz checkout e só envia os
+# pacotes prontos; o release é o único com escrita no repositório.
 on:
   push:
     branches:
@@ -78,15 +87,13 @@ jobs:
             echo "Tag v${VERSION} não existe. Prosseguindo com o build e a publicação."
           fi
 
-  build-and-deploy:
+  build:
     needs: check-version
     if: needs.check-version.outputs.has_tag == 'false'
     runs-on: ubuntu-latest
     permissions:
-      contents: write # cria a tag e a GitHub Release
+      contents: read
       packages: read # puxa a imagem do security-scanner do GHCR
-    env:
-      VERSION: ${{ needs.check-version.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -157,18 +164,59 @@ jobs:
           done
           ls -1 artifacts/packages
 
+      # O job publish recebe exatamente estes arquivos (.nupkg e .snupkg)
       - name: Upload packages
         uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
           path: artifacts/packages/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Trusted Publishing: emite o token OIDC que o nuget.org troca pela chave temporária
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # A chave temporária expira em pouco tempo: o login fica imediatamente antes do push
+      - name: NuGet login (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }} # nome do perfil no nuget.org, não o e-mail
 
       - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           dotnet nuget push "artifacts/packages/*.nupkg" \
-            --api-key "${{ secrets.NUGET_API_KEY }}" \
+            --api-key "$NUGET_API_KEY" \
             --source "$NUGET_SOURCE" \
             --skip-duplicate
+
+  release:
+    needs: [check-version, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # cria a tag e a GitHub Release
+    env:
+      VERSION: ${{ needs.check-version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
       - name: Create the tag and the GitHub Release
         env:
