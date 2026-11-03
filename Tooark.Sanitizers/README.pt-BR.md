@@ -298,7 +298,7 @@ var wysiwyg = new WysiwygSanitizerService(opcoes);
 | Pacote                                                                                                                                          | Versão   | Descrição                                 |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceções (`InternalServerErrorException`) |
-| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 9.x      | Sanitização de HTML, sobre o AngleSharp   |
+| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 10.x     | Sanitização de HTML, sobre o AngleSharp   |
 | [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Leitura das opções da configuração        |
 | [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container                     |
 

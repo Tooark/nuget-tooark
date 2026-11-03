@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.10
+  SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.12
   NUGET_SOURCE: https://api.nuget.org/v3/index.json
   # Projetos empacotados, em ordem de dependência: o agregador Tooark, tudo o que ele referencia e os provedores
   # de storage e de segredos, que ficam fora do agregador. Todo projeto empacotável da solução precisa estar
