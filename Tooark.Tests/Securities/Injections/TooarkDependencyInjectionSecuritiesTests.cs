@@ -229,4 +229,46 @@ public class TooarkDependencyInjectionSecuritiesTests
     // Assert
     Assert.Same(services, result);
   }
+
+  // Testa se o hash de senha é registrado mesmo sem nenhuma seção, porque tem padrão seguro e não exige configuração
+  [Fact]
+  public void AddTooarkSecurities_WithNoConfiguration_ShouldRegisterPasswordHash()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>())
+      .Build();
+
+    // Act
+    services.AddTooarkSecurities(configuration);
+    using var provider = services.BuildServiceProvider();
+    var passwordHash = provider.GetService<IPasswordHashService>();
+
+    // Assert
+    Assert.NotNull(passwordHash);
+    Assert.Contains("$i=600000$", passwordHash.Hash("senha"));
+  }
+
+  // Testa se a seção PasswordHash é lida pelo agregador quando existe
+  [Fact]
+  public void AddTooarkSecurities_WithPasswordHashConfiguration_ShouldBindSection()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{PasswordHashOptions.Section}:Iterations", "650000" }
+      })
+      .Build();
+
+    // Act
+    services.AddTooarkSecurities(configuration);
+    using var provider = services.BuildServiceProvider();
+    var options = provider.GetRequiredService<IOptions<PasswordHashOptions>>().Value;
+
+    // Assert
+    Assert.Equal(650_000, options.Iterations);
+  }
 }
