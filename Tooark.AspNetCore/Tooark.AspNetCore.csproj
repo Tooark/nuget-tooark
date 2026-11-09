@@ -5,7 +5,7 @@
     <PackageId>Tooark.AspNetCore</PackageId>
     <Title>Tooark.AspNetCore</Title>
     <Authors>Paulo Sergio de Freitas Junior</Authors>
-    <PackageTags>tooark, toolkit, aspnetcore, mvc, modelstate, filters, middlewares, .NET</PackageTags>
+    <PackageTags>tooark, toolkit, aspnetcore, mvc, modelstate, problemdetails, exceptionhandler, minimalapi, filters, middlewares, .NET</PackageTags>
     <Summary>ASP.NET Core integration for Tooark.</Summary>
     <PackageDescription>Package with the ASP.NET Core specific pieces of Tooark for .NET applications.</PackageDescription>
     <Description>Library that concentrates everything in Tooark that depends on ASP.NET Core, keeping the other packages free of the shared framework requirement.</Description>
@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Tooark.Attributes\Tooark.Attributes.csproj" />
     <ProjectReference Include="..\Tooark.Dtos\Tooark.Dtos.csproj" />
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
     <ProjectReference Include="..\Tooark.Extensions\Tooark.Extensions.csproj" />
   </ItemGroup>
 

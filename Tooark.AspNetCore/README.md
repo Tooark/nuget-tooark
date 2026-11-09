@@ -29,6 +29,8 @@ The `Tooark.AspNetCore` package provides:
 - extensions for ASP.NET Core types, today the `ModelStateDictionary`;
 - the `ResponseDto` body for validation failures in `[ApiController]` controllers, with `AddTooarkModelStateEnvelope`;
 - MVC validation of the `Tooark.Attributes` attributes without the duplicated missing-field message, with `AddTooarkValidationAttributes`;
+- Problem Details (RFC 9457) for the `Tooark.Exceptions` exceptions, in controllers and minimal APIs, with `AddTooarkProblemDetails`;
+- results for minimal APIs that answer a notification or an exception with the same Problem Details, with `TooarkResults`;
 - the place where the ASP.NET Core requirement was moved to, taking it out of the general-purpose packages;
 - integration with the `Tooark.Extensions` localizer, translating the validation error keys;
 - the intended home for the family's filters and middlewares.
@@ -70,6 +72,18 @@ using Tooark.AspNetCore.Injections;
 builder.Services.AddControllers();
 builder.Services.AddTooarkModelStateEnvelope();
 builder.Services.AddTooarkValidationAttributes();
+```
+
+The [Problem Details for exceptions](#problem-details-for-exceptions) is opt-in as well, and needs the
+`UseExceptionHandler` middleware in the pipeline, without arguments:
+
+```csharp
+using Tooark.AspNetCore.Injections;
+
+builder.Services.AddTooarkProblemDetails();
+
+var app = builder.Build();
+app.UseExceptionHandler();
 ```
 
 > **Runtime requirement**: because it declares the shared framework, whoever consumes this package needs the
@@ -186,6 +200,124 @@ the MVC options.
 neither calls the other: this one chooses the messages of a missing field, and the envelope, the body in which
 they reach the client.
 
+### Problem Details for exceptions
+
+- `TooarkDependencyInjection.AddTooarkProblemDetails(IServiceCollection, Action<ProblemDetailsOptions>?)`: makes
+  the [`Tooark.Exceptions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Exceptions) exceptions answer
+  with Problem Details ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)), in the status each exception
+  defines, in controllers and minimal APIs.
+- `TooarkExceptionHandler`: the `IExceptionHandler` the registration adds. It can be registered on its own with
+  `AddExceptionHandler<TooarkExceptionHandler>()`, next to `AddProblemDetails()`.
+- `ProblemDetailsError`: an item of the `errors` list of the body, with `code`, `key` and `message`.
+
+Without it, a `NotFoundException` thrown in an endpoint is an exception like any other: ASP.NET Core answers 500,
+and the status and the message the exception carries are lost. The registration adds the `AddProblemDetails` of
+ASP.NET Core and an `IExceptionHandler` that recognizes the `TooarkException` family: the status comes from
+`GetStatusCode()` and the body from `GetNotifications()`, with the messages translated by the
+[`Tooark.Extensions`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Extensions) localizer in the language
+of the request.
+
+`GET /users/1` throwing `new NotFoundException("NotFound.User")`, in `en-US`:
+
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+```
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "User not found",
+  "instance": "/users/1",
+  "errors": [{ "code": "T.ERR", "key": "Unknown", "message": "User not found" }],
+  "traceId": "0HNPTVUT6D34Q"
+}
+```
+
+| Member     | Source                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------- |
+| `status`   | `TooarkException.GetStatusCode()`                                                                    |
+| `title`    | The standard reason phrase of the status (`Not Found`, `Bad Request`)                                |
+| `type`     | The RFC 9110 section of the status, applied by ASP.NET Core                                          |
+| `detail`   | The first message of `errors`                                                                        |
+| `instance` | The request path                                                                                     |
+| `errors`   | One item per `NotificationItem` of the exception: `code` and `key` as recorded, `message` translated |
+| `traceId`  | Added by ASP.NET Core                                                                                |
+
+An exception built from a `Notification` carries one item per failure, with the code and the key of each
+validation; one built from a message carries a single item with the defaults `T.ERR` and `Unknown`. A message
+that is not a translation key, such as `"User.NotFound"`, arrives as written.
+
+**Which exceptions.** Every class of `Tooark.Exceptions`, in its status: `BadRequestException` 400,
+`UnauthorizedException` 401, `ForbiddenException` 403, `NotFoundException` 404, `ConflictException` 409,
+`UnprocessableEntityException` 422, `TooManyRequestsException` 429, `InternalServerErrorException` 500 and the
+others of the [package](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Exceptions/README.md). Any other
+exception is left to ASP.NET Core, which answers the default 500 Problem Details of `AddProblemDetails`, without
+the exception's message: a bug does not leak its text to the client.
+
+**Where it applies.** Wherever the exception reaches the `UseExceptionHandler` middleware: minimal API handlers,
+controller actions and filters, and the middlewares after it. The middleware has to be in the pipeline, without
+arguments and before the middlewares that may throw. `AddProblemDetails` is what lets `UseExceptionHandler` be
+called without an error path:
+
+```csharp
+builder.Services.AddTooarkProblemDetails();
+
+var app = builder.Build();
+
+app.UseExceptionHandler();   // no arguments: the Problem Details service is the fallback
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+```
+
+**Writing the body.** The body is written by the `IProblemDetailsService` of ASP.NET Core, so the
+`CustomizeProblemDetails` of the application applies to it and `type` gets the default of the status. When the
+service refuses to write — a client that sent an `Accept` without JSON, for instance — the handler writes the
+body itself, in `application/problem+json`: an exception of the Tooark family never ends in a 500 without a
+body. The `configure` parameter is the `ProblemDetailsOptions` of ASP.NET Core:
+
+```csharp
+builder.Services.AddTooarkProblemDetails(options =>
+  options.CustomizeProblemDetails = context =>
+    context.ProblemDetails.Extensions["application"] = "orders-api");
+```
+
+**Independent of the envelope.** [`AddTooarkModelStateEnvelope`](#validation-response) shapes the validation
+failure of `[ApiController]` controllers, which happens before the action, with `ResponseDto`. This registration
+shapes the exceptions, which happen during the action, and neither changes the other. An API can use both, or
+choose Problem Details for everything by not registering the envelope. Calling the registration twice does not
+repeat the handler.
+
+**Logging.** The handled exception is logged in the `Tooark.AspNetCore.ExceptionHandling.TooarkExceptionHandler`
+category: `Warning` for a 4xx status, `Error` for a 5xx.
+
+**OpenAPI.** `ProblemDetails` is already the error type ASP.NET Core assumes for `[ApiController]`, so a
+`[ProducesResponseType(StatusCodes.Status404NotFound)]` documents the response; in minimal APIs,
+`.ProducesProblem(StatusCodes.Status404NotFound)` does the same. The `errors` extension is not described by the
+framework.
+
+### Results for minimal APIs
+
+- `TooarkResults.Problem(TooarkException)`: answers an exception without throwing it, with the body the handler
+  writes.
+- `TooarkResults.ValidationProblem(Notification, int statusCode = 400)`: answers the notifications of an entity
+  or a value object, 400 by default.
+- `TooarkResults.ValidationProblem(IEnumerable<NotificationItem>, int statusCode = 400)`: the same, from a list
+  of items.
+
+Minimal APIs have no ModelState. The [`Tooark.Entities`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Entities)
+entities and the [`Tooark.ValueObjects`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.ValueObjects)
+value objects validate themselves and accumulate notifications, and the endpoint returns the problem when
+`IsValid` is false, with one item in `errors` per notification. The result fills `instance` with the request
+path when it runs, and the status must be an error status, from 400 to 599. A valid notification produces a
+problem with an empty `errors` list: check `IsValid` before calling it.
+
+The results do not depend on `AddTooarkProblemDetails`: they translate the messages with the `Tooark.Extensions`
+localizer by themselves, in the language of the request.
+
 ### Integration with the validations
 
 The returned messages are what the
@@ -205,8 +337,10 @@ that MVC infers, with the framework's text. `AddTooarkValidationAttributes` keep
 ### Filters and middlewares
 
 Not shipped yet. The validation response is not a filter: ASP.NET Core already calls a factory at the point where
-it decides the body of a validation failure, and replacing that factory was enough. When filters and middlewares
-exist, they go in this package, under the `Filters/` and `Middlewares/` folders.
+it decides the body of a validation failure, and replacing that factory was enough. The exception handling is
+not a middleware either: ASP.NET Core 8 has the `IExceptionHandler` contract, which the `UseExceptionHandler`
+middleware already calls, and implementing it was enough. When filters and middlewares exist, they go in this
+package, under the `Filters/` and `Middlewares/` folders.
 The family only splits a package when the **dependency profile** differs — that is what motivated separating
 `Tooark.Mediator.EntityFrameworkCore`, which pulls Entity Framework Core, from `Tooark.Mediator`, which does not
 use it. Filters, middlewares and the extensions here share exactly the same profile, so splitting them into
@@ -214,7 +348,9 @@ separate packages would reduce nothing.
 
 ### Namespaces
 
-The extensions live in `Tooark.AspNetCore.Extensions`, and the registrations in `Tooark.AspNetCore.Injections`.
+The extensions live in `Tooark.AspNetCore.Extensions`, the registrations in `Tooark.AspNetCore.Injections`, the
+exception handler in `Tooark.AspNetCore.ExceptionHandling` and the minimal API results in
+`Tooark.AspNetCore.Results`.
 
 ---
 
@@ -414,16 +550,135 @@ public sealed class ValidationFilter : IActionFilter
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 ```
 
+### Problem Details for the Tooark exceptions
+
+```csharp
+using Tooark.AspNetCore.Injections;
+using Tooark.Exceptions;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddTooarkProblemDetails();
+
+var app = builder.Build();
+app.UseExceptionHandler();
+
+app.MapGet("/users/{id:guid}", async (Guid id, IUserRepository users) =>
+  await users.FindAsync(id) ?? throw new NotFoundException("NotFound.User"));
+
+app.Run();
+```
+
+`GET /users/3fa85f64-5717-4562-b3fc-2c963f66afa6`, in `en-US`, for a user that does not exist:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "User not found",
+  "instance": "/users/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "errors": [{ "code": "T.ERR", "key": "Unknown", "message": "User not found" }],
+  "traceId": "0HNPTVUT6D34Q"
+}
+```
+
+`NotFound.User` is a key of the `Tooark.Extensions` resources, so it arrives translated. A message that is not a
+key, such as `"User.NotFound"`, arrives as written.
+
+An exception built from a notification carries one item per failure, with the code and the key of each
+validation:
+
+```csharp
+using Tooark.Exceptions;
+using Tooark.ValueObjects;
+
+app.MapPut("/users/{id:guid}/email", (Guid id, ChangeEmailRequest request) =>
+{
+  var email = new Email(request.Email);
+
+  if (!email.IsValid)
+  {
+    // 400 with errors: [{ "code": "T.VLD.RGX1", "key": "Email", "message": "Field Email is invalid" }]
+    throw new BadRequestException(email);
+  }
+
+  // ...
+  return Results.NoContent();
+});
+```
+
+### Validation of an entity in a minimal API
+
+Without an exception, returning the notifications of the entity:
+
+```csharp
+using Tooark.AspNetCore.Results;
+
+app.MapPost("/users", (CreateUserRequest request) =>
+{
+  var user = new User(request.Name, request.Email);
+
+  return user.IsValid
+    ? Results.Created($"/users/{user.Id}", user)
+    : TooarkResults.ValidationProblem(user);
+});
+```
+
+`POST /users` with an invalid e-mail, in `pt-BR`:
+
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "O campo E-mail é inválido",
+  "instance": "/users",
+  "errors": [{ "code": "T.VLD.RGX1", "key": "Email", "message": "O campo E-mail é inválido" }],
+  "traceId": "0HNPTVUT6D34Q"
+}
+```
+
+For a 422 instead of a 400, pass the status: `TooarkResults.ValidationProblem(user, StatusCodes.Status422UnprocessableEntity)`.
+To answer an exception without throwing it — a result the caller already has in hand — use
+`TooarkResults.Problem(new ConflictException("Record.Exists"))`.
+
+### Problem Details in a controller
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.Exceptions;
+
+[ApiController]
+[Route("users")]
+public sealed class UsersController(IUserRepository users) : ControllerBase
+{
+  [HttpGet("{id:guid}")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(StatusCodes.Status404NotFound)]
+  public async Task<IActionResult> Get(Guid id)
+  {
+    var user = await users.FindAsync(id) ?? throw new NotFoundException("NotFound.User");
+
+    return Ok(user);
+  }
+}
+```
+
+The same `AddTooarkProblemDetails` and `UseExceptionHandler` serve the controller: the exception leaves the
+action, crosses the MVC filters and reaches the middleware. The [envelope](#validation-response), when
+registered, keeps answering the validation of the `[ApiController]`, which happens before the action.
+
 ---
 
 ## 📋 Dependencies
 
-| Package                                                                                                  | Version  | Description                                                   |
-| -------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------- |
-| [`Tooark.Attributes`](https://www.nuget.org/packages/Tooark.Attributes)                                  | 4.x      | The attributes recognized by `AddTooarkValidationAttributes`  |
-| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                              | 4.x      | `ResponseDto`, the body of the validation response            |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization                                    |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary`, `ApiBehaviorOptions` and `MvcOptions` |
+| Package                                                                                                  | Version  | Description                                                                                                  |
+| -------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------ |
+| [`Tooark.Attributes`](https://www.nuget.org/packages/Tooark.Attributes)                                  | 4.x      | The attributes recognized by `AddTooarkValidationAttributes`                                                 |
+| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                              | 4.x      | `ResponseDto`, the body of the validation response                                                           |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                  | 4.x      | The exceptions answered with Problem Details, and their notification items                                   |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization                                                                                   |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` and `IProblemDetailsService` |
 
 ---
 
