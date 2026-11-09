@@ -200,8 +200,8 @@ Configuração exemplo para o hash de senha (todas as chaves são opcionais — 
 | `Audience`           | string?   | `null`  | Destinatário aceito na validação e gravado no token                        |
 | `Audiences`          | string[]? | `null`  | Destinatários adicionais aceitos na validação                              |
 | `ExpirationTime`     | int       | `5`     | Expiração do token em **minutos**                                          |
-| `EmitLegacyClaims`   | bool      | `true`  | Emite as claims `id` e `login` (nomes do Tooark)                           |
-| `EmitStandardClaims` | bool      | `false` | Emite as claims `sub` e `preferred_username` (nomes do JWT/OpenID Connect) |
+| `EmitLegacyClaims`   | bool      | `false` | Emite as claims `id` e `login` (nomes do Tooark na linha 4.x)              |
+| `EmitStandardClaims` | bool      | `true`  | Emite as claims `sub` e `preferred_username` (nomes do JWT/OpenID Connect) |
 
 > `Issuer`/`Issuers` e `Audience`/`Audiences` se somam: informar qualquer um deles liga a validação do
 > respectivo campo. Quando nenhum é informado, a validação daquele campo é desligada. O parâmetro
@@ -210,10 +210,11 @@ Configuração exemplo para o hash de senha (todas as chaves são opcionais — 
 > `PrivateKey` e `PublicKey` aceitam tanto o Base64 puro quanto o PEM completo: os delimitadores
 > `-----BEGIN/END ... KEY-----` e as quebras de linha são removidos ao atribuir.
 >
-> ⚠️ **Muda na v5:** os padrões das claims se invertem — `EmitStandardClaims` passa a `true` e
-> `EmitLegacyClaims` a `false`. Defina os dois sinalizadores de forma explícita hoje, para que a troca de versão
-> não mude os seus tokens. Ao menos um precisa estar ligado; os dois desligados falham no startup
-> (`Options.Jwt.ClaimsNotConfigured`). Veja [Nomes das claims](#nomes-das-claims).
+> ⚠️ **Mudou na v5:** os padrões das claims se inverteram — `EmitStandardClaims` agora é `true` e
+> `EmitLegacyClaims` é `false`. Um token emitido sem sinalizadores explícitos carrega `sub` e `preferred_username`,
+> e não `id` e `login`. Para manter os tokens da 4.x, defina `EmitLegacyClaims = true`. Ao menos um precisa estar
+> ligado; os dois desligados falham no startup (`Options.Jwt.ClaimsNotConfigured`). Veja
+> [Nomes das claims](#nomes-das-claims).
 
 Exemplo com múltiplos emissores e destinatários:
 
@@ -490,8 +491,9 @@ O `JwtTokenService` grava os dados do usuário como claims. Existem dois conjunt
 | `Login`    | `login`                          | `preferred_username`                | OpenID Connect Core |
 | `Security` | `security`                       | `security` (sem equivalente padrão) | —                   |
 
-- Na linha **4.x**, o padrão emite só os nomes legados (`EmitLegacyClaims = true`,
-  `EmitStandardClaims = false`), então os consumidores atuais não veem mudança.
+- Desde a **v5**, o padrão emite só os nomes padrão (`EmitStandardClaims = true`,
+  `EmitLegacyClaims = false`). A linha 4.x emitia só os nomes legados; um consumidor que ainda lê `id` ou `login`
+  precisa de `EmitLegacyClaims = true` até migrar para `sub`/`preferred_username`.
 - Com os **dois sinalizadores ligados**, o token carrega os dois conjuntos: o caminho de migração. Os
   consumidores novos leem `sub` enquanto os antigos ainda leem `id`.
 - O `UserTokenDto` lê `id` e cai para `sub`, `login` e cai para `preferred_username`, então um token emitido em
@@ -500,10 +502,10 @@ O `JwtTokenService` grava os dados do usuário como claims. Existem dois conjunt
   sinalizadores ou as `JwtOptions`. A sobrecarga sem parâmetros, que fixa os nomes legados, está **obsoleta
   desde a v4.8.0 e sai na v5**: use `GetClaims(options)`.
 
-> ⚠️ **Muda na v5:** os padrões se invertem — `EmitStandardClaims = true` e `EmitLegacyClaims = false`. Um token
-> emitido por um serviço v5 sem sinalizadores explícitos tem `sub` e não tem `id`. Defina os dois sinalizadores
-> de forma explícita na seção `Jwt` hoje, e leve os leitores para `sub`/`preferred_username` (ou para o
-> `UserTokenDto`, que trata os dois), para que a troca de versão não mude nada.
+> ⚠️ **Migrando da 4.x:** um token emitido por um serviço v5 sem sinalizadores explícitos tem `sub` e não tem `id`.
+> Ligue `EmitLegacyClaims` enquanto houver leitores antigos (o token passa a carregar os dois conjuntos), leve os
+> leitores para `sub`/`preferred_username` (ou para o `UserTokenDto`, que trata os dois) e desligue depois. Os
+> tokens emitidos por um serviço 4.x continuam sendo lidos pelo `UserTokenDto` e pelo `AddTooarkJwtBearer`.
 
 ### Testando emissão e expiração
 
@@ -1550,7 +1552,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 3. **Use `Issuer` e `Audience`** - Previne uso indevido de tokens entre aplicações
 4. **Armazene chaves em Secret Manager** - Nunca commite chaves no código fonte
 5. **Registre `AddTooarkJwtBearer` em vez de um `AddJwtBearer` à mão** - Mesma chave, emissor e destinatário do emissor, validados no startup
-6. **Defina `EmitLegacyClaims` e `EmitStandardClaims` explicitamente** - Os padrões da v5 se invertem; sinalizadores explícitos mantêm os tokens estáveis na troca de versão
+6. **Defina `EmitLegacyClaims` e `EmitStandardClaims` explicitamente** - Sinalizadores explícitos mantêm os tokens estáveis nas trocas de versão; ligue o conjunto legado só enquanto houver leitores de `id`/`login`
 7. **Leia as claims por `TooarkClaimNames` ou `UserTokenDto`** - Eles seguem os dois conjuntos de nomes
 
 ### Criptografia

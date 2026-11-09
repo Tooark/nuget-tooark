@@ -117,7 +117,7 @@ public class TooarkDependencyInjectionJwtBearerTests
 
     // Assert
     Assert.True(valid.IsValid);
-    Assert.Equal("1", valid.Claims["id"]);
+    Assert.Equal("1", valid.Claims["sub"]);
     Assert.False(invalid.IsValid);
   }
 

@@ -207,15 +207,15 @@ public class JwtOptionsTests
     Assert.Equal(10, options.ExpirationTime);
   }
 
-  // Testa se o padrão da 4.x emite as claims legadas e não as padrão; a v5 inverte os dois valores
+  // Testa se o padrão da v5 emite as claims padrão (sub, preferred_username) e não as legadas; a 4.x invertia os dois
   [Fact]
-  public void ClaimFlags_ShouldDefaultToLegacyOnly()
+  public void ClaimFlags_ShouldDefaultToStandardOnly()
   {
     // Arrange & Act
     var options = new JwtOptions();
 
     // Assert
-    Assert.True(options.EmitLegacyClaims);
-    Assert.False(options.EmitStandardClaims);
+    Assert.False(options.EmitLegacyClaims);
+    Assert.True(options.EmitStandardClaims);
   }
 }

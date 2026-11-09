@@ -736,8 +736,10 @@ public class JwtTokenServiceTests
   [Fact]
   public async Task ValidateAsync_WithExtraClaimNamedId_ShouldKeepTokenDtoId()
   {
-    // Arrange
-    var options = MEOptions.Options.Create(GetSymmetricOptions());
+    // Arrange: o conjunto legado é ligado porque o cenário é a claim extra com o nome legado "id"
+    var jwtOptions = GetSymmetricOptions();
+    jwtOptions.EmitLegacyClaims = true;
+    var options = MEOptions.Options.Create(jwtOptions);
     var service = new JwtTokenService(options, GetMockLogger());
     var extraClaims = new[] { new System.Security.Claims.Claim("id", "999") };
     var token = service.Create(GetTokenDto(), extraClaims: extraClaims);

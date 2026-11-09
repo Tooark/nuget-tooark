@@ -142,12 +142,38 @@ public class JwtTokenServiceClockTests
 
   #region Claim Names
 
-  // Testa se o padrão da 4.x emite só as claims legadas (id, login) e a security
+  // Testa se o padrão da v5 emite só as claims padrão (sub, preferred_username) e a security; a 4.x emitia id e login
   [Fact]
-  public void Create_ShouldEmitLegacyClaimsOnly_ByDefault()
+  public void Create_ShouldEmitStandardClaimsOnly_ByDefault()
   {
     // Arrange
     var service = CreateService(new FakeTimeProvider(IssuedAt));
+
+    // Act
+    var jwt = service.Create(User());
+    var token = new JsonWebToken(jwt);
+    var user = service.Validate(jwt);
+
+    // Assert
+    Assert.Equal("42", token.Subject);
+    Assert.Equal("ana", token.GetClaim(TooarkClaimNames.PreferredUsername).Value);
+    Assert.Equal("7", token.GetClaim(TooarkClaimNames.Security).Value);
+    Assert.False(token.TryGetClaim(TooarkClaimNames.Id, out _));
+    Assert.False(token.TryGetClaim(TooarkClaimNames.Login, out _));
+    Assert.Equal("42", user.Id);
+    Assert.Equal("ana", user.Login);
+  }
+
+  // Testa se o conjunto legado da 4.x (id, login) ainda pode ser emitido sozinho, para quem ainda não migrou os leitores
+  [Fact]
+  public void Create_ShouldEmitLegacyClaimsOnly_WhenStandardIsOff()
+  {
+    // Arrange
+    var service = CreateService(new FakeTimeProvider(IssuedAt), options =>
+    {
+      options.EmitLegacyClaims = true;
+      options.EmitStandardClaims = false;
+    });
 
     // Act
     var token = new JsonWebToken(service.Create(User()));
@@ -193,7 +219,11 @@ public class JwtTokenServiceClockTests
   public void Create_ShouldEmitBothClaimSets_WhenBothAreOn()
   {
     // Arrange
-    var service = CreateService(new FakeTimeProvider(IssuedAt), options => options.EmitStandardClaims = true);
+    var service = CreateService(new FakeTimeProvider(IssuedAt), options =>
+    {
+      options.EmitLegacyClaims = true;
+      options.EmitStandardClaims = true;
+    });
 
     // Act
     var token = new JsonWebToken(service.Create(User()));

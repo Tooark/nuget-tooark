@@ -200,8 +200,8 @@ Example configuration for password hashing (every key is optional — these are 
 | `Audience`           | string?   | `null`  | Audience accepted on validation and written to the token                   |
 | `Audiences`          | string[]? | `null`  | Additional audiences accepted on validation                                |
 | `ExpirationTime`     | int       | `5`     | Token expiration in **minutes**                                            |
-| `EmitLegacyClaims`   | bool      | `true`  | Emits the `id` and `login` claims (Tooark names)                           |
-| `EmitStandardClaims` | bool      | `false` | Emits the `sub` and `preferred_username` claims (JWT/OpenID Connect names) |
+| `EmitLegacyClaims`   | bool      | `false` | Emits the `id` and `login` claims (Tooark names of the 4.x line)           |
+| `EmitStandardClaims` | bool      | `true`  | Emits the `sub` and `preferred_username` claims (JWT/OpenID Connect names) |
 
 > `Issuer`/`Issuers` and `Audience`/`Audiences` add up: providing any of them turns on the validation of
 > that field. When none is provided, the validation of that field is turned off. The `audience` parameter
@@ -210,10 +210,10 @@ Example configuration for password hashing (every key is optional — these are 
 > `PrivateKey` and `PublicKey` accept both the raw Base64 and the full PEM: the
 > `-----BEGIN/END ... KEY-----` delimiters and the line breaks are removed on assignment.
 >
-> ⚠️ **Changes in v5:** the claim defaults invert — `EmitStandardClaims` becomes `true` and `EmitLegacyClaims`
-> becomes `false`. Set both flags explicitly today so the upgrade does not change your tokens. At least one of
-> them must be on; both off fail at startup (`Options.Jwt.ClaimsNotConfigured`). See
-> [Claim names](#claim-names).
+> ⚠️ **Changed in v5:** the claim defaults inverted — `EmitStandardClaims` is now `true` and `EmitLegacyClaims`
+> is `false`. A token issued without explicit flags carries `sub` and `preferred_username`, not `id` and `login`.
+> To keep the 4.x tokens, set `EmitLegacyClaims = true`. At least one of them must be on; both off fail at startup
+> (`Options.Jwt.ClaimsNotConfigured`). See [Claim names](#claim-names).
 
 Example with multiple issuers and audiences:
 
@@ -490,8 +490,9 @@ validates tokens (no issuing) configures the `Jwt` section with the `PublicKey` 
 | `Login`    | `login`                          | `preferred_username`                 | OpenID Connect Core |
 | `Security` | `security`                       | `security` (no standard equivalent)  | —                   |
 
-- In the **4.x** line, the default emits the legacy names only (`EmitLegacyClaims = true`,
-  `EmitStandardClaims = false`), so existing consumers see no change.
+- Since **v5**, the default emits the standard names only (`EmitStandardClaims = true`,
+  `EmitLegacyClaims = false`). The 4.x line emitted the legacy names only; a consumer that still reads `id` or
+  `login` needs `EmitLegacyClaims = true` until it moves to `sub`/`preferred_username`.
 - With **both flags on**, the token carries both sets: the migration path. New consumers read `sub` while the old
   ones still read `id`.
 - `UserTokenDto` reads `id` and falls back to `sub`, `login` and falls back to `preferred_username`, so a token
@@ -500,10 +501,10 @@ validates tokens (no issuing) configures the `Jwt` section with the `PublicKey` 
   `JwtOptions`. The parameterless overload, which hard-codes the legacy names, is **obsolete since v4.8.0 and
   removed in v5**: use `GetClaims(options)`.
 
-> ⚠️ **Changes in v5:** the defaults invert — `EmitStandardClaims = true` and `EmitLegacyClaims = false`. A token
-> issued by a v5 service without explicit flags has `sub` and no `id`. Set the two flags explicitly in the `Jwt`
-> section today, and move the readers to `sub`/`preferred_username` (or to `UserTokenDto`, which handles both),
-> so the upgrade changes nothing.
+> ⚠️ **Migrating from 4.x:** a token issued by a v5 service without explicit flags has `sub` and no `id`. Turn
+> `EmitLegacyClaims` on while old readers exist (the token then carries both sets), move the readers to
+> `sub`/`preferred_username` (or to `UserTokenDto`, which handles both) and turn it off afterwards. Tokens issued
+> by a 4.x service are still read by `UserTokenDto` and by `AddTooarkJwtBearer`.
 
 ### Testing emission and expiration
 
@@ -1551,7 +1552,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 3. **Use `Issuer` and `Audience`** - Prevents tokens from being misused across applications
 4. **Store keys in a Secret Manager** - Never commit keys to source code
 5. **Register `AddTooarkJwtBearer` instead of a hand-written `AddJwtBearer`** - Same key, issuer and audience as the issuer, validated at startup
-6. **Set `EmitLegacyClaims` and `EmitStandardClaims` explicitly** - The v5 defaults invert; explicit flags keep the tokens stable across the upgrade
+6. **Set `EmitLegacyClaims` and `EmitStandardClaims` explicitly** - Explicit flags keep the tokens stable across upgrades; turn the legacy set on only while readers of `id`/`login` exist
 7. **Read claims through `TooarkClaimNames` or `UserTokenDto`** - They follow both naming sets
 
 ### Cryptography
