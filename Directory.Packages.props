@@ -6,9 +6,9 @@
 
   <!-- Pacotes independentes da versão do runtime (mesma versão em todos os TFMs). Atualizados pelo Dependabot. -->
   <ItemGroup>
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.8" />
-    <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.100.22" />
-    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="4.0.104.8" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.104.11" />
+    <PackageVersion Include="AWSSDK.SecretsManager" Version="4.0.100.25" />
+    <PackageVersion Include="AWSSDK.SimpleSystemsManagement" Version="4.0.105" />
     <PackageVersion Include="Google.Cloud.ParameterManager.V1" Version="1.1.0" />
     <PackageVersion Include="Google.Cloud.SecretManager.V1" Version="3.0.0" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
@@ -20,8 +20,8 @@
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.20.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.1" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.2" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.20.2" />
     <!--
       Só existe em pré-lançamento: o projeto OpenTelemetry nunca publicou uma versão estável desta
       instrumentação. Fica no rc da mesma linha dos demais pacotes OpenTelemetry e gera o aviso NU5104 no
@@ -31,7 +31,7 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
     <PackageVersion Include="ReportGenerator" Version="5.5.12" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
-    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
 
