@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class EmailDomain : ValueObject
   {
     // Adiciona as notificações de validação do domínio de email
     AddNotifications(new Validation()
-      .IsEmailDomain(value, "EmailDomain", "Field.Invalid;EmailDomain")
+      .IsEmailDomain(value, "EmailDomain", ValidationErrorMessages.FieldInvalid("EmailDomain"))
     );
 
     // Verifica é valido então não existe notificação

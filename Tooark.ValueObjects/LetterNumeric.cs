@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class LetterNumeric : ValueObject
   {
     // Adiciona as notificações de validação da string de letras e números.
     AddNotifications(new Validation()
-      .IsLetterNumeric(value, "LetterNumeric", "Field.Invalid;LetterNumeric")
+      .IsLetterNumeric(value, "LetterNumeric", ValidationErrorMessages.FieldInvalid("LetterNumeric"))
     );
 
     // Verifica é valido então não existe notificação

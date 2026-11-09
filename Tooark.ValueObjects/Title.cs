@@ -1,6 +1,7 @@
 using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -28,7 +29,7 @@ public sealed class Title : ValueObject
   {
     // Adiciona as notificações de validação do título
     AddNotifications(new Validation()
-      .IsNotNullOrWhiteSpace(value, "Title", "Field.Invalid;Title")
+      .IsNotNullOrWhiteSpace(value, "Title", ValidationErrorMessages.FieldInvalid("Title"))
     );
 
     // Verifica se é válido então não existe notificação

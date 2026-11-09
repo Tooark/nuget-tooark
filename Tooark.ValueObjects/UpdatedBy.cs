@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class UpdatedBy : ValueObject
   {
     // Adiciona as notificações de validação do Guid do Atualizado Por.
     AddNotifications(new Validation()
-      .IsNotEmpty(value, "UpdatedBy", "Field.Invalid;UpdatedBy")
+      .IsNotEmpty(value, "UpdatedBy", ValidationErrorMessages.FieldInvalid("UpdatedBy"))
     );
 
     // Verifica é valido então não existe notificação

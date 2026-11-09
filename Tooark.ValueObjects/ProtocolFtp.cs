@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class ProtocolFtp : ValueObject
   {
     // Adiciona as notificações de validação do protocolo FTP
     AddNotifications(new Validation()
-      .IsProtocolFtp(value, "ProtocolFtp", "Field.Invalid;ProtocolFtp")
+      .IsProtocolFtp(value, "ProtocolFtp", ValidationErrorMessages.FieldInvalid("ProtocolFtp"))
     );
 
     // Verifica é valido então não existe notificação

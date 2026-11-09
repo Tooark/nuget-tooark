@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class Numeric : ValueObject
   {
     // Adiciona as notificações de validação da string de números.
     AddNotifications(new Validation()
-      .IsNumeric(value, "Numeric", "Field.Invalid;Numeric")
+      .IsNumeric(value, "Numeric", ValidationErrorMessages.FieldInvalid("Numeric"))
     );
 
     // Verifica é valido então não existe notificação

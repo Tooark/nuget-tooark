@@ -1,6 +1,7 @@
 using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -28,7 +29,7 @@ public sealed class Keyword : ValueObject
   {
     // Adiciona as notificações de validação da palavra-chave
     AddNotifications(new Validation()
-      .IsNotNullOrWhiteSpace(value, "Keyword", "Field.Invalid;Keyword")
+      .IsNotNullOrWhiteSpace(value, "Keyword", ValidationErrorMessages.FieldInvalid("Keyword"))
     );
 
     // Verifica se é válido então não existe notificação

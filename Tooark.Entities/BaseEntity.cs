@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Tooark.Exceptions;
 using Tooark.Notifications;
+using Tooark.Validations.Messages;
 
 namespace Tooark.Entities;
 
@@ -71,14 +72,14 @@ public abstract class BaseEntity : Notification, IEquatable<Guid>, IEquatable<Ba
     if (id == Guid.Empty)
     {
       // Adiciona uma notificação de erro
-      AddNotification("Field.Empty;Id", "Id", "T.ENT.BAS1");
+      AddNotification(ValidationErrorMessages.FieldEmpty("Id"), "Id", "T.ENT.BAS1");
       return;
     }
 
     // Não permitir mutação de identidade após definição
     if (Id != Guid.Empty && Id != id)
     {
-      AddNotification("Field.ChangeBlocked;Id", "Id", "T.ENT.BAS2");
+      AddNotification(ValidationErrorMessages.FieldChangeBlocked("Id"), "Id", "T.ENT.BAS2");
       return;
     }
 
@@ -121,7 +122,7 @@ public abstract class BaseEntity : Notification, IEquatable<Guid>, IEquatable<Ba
     // Verifica se o valor é nulo
     if (value is null)
     {
-      throw new BadRequestException($"Field.Required;{field}");
+      throw new BadRequestException(ValidationErrorMessages.FieldRequired(field));
     }
 
     // Verifica se o valor é inválido

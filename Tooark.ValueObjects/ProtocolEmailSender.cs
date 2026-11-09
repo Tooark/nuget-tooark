@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class ProtocolEmailSender : ValueObject
   {
     // Adiciona as notificações de validação do protocolo de Envio de Email
     AddNotifications(new Validation()
-      .IsProtocolEmailSender(value, "ProtocolEmailSender", "Field.Invalid;ProtocolEmailSender")
+      .IsProtocolEmailSender(value, "ProtocolEmailSender", ValidationErrorMessages.FieldInvalid("ProtocolEmailSender"))
     );
 
     // Verifica é valido então não existe notificação

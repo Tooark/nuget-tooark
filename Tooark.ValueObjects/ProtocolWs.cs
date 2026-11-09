@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class ProtocolWs : ValueObject
   {
     // Adiciona as notificações de validação do protocolo WebSocket
     AddNotifications(new Validation()
-      .IsProtocolWebSocket(value, "ProtocolWs", "Field.Invalid;ProtocolWs")
+      .IsProtocolWebSocket(value, "ProtocolWs", ValidationErrorMessages.FieldInvalid("ProtocolWs"))
     );
 
     // Verifica é valido então não existe notificação

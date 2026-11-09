@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Tooark.Enums;
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 using Tooark.ValueObjects;
 
 namespace Tooark.Entities;
@@ -59,8 +60,8 @@ public abstract class FileEntity : InitialEntity
     EnsureValid(title, "Title");
     EnsureValid(
       new Validation()
-        .IsNotNullOrEmpty(fileFormat, "FileFormat", "Field.Required;FileFormat")
-        .IsGreaterOrEquals(size, 0, "Size", "Field.Invalid;Size"),
+        .IsNotNullOrEmpty(fileFormat, "FileFormat", ValidationErrorMessages.FieldRequired("FileFormat"))
+        .IsGreaterOrEquals(size, 0, "Size", ValidationErrorMessages.FieldInvalid("Size")),
       "File");
 
     FileName = file.Name;

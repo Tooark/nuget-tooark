@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -36,7 +37,7 @@ public sealed class LanguageCode : ValueObject
   {
     // Adiciona as notificações de validação código do idioma
     AddNotifications(new Validation()
-      .IsCultureIgnoreCase(code, "LanguageCode", "Field.Invalid;LanguageCode")
+      .IsCultureIgnoreCase(code, "LanguageCode", ValidationErrorMessages.FieldInvalid("LanguageCode"))
     );
 
     // Verifica é valido então não existe notificação
