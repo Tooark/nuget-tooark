@@ -1,5 +1,6 @@
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Tooark.Observability.Enums;
 using Tooark.Observability.Options;
@@ -65,6 +66,25 @@ public class ObservabilityOptionsTests
     Assert.Null(options.ConfigureTracing);
     Assert.Null(options.ConfigureMetrics);
     Assert.Null(options.ConfigureLogging);
+    Assert.Null(options.ConfigureResource);
+  }
+
+  // Teste para definir ConfigureResource callback, que recebe o ResourceBuilder para os detectores externos.
+  [Fact]
+  public void ObservabilityOptions_ShouldSetConfigureResourceCallback()
+  {
+    // Arrange
+    ObservabilityOptions options = new();
+    var wasInvoked = false;
+    void callback(ResourceBuilder _) => wasInvoked = true;
+
+    // Act
+    options.ConfigureResource = callback;
+
+    // Assert
+    Assert.NotNull(options.ConfigureResource);
+    options.ConfigureResource.Invoke(ResourceBuilder.CreateEmpty());
+    Assert.True(wasInvoked);
   }
 
   #endregion

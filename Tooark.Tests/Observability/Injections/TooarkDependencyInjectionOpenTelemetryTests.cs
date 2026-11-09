@@ -8,8 +8,10 @@ using Microsoft.Extensions.Options;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Tooark.Exceptions;
+using Tooark.Observability;
 using Tooark.Observability.Injections;
 using Tooark.Observability.Options;
 
@@ -422,13 +424,16 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.Equal("instance-001", attrs["service.instance.id"]);
     Assert.Equal("TestEnv", attrs["deployment.environment"]);
     Assert.Equal(Environment.MachineName, attrs["host.name"]);
-    Assert.Equal(Environment.ProcessId.ToString(), attrs["process.pid"]);
+    // process.pid é numérico na convenção semântica; antes era gravado como texto
+    Assert.Equal((long)Environment.ProcessId, attrs["process.pid"]);
     Assert.Equal(".NET", attrs["process.runtime.name"]);
     Assert.Equal(Environment.Version.ToString(), attrs["process.runtime.version"]);
     Assert.Equal(RuntimeInformation.FrameworkDescription, attrs["process.runtime.description"]);
   }
 
-  // Teste para ConfigureResource adicionando atributos principais a partir de AssemblyInfo.
+  // Teste para ConfigureResource adicionando atributos principais a partir do assembly de entrada.
+  // A versão vem da InformationalVersion sem o "+commit" (o <Version> do projeto), e não mais da
+  // AssemblyVersion de quatro partes; o nome segue vindo do assembly quando as opções não informam.
   [Fact]
   public void ConfigureResource_WithoutSetInformation()
   {
@@ -437,6 +442,10 @@ public class TooarkDependencyInjectionOpenTelemetryTests
       .AddInMemoryCollection()
       .Build();
     var options = new ObservabilityOptions();
+    var entryAssembly = Assembly.GetEntryAssembly();
+    var expectedVersion = TooarkDependencyInjection.ResolveInformationalVersion(entryAssembly)
+      ?? entryAssembly?.GetName().Version?.ToString()
+      ?? "unknown_version";
 
     // Act
     var rb = TooarkDependencyInjection.ConfigureResource(config, options);
@@ -448,9 +457,410 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     Assert.True(attrs.ContainsKey("service.name"));
     Assert.True(attrs.ContainsKey("service.version"));
     Assert.True(attrs.ContainsKey("service.instance.id"));
-    Assert.Equal(Assembly.GetEntryAssembly()?.GetName().Name, attrs["service.name"]);
-    Assert.Equal(Assembly.GetEntryAssembly()?.GetName().Version?.ToString(), attrs["service.version"]);
+    Assert.Equal(entryAssembly?.GetName().Name ?? "unknown_service", attrs["service.name"]);
+    Assert.Equal(expectedVersion, attrs["service.version"]);
+    Assert.DoesNotContain('+', (string)attrs["service.version"]);
     Assert.Equal(32, serviceInstanceId.Length);
+  }
+
+  // Teste para ConfigureResource com a identidade já resolvida: o Resource grava exatamente o nome e a versão
+  // recebidos, sem consultar o assembly de entrada.
+  [Fact]
+  public void ConfigureResource_ShouldUseResolvedIdentity_WhenIdentityIsProvided()
+  {
+    // Arrange
+    var config = new ConfigurationBuilder().Build();
+    var options = new ObservabilityOptions();
+    var identity = new ServiceIdentity("orders-api", true, "2.3.0");
+
+    // Act
+    var rb = TooarkDependencyInjection.ConfigureResource(config, options, identity);
+    var attrs = rb.Build().Attributes.ToDictionary(k => k.Key, v => v.Value);
+
+    // Assert
+    Assert.Equal("orders-api", attrs["service.name"]);
+    Assert.Equal("2.3.0", attrs["service.version"]);
+    Assert.IsType<long>(attrs["process.pid"]);
+  }
+
+  // Teste para o callback ConfigureResource ser executado por último: um atributo que ele grava vence o mesmo
+  // atributo vindo de ResourceAttributes, porque na mesclagem do Resource o último valor prevalece.
+  [Fact]
+  public void ConfigureResource_ShouldInvokeConfigureResourceCallback_AfterResourceAttributes()
+  {
+    // Arrange
+    var config = new ConfigurationBuilder().Build();
+    var invoked = false;
+    var options = new ObservabilityOptions
+    {
+      ServiceName = "svc",
+      ResourceAttributes = new Dictionary<string, string> { ["cloud.region"] = "from-options" },
+      ConfigureResource = resource =>
+      {
+        invoked = true;
+        resource.AddAttributes(new Dictionary<string, object>
+        {
+          ["cloud.region"] = "from-callback",
+          ["cloud.provider"] = "aws"
+        });
+      }
+    };
+
+    // Act
+    var rb = TooarkDependencyInjection.ConfigureResource(config, options);
+    var attrs = rb.Build().Attributes.ToDictionary(k => k.Key, v => v.Value);
+
+    // Assert
+    Assert.True(invoked);
+    Assert.Equal("from-callback", attrs["cloud.region"]);
+    Assert.Equal("aws", attrs["cloud.provider"]);
+    Assert.Equal("svc", attrs["service.name"]);
+  }
+
+  // Teste para ConfigureResource sem o callback: nada além dos atributos do Tooark e das opções é adicionado.
+  [Fact]
+  public void ConfigureResource_ShouldNotFail_WhenConfigureResourceCallbackIsNull()
+  {
+    // Arrange
+    var config = new ConfigurationBuilder().Build();
+    var options = new ObservabilityOptions { ServiceName = "svc", ConfigureResource = null };
+
+    // Act
+    var attrs = TooarkDependencyInjection.ConfigureResource(config, options).Build().Attributes.ToDictionary(k => k.Key, v => v.Value);
+
+    // Assert
+    Assert.Equal("svc", attrs["service.name"]);
+    Assert.False(attrs.ContainsKey("cloud.provider"));
+  }
+
+  #endregion
+
+  #region ResolveServiceIdentity Tests
+
+  // Leitura de variáveis de ambiente substituída nos testes: o processo nunca é alterado
+  private static Func<string, string?> Env(Dictionary<string, string?>? values = null) =>
+    name => values is not null && values.TryGetValue(name, out var value) ? value : null;
+
+  // Teste para a identidade priorizar as opções sobre as variáveis de ambiente e o assembly.
+  [Fact]
+  public void ResolveServiceIdentity_ShouldUseOptions_WhenInformed()
+  {
+    // Arrange
+    var options = new ObservabilityOptions { ServiceName = " orders-api ", ServiceVersion = " 2.3.0 " };
+    var env = Env(new Dictionary<string, string?>
+    {
+      ["OTEL_SERVICE_NAME"] = "from-env",
+      ["OTEL_RESOURCE_ATTRIBUTES"] = "service.version=9.9.9"
+    });
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, env, typeof(TooarkDependencyInjectionOpenTelemetryTests).Assembly);
+
+    // Assert
+    Assert.Equal("orders-api", identity.Name);
+    Assert.Equal("2.3.0", identity.Version);
+    Assert.True(identity.IsNameKnown);
+  }
+
+  // Teste para OTEL_SERVICE_NAME vencer o nome do assembly quando as opções estão em branco.
+  // Antes, o nome do assembly sobrescrevia a variável, porque o AddService vence na mesclagem do Resource.
+  [Theory]
+  [InlineData(null)]
+  [InlineData("")]
+  [InlineData("   ")]
+  public void ResolveServiceIdentity_ShouldUseOtelServiceName_WhenOptionsNameIsBlank(string? serviceName)
+  {
+    // Arrange
+    var options = new ObservabilityOptions { ServiceName = serviceName };
+    var env = Env(new Dictionary<string, string?> { ["OTEL_SERVICE_NAME"] = "orders-api" });
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, env, typeof(TooarkDependencyInjectionOpenTelemetryTests).Assembly);
+
+    // Assert
+    Assert.Equal("orders-api", identity.Name);
+    Assert.True(identity.IsNameKnown);
+  }
+
+  // Teste para o nome do assembly de entrada ser usado sem opções e sem variável de ambiente.
+  [Fact]
+  public void ResolveServiceIdentity_ShouldUseEntryAssemblyName_WhenOptionsAndEnvAreEmpty()
+  {
+    // Arrange
+    var options = new ObservabilityOptions();
+    var assembly = typeof(TooarkDependencyInjectionOpenTelemetryTests).Assembly;
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, Env(), assembly);
+
+    // Assert
+    Assert.Equal(assembly.GetName().Name, identity.Name);
+    Assert.True(identity.IsNameKnown);
+  }
+
+  // Teste para o fallback unknown_service e unknown_version sem nenhuma fonte, com IsNameKnown falso.
+  [Fact]
+  public void ResolveServiceIdentity_ShouldFallbackToUnknown_WhenNoSourceIsAvailable()
+  {
+    // Arrange
+    var options = new ObservabilityOptions { ServiceName = "", ServiceVersion = "" };
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, Env(), null);
+
+    // Assert
+    Assert.Equal("unknown_service", identity.Name);
+    Assert.Equal("unknown_version", identity.Version);
+    Assert.False(identity.IsNameKnown);
+  }
+
+  // Teste para a versão vir de service.version em OTEL_RESOURCE_ATTRIBUTES quando as opções não informam.
+  [Fact]
+  public void ResolveServiceIdentity_ShouldUseResourceAttributesVersion_WhenOptionsVersionIsBlank()
+  {
+    // Arrange
+    var options = new ObservabilityOptions { ServiceVersion = "  " };
+    var env = Env(new Dictionary<string, string?>
+    {
+      ["OTEL_RESOURCE_ATTRIBUTES"] = "cloud.provider=aws, service.version=2.3.0-beta.1 ,cloud.region=us-east-1"
+    });
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, env, typeof(TooarkDependencyInjectionOpenTelemetryTests).Assembly);
+
+    // Assert
+    Assert.Equal("2.3.0-beta.1", identity.Version);
+  }
+
+  // Teste para a versão vir da InformationalVersion do assembly, sem o "+commit", antes da AssemblyVersion.
+  [Fact]
+  public void ResolveServiceIdentity_ShouldUseInformationalVersion_WhenEnvHasNoVersion()
+  {
+    // Arrange
+    var options = new ObservabilityOptions();
+    var assembly = typeof(ObservabilityOptions).Assembly;
+    var raw = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
+    var expected = raw.Contains('+') ? raw[..raw.IndexOf('+')] : raw;
+
+    // Act
+    var identity = TooarkDependencyInjection.ResolveServiceIdentity(options, Env(), assembly);
+
+    // Assert
+    Assert.NotEmpty(expected);
+    Assert.Equal(expected, identity.Version);
+    Assert.DoesNotContain('+', identity.Version);
+  }
+
+  // Teste para ResolveInformationalVersion descartar o sufixo "+commit" e devolver null sem assembly.
+  [Fact]
+  public void ResolveInformationalVersion_ShouldStripCommitSuffix_AndReturnNullWithoutAssembly()
+  {
+    // Arrange
+    var assembly = typeof(ObservabilityOptions).Assembly;
+
+    // Act
+    var version = TooarkDependencyInjection.ResolveInformationalVersion(assembly);
+    var missing = TooarkDependencyInjection.ResolveInformationalVersion(null);
+
+    // Assert
+    Assert.NotNull(version);
+    Assert.DoesNotContain('+', version);
+    Assert.Null(missing);
+  }
+
+  // Teste para a leitura de service.version em OTEL_RESOURCE_ATTRIBUTES: ausente, vazia, com outras chaves,
+  // com valor codificado e com a chave em outra caixa, que não é a mesma chave.
+  [Theory]
+  [InlineData(null, null)]
+  [InlineData("", null)]
+  [InlineData("cloud.provider=aws", null)]
+  [InlineData("service.version=", null)]
+  [InlineData("service.version=2.3.0", "2.3.0")]
+  [InlineData("cloud.provider=aws,service.version=2.3.0,cloud.region=us-east-1", "2.3.0")]
+  [InlineData("service.version=2.3.0%2Bbuild.7", "2.3.0+build.7")]
+  [InlineData("SERVICE.VERSION=2.3.0", null)]
+  [InlineData("service.version=a=b", "a=b")]
+  public void ResolveVersionFromResourceAttributes_ShouldReadServiceVersionKey(string? attributes, string? expected)
+  {
+    // Act
+    var version = TooarkDependencyInjection.ResolveVersionFromResourceAttributes(attributes);
+
+    // Assert
+    Assert.Equal(expected, version);
+  }
+
+  // Teste para o nome da fonte/medidor: valor informado vence; o padrão "Tooark" ou vazio vira o nome do
+  // serviço quando conhecido; com o serviço desconhecido fica "Tooark", para nunca existir uma fonte
+  // chamada unknown_service.
+  [Theory]
+  [InlineData("Orders.Tracing", "orders-api", true, "Orders.Tracing")]
+  [InlineData("  Orders.Tracing  ", "orders-api", true, "Orders.Tracing")]
+  [InlineData("Tooark", "orders-api", true, "orders-api")]
+  [InlineData(null, "orders-api", true, "orders-api")]
+  [InlineData("", "orders-api", true, "orders-api")]
+  [InlineData("   ", "orders-api", true, "orders-api")]
+  [InlineData("Tooark", "unknown_service", false, "Tooark")]
+  [InlineData(null, "unknown_service", false, "Tooark")]
+  [InlineData("tooark", "orders-api", true, "tooark")]
+  public void ResolveInstrumentationName_ShouldFollowResolutionOrder(string? configured, string serviceName, bool known, string expected)
+  {
+    // Arrange
+    var identity = new ServiceIdentity(serviceName, known, "1.0.0");
+
+    // Act
+    var name = TooarkDependencyInjection.ResolveInstrumentationName(configured, identity);
+
+    // Assert
+    Assert.Equal(expected, name);
+  }
+
+  #endregion
+
+  #region AddTooarkOpenTelemetry - TooarkInstrumentation and IOptions write-back Tests
+
+  // Teste para a instrumentação ser registrada com os nomes resolvidos a partir do ServiceName configurado.
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldRegisterTooarkInstrumentation_WithResolvedNames()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:ServiceName"] = "orders-api",
+      [$"{ObservabilityOptions.Section}:ServiceVersion"] = "2.3.0"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config);
+    using var provider = services.BuildServiceProvider();
+    var instrumentation = provider.GetRequiredService<TooarkInstrumentation>();
+
+    // Assert
+    Assert.Equal("orders-api", instrumentation.ServiceName);
+    Assert.Equal("2.3.0", instrumentation.ServiceVersion);
+    Assert.Equal("orders-api", instrumentation.ActivitySource.Name);
+    Assert.Equal("2.3.0", instrumentation.ActivitySource.Version);
+    Assert.Equal("orders-api", instrumentation.Meter.Name);
+    Assert.Equal("2.3.0", instrumentation.Meter.Version);
+    Assert.Same(instrumentation, provider.GetRequiredService<TooarkInstrumentation>());
+  }
+
+  // Teste para a instrumentação ser registrada mesmo com a observabilidade desabilitada: a injeção não falha.
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldRegisterTooarkInstrumentation_WhenDisabled()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:Enabled"] = "false",
+      [$"{ObservabilityOptions.Section}:ServiceName"] = "orders-api"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config);
+    using var provider = services.BuildServiceProvider();
+    var instrumentation = provider.GetRequiredService<TooarkInstrumentation>();
+
+    // Assert
+    Assert.Equal("orders-api", instrumentation.ActivitySource.Name);
+    Assert.Equal(0, CountOpenTelemetryRegistrations(services));
+  }
+
+  // Teste para um nome explícito de fonte e de medidor vencer o nome do serviço na instrumentação.
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldKeepExplicitNames_WhenActivitySourceAndMeterAreInformed()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:ServiceName"] = "orders-api",
+      [$"{ObservabilityOptions.Section}:Tracing:ActivitySourceName"] = "Orders.Tracing"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config, options => options.Metrics.MeterName = "Orders.Metrics");
+    using var provider = services.BuildServiceProvider();
+    var instrumentation = provider.GetRequiredService<TooarkInstrumentation>();
+    var registered = provider.GetRequiredService<IOptions<ObservabilityOptions>>().Value;
+
+    // Assert
+    Assert.Equal("Orders.Tracing", instrumentation.ActivitySource.Name);
+    Assert.Equal("Orders.Metrics", instrumentation.Meter.Name);
+    Assert.Equal("Orders.Tracing", registered.Tracing.ActivitySourceName);
+    Assert.Equal("Orders.Metrics", registered.Metrics.MeterName);
+  }
+
+  // Teste para os valores resolvidos serem gravados no IOptions: antes, options.Value.ServiceName era null
+  // mesmo com o nome inferido do assembly, e ActivitySourceName/MeterName ficavam em "Tooark".
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldWriteResolvedValuesBack_ToIOptions()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:Enabled"] = "true"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config);
+    using var provider = services.BuildServiceProvider();
+    var registered = provider.GetRequiredService<IOptions<ObservabilityOptions>>().Value;
+    var instrumentation = provider.GetRequiredService<TooarkInstrumentation>();
+
+    // Assert
+    Assert.False(string.IsNullOrWhiteSpace(registered.ServiceName));
+    Assert.False(string.IsNullOrWhiteSpace(registered.ServiceVersion));
+    Assert.Equal(instrumentation.ServiceName, registered.ServiceName);
+    Assert.Equal(instrumentation.ServiceVersion, registered.ServiceVersion);
+    Assert.Equal(instrumentation.ActivitySource.Name, registered.Tracing.ActivitySourceName);
+    Assert.Equal(instrumentation.Meter.Name, registered.Metrics.MeterName);
+    // Sem nome explícito, a fonte e o medidor recebem o nome do serviço, que aqui vem do assembly de entrada
+    Assert.Equal(registered.ServiceName, registered.Tracing.ActivitySourceName);
+    Assert.Equal(registered.ServiceName, registered.Metrics.MeterName);
+  }
+
+  // Teste para o ServiceName informado no IOptions não ser sobrescrito pela gravação dos valores resolvidos.
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldNotOverrideInformedServiceName_InIOptions()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:ServiceName"] = "orders-api"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config);
+    using var provider = services.BuildServiceProvider();
+    var registered = provider.GetRequiredService<IOptions<ObservabilityOptions>>().Value;
+
+    // Assert
+    Assert.Equal("orders-api", registered.ServiceName);
+    Assert.Equal("orders-api", registered.Tracing.ActivitySourceName);
+    Assert.Equal("orders-api", registered.Metrics.MeterName);
+  }
+
+  // Teste para o registro repetido não duplicar a instrumentação (TryAddSingleton).
+  [Fact]
+  public void AddTooarkOpenTelemetry_ShouldRegisterTooarkInstrumentationOnce_WhenCalledTwice()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var config = BuildConfig(new Dictionary<string, string?>
+    {
+      [$"{ObservabilityOptions.Section}:ServiceName"] = "orders-api"
+    });
+
+    // Act
+    services.AddTooarkOpenTelemetry(config);
+    services.AddTooarkOpenTelemetry(config);
+
+    // Assert
+    Assert.Single(services, descriptor => descriptor.ServiceType == typeof(TooarkInstrumentation));
   }
 
   // Teste para ConfigureResource normalizando e adicionando atributos de recurso personalizados.

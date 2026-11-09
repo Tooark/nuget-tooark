@@ -49,6 +49,14 @@ public static partial class TooarkDependencyInjection
 
     // Adiciona meters padrão e customizados
     builder.AddMeter(options.Metrics.MeterName);
+
+    // O nome padrão segue registrado quando o medidor principal recebeu outro nome (o do serviço, por exemplo):
+    // um Meter("Tooark") criado pela aplicação continua sendo coletado
+    if (!string.Equals(options.Metrics.MeterName, TooarkInstrumentation.DefaultName, StringComparison.Ordinal))
+    {
+      builder.AddMeter(TooarkInstrumentation.DefaultName);
+    }
+
     foreach (var meter in options.Metrics.AdditionalMeters)
     {
       builder.AddMeter(meter);

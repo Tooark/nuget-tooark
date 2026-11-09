@@ -62,6 +62,14 @@ public static partial class TooarkDependencyInjection
 
     // Adiciona sources padrão e customizadas
     builder.AddSource(options.Tracing.ActivitySourceName);
+
+    // O nome padrão segue registrado quando a fonte principal recebeu outro nome (o do serviço, por exemplo):
+    // um ActivitySource("Tooark") criado pela aplicação continua sendo capturado
+    if (!string.Equals(options.Tracing.ActivitySourceName, TooarkInstrumentation.DefaultName, StringComparison.Ordinal))
+    {
+      builder.AddSource(TooarkInstrumentation.DefaultName);
+    }
+
     foreach (var source in options.Tracing.AdditionalSources)
     {
       builder.AddSource(source);

@@ -48,10 +48,17 @@ public class MetricsOptions
   public bool ProcessMetricsEnabled { get; set; } = true;
 
   /// <summary>
-  /// Nome padrão do Meter para métricas.
+  /// Nome do Meter principal registrado nas métricas, o mesmo de <c>TooarkInstrumentation.Meter</c>.
   /// </summary>
   /// <remarks>
-  /// Utilizado para registrar métricas customizadas.
+  /// <para>
+  /// Ordem de resolução: o valor informado aqui (diferente do padrão <c>Tooark</c>), o <c>service.name</c>
+  /// resolvido quando ele veio de uma fonte real (opções, <c>OTEL_SERVICE_NAME</c> ou assembly de entrada) e,
+  /// por fim, <c>Tooark</c>. O nome <c>Tooark</c> continua sempre registrado como medidor adicional.
+  /// </para>
+  /// <para>
+  /// Depois do registro, o <c>IOptions&lt;ObservabilityOptions&gt;</c> do container carrega o nome resolvido.
+  /// </para>
   /// </remarks>
   public string MeterName { get; set; } = "Tooark";
 

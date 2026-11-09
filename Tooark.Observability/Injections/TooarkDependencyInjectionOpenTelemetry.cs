@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -26,6 +27,17 @@ public static partial class TooarkDependencyInjection
   /// <summary>
   /// Adiciona os serviços de OpenTelemetry ao container de injeção de dependência.
   /// </summary>
+  /// <remarks>
+  /// <para>
+  /// Resolve o <c>service.name</c> e o <c>service.version</c> (opções, variáveis <c>OTEL_SERVICE_NAME</c> e
+  /// <c>OTEL_RESOURCE_ATTRIBUTES</c>, assembly de entrada) e os nomes da fonte de atividades e do medidor, e
+  /// grava os valores resolvidos no <c>IOptions&lt;ObservabilityOptions&gt;</c> do container.
+  /// </para>
+  /// <para>
+  /// Registra o <see cref="TooarkInstrumentation"/> como singleton, com a fonte e o medidor já registrados no
+  /// OpenTelemetry, mesmo quando a observabilidade está desabilitada, para a injeção nunca falhar.
+  /// </para>
+  /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
   /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
   /// <param name="configure">Ação opcional para configurar programaticamente as opções de Observability.</param>
@@ -52,6 +64,37 @@ public static partial class TooarkDependencyInjection
     // Aplica configurações programáticas
     configure?.Invoke(options);
 
+    // Resolve a identidade do serviço e os nomes da fonte e do medidor uma única vez, antes de olhar o Enabled:
+    // a instrumentação e o IOptions recebem os valores resolvidos mesmo com a observabilidade desligada
+    var identity = ResolveServiceIdentity(options, Environment.GetEnvironmentVariable, Assembly.GetEntryAssembly());
+    var activitySourceName = ResolveInstrumentationName(options.Tracing.ActivitySourceName, identity);
+    var meterName = ResolveInstrumentationName(options.Metrics.MeterName, identity);
+
+    // As opções locais passam a carregar os nomes resolvidos: o tracing e as métricas registram esses nomes
+    options.Tracing.ActivitySourceName = activitySourceName;
+    options.Metrics.MeterName = meterName;
+
+    // Grava os valores resolvidos no IOptions do container, depois dos overrides programáticos: quem lê
+    // options.Value.ServiceName recebe o nome inferido, e não null
+    services.PostConfigure<ObservabilityOptions>(registered =>
+    {
+      if (string.IsNullOrWhiteSpace(registered.ServiceName))
+      {
+        registered.ServiceName = identity.Name;
+      }
+
+      if (string.IsNullOrWhiteSpace(registered.ServiceVersion))
+      {
+        registered.ServiceVersion = identity.Version;
+      }
+
+      registered.Tracing.ActivitySourceName = activitySourceName;
+      registered.Metrics.MeterName = meterName;
+    });
+
+    // Fonte e medidor prontos para a aplicação, descartados junto com o container
+    services.TryAddSingleton(_ => new TooarkInstrumentation(activitySourceName, meterName, identity.Name, identity.Version));
+
     // Se desabilitado, não registra nada
     if (!options.Enabled)
     {
@@ -62,7 +105,7 @@ public static partial class TooarkDependencyInjection
     var isDevelopment = IsDevelopmentEnvironment(configuration);
 
     // Configura o resource (identificação do serviço)
-    var resourceBuilder = ConfigureResource(configuration, options);
+    var resourceBuilder = ConfigureResource(configuration, options, identity);
 
     // Configura OpenTelemetry
     var otelBuilder = services.AddOpenTelemetry();
@@ -146,42 +189,197 @@ public static partial class TooarkDependencyInjection
   }
 
   /// <summary>
-  /// Configura o ResourceBuilder com informações do serviço.
+  /// Resolve a identidade do serviço (<c>service.name</c> e <c>service.version</c>) a partir das opções, das
+  /// variáveis de ambiente do OpenTelemetry e do assembly de entrada.
+  /// </summary>
+  /// <remarks>
+  /// Nome: <c>ServiceName</c>, <c>OTEL_SERVICE_NAME</c>, nome do assembly de entrada, <c>unknown_service</c>.
+  /// Versão: <c>ServiceVersion</c>, <c>service.version</c> em <c>OTEL_RESOURCE_ATTRIBUTES</c>,
+  /// <c>AssemblyInformationalVersion</c> sem o sufixo <c>+commit</c>, <c>AssemblyVersion</c>,
+  /// <c>unknown_version</c>. Valores vazios ou só com espaços passam para a próxima fonte.
+  /// </remarks>
+  /// <param name="options">Opções de Observability.</param>
+  /// <param name="getEnvironmentVariable">Leitura das variáveis de ambiente, substituível nos testes.</param>
+  /// <param name="entryAssembly">Assembly de entrada da aplicação, quando houver.</param>
+  /// <returns>A identidade resolvida.</returns>
+  internal static ServiceIdentity ResolveServiceIdentity(
+    ObservabilityOptions options,
+    Func<string, string?> getEnvironmentVariable,
+    Assembly? entryAssembly
+  )
+  {
+    // O nome vem da primeira fonte real preenchida; só sem nenhuma delas cai no fallback da especificação
+    var serviceName = FirstNonBlank(
+      options.ServiceName,
+      getEnvironmentVariable("OTEL_SERVICE_NAME"),
+      entryAssembly?.GetName().Name
+    );
+
+    // A versão informacional carrega o <Version> do projeto (2.3.0, 2.3.0-beta.1); a AssemblyVersion tem quatro partes
+    var serviceVersion = FirstNonBlank(
+      options.ServiceVersion,
+      ResolveVersionFromResourceAttributes(getEnvironmentVariable("OTEL_RESOURCE_ATTRIBUTES")),
+      ResolveInformationalVersion(entryAssembly),
+      entryAssembly?.GetName().Version?.ToString()
+    );
+
+    return new ServiceIdentity(
+      serviceName ?? "unknown_service",
+      serviceName is not null,
+      serviceVersion ?? "unknown_version"
+    );
+  }
+
+  /// <summary>
+  /// Lê a chave <c>service.version</c> do valor de <c>OTEL_RESOURCE_ATTRIBUTES</c> (<c>chave=valor,chave=valor</c>).
+  /// </summary>
+  /// <param name="resourceAttributes">Valor da variável de ambiente, quando houver.</param>
+  /// <returns>A versão, ou null quando a chave não está presente ou está vazia.</returns>
+  internal static string? ResolveVersionFromResourceAttributes(string? resourceAttributes)
+  {
+    // Sem a variável não há o que ler
+    if (string.IsNullOrWhiteSpace(resourceAttributes))
+    {
+      return null;
+    }
+
+    // Cada par é chave=valor; o valor pode conter '=' e vir codificado como na especificação (W3C Baggage)
+    foreach (var pair in resourceAttributes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    {
+      var separator = pair.IndexOf('=');
+
+      if (separator <= 0)
+      {
+        continue;
+      }
+
+      // As chaves de atributo do OpenTelemetry diferenciam maiúsculas, como no detector do próprio SDK
+      var key = pair[..separator].Trim();
+
+      if (!key.Equals("service.version", StringComparison.Ordinal))
+      {
+        continue;
+      }
+
+      var value = Uri.UnescapeDataString(pair[(separator + 1)..].Trim());
+
+      return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  /// Lê a <c>AssemblyInformationalVersion</c> do assembly, descartando o sufixo <c>+commit</c> que o SDK anexa.
+  /// </summary>
+  /// <param name="assembly">Assembly a consultar, quando houver.</param>
+  /// <returns>A versão informacional sem o sufixo, ou null quando ausente ou vazia.</returns>
+  internal static string? ResolveInformationalVersion(Assembly? assembly)
+  {
+    var informational = assembly?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+
+    if (string.IsNullOrWhiteSpace(informational))
+    {
+      return null;
+    }
+
+    // A partir do .NET 8 o SDK anexa o commit (2.3.0+a1b2c3d); o trecho depois do '+' não é parte da versão
+    var plus = informational.IndexOf('+');
+    var version = (plus >= 0 ? informational[..plus] : informational).Trim();
+
+    return version.Length == 0 ? null : version;
+  }
+
+  /// <summary>
+  /// Resolve o nome da fonte de atividades ou do medidor principal.
+  /// </summary>
+  /// <remarks>
+  /// O valor informado vence quando difere do padrão <see cref="TooarkInstrumentation.DefaultName"/>. Sem valor
+  /// informado, usa o <c>service.name</c> quando ele veio de uma fonte real; com o nome desconhecido, fica no
+  /// padrão, para nunca existir uma fonte chamada <c>unknown_service</c>.
+  /// </remarks>
+  /// <param name="configured">Nome configurado nas opções.</param>
+  /// <param name="identity">Identidade do serviço resolvida.</param>
+  /// <returns>O nome resolvido.</returns>
+  internal static string ResolveInstrumentationName(string? configured, ServiceIdentity identity)
+  {
+    var informed = configured?.Trim();
+
+    // Um nome diferente do padrão foi informado de propósito
+    if (!string.IsNullOrEmpty(informed) && !informed.Equals(TooarkInstrumentation.DefaultName, StringComparison.Ordinal))
+    {
+      return informed;
+    }
+
+    return identity.IsNameKnown ? identity.Name : TooarkInstrumentation.DefaultName;
+  }
+
+  /// <summary>
+  /// Devolve o primeiro valor que não é nulo, vazio ou só espaços, já sem os espaços das pontas.
+  /// </summary>
+  /// <param name="candidates">Valores na ordem de prioridade.</param>
+  /// <returns>O primeiro valor preenchido, ou null quando nenhum está.</returns>
+  private static string? FirstNonBlank(params string?[] candidates)
+  {
+    foreach (var candidate in candidates)
+    {
+      if (!string.IsNullOrWhiteSpace(candidate))
+      {
+        return candidate.Trim();
+      }
+    }
+
+    return null;
+  }
+
+  /// <summary>
+  /// Configura o ResourceBuilder com informações do serviço, resolvendo a identidade a partir das variáveis
+  /// de ambiente do processo e do assembly de entrada.
   /// </summary>
   /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
   /// <param name="options">Opções de Observability.</param>
   /// <returns>ResourceBuilder configurado.</returns>
-  internal static ResourceBuilder ConfigureResource(IConfiguration configuration, ObservabilityOptions options)
+  internal static ResourceBuilder ConfigureResource(IConfiguration configuration, ObservabilityOptions options) =>
+    ConfigureResource(
+      configuration,
+      options,
+      ResolveServiceIdentity(options, Environment.GetEnvironmentVariable, Assembly.GetEntryAssembly())
+    );
+
+  /// <summary>
+  /// Configura o ResourceBuilder com informações do serviço.
+  /// </summary>
+  /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
+  /// <param name="options">Opções de Observability.</param>
+  /// <param name="identity">Identidade do serviço já resolvida.</param>
+  /// <returns>ResourceBuilder configurado.</returns>
+  internal static ResourceBuilder ConfigureResource(IConfiguration configuration, ObservabilityOptions options, ServiceIdentity identity)
   {
-    // Obtém o nome, versão e ambiente do serviço
-    var serviceName = options.ServiceName
-      ?? Assembly.GetEntryAssembly()?.GetName().Name
-      ?? "unknown_service";
-    var serviceVersion = options.ServiceVersion
-      ?? Assembly.GetEntryAssembly()?.GetName().Version?.ToString()
-      ?? "unknown_version";
+    // Obtém a instância e o ambiente do serviço
     var serviceInstanceId = options.ServiceInstanceId
       ?? Environment.GetEnvironmentVariable("OTEL_SERVICE_INSTANCE_ID")
       ?? Guid.NewGuid().ToString("N");
     var serviceEnvironment = GetEnvironment(configuration);
 
-    // Cria o ResourceBuilder
+    // Cria o ResourceBuilder. O CreateDefault lê OTEL_SERVICE_NAME e OTEL_RESOURCE_ATTRIBUTES; como o AddService
+    // vence na mesclagem, a identidade resolvida já considera as duas variáveis para os valores coincidirem
     var resourceBuilder = ResourceBuilder
       .CreateDefault()
       .AddService(
-        serviceName: serviceName,
-        serviceVersion: serviceVersion,
+        serviceName: identity.Name,
+        serviceVersion: identity.Version,
         serviceInstanceId: serviceInstanceId
       );
 
     // Atributos úteis e genéricos (não dependem do tipo de aplicação)
     // deployment.environment.name é a convenção semântica atual; deployment.environment é mantida para backends que ainda usam a chave antiga
+    // process.pid é numérico na convenção semântica (o SDK guarda inteiros como long)
     resourceBuilder.AddAttributes(new Dictionary<string, object>
     {
       ["deployment.environment"] = serviceEnvironment,
       ["deployment.environment.name"] = serviceEnvironment,
       ["host.name"] = Environment.MachineName,
-      ["process.pid"] = Environment.ProcessId.ToString(),
+      ["process.pid"] = (long)Environment.ProcessId,
       ["process.runtime.name"] = ".NET",
       ["process.runtime.version"] = Environment.Version.ToString(),
       ["process.runtime.description"] = RuntimeInformation.FrameworkDescription
@@ -204,6 +402,9 @@ public static partial class TooarkDependencyInjection
 
       resourceBuilder.AddAttributes(customAttributes);
     }
+
+    // Callback da aplicação por último, como os demais callbacks do pacote: detectores de nuvem e de contêiner
+    options.ConfigureResource?.Invoke(resourceBuilder);
 
     return resourceBuilder;
   }
