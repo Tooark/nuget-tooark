@@ -107,10 +107,9 @@ Creating and clearing notifications is protected: only the object itself decides
 - `AddNotification(string message, string key)`: Adds a notification item with message and key.
 - `AddNotification(string message, string key, string code)`: Adds a notification item with message, key and error code.
 - `AddNotifications(ICollection<NotificationItem> notifications)`: Adds a collection of notification items to the notification list.
-- `ClearNotifications()`: Clears the notification list.
-- `Clear()`: Same as `ClearNotifications()`. **Obsolete since v4.8.0, removed in v5**: the name collides with domain
-  methods of the entities (a `Clear()` of your own hides the base one, `CS0108`). It is marked with `[Obsolete]`,
-  so calls get a compiler warning; replace them with `ClearNotifications()`.
+- `ClearNotifications()`: Clears the notification list. It replaces the `Clear()` of the 4.x line, **removed in
+  v5.0.0** (obsolete since v4.8.0): the name collided with domain methods of the entities, and a `Clear()` of your
+  own hid the base one (`CS0108`). The name is now free for your entities.
 
 **Null handling:**
 

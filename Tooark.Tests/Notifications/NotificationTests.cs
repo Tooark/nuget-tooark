@@ -20,10 +20,6 @@ public class NotificationTests
     public new void AddNotifications(ICollection<NotificationItem> notifications) => base.AddNotifications(notifications);
 
     public new void ClearNotifications() => base.ClearNotifications();
-
-#pragma warning disable CS0618 // Clear() é obsoleto: o teste garante que continua funcionando até a v5
-    public new void Clear() => base.Clear();
-#pragma warning restore CS0618
   }
 
   // Testa a adição de uma notificação com uma mensagem
@@ -169,38 +165,18 @@ public class NotificationTests
     Assert.True(notification.IsValid);
   }
 
-  // Testa se o Clear() obsoleto continua limpando as notificações: ele encaminha para ClearNotifications()
-  // e só sai na v5, então quem ainda o chama não pode mudar de comportamento na 4.x.
+  // Testa se o Clear() da 4.x não existe mais: a v5 o removeu para liberar o nome aos métodos de domínio
+  // das entidades (um Clear() próprio ocultava o da base, CS0108)
   [Fact]
-  public void Clear_ShouldClearNotifications_WhileObsolete()
+  public void Clear_ShouldNotExist_InV5()
   {
-    // Arrange
-    var notification = new TestNotification();
-    notification.AddNotification("Message 1");
-
-    // Act
-    notification.Clear();
-
-    // Assert
-    Assert.Empty(notification.Notifications);
-  }
-
-  // Testa se o Clear() carrega o ObsoleteAttribute com a orientação de migração para a v5
-  [Fact]
-  public void Clear_ShouldBeMarkedObsolete()
-  {
-    // Arrange
+    // Arrange & Act
     var method = typeof(Notification).GetMethod(
       "Clear",
-      System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-    // Act
-    var attribute = method?.GetCustomAttributes(typeof(ObsoleteAttribute), false).OfType<ObsoleteAttribute>().SingleOrDefault();
+      System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
 
     // Assert
-    Assert.NotNull(attribute);
-    Assert.Contains("ClearNotifications", attribute.Message);
-    Assert.Contains("v5", attribute.Message);
+    Assert.Null(method);
   }
 
   // Testa a validação de notificações

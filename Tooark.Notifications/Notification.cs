@@ -177,21 +177,14 @@ public abstract class Notification
   /// Limpa a lista de notificações.
   /// </summary>
   /// <remarks>
-  /// Substitui o <c>Clear()</c>, cujo nome colide com métodos de domínio das entidades: um <c>Clear()</c>
-  /// próprio oculta o da base (CS0108). O <c>Clear()</c> fica obsoleto na 4.x e é removido na v5.
+  /// Substitui o <c>Clear()</c> da linha 4.x, cujo nome colidia com métodos de domínio das entidades: um
+  /// <c>Clear()</c> próprio ocultava o da base (CS0108). O <c>Clear()</c> foi removido na v5.
   /// </remarks>
   protected void ClearNotifications()
   {
     // Limpa a lista de notificações
     _notifications.Clear();
   }
-
-  /// <summary>
-  /// Limpa a lista de notificações. Obsoleto: use <see cref="ClearNotifications"/>.
-  /// </summary>
-  /// <remarks>Mantido só por compatibilidade; será removido na v5.</remarks>
-  [Obsolete("Use ClearNotifications(). Will be removed in v5.")]
-  protected void Clear() => ClearNotifications();
 
   #endregion
 

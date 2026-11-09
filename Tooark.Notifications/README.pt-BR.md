@@ -108,10 +108,9 @@ A criação e a limpeza de notificações são protegidas: apenas o próprio obj
 - `AddNotification(string message, string key)`: Adiciona um item de notificação com mensagem e chave.
 - `AddNotification(string message, string key, string code)`: Adiciona um item de notificação com mensagem, chave e código de erro.
 - `AddNotifications(ICollection<NotificationItem> notifications)`: Adiciona uma coleção de itens de notificação à lista de notificações.
-- `ClearNotifications()`: Limpa a lista de notificações.
-- `Clear()`: Igual ao `ClearNotifications()`. **Obsoleto desde a v4.8.0, removido na v5**: o nome colide com métodos
-  de domínio das entidades (um `Clear()` próprio oculta o da base, `CS0108`). Está marcado com `[Obsolete]`, então
-  as chamadas recebem um aviso do compilador; troque-as por `ClearNotifications()`.
+- `ClearNotifications()`: Limpa a lista de notificações. Substitui o `Clear()` da linha 4.x, **removido na v5.0.0**
+  (obsoleto desde a v4.8.0): o nome colidia com métodos de domínio das entidades, e um `Clear()` próprio ocultava o
+  da base (`CS0108`). O nome agora fica livre para as suas entidades.
 
 **Tratamento de valores nulos:**
 
