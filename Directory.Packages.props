@@ -12,7 +12,7 @@
     <PackageVersion Include="Google.Cloud.ParameterManager.V1" Version="1.1.0" />
     <PackageVersion Include="Google.Cloud.SecretManager.V1" Version="3.0.0" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
-    <PackageVersion Include="HtmlSanitizer" Version="10.0.1120" />
+    <PackageVersion Include="HtmlSanitizer" Version="11.0.16" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.13" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Moq" Version="4.21.0" />
