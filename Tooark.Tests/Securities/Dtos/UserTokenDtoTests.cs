@@ -380,4 +380,47 @@ public class UserTokenDtoTests
     Assert.Equal(string.Empty, dto.GetClaim("id"));
     Assert.Equal(Guid.Empty, dto.GetClaim<Guid>("id"));
   }
+
+  // Testa se um token só com as claims padrão (sub, preferred_username) preenche Id e Login
+  [Fact]
+  public void Constructor_ShouldReadStandardClaims_WhenLegacyClaimsAreAbsent()
+  {
+    // Arrange
+    var token = new JwtSecurityToken(claims:
+    [
+      new Claim("sub", "42"),
+      new Claim("preferred_username", "ana"),
+      new Claim("security", "7")
+    ]);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal("42", dto.Id);
+    Assert.Equal("ana", dto.Login);
+    Assert.Equal("7", dto.Security);
+    Assert.Equal("42", dto.GetClaim("sub"));
+  }
+
+  // Testa se a claim legada prevalece quando o token traz os dois conjuntos
+  [Fact]
+  public void Constructor_ShouldPreferLegacyClaims_WhenBothArePresent()
+  {
+    // Arrange
+    var token = new JwtSecurityToken(claims:
+    [
+      new Claim("id", "legacy-id"),
+      new Claim("sub", "standard-id"),
+      new Claim("login", "legacy-login"),
+      new Claim("preferred_username", "standard-login")
+    ]);
+
+    // Act
+    var dto = new UserTokenDto(token);
+
+    // Assert
+    Assert.Equal("legacy-id", dto.Id);
+    Assert.Equal("legacy-login", dto.Login);
+  }
 }

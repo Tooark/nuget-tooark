@@ -139,5 +139,26 @@ public class JwtOptions
   /// </summary>
   public int ExpirationTime { get; set; } = 5;
 
+  /// <summary>
+  /// Emite as claims com os nomes legados do Tooark: <c>id</c> e <c>login</c>. Padrão: <c>true</c>.
+  /// </summary>
+  /// <remarks>
+  /// Na v5 o padrão passa a <c>false</c> e as claims padrão (<see cref="EmitStandardClaims"/>) passam a ser as
+  /// emitidas. Defina os dois sinalizadores de forma explícita para que a troca de versão não mude os tokens.
+  /// Ao menos um dos dois precisa estar ligado; os dois desligados falham no startup.
+  /// </remarks>
+  public bool EmitLegacyClaims { get; set; } = true;
+
+  /// <summary>
+  /// Emite as claims com os nomes padrão do JWT e do OpenID Connect: <c>sub</c> e <c>preferred_username</c>.
+  /// Padrão: <c>false</c>.
+  /// </summary>
+  /// <remarks>
+  /// Com os dois sinalizadores ligados o token carrega os dois conjuntos, o caminho de migração: os consumidores
+  /// passam a ler <c>sub</c> enquanto os antigos ainda leem <c>id</c>. A claim <c>security</c> não tem equivalente
+  /// padrão e é emitida sempre. Na v5 o padrão passa a <c>true</c>.
+  /// </remarks>
+  public bool EmitStandardClaims { get; set; } = false;
+
   #endregion
 }
