@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.9.0</Version>
+    <Version>5.0.0</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
     <Copyright>Copyright (c) 2026 Tooark</Copyright>
@@ -38,7 +38,14 @@
       versão major, atualize a baseline para a última versão da linha anterior ou remova-a temporariamente.
     -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>4.8.0</PackageValidationBaselineVersion>
+    <!--
+      v5: a baseline fica desligada enquanto a major está em desenvolvimento, porque a remoção do
+      Notification.Clear() e a troca dos padrões das claims do JWT são quebras intencionais. Antes de publicar a
+      5.0.0, restaure a baseline na última 4.x publicada (4.8.0) e gere o CompatibilitySuppressions.xml com
+      "dotnet pack /p:GenerateCompatibilitySuppressionFile=true", para que só as quebras documentadas nas notas
+      passem pela validação.
+    -->
+    <!-- <PackageValidationBaselineVersion>4.8.0</PackageValidationBaselineVersion> -->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
