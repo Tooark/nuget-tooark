@@ -40,7 +40,7 @@ public class PasswordHashServiceTests
     Assert.Matches(@"^\$pbkdf2-sha256\$i=600000\$[A-Za-z0-9+/]{22}\$[A-Za-z0-9+/]{43}$", hash);
   }
 
-  // Testa se cada hash usa um sal novo: a mesma senha nunca produz o mesmo texto
+  // Testa se cada hash usa um salt novo: a mesma senha nunca produz o mesmo texto
   [Fact]
   public void Hash_ShouldUseRandomSalt()
   {
@@ -85,7 +85,7 @@ public class PasswordHashServiceTests
     Assert.False(service.Verify("Senha-correta", hash));
   }
 
-  // Testa o vetor conhecido do PBKDF2-HMAC-SHA256 (senha "password", sal "salt", 1 iteração), montado no formato PHC
+  // Testa o vetor conhecido do PBKDF2-HMAC-SHA256 (senha "password", salt "salt", 1 iteração), montado no formato PHC
   [Fact]
   public void Verify_ShouldAcceptKnownPbkdf2Vector()
   {
@@ -162,7 +162,7 @@ public class PasswordHashServiceTests
     Assert.Contains("$i=700000$", newService.Hash("senha"));
   }
 
-  // Testa se um hash com sal ou saída de tamanho diferente do configurado é apontado para ser refeito
+  // Testa se um hash com salt ou saída de tamanho diferente do configurado é apontado para ser refeito
   [Fact]
   public void NeedsRehash_ShouldReturnTrue_WhenSizesChanged()
   {

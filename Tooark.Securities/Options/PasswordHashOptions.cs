@@ -33,7 +33,7 @@ public class PasswordHashOptions
   public const int MinimumIterations = 100_000;
 
   /// <summary>
-  /// Tamanho padrão e mínimo do sal em bytes (128 bits).
+  /// Tamanho padrão e mínimo do salt em bytes (128 bits).
   /// </summary>
   public const int DefaultSaltSize = 16;
 
@@ -57,7 +57,7 @@ public class PasswordHashOptions
   public int Iterations { get; set; } = DefaultIterations;
 
   /// <summary>
-  /// Tamanho do sal em bytes. Padrão e mínimo: 16.
+  /// Tamanho do salt em bytes. Padrão e mínimo: 16.
   /// </summary>
   public int SaltSize { get; set; } = DefaultSaltSize;
 
@@ -73,7 +73,7 @@ public class PasswordHashOptions
   /// <summary>
   /// Valida as opções, falhando no startup quando algum valor fica abaixo do mínimo seguro.
   /// </summary>
-  /// <exception cref="InternalServerErrorException">Quando as iterações, o sal ou o hash ficam abaixo do mínimo.</exception>
+  /// <exception cref="InternalServerErrorException">Quando as iterações, o salt ou o hash ficam abaixo do mínimo.</exception>
   public void Validate()
   {
     // Nenhum dos mínimos é substituído em silêncio: configuração fraca é erro de configuração

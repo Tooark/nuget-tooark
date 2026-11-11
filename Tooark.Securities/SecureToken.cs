@@ -8,9 +8,9 @@ namespace Tooark.Securities;
 /// </summary>
 /// <remarks>
 /// O token vai para o usuário e só o hash vai para o banco: um vazamento do banco não expõe tokens válidos.
-/// O hash é SHA-256 sem sal e sem fator de custo de propósito: o token tem no mínimo 128 bits aleatórios,
+/// O hash é SHA-256 sem salt e sem fator de custo de propósito: o token tem no mínimo 128 bits aleatórios,
 /// então a força bruta é inviável mesmo com um hash rápido, e o hash determinístico permite buscar o registro pelo
-/// próprio hash. Hash lento com sal é para senha, que tem pouca entropia (<see cref="Interfaces.IPasswordHashService"/>).
+/// próprio hash. Hash lento com salt é para senha, que tem pouca entropia (<see cref="Interfaces.IPasswordHashService"/>).
 /// </remarks>
 public static class SecureToken
 {

@@ -118,7 +118,7 @@
   "Options.Otlp.Headers.SecurityRisk": "Los encabezados OTLP llevan credenciales de forma insegura.",
   "Options.PasswordHash.HashSizeTooSmall": "El hash de contraseña debe tener al menos {0} bytes.",
   "Options.PasswordHash.IterationsTooLow": "El hash de contraseña debe usar al menos {0} iteraciones.",
-  "Options.PasswordHash.SaltSizeTooSmall": "La sal del hash de contraseña debe tener al menos {0} bytes.",
+  "Options.PasswordHash.SaltSizeTooSmall": "La salt del hash de contraseña debe tener al menos {0} bytes.",
   "Options.Sanitizers.Html.AttributeNotAllowed": "El atributo de evento {0} no se puede permitir en el sanitizador de HTML.",
   "Options.Sanitizers.Html.TagNotAllowed": "La etiqueta {0} no se puede permitir en el sanitizador de HTML.",
   "Options.Sanitizers.SchemeInvalid": "El esquema {0} no es un esquema de URL válido.",

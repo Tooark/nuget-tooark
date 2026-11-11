@@ -17,7 +17,7 @@ public static partial class TooarkDependencyInjection
   /// </summary>
   /// <remarks>
   /// A seção <c>PasswordHash</c> é opcional: sem ela, e sem <paramref name="configure"/>, valem os padrões
-  /// (600.000 iterações, sal de 16 bytes, hash de 32 bytes). As opções são validadas aqui, no startup, e não no
+  /// (600.000 iterações, salt de 16 bytes, hash de 32 bytes). As opções são validadas aqui, no startup, e não no
   /// primeiro login. Chamar mais de uma vez não repete o registro do serviço.
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>

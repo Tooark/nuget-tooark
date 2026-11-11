@@ -8,16 +8,12 @@ namespace Tooark.Securities;
 /// Senha de uso único baseada em tempo (TOTP, RFC 6238), o segundo fator dos aplicativos autenticadores.
 /// </summary>
 /// <remarks>
-/// <para>
 /// Os padrões são os que o Google Authenticator, o Microsoft Authenticator e similares aceitam: HMAC-SHA1,
 /// 6 dígitos e passos de 30 segundos. O segredo é gerado em Base32 e deve ser guardado cifrado
 /// (<see cref="Interfaces.ICryptographyService"/>), porque quem o lê gera códigos válidos.
-/// </para>
-/// <para>
 /// A verificação aceita o passo atual e os vizinhos dentro da janela, para tolerar relógio defasado, e recusa
 /// qualquer passo já usado: grave o <c>matchedStep</c> devolvido por <see cref="Verify"/> e informe-o na próxima
 /// verificação, para que o mesmo código não valha duas vezes.
-/// </para>
 /// </remarks>
 public static class Totp
 {
@@ -84,6 +80,7 @@ public static class Totp
   {
     ArgumentException.ThrowIfNullOrWhiteSpace(issuer);
     ArgumentException.ThrowIfNullOrWhiteSpace(account);
+
     ValidateDigits(digits);
     ValidatePeriod(periodSeconds);
 
@@ -121,6 +118,7 @@ public static class Totp
   public static string Compute(string secret, long timeStep, int digits = DefaultDigits)
   {
     ValidateDigits(digits);
+
     ArgumentOutOfRangeException.ThrowIfNegative(timeStep);
 
     return Compute(DecodeSecret(secret), timeStep, digits);
@@ -157,6 +155,7 @@ public static class Totp
   {
     ArgumentOutOfRangeException.ThrowIfNegative(window);
     ArgumentOutOfRangeException.ThrowIfGreaterThan(window, 10);
+
     ValidateDigits(digits);
     ValidatePeriod(periodSeconds);
 

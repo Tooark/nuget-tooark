@@ -65,7 +65,7 @@ Biblioteca de segurança para aplicações .NET, fornecendo **criptografia AES**
 | `IKeyedCryptographyService.KeyIdOf`              | Lê o identificador da chave de um valor; `null` para um valor legado, sem prefixo |
 | `IKeyedCryptographyService.IsCurrent`            | Se o valor foi cifrado com a chave corrente                                       |
 | `IKeyedCryptographyService.ReEncrypt`            | Decifra com a chave que gravou o valor e cifra com a corrente                     |
-| `IPasswordHashService.Hash`                      | Gera o hash de uma senha com sal aleatório                                        |
+| `IPasswordHashService.Hash`                      | Gera o hash de uma senha com salt aleatório                                       |
 | `IPasswordHashService.Verify`                    | Confere a senha contra o hash guardado, em tempo constante; nunca lança           |
 | `IPasswordHashService.NeedsRehash`               | Se o hash usa parâmetros mais antigos que as opções atuais                        |
 
@@ -264,7 +264,7 @@ Exemplo com múltiplos emissores e destinatários:
 | Propriedade  | Tipo | Padrão   | Descrição                                                   |
 | ------------ | ---- | -------- | ----------------------------------------------------------- |
 | `Iterations` | int  | `600000` | Iterações do PBKDF2 (recomendação da OWASP). Mínimo 100.000 |
-| `SaltSize`   | int  | `16`     | Tamanho do sal em bytes. Mínimo 16                          |
+| `SaltSize`   | int  | `16`     | Tamanho do salt em bytes. Mínimo 16                         |
 | `HashSize`   | int  | `32`     | Tamanho do hash derivado em bytes. Mínimo 32                |
 
 > Valores abaixo dos mínimos falham no startup: configuração fraca é erro de configuração, nunca é substituída
@@ -956,7 +956,7 @@ cima dela.
 ## 🧂 Hash de Senha
 
 O `IPasswordHashService` gera hashes de senha com **PBKDF2-HMAC-SHA256**, nativo do .NET
-(`Rfc2898DeriveBytes.Pbkdf2`), com sal aleatório por senha e 600.000 iterações por padrão — a recomendação atual
+(`Rfc2898DeriveBytes.Pbkdf2`), com salt aleatório por senha e 600.000 iterações por padrão — a recomendação atual
 da OWASP. O value object `Password` do `Tooark.ValueObjects` valida e mascara uma senha; este serviço é o que vai
 para o banco.
 
@@ -993,17 +993,17 @@ public class AccountService(IPasswordHashService passwords, IUserRepository user
 ### Formato do hash
 
 ```text
-$pbkdf2-sha256$i=600000$<sal em Base64>$<hash em Base64>
+$pbkdf2-sha256$i=600000$<salt em Base64>$<hash em Base64>
 ```
 
 A string PHC carrega o algoritmo e os parâmetros, então o serviço continua validando hashes gravados com
-parâmetros antigos e o `NeedsRehash` aponta quais regravar. Sal e hash usam Base64 sem preenchimento, como o
+parâmetros antigos e o `NeedsRehash` aponta quais regravar. Salt e hash usam Base64 sem preenchimento, como o
 formato prescreve; o `Verify` aceita também a forma com preenchimento.
 
 - O `Hash` lança `PasswordHash.PasswordNotProvided` para senha nula ou vazia.
 - O `Verify` nunca lança: senha nula, hash nulo ou hash em outro formato (outro algoritmo, um texto puro)
   devolve `false`.
-- O `NeedsRehash` devolve `true` quando as iterações, o tamanho do sal ou o tamanho do hash diferem das opções
+- O `NeedsRehash` devolve `true` quando as iterações, o tamanho do salt ou o tamanho do hash diferem das opções
   atuais, e também para um hash que ele não consegue ler.
 
 ### Por que PBKDF2 e não Argon2
@@ -1043,9 +1043,9 @@ if (record is null || record.ExpiresAt < DateTime.UtcNow || !SecureToken.Verify(
 }
 ```
 
-O hash é SHA-256 sem sal nem fator de custo de propósito: o token tem no mínimo 128 bits aleatórios, então a
+O hash é SHA-256 sem salt nem fator de custo de propósito: o token tem no mínimo 128 bits aleatórios, então a
 força bruta é inviável mesmo com um hash rápido, e um hash determinístico permite achar o registro por ele. Hash
-lento com sal é para senha, que tem pouca entropia (`IPasswordHashService`). O `Create` aceita de 16 a 1024
+lento com salt é para senha, que tem pouca entropia (`IPasswordHashService`). O `Create` aceita de 16 a 1024
 bytes; o `Verify` devolve `false` para qualquer coisa ausente ou malformada, nunca lança.
 
 ### `Totp` — segundo fator com aplicativos autenticadores
@@ -1089,8 +1089,7 @@ user.TotpLastUsedStep = step;
   usuário em silêncio.
 - `Compute(secret, step, digits)` e `GetTimeStep(at, period)` expõem as peças para testes e para exibir um código
   no servidor; o `TimeProvider` do `Verify` deixa um teste controlar o relógio.
-- `digits` (6 a 8) e `periodSeconds` são configuráveis, mas nem todo aplicativo honra valores diferentes de 6 e
-  30.
+- `digits` (6 a 8) e `periodSeconds` são configuráveis, mas nem todo aplicativo honra valores diferentes de 6 e 30.
 
 ### `RecoveryCodes` — quando o autenticador se perde
 

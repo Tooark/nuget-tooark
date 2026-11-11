@@ -5,7 +5,7 @@ namespace Tooark.Tests.Securities.Options;
 
 public class PasswordHashOptionsTests
 {
-  // Testa se os padrões são os recomendados: 600.000 iterações, sal de 16 bytes e hash de 32 bytes
+  // Testa se os padrões são os recomendados: 600.000 iterações, salt de 16 bytes e hash de 32 bytes
   [Fact]
   public void Defaults_ShouldMatchOwaspRecommendation()
   {
@@ -46,7 +46,7 @@ public class PasswordHashOptionsTests
     Assert.Equal("Options.PasswordHash.IterationsTooLow;100000", exception.Message);
   }
 
-  // Testa se o sal abaixo de 16 bytes é recusado
+  // Testa se o salt abaixo de 16 bytes é recusado
   [Fact]
   public void Validate_ShouldThrow_WhenSaltIsTooSmall()
   {

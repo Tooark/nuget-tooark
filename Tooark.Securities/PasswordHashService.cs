@@ -11,7 +11,7 @@ namespace Tooark.Securities;
 /// Serviço de hash de senha com PBKDF2-HMAC-SHA256, nativo do .NET, no formato PHC.
 /// </summary>
 /// <remarks>
-/// Formato do hash: <c>$pbkdf2-sha256$i=&lt;iterações&gt;$&lt;sal&gt;$&lt;hash&gt;</c>, com sal e hash em Base64 sem
+/// Formato do hash: <c>$pbkdf2-sha256$i=&lt;iterações&gt;$&lt;salt&gt;$&lt;hash&gt;</c>, com salt e hash em Base64 sem
 /// preenchimento. O prefixo identifica o algoritmo, então outro algoritmo pode conviver no mesmo campo no futuro.
 /// </remarks>
 public class PasswordHashService : IPasswordHashService
@@ -144,8 +144,8 @@ public class PasswordHashService : IPasswordHashService
   /// Lê os componentes de um hash no formato PHC deste serviço.
   /// </summary>
   /// <param name="hash">Hash guardado.</param>
-  /// <param name="parsed">Iterações, sal e hash lidos.</param>
-  /// <returns>Verdadeiro quando o hash tem o formato <c>$pbkdf2-sha256$i=N$sal$hash</c> com valores válidos.</returns>
+  /// <param name="parsed">Iterações, salt e hash lidos.</param>
+  /// <returns>Verdadeiro quando o hash tem o formato <c>$pbkdf2-sha256$i=N$salt$hash</c> com valores válidos.</returns>
   private static bool TryParse(string? hash, out (int Iterations, byte[] Salt, byte[] Hash) parsed)
   {
     parsed = default;
@@ -170,7 +170,7 @@ public class PasswordHashService : IPasswordHashService
       return false;
     }
 
-    // Sal e hash precisam ser Base64 válidos
+    // Salt e hash precisam ser Base64 válidos
     if (!TryDecode(parts[3], out var salt) || !TryDecode(parts[4], out var digest))
     {
       return false;

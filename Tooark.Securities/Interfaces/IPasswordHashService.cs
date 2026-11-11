@@ -13,10 +13,10 @@ namespace Tooark.Securities.Interfaces;
 public interface IPasswordHashService
 {
   /// <summary>
-  /// Calcula o hash de uma senha com sal aleatório.
+  /// Calcula o hash de uma senha com salt aleatório.
   /// </summary>
   /// <param name="password">Senha em texto claro.</param>
-  /// <returns>O hash no formato PHC, como <c>$pbkdf2-sha256$i=600000$&lt;sal&gt;$&lt;hash&gt;</c>, a ser guardado no banco.</returns>
+  /// <returns>O hash no formato PHC, como <c>$pbkdf2-sha256$i=600000$&lt;salt&gt;$&lt;hash&gt;</c>, a ser guardado no banco.</returns>
   /// <exception cref="BadRequestException">Quando a senha é nula ou vazia.</exception>
   string Hash(string password);
 
