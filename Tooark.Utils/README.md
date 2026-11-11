@@ -296,6 +296,7 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 ## 📋 Dependencies
 
 - [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/) 2.x — brings `IFormFile`
+- [Microsoft.AspNetCore.WebUtilities](https://www.nuget.org/packages/Microsoft.AspNetCore.WebUtilities/) 2.3.14 — transitive dependency of the package above, pinned to the version that fixes CVE-2026-118750 so consumers never resolve the vulnerable 2.3.x
   for `FileConvert` and `FileValid` without requiring the `Microsoft.AspNetCore.App` shared framework, so the
   package also runs in console and worker applications. Inside an ASP.NET Core application the framework's
   own assembly wins and `IFormFile` is the same type.

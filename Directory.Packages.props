@@ -13,7 +13,13 @@
     <PackageVersion Include="Google.Cloud.SecretManager.V1" Version="3.0.0" />
     <PackageVersion Include="Google.Cloud.Storage.V1" Version="5.0.0" />
     <PackageVersion Include="HtmlSanitizer" Version="10.0.1120" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.13" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.14" />
+    <!--
+      Dependência transitiva do Microsoft.AspNetCore.Http, fixada aqui porque o nuspec dele aceita a 2.3.13, que
+      carrega a CVE-2026-118750 (negação de serviço). Com o pin transitivo habilitado, a versão entra no nuspec do
+      Tooark.Utils e o consumidor resolve a corrigida. Suba junto com o Microsoft.AspNetCore.Http.
+    -->
+    <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="2.3.14" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="OpenTelemetry" Version="1.20.1" />
