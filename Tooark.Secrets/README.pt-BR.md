@@ -160,13 +160,13 @@ chave, deixe-a desligada.
 
 Qualquer chave de configuração pode vir do cofre. As sensíveis da família:
 
-| Pacote                     | Chaves                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `Tooark.Storage.Aws`       | `Storage:AccessKey`, `Storage:SecretKey`, `Storage:SessionToken`                            |
-| `Tooark.Storage.Gcp`       | `Storage:CredentialsJson`                                                                   |
-| `Tooark.Securities`        | `Jwt:Secret`, `Jwt:PrivateKey`, `Cryptography:Secret`, `DataProtection:CertificatePassword` |
-| `Tooark.Securities.OpenId` | `OpenId:{provedor}:ClientSecret`                                                            |
-| `Tooark.Observability`     | os `Headers` do OTLP, com a chave do coletor                                                |
+| Pacote                     | Chaves                                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `Tooark.Storage.Aws`       | `Storage:AccessKey`, `Storage:SecretKey`, `Storage:SessionToken`                                                       |
+| `Tooark.Storage.Gcp`       | `Storage:CredentialsJson`                                                                                              |
+| `Tooark.Securities`        | `Jwt:Secret`, `Jwt:PrivateKey`, `Cryptography:SecretBase64`, `Cryptography:Keys`, `DataProtection:CertificatePassword` |
+| `Tooark.Securities.OpenId` | `OpenId:{provedor}:ClientSecret`                                                                                       |
+| `Tooark.Observability`     | os `Headers` do OTLP, com a chave do coletor                                                                           |
 
 ---
 
@@ -227,7 +227,7 @@ builder.Configuration.AddTooarkSecretsVault(options => options.Optional = builde
 | Pacote                                                                                                                                        | Versão   | Descrição                                 |
 | --------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                       | 4.x      | Exceções (`InternalServerErrorException`) |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions) | 8.x/10.x | Abstrações de configuração e binder       |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions) | 10.x     | Abstrações de configuração e binder       |
 
 O pacote roda no runtime base do .NET, sem o ASP.NET Core e sem SDK de nuvem.
 

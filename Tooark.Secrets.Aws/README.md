@@ -118,7 +118,7 @@ The application's identity needs:
 | [`Tooark.Secrets`](https://www.nuget.org/packages/Tooark.Secrets)                                                                               | 4.x      | Model and configuration source |
 | [`AWSSDK.SecretsManager`](https://www.nuget.org/packages/AWSSDK.SecretsManager)                                                                 | 4.x      | Secrets Manager client         |
 | [`AWSSDK.SimpleSystemsManagement`](https://www.nuget.org/packages/AWSSDK.SimpleSystemsManagement)                                               | 4.x      | Parameter Store client         |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration         |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration         |
 
 ---
 

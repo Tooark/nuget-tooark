@@ -353,8 +353,8 @@ request.
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceptions (e.g. `BadRequestException`) |
 | [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Base contracts of the Mediator pattern  |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Dependency injection abstractions       |
-| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 8.x/10.x | Options pattern for `MediatorOptions`   |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Dependency injection abstractions       |
+| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 10.x     | Options pattern for `MediatorOptions`   |
 
 ---
 

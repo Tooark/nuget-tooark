@@ -301,8 +301,8 @@ var wysiwyg = new WysiwygSanitizerService(options);
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceptions (`InternalServerErrorException`) |
 | [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 10.x     | HTML sanitization, on top of AngleSharp     |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Reading the options from configuration      |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                      |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Reading the options from configuration      |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                      |
 
 ---
 

@@ -150,7 +150,7 @@ path "secret/metadata/arkuest/prod" {
 | Pacote                                                                                                                                          | Versão   | Descrição                      |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------ |
 | [`Tooark.Secrets`](https://www.nuget.org/packages/Tooark.Secrets)                                                                               | 4.x      | Modelo e fonte de configuração |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container          |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container          |
 
 Não há cliente de terceiros: as chamadas ao cofre usam o `HttpClient` do .NET.
 

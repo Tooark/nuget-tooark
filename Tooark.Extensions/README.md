@@ -342,7 +342,7 @@ package.
 | Dependency                                                                                              | Version  | Usage                                             |
 | ------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------- |
 | [`Tooark.Utils`](https://www.nuget.org/packages/Tooark.Utils)                                           | 4.x      | Normalization and language                        |
-| [`Microsoft.Extensions.Localization`](https://www.nuget.org/packages/Microsoft.Extensions.Localization) | 8.x/10.x | `IStringLocalizer` and the container registration |
+| [`Microsoft.Extensions.Localization`](https://www.nuget.org/packages/Microsoft.Extensions.Localization) | 10.x     | `IStringLocalizer` and the container registration |
 
 > **The package does not require the ASP.NET Core runtime.** Until v3 it declared the shared framework
 > because of `ModelStateExtension`, and that requirement propagated to `Tooark.Dtos`, `Tooark.ValueObjects`,

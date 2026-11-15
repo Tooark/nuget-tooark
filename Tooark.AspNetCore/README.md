@@ -678,7 +678,7 @@ registered, keeps answering the validation of the `[ApiController]`, which happe
 | [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                              | 4.x      | `ResponseDto`, the body of the validation response                                                           |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                  | 4.x      | The exceptions answered with Problem Details, and their notification items                                   |
 | [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Error message localization                                                                                   |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` and `IProblemDetailsService` |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 10.x     | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` and `IProblemDetailsService` |
 
 ---
 

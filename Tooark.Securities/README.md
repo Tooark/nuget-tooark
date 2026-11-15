@@ -1538,8 +1538,8 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 | Package                                                                                                                         | Version  | Description                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                         | 4.x      | Exceptions (e.g. `BadRequestException`)                           |
-| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 8.x/10.x | JWT authentication for ASP.NET Core                               |
-| [`Microsoft.AspNetCore.DataProtection`](https://www.nuget.org/packages/Microsoft.AspNetCore.DataProtection)                     | 8.x/10.x | Data Protection, standalone package that runs on the base runtime |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer) | 10.x     | JWT authentication for ASP.NET Core                               |
+| [`Microsoft.AspNetCore.DataProtection`](https://www.nuget.org/packages/Microsoft.AspNetCore.DataProtection)                     | 10.x     | Data Protection, standalone package that runs on the base runtime |
 
 ---
 

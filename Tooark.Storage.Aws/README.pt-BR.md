@@ -150,8 +150,8 @@ Guarde as chaves de desenvolvimento no `appsettings.Development.json` ou no Secr
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------- |
 | [`Tooark.Storage`](https://www.nuget.org/packages/Tooark.Storage)                                                                               | 4.x      | Contrato e validações comuns       |
 | [`AWSSDK.S3`](https://www.nuget.org/packages/AWSSDK.S3)                                                                                         | 4.x      | Cliente do Amazon S3               |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Leitura das opções da configuração |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container              |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Leitura das opções da configuração |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container              |
 
 ---
 

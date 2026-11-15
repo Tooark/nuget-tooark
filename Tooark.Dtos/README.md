@@ -290,7 +290,7 @@ response.SetMetadata([new MetadataDto("source", "cache")]);
 | -------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------- |
 | [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                  | 4.x      | Message localization and search normalization |
 | [`Tooark.Notifications`](https://www.nuget.org/packages/Tooark.Notifications)                            | 4.x      | Notifications that become the response errors |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 8.x/10.x | `HttpRequest`, `QueryHelpers` and `BindNever` |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (shared framework) | 10.x     | `HttpRequest`, `QueryHelpers` and `BindNever` |
 
 ---
 

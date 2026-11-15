@@ -678,7 +678,7 @@ respondendo a validação do `[ApiController]`, que acontece antes da action.
 | [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                                     | 4.x      | `ResponseDto`, o corpo da resposta de validação                                                            |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                         | 4.x      | As exceções respondidas com Problem Details, e os itens de notificação delas                               |
 | [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro                                                                          |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 8.x/10.x | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` e `IProblemDetailsService` |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 10.x     | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` e `IProblemDetailsService` |
 
 ---
 

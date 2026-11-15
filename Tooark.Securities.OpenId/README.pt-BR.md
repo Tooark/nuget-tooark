@@ -469,8 +469,8 @@ várias instâncias estão em
 | Pacote                                                                                                                                  | Versão   | Descrição                                 |
 | --------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                 | 4.x      | Exceções (`InternalServerErrorException`) |
-| [`Microsoft.AspNetCore.Authentication.OpenIdConnect`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.OpenIdConnect) | 8.x/10.x | Handler `OpenIdConnect` do ASP.NET Core   |
-| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer)         | 8.x/10.x | Handler `JwtBearer` do ASP.NET Core       |
+| [`Microsoft.AspNetCore.Authentication.OpenIdConnect`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.OpenIdConnect) | 10.x     | Handler `OpenIdConnect` do ASP.NET Core   |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer)         | 10.x     | Handler `JwtBearer` do ASP.NET Core       |
 
 O pacote declara o framework compartilhado `Microsoft.AspNetCore.App`: ele existe para configurar os handlers
 de autenticação do ASP.NET Core e não tem uso fora de uma aplicação ASP.NET Core.

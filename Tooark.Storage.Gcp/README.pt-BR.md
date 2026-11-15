@@ -131,8 +131,8 @@ só para assinar URLs.
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------- |
 | [`Tooark.Storage`](https://www.nuget.org/packages/Tooark.Storage)                                                                               | 4.x      | Contrato e validações comuns       |
 | [`Google.Cloud.Storage.V1`](https://www.nuget.org/packages/Google.Cloud.Storage.V1)                                                             | 5.x      | Cliente do Google Cloud Storage    |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Leitura das opções da configuração |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container              |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Leitura das opções da configuração |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container              |
 
 ---
 

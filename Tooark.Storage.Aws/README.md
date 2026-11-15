@@ -150,8 +150,8 @@ Keep development keys in `appsettings.Development.json` or in the Secret Manager
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- |
 | [`Tooark.Storage`](https://www.nuget.org/packages/Tooark.Storage)                                                                               | 4.x      | Contract and common validations        |
 | [`AWSSDK.S3`](https://www.nuget.org/packages/AWSSDK.S3)                                                                                         | 4.x      | Amazon S3 client                       |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Reading the options from configuration |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                 |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Reading the options from configuration |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                 |
 
 ---
 

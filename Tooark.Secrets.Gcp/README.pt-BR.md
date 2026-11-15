@@ -129,7 +129,7 @@ precisa ler esses segredos.
 | [`Tooark.Secrets`](https://www.nuget.org/packages/Tooark.Secrets)                                                                               | 4.x      | Modelo e fonte de configuração |
 | [`Google.Cloud.SecretManager.V1`](https://www.nuget.org/packages/Google.Cloud.SecretManager.V1)                                                 | 3.x      | Cliente do Secret Manager      |
 | [`Google.Cloud.ParameterManager.V1`](https://www.nuget.org/packages/Google.Cloud.ParameterManager.V1)                                           | 1.x      | Cliente do Parameter Manager   |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container          |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container          |
 
 ---
 

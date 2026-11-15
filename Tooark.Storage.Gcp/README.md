@@ -132,8 +132,8 @@ credential applies only to URL signing.
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------- |
 | [`Tooark.Storage`](https://www.nuget.org/packages/Tooark.Storage)                                                                               | 4.x      | Contract and common validations        |
 | [`Google.Cloud.Storage.V1`](https://www.nuget.org/packages/Google.Cloud.Storage.V1)                                                             | 5.x      | Google Cloud Storage client            |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 8.x/10.x | Reading the options from configuration |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                 |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Reading the options from configuration |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                 |
 
 ---
 

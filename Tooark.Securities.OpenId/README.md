@@ -471,8 +471,8 @@ multiple instances are in
 | Package                                                                                                                                 | Version  | Description                                 |
 | --------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                 | 4.x      | Exceptions (`InternalServerErrorException`) |
-| [`Microsoft.AspNetCore.Authentication.OpenIdConnect`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.OpenIdConnect) | 8.x/10.x | ASP.NET Core `OpenIdConnect` handler        |
-| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer)         | 8.x/10.x | ASP.NET Core `JwtBearer` handler            |
+| [`Microsoft.AspNetCore.Authentication.OpenIdConnect`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.OpenIdConnect) | 10.x     | ASP.NET Core `OpenIdConnect` handler        |
+| [`Microsoft.AspNetCore.Authentication.JwtBearer`](https://www.nuget.org/packages/Microsoft.AspNetCore.Authentication.JwtBearer)         | 10.x     | ASP.NET Core `JwtBearer` handler            |
 
 The package declares the `Microsoft.AspNetCore.App` shared framework: it exists to configure the ASP.NET Core
 authentication handlers and has no use outside an ASP.NET Core application.

@@ -353,8 +353,8 @@ rejeitar a requisição.
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceções (ex.: `BadRequestException`) |
 | [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Contratos base do padrão Mediator     |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Abstrações de injeção de dependência  |
-| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 8.x/10.x | Padrão Options para `MediatorOptions` |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Abstrações de injeção de dependência  |
+| [`Microsoft.Extensions.Options`](https://www.nuget.org/packages/Microsoft.Extensions.Options)                                                   | 10.x     | Padrão Options para `MediatorOptions` |
 
 ---
 

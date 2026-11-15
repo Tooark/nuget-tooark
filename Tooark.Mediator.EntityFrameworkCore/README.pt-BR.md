@@ -161,8 +161,8 @@ Do mais externo para o mais interno: log, validação, unidade de trabalho e, po
 | [`Tooark.Mediator`](https://www.nuget.org/packages/Tooark.Mediator)                                                                             | 4.x      | Pipeline de behaviors e registro    |
 | [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Contratos de mensagens (`ICommand`) |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Erros de configuração               |
-| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Contexto, persistência e transações |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container               |
+| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 10.x     | Contexto, persistência e transações |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container               |
 
 O pacote integra o agregador `Tooark`, então quem instala `Tooark` já o recebe.
 

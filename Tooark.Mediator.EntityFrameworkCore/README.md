@@ -161,8 +161,8 @@ From outermost to innermost: logging, validation, unit of work and, last, the ha
 | [`Tooark.Mediator`](https://www.nuget.org/packages/Tooark.Mediator)                                                                             | 4.x      | Behavior pipeline and registration    |
 | [`Tooark.Mediator.Abstractions`](https://www.nuget.org/packages/Tooark.Mediator.Abstractions)                                                   | 4.x      | Message contracts (`ICommand`)        |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Configuration errors                  |
-| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Context, persistence and transactions |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                |
+| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 10.x     | Context, persistence and transactions |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                |
 
 The package is part of the `Tooark` aggregator, so whoever installs `Tooark` already gets it.
 

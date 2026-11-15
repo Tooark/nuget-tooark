@@ -150,7 +150,7 @@ path "secret/metadata/arkuest/prod" {
 | Package                                                                                                                                         | Version  | Description                    |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------ |
 | [`Tooark.Secrets`](https://www.nuget.org/packages/Tooark.Secrets)                                                                               | 4.x      | Model and configuration source |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration         |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration         |
 
 There is no third-party client: the calls to the store use the .NET `HttpClient`.
 
