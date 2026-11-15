@@ -234,28 +234,28 @@ Example with multiple issuers and audiences:
 | Property       | Type                         | Default | Description                                              |
 | -------------- | ---------------------------- | ------- | -------------------------------------------------------- |
 | `Algorithm`    | string                       | `GCM`   | AES-256 mode: `GCM`, `CBC` or `CBCUnsafe` (decrypt only) |
-| `Secret`       | string?                      | `null`  | **Obsolete**, removed in v5. Key derived via SHA256      |
 | `SecretBase64` | string?                      | `null`  | 32-byte AES key used directly                            |
 | `CurrentKeyId` | string?                      | `null`  | Identifier of the key in `Keys` that encrypts new values |
 | `Keys`         | `Dictionary<string, string>` | empty   | Identified 32-byte AES keys in Base64, for rotation      |
 
-> Without `Keys`, `SecretBase64` (or the obsolete `Secret`) is required. When both are provided, `SecretBase64`
-> takes precedence. `SecretBase64` must represent exactly 32 bytes (AES-256) — invalid values fail at startup.
-> Generate a key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
+> Without `Keys`, `SecretBase64` is required. It must represent exactly 32 bytes (AES-256) — invalid values
+> fail at startup. Generate a key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
 >
 > With `Keys`, `CurrentKeyId` is required and must be one of the identifiers; each identifier uses only letters,
 > digits, hyphen and underscore (never a dot), and each key is exactly 32 bytes in Base64 — anything else fails
-> at startup. `Secret`/`SecretBase64` become the **legacy key**: they only open values written without a key
-> prefix, and can be removed once none is left.
+> at startup. `SecretBase64` becomes the **legacy key**: it only opens values written without a key prefix, and
+> can be removed once none is left.
 >
-> ⚠️ **Changes in v5:** the text `Secret` is obsolete since v4.8.0 and is removed in v5. The key it derives is the
-> SHA-256 of the text: put that value in `SecretBase64` and everything already encrypted keeps opening, with no
-> re-encryption, including the legacy values read with `CBCUnsafe`:
-> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. `[Obsolete]` only warns code that
-> assigns `Secret`; setting it in `appsettings.json` raises no compiler warning.
+> ⚠️ **Changed in v5:** the text `Secret` of the 4.x line was removed. The key it derived is the SHA-256 of the
+> text: put that value in `SecretBase64` and everything encrypted on 4.x keeps opening, with no re-encryption,
+> including the legacy values read with `CBCUnsafe`:
+> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. A `"Secret"` left in the
+> `Cryptography` section is ignored, and without `SecretBase64` or `Keys` the service fails with
+> `Options.Cryptography.SecretNotConfigured`.
 >
-> ⚠️ **Changes in v5:** an unknown `Algorithm` (a typo such as `GMC`) fails at startup. On the 4.x line it
-> silently falls back to `GCM`. Missing or empty still means `GCM`.
+> ⚠️ **Changed in v5:** an unknown `Algorithm` (a typo such as `GMC`) fails at startup with
+> `Options.Cryptography.AlgorithmNotSupported`. On the 4.x line it silently fell back to `GCM`. Missing or empty
+> still means `GCM`.
 
 #### `PasswordHashOptions` properties
 
@@ -498,8 +498,8 @@ validates tokens (no issuing) configures the `Jwt` section with the `PublicKey` 
 - `UserTokenDto` reads `id` and falls back to `sub`, `login` and falls back to `preferred_username`, so a token
   issued in any mode is read.
 - The constants live in `TooarkClaimNames`; `RoleClaimsExtension.GetClaims` has overloads taking the flags or the
-  `JwtOptions`. The parameterless overload, which hard-codes the legacy names, is **obsolete since v4.8.0 and
-  removed in v5**: use `GetClaims(options)`.
+  `JwtOptions`. The parameterless overload of the 4.x line, which hard-coded the legacy names, was **removed in
+  v5**: use `GetClaims(options)`.
 
 > ⚠️ **Migrating from 4.x:** a token issued by a v5 service without explicit flags has `sub` and no `id`. Turn
 > `EmitLegacyClaims` on while old readers exist (the token then carries both sets), move the readers to
@@ -535,8 +535,8 @@ service uses `TimeProvider.System`, with the handler's own lifetime validation.
 | `CBCUnsafe` | AES-256-CBC | ⚠️ Legacy - zero IV, **decryption only**   |
 
 > `CBCUnsafe` exists only to read old data encrypted with a zero IV: encrypting in this mode throws
-> (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`. The mode stays in v5, for decryption
-> only.
+> (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`. A value outside this table fails at
+> startup (`Options.Cryptography.AlgorithmNotSupported`).
 
 ---
 
@@ -586,7 +586,7 @@ payload is exactly what `CryptographyService` produces with that key and the con
 2. Deploy. New values go out with the new key; old values keep opening.
 3. Re-encrypt the stored values at your own pace — on read, as below, or in a batch job.
 4. When no value uses the old key anymore (`KeyIdOf` returns the old identifier, or `null` for legacy values),
-   remove it from `Keys` — and `SecretBase64`/`Secret` once no legacy value is left.
+   remove it from `Keys` — and `SecretBase64` once no legacy value is left.
 
 ```csharp
 public class CustomerRepository(IKeyedCryptographyService crypto, AppDbContext db)
@@ -611,7 +611,7 @@ public class CustomerRepository(IKeyedCryptographyService crypto, AppDbContext d
 
 - **Removing a key makes its values unreadable**: `Decrypt` fails with `Cryptography.KeyNotFound;{id}`. Only
   remove a key after re-encrypting everything written with it.
-- **Legacy values need the legacy key**: without `Secret`/`SecretBase64`, a value without prefix fails with
+- **Legacy values need the legacy key**: without `SecretBase64`, a value without prefix fails with
   `Cryptography.LegacyKeyNotConfigured`.
 - **One algorithm for all keys**: `Algorithm` applies to every key, including the legacy one. Changing the
   algorithm is a re-encryption, not a rotation.
@@ -1055,10 +1055,10 @@ bytes; `Verify` returns `false` for anything missing or malformed, never throws.
 
 > **`SecureToken` or Data Protection?** `SecureToken` is an opaque value: the hash lives in the database, so the
 > token is revocable, can be single-use (delete the record on redemption) and lasts as long as the record does.
-> The Data Protection protector ([link token](#data-protection---protecting-a-link-token)) carries its own encrypted content and needs no
-> table, but only suits short lifetimes and cannot be revoked without separate tracking. For new tokens, prefer
-> `SecureToken.Create` over `GenerateString.Token` from `Tooark.Utils`, which only generates the text and has
-> no hash or verification.
+> The Data Protection protector ([link token](#data-protection---protecting-a-link-token)) carries its own
+> encrypted content and needs no table, but only suits short lifetimes and cannot be revoked without separate
+> tracking. `GenerateString.Token` from `Tooark.Utils`, which only generated the text, was removed in v5: use
+> `SecureToken.Create`.
 
 ### `Totp` — second factor with authenticator apps
 
@@ -1559,7 +1559,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 1. **Prefer GCM over CBC** - GCM provides built-in authentication
 2. **Never use CBCUnsafe for new data** - Decrypt-only mode for compatibility with legacy systems
-3. **Use `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation; the text `Secret` is obsolete and removed in v5
+3. **Use `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation
 4. **Generate random keys** - Use `openssl rand -base64 32` or `RandomNumberGenerator.GetBytes(32)`
 5. **Adopt `Keys` before the first rotation is urgent** - Values written with identified keys rotate without a big-bang re-encryption
 6. **Never remove a key with values still encrypted by it** - Check with `KeyIdOf` or re-encrypt on read first
@@ -1595,20 +1595,21 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 | Service                    | Message                                               | Description                                             | Solution                                                         | Exception             |
 | -------------------------- | ----------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------- | --------------------- |
 | `CryptographyService`      | `Options.NotConfigured`                               | `Options` not configured                                | Configure `CryptographyOptions`                                  | `InternalServerError` |
-| `CryptographyService`      | `Options.Cryptography.SecretNotConfigured`            | No key configured                                       | Configure `Secret` or `SecretBase64` in `CryptographyOptions`    | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.SecretNotConfigured`            | No key configured                                       | Configure `SecretBase64` (or `Keys`) in `CryptographyOptions`    | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.SecretBase64Invalid`            | `SecretBase64` is not valid Base64                      | Provide a valid Base64 value in `SecretBase64`                   | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.SecretBase64InvalidSize`        | `SecretBase64` is not 32 bytes                          | Use a key of exactly 32 bytes (AES-256)                          | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.AlgorithmDecryptOnly`           | `CBCUnsafe` used to encrypt                             | Use `CBCUnsafe` only to decrypt legacy data                      | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.AlgorithmNotSupported;{value}`  | `Algorithm` other than `GCM`, `CBC` and `CBCUnsafe`     | Fix the value; missing or empty means `GCM`                      | `InternalServerError` |
 | `CryptographyService`      | `Cryptography.PlainTextNotProvided`                   | `PlainText` not provided                                | Provide the plain text to encrypt                                | `BadRequest`          |
 | `CryptographyService`      | `Cryptography.CipherTextNotProvided`                  | `CipherText` not provided                               | Provide the encrypted text to decrypt                            | `BadRequest`          |
 | `CryptographyService`      | `Cryptography.InvalidCipherText`                      | Invalid `CipherText`                                    | Provide a valid encrypted text to decrypt                        | `BadRequest`          |
-| `KeyedCryptographyService` | `Options.Cryptography.Keys.NotConfigured`             | Keyed service without keys                              | Fill `Keys` or use the single-key `Secret`/`SecretBase64`        | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.Keys.NotConfigured`             | Keyed service without keys                              | Fill `Keys` or use the single-key `SecretBase64`                 | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotConfigured`     | `Keys` without `CurrentKeyId`                           | Point `CurrentKeyId` to one of the identifiers in `Keys`         | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotFound;{id}`     | `CurrentKeyId` not among `Keys`                         | Use an identifier that exists in `Keys`                          | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.KeyId.Invalid;{id}`             | Identifier with a dot, space or other invalid character | Use only letters, digits, hyphen and underscore                  | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.Keys.Invalid;{id}`              | Key that is not 32 bytes in Base64                      | Generate the key with `openssl rand -base64 32`                  | `InternalServerError` |
 | `KeyedCryptographyService` | `Cryptography.KeyNotFound;{id}`                       | Value encrypted with a key that is not configured       | Put the key back in `Keys`; only remove keys after re-encrypting | `BadRequest`          |
-| `KeyedCryptographyService` | `Cryptography.LegacyKeyNotConfigured`                 | Value without prefix and no `Secret`/`SecretBase64`     | Keep the legacy key until every legacy value is re-encrypted     | `BadRequest`          |
+| `KeyedCryptographyService` | `Cryptography.LegacyKeyNotConfigured`                 | Value without prefix and no `SecretBase64`              | Keep the legacy key until every legacy value is re-encrypted     | `BadRequest`          |
 | `PasswordHashService`      | `Options.NotConfigured`                               | `Options` not configured                                | Register with `AddTooarkPasswordHash`                            | `InternalServerError` |
 | `PasswordHashService`      | `Options.PasswordHash.IterationsTooLow;100000`        | `Iterations` below the minimum                          | Use at least 100.000 iterations (default 600.000)                | `InternalServerError` |
 | `PasswordHashService`      | `Options.PasswordHash.SaltSizeTooSmall;16`            | `SaltSize` below the minimum                            | Use at least 16 bytes                                            | `InternalServerError` |

@@ -235,28 +235,29 @@ Exemplo com múltiplos emissores e destinatários:
 | Propriedade    | Tipo                         | Padrão | Descrição                                                     |
 | -------------- | ---------------------------- | ------ | ------------------------------------------------------------- |
 | `Algorithm`    | string                       | `GCM`  | Modo AES-256: `GCM`, `CBC` ou `CBCUnsafe` (somente decrypt)   |
-| `Secret`       | string?                      | `null` | **Obsoleto**, sai na v5. Chave derivada via SHA256            |
 | `SecretBase64` | string?                      | `null` | Chave AES de 32 bytes usada diretamente                       |
 | `CurrentKeyId` | string?                      | `null` | Identificador da chave em `Keys` que cifra os valores novos   |
 | `Keys`         | `Dictionary<string, string>` | vazio  | Chaves AES de 32 bytes em Base64, identificadas, para rotação |
 
-> Sem `Keys`, é obrigatório informar `SecretBase64` (ou o `Secret` obsoleto). Quando ambos são informados,
-> `SecretBase64` tem prioridade. O `SecretBase64` deve representar exatamente 32 bytes (AES-256) — valores
-> inválidos falham no startup. Gere uma chave com `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
+> Sem `Keys`, é obrigatório informar `SecretBase64`. Ele deve representar exatamente 32 bytes (AES-256) —
+> valores inválidos falham no startup. Gere uma chave com
+> `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
 >
 > Com `Keys`, o `CurrentKeyId` é obrigatório e precisa ser um dos identificadores; cada identificador usa só
 > letras, dígitos, hífen e sublinhado (nunca ponto), e cada chave tem exatamente 32 bytes em Base64 — qualquer
-> outra coisa falha no startup. `Secret`/`SecretBase64` viram a **chave legada**: só abrem os valores gravados
-> sem prefixo de chave, e podem ser removidos quando não restar nenhum.
+> outra coisa falha no startup. O `SecretBase64` vira a **chave legada**: só abre os valores gravados sem
+> prefixo de chave, e pode ser removido quando não restar nenhum.
 >
-> ⚠️ **Muda na v5:** o `Secret` em texto está obsoleto desde a v4.8.0 e sai na v5. A chave que ele deriva é o
-> SHA-256 do texto: informe esse valor em `SecretBase64` e tudo o que já foi cifrado continua abrindo, sem
-> recifrar nada, inclusive os valores legados lidos com `CBCUnsafe`:
-> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. O `[Obsolete]` só avisa quem
-> atribui `Secret` em código; quem o define no `appsettings.json` não recebe aviso de compilação.
+> ⚠️ **Mudou na v5:** o `Secret` em texto da linha 4.x foi removido. A chave que ele derivava é o SHA-256 do
+> texto: informe esse valor em `SecretBase64` e tudo o que foi cifrado na 4.x continua abrindo, sem recifrar
+> nada, inclusive os valores legados lidos com `CBCUnsafe`:
+> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. Um `"Secret"` esquecido na seção
+> `Cryptography` é ignorado, e sem `SecretBase64` nem `Keys` o serviço falha com
+> `Options.Cryptography.SecretNotConfigured`.
 >
-> ⚠️ **Muda na v5:** um `Algorithm` desconhecido (erro de digitação, como `GMC`) passa a falhar no startup. Na
-> linha 4.x ele cai em `GCM` em silêncio. Ausente ou vazio continua valendo `GCM`.
+> ⚠️ **Mudou na v5:** um `Algorithm` desconhecido (erro de digitação, como `GMC`) falha no startup com
+> `Options.Cryptography.AlgorithmNotSupported`. Na linha 4.x ele caía em `GCM` em silêncio. Ausente ou vazio
+> continua valendo `GCM`.
 
 #### Propriedades de `PasswordHashOptions`
 
@@ -499,8 +500,8 @@ O `JwtTokenService` grava os dados do usuário como claims. Existem dois conjunt
 - O `UserTokenDto` lê `id` e cai para `sub`, `login` e cai para `preferred_username`, então um token emitido em
   qualquer modo é lido.
 - As constantes ficam em `TooarkClaimNames`; o `RoleClaimsExtension.GetClaims` tem sobrecargas que recebem os
-  sinalizadores ou as `JwtOptions`. A sobrecarga sem parâmetros, que fixa os nomes legados, está **obsoleta
-  desde a v4.8.0 e sai na v5**: use `GetClaims(options)`.
+  sinalizadores ou as `JwtOptions`. A sobrecarga sem parâmetros da linha 4.x, que fixava os nomes legados, foi
+  **removida na v5**: use `GetClaims(options)`.
 
 > ⚠️ **Migrando da 4.x:** um token emitido por um serviço v5 sem sinalizadores explícitos tem `sub` e não tem `id`.
 > Ligue `EmitLegacyClaims` enquanto houver leitores antigos (o token passa a carregar os dois conjuntos), leve os
@@ -536,8 +537,8 @@ serviço usa o `TimeProvider.System`, com a validação de vida útil do própri
 | `CBCUnsafe` | AES-256-CBC | ⚠️ Legado - IV zerado, **somente descriptografia** |
 
 > `CBCUnsafe` existe apenas para ler dados antigos criptografados com IV zero: criptografar neste modo
-> lança exceção (`Options.Cryptography.AlgorithmDecryptOnly`). Para novos dados, use `GCM`. O modo continua na
-> v5, somente para descriptografia.
+> lança exceção (`Options.Cryptography.AlgorithmDecryptOnly`). Para novos dados, use `GCM`. Um valor fora desta
+> tabela falha no startup (`Options.Cryptography.AlgorithmNotSupported`).
 
 ---
 
@@ -587,7 +588,7 @@ exatamente o que o `CryptographyService` produz com aquela chave e o algoritmo c
 2. Faça o deploy. Os valores novos saem com a chave nova; os antigos continuam abrindo.
 3. Recifre os valores guardados no seu ritmo — na leitura, como abaixo, ou em um job em lote.
 4. Quando nenhum valor usar a chave antiga (`KeyIdOf` devolve o identificador antigo, ou `null` para os
-   legados), remova-a de `Keys` — e `SecretBase64`/`Secret` quando não restar valor legado.
+   legados), remova-a de `Keys` — e o `SecretBase64` quando não restar valor legado.
 
 ```csharp
 public class CustomerRepository(IKeyedCryptographyService crypto, AppDbContext db)
@@ -612,7 +613,7 @@ public class CustomerRepository(IKeyedCryptographyService crypto, AppDbContext d
 
 - **Remover uma chave torna ilegíveis os valores dela**: o `Decrypt` falha com `Cryptography.KeyNotFound;{id}`.
   Só remova uma chave depois de recifrar tudo o que foi gravado com ela.
-- **Valores legados precisam da chave legada**: sem `Secret`/`SecretBase64`, um valor sem prefixo falha com
+- **Valores legados precisam da chave legada**: sem `SecretBase64`, um valor sem prefixo falha com
   `Cryptography.LegacyKeyNotConfigured`.
 - **Um algoritmo para todas as chaves**: `Algorithm` vale para todas, inclusive a legada. Trocar o algoritmo é
   uma recriptografia, não uma rotação.
@@ -1057,9 +1058,9 @@ bytes; o `Verify` devolve `false` para qualquer coisa ausente ou malformada, nun
 > **`SecureToken` ou Data Protection?** O `SecureToken` é um valor opaco: o hash fica no banco, então o token é
 > revogável, pode ser de uso único (apague o registro no resgate) e dura o quanto o registro durar. O protetor
 > do Data Protection ([token de link](#data-protection---protegendo-um-token-de-link)) carrega o próprio
-> conteúdo cifrado e dispensa a tabela, mas só serve para vida curta e não é revogável sem um controle à parte. Para tokens novos, prefira o
-> `SecureToken.Create` ao `GenerateString.Token` do `Tooark.Utils`, que só gera o texto e não tem hash nem
-> verificação.
+> conteúdo cifrado e dispensa a tabela, mas só serve para vida curta e não é revogável sem um controle à
+> parte. O `GenerateString.Token` do `Tooark.Utils`, que só gerava o texto, foi removido na v5: use o
+> `SecureToken.Create`.
 
 ### `Totp` — segundo fator com aplicativos autenticadores
 
@@ -1559,7 +1560,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 1. **Prefira GCM sobre CBC** - GCM fornece autenticação integrada
 2. **Nunca use CBCUnsafe para novos dados** - Modo somente-descriptografia para compatibilidade com sistemas legados
-3. **Use `SecretBase64` com chave aleatória de 32 bytes** - A chave é usada diretamente, sem derivação; o `Secret` em texto está obsoleto e sai na v5
+3. **Use `SecretBase64` com chave aleatória de 32 bytes** - A chave é usada diretamente, sem derivação
 4. **Gere chaves aleatórias** - Use `openssl rand -base64 32` ou `RandomNumberGenerator.GetBytes(32)`
 5. **Adote `Keys` antes que a primeira rotação seja urgente** - Valores gravados com chaves identificadas rotacionam sem recriptografia em massa
 6. **Nunca remova uma chave com valores ainda cifrados por ela** - Confira com `KeyIdOf` ou recifre na leitura antes
@@ -1595,20 +1596,21 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 | Serviço                    | Mensagem                                              | Descrição                                                   | Solução                                                               | Exception             |
 | -------------------------- | ----------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------- | --------------------- |
 | `CryptographyService`      | `Options.NotConfigured`                               | `Options` não configurado                                   | Configure `CryptographyOptions`                                       | `InternalServerError` |
-| `CryptographyService`      | `Options.Cryptography.SecretNotConfigured`            | Nenhuma chave configurada                                   | Configure `Secret` ou `SecretBase64` em `CryptographyOptions`         | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.SecretNotConfigured`            | Nenhuma chave configurada                                   | Configure `SecretBase64` (ou `Keys`) em `CryptographyOptions`         | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.SecretBase64Invalid`            | `SecretBase64` não é Base64 válido                          | Forneça um valor Base64 válido em `SecretBase64`                      | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.SecretBase64InvalidSize`        | `SecretBase64` não tem 32 bytes                             | Use uma chave de exatamente 32 bytes (AES-256)                        | `InternalServerError` |
 | `CryptographyService`      | `Options.Cryptography.AlgorithmDecryptOnly`           | `CBCUnsafe` usado para criptografar                         | Use `CBCUnsafe` apenas para descriptografar dados legados             | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.AlgorithmNotSupported;{valor}`  | `Algorithm` fora de `GCM`, `CBC` e `CBCUnsafe`              | Corrija o valor; ausente ou vazio vale `GCM`                          | `InternalServerError` |
 | `CryptographyService`      | `Cryptography.PlainTextNotProvided`                   | `PlainText` não fornecido                                   | Forneça o texto plano para criptografar                               | `BadRequest`          |
 | `CryptographyService`      | `Cryptography.CipherTextNotProvided`                  | `CipherText` não fornecido                                  | Forneça o texto criptografado para descriptografar                    | `BadRequest`          |
 | `CryptographyService`      | `Cryptography.InvalidCipherText`                      | `CipherText` inválido                                       | Forneça um texto criptografado válido para descriptografar            | `BadRequest`          |
-| `KeyedCryptographyService` | `Options.Cryptography.Keys.NotConfigured`             | Serviço identificado sem chaves                             | Preencha `Keys` ou use `Secret`/`SecretBase64` de chave única         | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.Keys.NotConfigured`             | Serviço identificado sem chaves                             | Preencha `Keys` ou use o `SecretBase64` de chave única                | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotConfigured`     | `Keys` sem `CurrentKeyId`                                   | Aponte `CurrentKeyId` para um dos identificadores de `Keys`           | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotFound;{id}`     | `CurrentKeyId` fora de `Keys`                               | Use um identificador que exista em `Keys`                             | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.KeyId.Invalid;{id}`             | Identificador com ponto, espaço ou outro caractere inválido | Use só letras, dígitos, hífen e sublinhado                            | `InternalServerError` |
 | `KeyedCryptographyService` | `Options.Cryptography.Keys.Invalid;{id}`              | Chave que não tem 32 bytes em Base64                        | Gere a chave com `openssl rand -base64 32`                            | `InternalServerError` |
 | `KeyedCryptographyService` | `Cryptography.KeyNotFound;{id}`                       | Valor cifrado com uma chave que não está configurada        | Devolva a chave a `Keys`; só remova chaves depois de recifrar         | `BadRequest`          |
-| `KeyedCryptographyService` | `Cryptography.LegacyKeyNotConfigured`                 | Valor sem prefixo e sem `Secret`/`SecretBase64`             | Mantenha a chave legada até recifrar todos os valores legados         | `BadRequest`          |
+| `KeyedCryptographyService` | `Cryptography.LegacyKeyNotConfigured`                 | Valor sem prefixo e sem `SecretBase64`                      | Mantenha a chave legada até recifrar todos os valores legados         | `BadRequest`          |
 | `PasswordHashService`      | `Options.NotConfigured`                               | `Options` não configurado                                   | Registre com `AddTooarkPasswordHash`                                  | `InternalServerError` |
 | `PasswordHashService`      | `Options.PasswordHash.IterationsTooLow;100000`        | `Iterations` abaixo do mínimo                               | Use ao menos 100.000 iterações (padrão 600.000)                       | `InternalServerError` |
 | `PasswordHashService`      | `Options.PasswordHash.SaltSizeTooSmall;16`            | `SaltSize` abaixo do mínimo                                 | Use ao menos 16 bytes                                                 | `InternalServerError` |
