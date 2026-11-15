@@ -68,7 +68,9 @@ public class CryptographyService : ICryptographyService
       ?? throw new InternalServerErrorException("Options.NotConfigured");
 
     _algorithm = _options.Algorithm;
+#pragma warning disable CS0618 // Secret é obsoleto: continua lido até a v5 para abrir os valores de quem ainda o usa
     _secret = _options.Secret;
+#pragma warning restore CS0618
 
     // SecretBase64 tem prioridade quando informado; validado no startup (fail-fast, nunca troca de chave silenciosamente)
     if (!string.IsNullOrWhiteSpace(_options.SecretBase64))

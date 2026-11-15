@@ -54,7 +54,14 @@ public class CryptographyOptions
   /// esteja preenchido. Quando ambos são informados, <see cref="SecretBase64"/> tem prioridade.
   /// Com <see cref="Keys"/>, esta chave passa a ser a chave legada: só abre os valores gravados sem prefixo de
   /// chave, e pode ser removida quando não restar nenhum deles.
+  /// <para>
+  /// Obsoleto: a chave é derivada do texto por um SHA-256 simples, mais fraca do que uma chave aleatória. Troque
+  /// por <see cref="SecretBase64"/> com o valor
+  /// <c>Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))</c>: é a mesma chave que este
+  /// texto deriva, então os valores já cifrados continuam abrindo, sem recifrar nada. Será removido na v5.
+  /// </para>
   /// </remarks>
+  [Obsolete("Use SecretBase64 with Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret))), the same key. Will be removed in v5.")]
   public string? Secret { get; set; } = null;
 
   /// <summary>

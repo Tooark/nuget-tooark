@@ -4,6 +4,8 @@ using Tooark.Securities;
 using Tooark.Securities.Options;
 using MEOptions = Microsoft.Extensions.Options;
 
+#pragma warning disable CS0618 // CryptographyOptions.Secret é obsoleto: os testes garantem que continua funcionando até a v5
+
 namespace Tooark.Tests.Securities;
 
 public class CryptographyServiceTests
@@ -781,6 +783,77 @@ public class CryptographyServiceTests
 
     // Act & Assert - should fail because formats are different
     Assert.Throws<BadRequestException>(() => gcmService.Decrypt(encrypted));
+  }
+
+  #endregion
+
+  #region Secret to SecretBase64 Migration Tests
+
+  // Converte o Secret em texto na chave que ele deriva: o valor a informar em SecretBase64 na migração para a v5
+  private static string ToSecretBase64(string secret) =>
+    Convert.ToBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret)));
+
+  // Testa se o SecretBase64 com o SHA-256 do Secret é a mesma chave: os valores cifrados com um abrem com o outro,
+  // então trocar o Secret obsoleto pelo SecretBase64 equivalente não exige recifrar nada
+  [Theory]
+  [InlineData("GCM")]
+  [InlineData("CBC")]
+  public void Decrypt_WithEquivalentSecretBase64_ShouldOpenValuesEncryptedWithSecret(string algorithm)
+  {
+    // Arrange
+    var secret = "mysupersecretkey1234567890ABCDEF";
+    var plainText = "Hello, migrated key!";
+    var withSecret = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    {
+      Algorithm = algorithm,
+      Secret = secret
+    }));
+    var withBase64 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    {
+      Algorithm = algorithm,
+      SecretBase64 = ToSecretBase64(secret)
+    }));
+
+    // Act
+    var openedWithBase64 = withBase64.Decrypt(withSecret.Encrypt(plainText));
+    var openedWithSecret = withSecret.Decrypt(withBase64.Encrypt(plainText));
+
+    // Assert
+    Assert.Equal(plainText, openedWithBase64);
+    Assert.Equal(plainText, openedWithSecret);
+  }
+
+  // Testa se os dados legados em CBC com IV zero, cifrados com a chave derivada do Secret, abrem com o
+  // SecretBase64 equivalente: o modo CBCUnsafe continua lendo esses valores depois da migração
+  [Fact]
+  public void Decrypt_CBCZeroIv_WithEquivalentSecretBase64_ShouldOpenLegacyData()
+  {
+    // Arrange - dado legado cifrado em CBC com IV zero e a chave derivada do Secret
+    var secret = "mysupersecretkey1234567890ABCDEF";
+    var plainText = "Hello, Legacy World!";
+
+    using var aes = Aes.Create();
+    aes.KeySize = 256;
+    aes.Mode = CipherMode.CBC;
+    aes.Padding = PaddingMode.PKCS7;
+    aes.Key = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret));
+    aes.IV = new byte[16];
+
+    using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+    var plainBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+    var legacyEncrypted = Convert.ToBase64String(encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length));
+
+    var service = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    {
+      Algorithm = "CBCUnsafe",
+      SecretBase64 = ToSecretBase64(secret)
+    }));
+
+    // Act
+    var decrypted = service.Decrypt(legacyEncrypted);
+
+    // Assert
+    Assert.Equal(plainText, decrypted);
   }
 
   #endregion

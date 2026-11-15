@@ -7,6 +7,8 @@ using Tooark.Securities.Injections;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
 
+#pragma warning disable CS0618 // CryptographyOptions.Secret é obsoleto: os testes garantem que continua funcionando até a v5
+
 namespace Tooark.Tests.Securities.Injections;
 
 public class TooarkDependencyInjectionCryptographyTests

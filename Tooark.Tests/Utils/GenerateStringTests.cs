@@ -111,6 +111,7 @@ public class GenerateStringTests
     Assert.Equal(32, result.Length);
   }
 
+#pragma warning disable CS0618 // Token() é obsoleto: os testes garantem que continua funcionando até a v5
   // Testa se Token gera uma string com o comprimento correto
   [Theory]
   [InlineData(260)]
@@ -137,6 +138,23 @@ public class GenerateStringTests
 
     // Assert
     Assert.Equal(256, result.Length);
+  }
+#pragma warning restore CS0618
+
+  // Testa se o Token() carrega o ObsoleteAttribute com a orientação de migração para a v5
+  [Fact]
+  public void Token_ShouldBeMarkedObsolete()
+  {
+    // Arrange
+    var method = typeof(GenerateString).GetMethod(nameof(GenerateString.Token));
+
+    // Act
+    var attribute = method?.GetCustomAttributes(typeof(ObsoleteAttribute), false).OfType<ObsoleteAttribute>().SingleOrDefault();
+
+    // Assert
+    Assert.NotNull(attribute);
+    Assert.Contains("SecureToken.Create", attribute.Message);
+    Assert.Contains("v5", attribute.Message);
   }
 
   // Testa se Hexadecimal gera uma string com o comprimento exato quando o tamanho é ímpar

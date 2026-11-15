@@ -86,6 +86,7 @@ public partial class KeyedCryptographyService : IKeyedCryptographyService
     }
 
     // A chave legada é opcional: só é necessária enquanto restarem valores sem prefixo
+#pragma warning disable CS0618 // Secret é obsoleto: continua lido até a v5 como chave legada
     if (!string.IsNullOrWhiteSpace(configured.Secret) || !string.IsNullOrWhiteSpace(configured.SecretBase64))
     {
       _legacy = new CryptographyService(Microsoft.Extensions.Options.Options.Create(new CryptographyOptions
@@ -95,6 +96,7 @@ public partial class KeyedCryptographyService : IKeyedCryptographyService
         SecretBase64 = configured.SecretBase64
       }));
     }
+#pragma warning restore CS0618
   }
 
   #endregion

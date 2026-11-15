@@ -12,8 +12,14 @@ public static class RoleClaimsExtension
   /// <summary>
   /// Adiciona os dados de autenticação do usuário como claims, com os nomes legados (<c>id</c>, <c>login</c>, <c>security</c>).
   /// </summary>
+  /// <remarks>
+  /// Obsoleto: fixa os nomes legados e ignora <see cref="JwtOptions.EmitLegacyClaims"/> e
+  /// <see cref="JwtOptions.EmitStandardClaims"/>, cujos padrões se invertem na v5. Use a sobrecarga com
+  /// <see cref="JwtOptions"/> ou a com os dois sinalizadores. Será removido na v5.
+  /// </remarks>
   /// <param name="jwtToken">Dados de autenticação.</param>
   /// <returns>Uma coleção de claims.</returns>
+  [Obsolete("Use GetClaims(JwtOptions) or GetClaims(bool, bool). Will be removed in v5.")]
   public static IEnumerable<Claim> GetClaims(this JwtTokenDto jwtToken) =>
     jwtToken.GetClaims(emitLegacyClaims: true, emitStandardClaims: false);
 
