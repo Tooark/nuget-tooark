@@ -21,6 +21,7 @@ description: Modular building blocks for .NET applications — validations, valu
   </div>
   <div class="tk-stats">
     <div class="tk-stat"><span class="tk-stat-value"><!-- tooark:package-count --></span><span class="tk-stat-label">Packages</span></div>
+    <!-- tooark:downloads-stat -->
     <div class="tk-stat"><span class="tk-stat-value"><!-- tooark:framework-count --></span><span class="tk-stat-label">.NET targets</span></div>
     <div class="tk-stat"><span class="tk-stat-value"><!-- tooark:language-count --></span><span class="tk-stat-label">Message languages</span></div>
   </div>

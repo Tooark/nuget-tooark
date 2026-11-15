@@ -609,6 +609,24 @@ body[data-layout="landing"] .actionbar {
   font-size: 0.82em;
 }
 
+/* Downloads do pacote no nuget.org, no pé do cartão: o margin-top: auto alinha a linha entre os cartões da
+   mesma fileira, que têm descrições de tamanhos diferentes. */
+.tk-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  color: var(--tk-subtle);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tk-card-icon {
+  flex: none;
+  opacity: 0.8;
+}
+
 .tk-community {
   margin-bottom: 4rem;
 }
