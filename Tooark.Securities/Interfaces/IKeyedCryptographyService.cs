@@ -10,7 +10,7 @@ namespace Tooark.Securities.Interfaces;
 /// Os valores cifrados carregam o identificador da chave no formato <c>tk1.&lt;id&gt;.&lt;payload&gt;</c>:
 /// <c>tk1</c> é a versão do formato, <c>id</c> é a chave usada e <c>payload</c> é o texto cifrado em Base64.
 /// Valores sem prefixo, gravados antes da adoção das chaves identificadas, continuam abrindo com a chave legada
-/// (<c>Secret</c> ou <c>SecretBase64</c>). <see cref="ICryptographyService.Encrypt"/> cifra com a chave corrente
+/// (<c>SecretBase64</c>). <see cref="ICryptographyService.Encrypt"/> cifra com a chave corrente
 /// e <see cref="ICryptographyService.Decrypt"/> abre com a chave indicada no prefixo.
 /// </remarks>
 public interface IKeyedCryptographyService : ICryptographyService

@@ -20,7 +20,7 @@
   "Cryptography.CipherTextNotProvided": "No se proporcionó el texto cifrado.",
   "Cryptography.InvalidCipherText": "El texto cifrado no es válido.",
   "Cryptography.KeyNotFound": "La clave de cifrado {0} no está configurada.",
-  "Cryptography.LegacyKeyNotConfigured": "El texto cifrado no tiene identificador de clave y no hay ningún secreto heredado (Secret o SecretBase64) configurado.",
+  "Cryptography.LegacyKeyNotConfigured": "El texto cifrado no tiene identificador de clave y no hay ningún secreto heredado (SecretBase64) configurado.",
   "Cryptography.PlainTextNotProvided": "No se proporcionó el texto a cifrar.",
   "DeserializingError": "Error al deserializar.",
   "DivergentId": "Los ID proporcionados son diferentes",

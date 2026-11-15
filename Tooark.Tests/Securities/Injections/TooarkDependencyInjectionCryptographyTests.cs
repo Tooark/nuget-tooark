@@ -7,8 +7,6 @@ using Tooark.Securities.Injections;
 using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
 
-#pragma warning disable CS0618 // CryptographyOptions.Secret é obsoleto: os testes garantem que continua funcionando até a v5
-
 namespace Tooark.Tests.Securities.Injections;
 
 public class TooarkDependencyInjectionCryptographyTests
@@ -22,7 +20,7 @@ public class TooarkDependencyInjectionCryptographyTests
     var inMemorySettings = new Dictionary<string, string?>
     {
       { $"{CryptographyOptions.Section}:Algorithm", "GCM" },
-      { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+      { $"{CryptographyOptions.Section}:SecretBase64", Tooark.Tests.Securities.CryptographyTestKeys.FromText("initialization-vector-test") }
     };
 
     IConfiguration configuration = new ConfigurationBuilder()
@@ -39,7 +37,31 @@ public class TooarkDependencyInjectionCryptographyTests
     Assert.NotNull(cryptographyService);
     Assert.NotNull(options);
     Assert.Equal("GCM", options.Value.Algorithm);
-    Assert.Equal("initialization-vector-test", options.Value.Secret);
+    Assert.Equal(CryptographyTestKeys.FromText("initialization-vector-test"), options.Value.SecretBase64);
+  }
+
+  // Testa se um Secret em texto esquecido na configuração, removido na v5, é ignorado e o serviço falha por
+  // falta de chave, em vez de cifrar com uma chave que ninguém configurou
+  [Fact]
+  public void AddTooarkCryptography_WithOnlyTheRemovedTextSecret_ShouldFailForMissingKey()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+      })
+      .Build();
+
+    services.AddTooarkCryptography(configuration);
+    using var provider = services.BuildServiceProvider();
+
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => provider.GetRequiredService<ICryptographyService>());
+
+    // Assert
+    Assert.Equal("Options.Cryptography.SecretNotConfigured", exception.Message);
   }
 
   // Testa se sem chaves identificadas o serviço de chave única é registrado e o identificado não existe
@@ -51,7 +73,7 @@ public class TooarkDependencyInjectionCryptographyTests
     IConfiguration configuration = new ConfigurationBuilder()
       .AddInMemoryCollection(new Dictionary<string, string?>
       {
-        { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+        { $"{CryptographyOptions.Section}:SecretBase64", Tooark.Tests.Securities.CryptographyTestKeys.FromText("initialization-vector-test") }
       })
       .Build();
 

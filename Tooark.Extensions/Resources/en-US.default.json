@@ -20,7 +20,7 @@
   "Cryptography.CipherTextNotProvided": "The encrypted text was not provided.",
   "Cryptography.InvalidCipherText": "The encrypted text is invalid.",
   "Cryptography.KeyNotFound": "The encryption key {0} is not configured.",
-  "Cryptography.LegacyKeyNotConfigured": "The encrypted text has no key identifier and no legacy secret (Secret or SecretBase64) is configured.",
+  "Cryptography.LegacyKeyNotConfigured": "The encrypted text has no key identifier and no legacy secret (SecretBase64) is configured.",
   "Cryptography.PlainTextNotProvided": "The text to encrypt was not provided.",
   "DeserializingError": "Error while deserializing.",
   "DivergentId": "IDs provided are different",

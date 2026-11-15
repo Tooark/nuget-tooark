@@ -4,8 +4,6 @@ using Tooark.Securities;
 using Tooark.Securities.Options;
 using MEOptions = Microsoft.Extensions.Options;
 
-#pragma warning disable CS0618 // CryptographyOptions.Secret é obsoleto: os testes garantem que continua funcionando até a v5
-
 namespace Tooark.Tests.Securities;
 
 public class CryptographyServiceTests
@@ -16,21 +14,21 @@ public class CryptographyServiceTests
   private static CryptographyOptions GetGcmOptions() => new()
   {
     Algorithm = "GCM",
-    Secret = "mysupersecretkey1234567890ABCDEF"
+    SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
   };
 
   // Opções para testes com CBC
   private static CryptographyOptions GetCbcOptions() => new()
   {
     Algorithm = "CBC",
-    Secret = "mysupersecretkey1234567890ABCDEF"
+    SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
   };
 
   // Opções para testes com CBCZeroIv (legado)
   private static CryptographyOptions GetCbcZeroIvOptions() => new()
   {
     Algorithm = "CBCUnsafe",
-    Secret = "mysupersecretkey1234567890ABCDEF"
+    SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
   };
 
   // Opções com SecretBase64 configurado (chave AES de 32 bytes)
@@ -40,7 +38,6 @@ public class CryptographyServiceTests
     return new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "fallback-secret",
       SecretBase64 = Convert.ToBase64String(key)
     };
   }
@@ -52,7 +49,6 @@ public class CryptographyServiceTests
     return new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "mysupersecretkey1234567890ABCDEF",
       SecretBase64 = Convert.ToBase64String(key)
     };
   }
@@ -79,15 +75,15 @@ public class CryptographyServiceTests
     Assert.Contains("Options.NotConfigured", ex.GetErrorMessages());
   }
 
-  // Testa se o construtor lança exceção quando o segredo não está configurado
+  // Testa se o construtor lança exceção quando a chave não está configurada
   [Fact]
-  public void Constructor_WithoutSecret_ShouldThrowInternalServerErrorException()
+  public void Constructor_WithoutSecretBase64_ShouldThrowInternalServerErrorException()
   {
     // Arrange
     var cryptoOptions = new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = null
+      SecretBase64 = null
     };
     var options = MEOptions.Options.Create(cryptoOptions);
 
@@ -274,7 +270,7 @@ public class CryptographyServiceTests
     var cryptoOptions = new CryptographyOptions
     {
       Algorithm = "UNKNOWN",
-      Secret = "mysupersecretkey1234567890ABCDEF"
+      SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     };
     var options = MEOptions.Options.Create(cryptoOptions);
     var service = new CryptographyService(options);
@@ -514,7 +510,7 @@ public class CryptographyServiceTests
     var cryptoOptions = new CryptographyOptions
     {
       Algorithm = "CBCUnsafe",
-      Secret = secret
+      SecretBase64 = CryptographyTestKeys.FromText(secret)
     };
     var options = MEOptions.Options.Create(cryptoOptions);
     var service = new CryptographyService(options);
@@ -570,7 +566,7 @@ public class CryptographyServiceTests
     var unknownOptions = new CryptographyOptions
     {
       Algorithm = "UNKNOWN",
-      Secret = "mysupersecretkey1234567890ABCDEF"
+      SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     };
     var options = MEOptions.Options.Create(unknownOptions);
     var service = new CryptographyService(options);
@@ -632,11 +628,11 @@ public class CryptographyServiceTests
     Assert.Contains("Options.Cryptography.SecretBase64Invalid", ex.GetErrorMessages());
   }
 
-  // Testa que SecretBase64 sozinho (sem Secret) é uma configuração válida
+  // Testa que SecretBase64 com uma chave aleatória de 32 bytes é uma configuração válida
   [Fact]
   public void Encrypt_Decrypt_WithSecretBase64Only_ShouldWork()
   {
-    // Arrange - apenas SecretBase64, sem Secret
+    // Arrange
     var key = RandomNumberGenerator.GetBytes(32);
     var cryptoOptions = new CryptographyOptions
     {
@@ -650,33 +646,6 @@ public class CryptographyServiceTests
     // Act
     var encrypted = service.Encrypt(plainText);
     var decrypted = service.Decrypt(encrypted);
-
-    // Assert
-    Assert.Equal(plainText, decrypted);
-  }
-
-  // Testa que SecretBase64 tem prioridade sobre Secret quando ambos são informados
-  [Fact]
-  public void Decrypt_WithBase64Priority_ShouldUseBase64Key()
-  {
-    // Arrange - dois serviços com o mesmo SecretBase64 e Secrets diferentes: devem interoperar
-    var key = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-    var service1 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
-    {
-      Algorithm = "GCM",
-      Secret = "secret-one",
-      SecretBase64 = key
-    }));
-    var service2 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
-    {
-      Algorithm = "GCM",
-      Secret = "secret-two",
-      SecretBase64 = key
-    }));
-    var plainText = "Base64 key has priority!";
-
-    // Act
-    var decrypted = service2.Decrypt(service1.Encrypt(plainText));
 
     // Assert
     Assert.Equal(plainText, decrypted);
@@ -787,66 +756,66 @@ public class CryptographyServiceTests
 
   #endregion
 
-  #region Secret to SecretBase64 Migration Tests
+  #region 4.x Text Secret Migration Tests
 
-  // Converte o Secret em texto na chave que ele deriva: o valor a informar em SecretBase64 na migração para a v5
-  private static string ToSecretBase64(string secret) =>
-    Convert.ToBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret)));
-
-  // Testa se o SecretBase64 com o SHA-256 do Secret é a mesma chave: os valores cifrados com um abrem com o outro,
-  // então trocar o Secret obsoleto pelo SecretBase64 equivalente não exige recifrar nada
-  [Theory]
-  [InlineData("GCM")]
-  [InlineData("CBC")]
-  public void Decrypt_WithEquivalentSecretBase64_ShouldOpenValuesEncryptedWithSecret(string algorithm)
+  // Testa se um valor cifrado em GCM na linha 4.x com o Secret em texto abre na v5 com o SecretBase64 do guia de
+  // migração (o SHA-256 do texto). Formato do payload: nonce (12 bytes) + tag (16 bytes) + dados cifrados.
+  [Fact]
+  public void Decrypt_Gcm_ShouldOpenValueEncryptedWithThe4xTextSecret()
   {
-    // Arrange
+    // Arrange - valor cifrado como a 4.x cifrava, com a chave derivada do texto
     var secret = "mysupersecretkey1234567890ABCDEF";
     var plainText = "Hello, migrated key!";
-    var withSecret = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+    var key = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret));
+    var nonce = RandomNumberGenerator.GetBytes(12);
+    var tag = new byte[16];
+    var plainBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+    var cipherBytes = new byte[plainBytes.Length];
+
+    using (var aesGcm = new AesGcm(key, tag.Length))
     {
-      Algorithm = algorithm,
-      Secret = secret
-    }));
-    var withBase64 = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
+      aesGcm.Encrypt(nonce, plainBytes, cipherBytes, tag);
+    }
+
+    var legacyEncrypted = Convert.ToBase64String([.. nonce, .. tag, .. cipherBytes]);
+    var service = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
     {
-      Algorithm = algorithm,
-      SecretBase64 = ToSecretBase64(secret)
+      Algorithm = "GCM",
+      SecretBase64 = CryptographyTestKeys.FromText(secret)
     }));
 
     // Act
-    var openedWithBase64 = withBase64.Decrypt(withSecret.Encrypt(plainText));
-    var openedWithSecret = withSecret.Decrypt(withBase64.Encrypt(plainText));
+    var decrypted = service.Decrypt(legacyEncrypted);
 
     // Assert
-    Assert.Equal(plainText, openedWithBase64);
-    Assert.Equal(plainText, openedWithSecret);
+    Assert.Equal(plainText, decrypted);
   }
 
-  // Testa se os dados legados em CBC com IV zero, cifrados com a chave derivada do Secret, abrem com o
-  // SecretBase64 equivalente: o modo CBCUnsafe continua lendo esses valores depois da migração
+  // Testa se um valor cifrado em CBC na linha 4.x com o Secret em texto abre na v5 com o SecretBase64 do guia de
+  // migração. Formato do payload: IV (16 bytes) + dados cifrados.
   [Fact]
-  public void Decrypt_CBCZeroIv_WithEquivalentSecretBase64_ShouldOpenLegacyData()
+  public void Decrypt_Cbc_ShouldOpenValueEncryptedWithThe4xTextSecret()
   {
-    // Arrange - dado legado cifrado em CBC com IV zero e a chave derivada do Secret
+    // Arrange - valor cifrado como a 4.x cifrava, com a chave derivada do texto
     var secret = "mysupersecretkey1234567890ABCDEF";
-    var plainText = "Hello, Legacy World!";
+    var plainText = "Hello, migrated key!";
 
     using var aes = Aes.Create();
     aes.KeySize = 256;
     aes.Mode = CipherMode.CBC;
     aes.Padding = PaddingMode.PKCS7;
     aes.Key = SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(secret));
-    aes.IV = new byte[16];
+    aes.GenerateIV();
 
     using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
     var plainBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-    var legacyEncrypted = Convert.ToBase64String(encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length));
+    var cipherBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+    var legacyEncrypted = Convert.ToBase64String([.. aes.IV, .. cipherBytes]);
 
     var service = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
     {
-      Algorithm = "CBCUnsafe",
-      SecretBase64 = ToSecretBase64(secret)
+      Algorithm = "CBC",
+      SecretBase64 = CryptographyTestKeys.FromText(secret)
     }));
 
     // Act
@@ -868,7 +837,7 @@ public class CryptographyServiceTests
     var options1 = MEOptions.Options.Create(new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "mysupersecretkey1234567890ABCDEF"
+      SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     });
     var service1 = new CryptographyService(options1);
     var plainText = "Hello, World!";
@@ -877,7 +846,7 @@ public class CryptographyServiceTests
     var options2 = MEOptions.Options.Create(new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "differentsecretek1234567890ABCDE"
+      SecretBase64 = CryptographyTestKeys.FromText("differentsecretek1234567890ABCDE")
     });
     var service2 = new CryptographyService(options2);
 

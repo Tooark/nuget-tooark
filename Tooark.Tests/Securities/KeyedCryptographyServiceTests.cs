@@ -5,8 +5,6 @@ using Tooark.Securities.Interfaces;
 using Tooark.Securities.Options;
 using MEOptions = Microsoft.Extensions.Options;
 
-#pragma warning disable CS0618 // CryptographyOptions.Secret é obsoleto: os testes garantem que continua funcionando até a v5
-
 namespace Tooark.Tests.Securities;
 
 public class KeyedCryptographyServiceTests
@@ -20,7 +18,7 @@ public class KeyedCryptographyServiceTests
   private static CryptographyOptions GetKeyedOptions(string algorithm = "GCM", string? legacySecret = null) => new()
   {
     Algorithm = algorithm,
-    Secret = legacySecret,
+    SecretBase64 = legacySecret is null ? null : CryptographyTestKeys.FromText(legacySecret),
     CurrentKeyId = "k2",
     Keys = new Dictionary<string, string>
     {
@@ -138,7 +136,7 @@ public class KeyedCryptographyServiceTests
     Assert.Equal("Cryptography.KeyNotFound;k1", exception.Message);
   }
 
-  // Testa se um valor legado, sem prefixo, é aberto com a chave única configurada em Secret
+  // Testa se um valor legado, sem prefixo, é aberto com a chave única configurada em SecretBase64
   [Fact]
   public void Decrypt_ShouldOpenLegacyValue_WithLegacySecret()
   {
@@ -146,7 +144,7 @@ public class KeyedCryptographyServiceTests
     var legacy = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "mysupersecretkey1234567890ABCDEF"
+      SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     }));
     var legacyCipherText = legacy.Encrypt("valor antigo");
     var service = CreateService(GetKeyedOptions(legacySecret: "mysupersecretkey1234567890ABCDEF"));
@@ -284,7 +282,7 @@ public class KeyedCryptographyServiceTests
     var legacy = new CryptographyService(MEOptions.Options.Create(new CryptographyOptions
     {
       Algorithm = "GCM",
-      Secret = "mysupersecretkey1234567890ABCDEF"
+      SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     }));
     var service = CreateService(GetKeyedOptions(legacySecret: "mysupersecretkey1234567890ABCDEF"));
 

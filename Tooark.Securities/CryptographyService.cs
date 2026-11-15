@@ -20,14 +20,9 @@ public class CryptographyService : ICryptographyService
   private readonly string _algorithm;
 
   /// <summary>
-  /// Segredo para derivação da chave (usado quando SecretBase64 não é informado).
+  /// Chave AES-256 binária, lida de <see cref="CryptographyOptions.SecretBase64"/>.
   /// </summary>
-  private readonly string? _secret;
-
-  /// <summary>
-  /// Chave AES binária opcional (quando fornecida em Base64 na configuração).
-  /// </summary>
-  private readonly byte[]? _aesKey;
+  private readonly byte[] _aesKey;
 
   /// <summary>
   /// Tamanho da chave AES-256 em bytes.
@@ -58,7 +53,7 @@ public class CryptographyService : ICryptographyService
   /// </summary>
   /// <param name="options">Opções de configuração de criptografia.</param>
   /// <exception cref="InternalServerErrorException">Quando as opções não estão configuradas.</exception>
-  /// <exception cref="InternalServerErrorException">Quando nem Secret nem SecretBase64 estão configurados.</exception>
+  /// <exception cref="InternalServerErrorException">Quando SecretBase64 não está configurado.</exception>
   /// <exception cref="InternalServerErrorException">Quando SecretBase64 não é um Base64 válido.</exception>
   /// <exception cref="InternalServerErrorException">Quando SecretBase64 não representa uma chave de 32 bytes (AES-256).</exception>
   public CryptographyService(IOptions<CryptographyOptions> options)
@@ -68,37 +63,31 @@ public class CryptographyService : ICryptographyService
       ?? throw new InternalServerErrorException("Options.NotConfigured");
 
     _algorithm = _options.Algorithm;
-#pragma warning disable CS0618 // Secret é obsoleto: continua lido até a v5 para abrir os valores de quem ainda o usa
-    _secret = _options.Secret;
-#pragma warning restore CS0618
 
-    // SecretBase64 tem prioridade quando informado; validado no startup (fail-fast, nunca troca de chave silenciosamente)
-    if (!string.IsNullOrWhiteSpace(_options.SecretBase64))
+    // A chave é obrigatória e validada no startup (fail-fast, nunca troca de chave silenciosamente)
+    if (string.IsNullOrWhiteSpace(_options.SecretBase64))
     {
-      byte[] keyBytes;
-
-      try
-      {
-        keyBytes = Convert.FromBase64String(_options.SecretBase64);
-      }
-      catch (FormatException)
-      {
-        throw new InternalServerErrorException("Options.Cryptography.SecretBase64Invalid");
-      }
-
-      // AES-256 exige chave de exatamente 32 bytes
-      if (keyBytes.Length != AesKeySize)
-      {
-        throw new InternalServerErrorException("Options.Cryptography.SecretBase64InvalidSize");
-      }
-
-      _aesKey = keyBytes;
-    }
-    else if (string.IsNullOrWhiteSpace(_secret))
-    {
-      // Exige ao menos uma das chaves: Secret ou SecretBase64
       throw new InternalServerErrorException("Options.Cryptography.SecretNotConfigured");
     }
+
+    byte[] keyBytes;
+
+    try
+    {
+      keyBytes = Convert.FromBase64String(_options.SecretBase64);
+    }
+    catch (FormatException)
+    {
+      throw new InternalServerErrorException("Options.Cryptography.SecretBase64Invalid");
+    }
+
+    // AES-256 exige chave de exatamente 32 bytes
+    if (keyBytes.Length != AesKeySize)
+    {
+      throw new InternalServerErrorException("Options.Cryptography.SecretBase64InvalidSize");
+    }
+
+    _aesKey = keyBytes;
   }
 
   #endregion
@@ -199,7 +188,7 @@ public class CryptographyService : ICryptographyService
     aes.KeySize = 256;
     aes.Mode = CipherMode.CBC;
     aes.Padding = PaddingMode.PKCS7;
-    aes.Key = GetSymmetricKey();
+    aes.Key = _aesKey;
     aes.GenerateIV();
 
     // Gera um vetor de inicialização (IV) aleatório para cada criptografia
@@ -234,7 +223,7 @@ public class CryptographyService : ICryptographyService
     // Gera um nonce (vetor de inicialização) aleatório, tag de autenticação, chave a partir do segredo
     var nonce = RandomNumberGenerator.GetBytes(GcmNonceSize);
     var tag = new byte[GcmTagSize];
-    var key = GetSymmetricKey();
+    var key = _aesKey;
 
     // Converte o texto plano em bytes e prepara o buffer para os dados criptografados
     var plainBytes = Encoding.UTF8.GetBytes(plainText);
@@ -288,7 +277,7 @@ public class CryptographyService : ICryptographyService
     aes.KeySize = 256;
     aes.Mode = CipherMode.CBC;
     aes.Padding = PaddingMode.PKCS7;
-    aes.Key = GetSymmetricKey();
+    aes.Key = _aesKey;
     aes.IV = iv;
 
     // Cria o descriptografador e realiza a descriptografia
@@ -319,7 +308,7 @@ public class CryptographyService : ICryptographyService
     // Extrai o nonce, a tag de autenticação e os dados criptografados
     var nonce = new byte[GcmNonceSize];
     var tag = new byte[GcmTagSize];
-    var key = GetSymmetricKey();
+    var key = _aesKey;
     var cipherBytes = new byte[allBytes.Length - GcmNonceSize - GcmTagSize];
 
     // Copia os componentes para os arrays correspondentes
@@ -361,7 +350,7 @@ public class CryptographyService : ICryptographyService
     aes.KeySize = 256;
     aes.Mode = CipherMode.CBC;
     aes.Padding = PaddingMode.PKCS7;
-    aes.Key = GetSymmetricKey();
+    aes.Key = _aesKey;
     aes.IV = new byte[IvSize]; // IV zero (dados legados)
 
     // Cria o descriptografador e realiza a descriptografia
@@ -371,30 +360,6 @@ public class CryptographyService : ICryptographyService
 
     // Lê e retorna o texto plano descriptografado
     return sr.ReadToEnd();
-  }
-
-  /// <summary>
-  /// Deriva uma chave de 32 bytes (256 bits) a partir do segredo fornecido.
-  /// </summary>
-  /// <param name="secret">Segredo para derivação da chave.</param>
-  /// <returns>Chave derivada de 32 bytes.</returns>
-  private static byte[] DeriveKey(string secret)
-  {
-    // Garante 32 bytes (256 bits) a partir do secret usando SHA256.
-    return SHA256.HashData(Encoding.UTF8.GetBytes(secret));
-  }
-
-  /// <summary>
-  /// Obtém a chave simétrica a ser usada (AES-256).
-  /// </summary>
-  /// <remarks>
-  /// A chave Base64 (validada no construtor) tem prioridade; caso contrário,
-  /// a chave é derivada a partir do segredo usando SHA256. O construtor garante
-  /// que ao menos uma das duas fontes de chave está configurada.
-  /// </remarks>
-  private byte[] GetSymmetricKey()
-  {
-    return _aesKey ?? DeriveKey(_secret!);
   }
 
   #endregion

@@ -218,7 +218,7 @@ public class TooarkDependencyInjectionTests
     var inMemorySettings = new Dictionary<string, string?>
     {
       { $"{CryptographyOptions.Section}:Algorithm", "GCM" },
-      { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+      { $"{CryptographyOptions.Section}:SecretBase64", Tooark.Tests.Securities.CryptographyTestKeys.FromText("initialization-vector-test") }
     };
 
     IConfiguration configuration = new ConfigurationBuilder()
@@ -252,7 +252,7 @@ public class TooarkDependencyInjectionTests
       { $"{JwtOptions.Section}:ExpirationTime", "60" },
       // Configurações de Criptografia
       { $"{CryptographyOptions.Section}:Algorithm", "GCM" },
-      { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+      { $"{CryptographyOptions.Section}:SecretBase64", Tooark.Tests.Securities.CryptographyTestKeys.FromText("initialization-vector-test") }
     };
 
     IConfiguration configuration = new ConfigurationBuilder()

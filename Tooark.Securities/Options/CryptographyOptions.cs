@@ -47,33 +47,19 @@ public class CryptographyOptions
   }
 
   /// <summary>
-  /// Chave secreta para algoritmos simétricos.
-  /// </summary>
-  /// <remarks>
-  /// É obrigatório informar <see cref="Secret"/> ou <see cref="SecretBase64"/>, a menos que <see cref="Keys"/>
-  /// esteja preenchido. Quando ambos são informados, <see cref="SecretBase64"/> tem prioridade.
-  /// Com <see cref="Keys"/>, esta chave passa a ser a chave legada: só abre os valores gravados sem prefixo de
-  /// chave, e pode ser removida quando não restar nenhum deles.
-  /// <para>
-  /// Obsoleto: a chave é derivada do texto por um SHA-256 simples, mais fraca do que uma chave aleatória. Troque
-  /// por <see cref="SecretBase64"/> com o valor
-  /// <c>Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))</c>: é a mesma chave que este
-  /// texto deriva, então os valores já cifrados continuam abrindo, sem recifrar nada. Será removido na v5.
-  /// </para>
-  /// </remarks>
-  [Obsolete("Use SecretBase64 with Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret))), the same key. Will be removed in v5.")]
-  public string? Secret { get; set; } = null;
-
-  /// <summary>
   /// Chave secreta em Base64 para algoritmos simétricos.
   /// </summary>
   /// <remarks>
-  /// Se informada, será usada diretamente como chave simétrica e deve representar
-  /// exatamente 32 bytes (AES-256); valores inválidos falham no startup.
-  /// É a opção recomendada: gere uma chave aleatória com
-  /// <c>Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))</c>.
-  /// Quando <see cref="Secret"/> também é informado, esta chave tem prioridade.
-  /// Com <see cref="Keys"/>, vale o mesmo papel de chave legada descrito em <see cref="Secret"/>.
+  /// Obrigatória, a menos que <see cref="Keys"/> esteja preenchido. É usada diretamente como chave simétrica e
+  /// deve representar exatamente 32 bytes (AES-256); valores inválidos falham no startup. Gere uma chave
+  /// aleatória com <c>Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))</c>.
+  /// Com <see cref="Keys"/>, esta chave passa a ser a chave legada: só abre os valores gravados sem prefixo de
+  /// chave, e pode ser removida quando não restar nenhum deles.
+  /// <para>
+  /// Na linha 4.x existia também o <c>Secret</c> em texto, removido na v5. A chave que ele derivava é o SHA-256
+  /// do texto: <c>Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))</c> informado aqui abre
+  /// os mesmos valores, sem recifrar nada.
+  /// </para>
   /// </remarks>
   public string? SecretBase64 { get; set; } = null;
 
@@ -94,7 +80,7 @@ public class CryptographyOptions
   /// em Base64, de exatamente 32 bytes. Quando preenchido, o pacote registra o
   /// <see cref="Interfaces.IKeyedCryptographyService"/>, que grava os valores no formato
   /// <c>tk1.&lt;id&gt;.&lt;payload&gt;</c>; vazio, vale o <see cref="Interfaces.ICryptographyService"/> de chave
-  /// única com <see cref="Secret"/> ou <see cref="SecretBase64"/>. Remover uma chave torna ilegíveis os valores
+  /// única com <see cref="SecretBase64"/>. Remover uma chave torna ilegíveis os valores
   /// cifrados com ela.
   /// </remarks>
   public Dictionary<string, string> Keys { get; set; } = [];
