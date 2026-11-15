@@ -37,7 +37,7 @@ public static partial class TooarkDependencyInjection
   {
     // Carrega da configuração e aplica os overrides programáticos por cima
     var options = new KeyRingOptions();
-    configuration.GetSection(KeyRingOptions.Section).Bind(options);
+    StrictConfiguration.Bind(configuration, KeyRingOptions.Section, options);
     configure?.Invoke(options);
 
     // Valida no startup, e não ao gravar a primeira chave

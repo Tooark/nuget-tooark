@@ -169,7 +169,7 @@ public static partial class TooarkDependencyInjection
 
     // Carrega da configuração e aplica os overrides programáticos por cima
     var options = new TOptions();
-    configuration.GetSection(SectionName(name)).Bind(options);
+    StrictConfiguration.Bind(configuration, SectionName(name), options);
     configure?.Invoke(options);
 
     // Valida com o handler em vista, para que a mensagem aponte o que falta

@@ -69,6 +69,8 @@
   "Notify.Null": "No se proporcionó la notificación enviada al mediador.",
   "OK": "Aceptar",
   "OpenId.HostedDomain.Invalid": "La cuenta no pertenece al dominio permitido.",
+  "Options.Configuration.StrictInvalid": "El valor {0} de Tooark:StrictConfiguration no es válido. Use true o false.",
+  "Options.Configuration.UnknownKey": "La sección de configuración {0} tiene claves desconocidas: {1}.",
   "Options.Cryptography.AlgorithmDecryptOnly": "El algoritmo {0} solo puede usarse para descifrar.",
   "Options.Cryptography.CurrentKeyId.NotConfigured": "El identificador de la clave de cifrado actual (CurrentKeyId) no está configurado.",
   "Options.Cryptography.CurrentKeyId.NotFound": "La clave de cifrado actual {0} no está entre las claves configuradas.",

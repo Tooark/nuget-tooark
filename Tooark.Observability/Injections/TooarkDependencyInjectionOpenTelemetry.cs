@@ -59,7 +59,7 @@ public static partial class TooarkDependencyInjection
 
     // Carrega as opções da configuração
     var options = new ObservabilityOptions();
-    configuration.GetSection(ObservabilityOptions.Section).Bind(options);
+    StrictConfiguration.Bind(configuration, ObservabilityOptions.Section, options);
 
     // Aplica configurações programáticas
     configure?.Invoke(options);

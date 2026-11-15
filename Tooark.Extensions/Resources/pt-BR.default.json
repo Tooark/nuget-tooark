@@ -69,6 +69,8 @@
   "Notify.Null": "A notificação enviada ao mediador não foi informada.",
   "OK": "OK",
   "OpenId.HostedDomain.Invalid": "A conta não pertence ao domínio permitido.",
+  "Options.Configuration.StrictInvalid": "O valor {0} de Tooark:StrictConfiguration é inválido. Use true ou false.",
+  "Options.Configuration.UnknownKey": "A seção de configuração {0} tem chaves desconhecidas: {1}.",
   "Options.Cryptography.AlgorithmDecryptOnly": "O algoritmo {0} só pode ser usado para descriptografar.",
   "Options.Cryptography.CurrentKeyId.NotConfigured": "O identificador da chave de criptografia corrente (CurrentKeyId) não está configurado.",
   "Options.Cryptography.CurrentKeyId.NotFound": "A chave de criptografia corrente {0} não está entre as chaves configuradas.",

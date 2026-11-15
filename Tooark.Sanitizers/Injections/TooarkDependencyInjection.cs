@@ -28,7 +28,7 @@ public static partial class TooarkDependencyInjection
     this IServiceCollection services,
     IConfiguration configuration,
     Action<SanitizerOptions>? configure = null
-  ) => AddSanitizers(services, configuration.GetSection(SanitizerOptions.Section), configure);
+  ) => AddSanitizers(services, configuration, configure);
 
   /// <summary>
   /// Adiciona os sanitizadores de HTML, URL e do <c>@tooark/wysiwyg</c>, sem ler a configuração da aplicação.
@@ -44,19 +44,23 @@ public static partial class TooarkDependencyInjection
   /// Valida as opções e registra os sanitizadores.
   /// </summary>
   /// <param name="services">Coleção de serviços.</param>
-  /// <param name="section">A seção de configuração, quando houver.</param>
+  /// <param name="configuration">A configuração da aplicação, quando houver.</param>
   /// <param name="configure">Ação opcional para configurar programaticamente as opções.</param>
   /// <returns>A coleção de serviços com os sanitizadores adicionados.</returns>
   private static IServiceCollection AddSanitizers(
     IServiceCollection services,
-    IConfigurationSection? section,
+    IConfiguration? configuration,
     Action<SanitizerOptions>? configure
   )
   {
     // Carrega da configuração e aplica os overrides programáticos por cima
     void Apply(SanitizerOptions options)
     {
-      section?.Bind(options);
+      if (configuration is not null)
+      {
+        StrictConfiguration.Bind(configuration, SanitizerOptions.Section, options);
+      }
+
       configure?.Invoke(options);
     }
 

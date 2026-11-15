@@ -39,7 +39,7 @@ public static partial class TooarkDependencyInjection
     // Carrega da configuração e aplica os overrides programáticos por cima
     void Apply(GcpStorageOptions options)
     {
-      configuration.GetSection(StorageOptions.Section).Bind(options);
+      StrictConfiguration.Bind(configuration, StorageOptions.Section, options);
       configure?.Invoke(options);
     }
 
