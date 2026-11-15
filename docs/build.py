@@ -38,6 +38,8 @@ LANGS = {
         "out": SITE,
         "base_url": BASE_URL,
         "nav": {"home": "Home", "packages": "Packages", "api": "API"},
+        "api_button": "API reference",
+        "tagline": "Modular building blocks for .NET",
         "overview": "Overview",
         "overview_sections": ["📖 About", "🔧 Installation", "📦 Packages"],
     },
@@ -46,6 +48,8 @@ LANGS = {
         "out": SITE / "pt-BR",
         "base_url": f"{BASE_URL}/pt-BR",
         "nav": {"home": "Início", "packages": "Pacotes", "api": "API"},
+        "api_button": "Referência da API",
+        "tagline": "Blocos modulares para .NET",
         "overview": "Visão geral",
         "overview_sections": ["📖 Sobre o Projeto", "🔧 Instalação", "📦 Pacotes"],
     },
@@ -275,13 +279,54 @@ def cards(lang):
             f'<span class="tk-card-text">{inline_html(summary(package, lang))}</span></a>'
             for package in packages
         )
-        blocks.append(f'<section class="tk-group">\n<h2>{names[lang]}</h2>\n<div class="tk-grid">\n{items}\n</div>\n'
-                      f"</section>")
+        blocks.append(f'<section class="tk-group">\n<h2>{names[lang]} <span class="tk-count">{len(packages)}</span>'
+                      f'</h2>\n<div class="tk-grid">\n{items}\n</div>\n</section>')
     return "\n".join(blocks)
 
 
 def version():
     return re.search(r"<Version>([^<]+)</Version>", (ROOT / "Directory.Build.props").read_text("utf-8")).group(1)
+
+
+def frameworks():
+    """Alvos dos pacotes, lidos do agregador: ['.NET 8', '.NET 10']. A página inicial nunca os escreve à mão,
+    para a troca de alvos de uma major não deixar o site desatualizado."""
+    project = (ROOT / "Tooark" / "Tooark.csproj").read_text("utf-8")
+    targets = re.search(r"<TargetFrameworks?>([^<]+)</TargetFrameworks?>", project).group(1)
+    return [f".NET {t.strip().removeprefix('net').split('.')[0]}" for t in targets.split(";") if t.strip()]
+
+
+def language_count():
+    """Idiomas em que as mensagens dos pacotes são traduzidas (os recursos padrão do Tooark.Extensions)."""
+    return len(list((ROOT / "Tooark.Extensions" / "Resources").glob("*.default.json")))
+
+
+def release_notes():
+    """Notas da versão atual; sem o arquivo (versão subiu antes das notas), a lista de releases."""
+    notes = f"Notes/v{version()}.md"
+    return f"{BLOB}/{notes}" if (ROOT / notes).exists() else f"{REPO}/releases"
+
+
+def landing(text, lang, with_api):
+    """Preenche os marcadores da página inicial com o que o repositório diz no momento do build."""
+    targets = frameworks()
+    api = f'<a class="tk-button" href="api/index.md">{LANGS[lang]["api_button"]}</a>' if with_api else ""
+    values = {
+        "packages": cards(lang),
+        "version": version(),
+        "frameworks": " · ".join(targets),
+        "framework-count": str(len(targets)),
+        "package-count": str(sum(len(packages) for _, packages in GROUPS)),
+        "language-count": str(language_count()),
+        "release-notes": release_notes(),
+        "api-button": api,
+    }
+    for key, value in values.items():
+        text = text.replace(f"<!-- tooark:{key} -->", value)
+    left = re.findall(r"<!-- tooark:[a-z-]+ -->", text)
+    if left:
+        sys.exit(f"Marcadores sem valor na página inicial ({lang}): {sorted(set(left))}")
+    return text
 
 
 def yaml_toc(items, indent=0):
@@ -300,16 +345,24 @@ def yaml_toc(items, indent=0):
 
 def docfx_config(lang, with_api):
     cfg = LANGS[lang]
-    footer = {
-        "en": "Tooark · <a href=\"https://github.com/Tooark/nuget-tooark/blob/main/LICENSE\">BSD 3-Clause License</a>"
-              " · <a href=\"https://www.nuget.org/profiles/Tooark\">NuGet</a>"
-              " · <a href=\"https://tooark.com\">tooark.com</a>"
-              " · <a href=\"https://github.com/sponsors/paulosfjunior\">Sponsor</a>",
-        "pt-BR": "Tooark · <a href=\"https://github.com/Tooark/nuget-tooark/blob/main/LICENSE\">Licença BSD 3-Clause</a>"
-                 " · <a href=\"https://www.nuget.org/profiles/Tooark\">NuGet</a>"
-                 " · <a href=\"https://tooark.com\">tooark.com</a>"
-                 " · <a href=\"https://github.com/sponsors/paulosfjunior\">Sponsor</a>"
+    labels = {
+        "en": {"license": "BSD 3-Clause License", "releases": "Releases", "security": "Security",
+               "sponsor": "Sponsor"},
+        "pt-BR": {"license": "Licença BSD 3-Clause", "releases": "Versões", "security": "Segurança",
+                  "sponsor": "Apoie"},
     }[lang]
+    links = [
+        ("https://tooark.com", "tooark.com"),
+        (REPO, "GitHub"),
+        ("https://www.nuget.org/profiles/Tooark", "NuGet"),
+        (f"{REPO}/releases", labels["releases"]),
+        (f"{BLOB}/SECURITY.md", labels["security"]),
+        (f"{BLOB}/LICENSE", labels["license"]),
+        ("https://github.com/sponsors/paulosfjunior", labels["sponsor"]),
+    ]
+    footer = (f'<span class="tk-footer-brand">Tooark<small>{cfg["tagline"]} · v{version()}</small></span>'
+              '<span class="tk-footer-links">'
+              + "".join(f'<a href="{href}">{text}</a>' for href, text in links) + "</span>")
     content = ["*.md", "toc.yml", "packages/*.md", "packages/toc.yml"]
     if with_api:
         content += ["api/*.md", "api/*.yml"]
@@ -371,8 +424,7 @@ def build_lang(lang, api_dir):
     shutil.copy(ROOT / "Media" / "tooark.svg", work / "images" / "tooark.svg")
     shutil.copy(ROOT / "Media" / "favicon.svg", work / "images" / "favicon.svg")
 
-    index = (work / "index.md").read_text(encoding="utf-8")
-    index = index.replace("<!-- tooark:packages -->", cards(lang)).replace("<!-- tooark:version -->", version())
+    index = landing((work / "index.md").read_text(encoding="utf-8"), lang, bool(api_dir))
     (work / "index.md").write_text(index, encoding="utf-8")
 
     packages = work / "packages"

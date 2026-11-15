@@ -259,9 +259,14 @@ unsigned commits. A commit already made without it is fixed with
   pages and the API introduction are written by hand, in `docs/en/` and
   `docs/pt-BR/`; everything else comes from the READMEs and the XML docs, so
   fix the README, not the site. A new package goes into `GROUPS` in
-  `docs/build.py` (`python docs/build.py --check`, also run by CI). To preview
-  locally: `dotnet tool restore`, then `python docs/build.py` (add `--no-api`
-  for a quick text review) and serve `docs/_site/`. The site runs under the
+  `docs/build.py` (`python docs/build.py --check`, also run by CI). The
+  version, the target frameworks and the counts on the landing page are
+  filled in by the build from the repository (the `tooark:*` markers), never
+  typed by hand. The theme (`docs/template/public/main.css`) follows the
+  design tokens of tooark.com, with a light variant. To preview locally:
+  `dotnet tool restore`, then `python docs/build.py` (add `--no-api` for a
+  quick text review) and serve the output with
+  `python -m http.server --directory docs/_site`. The site runs under the
   Content Security Policy that Cloudflare applies to tooark.com: no inline
   script or event handler and no image from another domain (a README badge,
   for instance). `docs/build.py` moves the template's inline script to a file

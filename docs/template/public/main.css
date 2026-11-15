@@ -1,6 +1,7 @@
-/* Identidade do Tooark sobre o template moderno do DocFX (Bootstrap 5.3): a paleta e a fonte do tooark.com,
-   com o âmbar como cor principal. No tema claro o link usa o âmbar escuro, porque o âmbar puro sobre branco
-   não chega ao contraste mínimo de texto. */
+/* Identidade do Tooark sobre o template moderno do DocFX (Bootstrap 5.3): os tokens, a fonte e os componentes
+   do tooark.com (css/style.css de lá), com o âmbar como cor principal. O tooark.com só tem tema escuro; este
+   site tem os dois, então todo token tem um valor claro com contraste de texto conferido. No tema claro o link
+   usa o âmbar escuro, porque o âmbar puro sobre branco não chega ao contraste mínimo. */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
 
@@ -9,21 +10,36 @@
   --tk-amber-hover: #d97706;
   --bs-font-sans-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --bs-font-monospace: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
-  --tk-radius: 16px;
+  --tk-radius-sm: 6px;
+  --tk-radius: 10px;
+  --tk-radius-lg: 16px;
+  --tk-transition: 0.2s ease;
 }
 
 [data-bs-theme="light"] {
+  --bs-body-color: #1c1917;
+  --bs-body-color-rgb: 28, 25, 23;
+  --bs-secondary-color: #57534e;
+  --bs-border-color: #e7e5e4;
   --bs-link-color: #b45309;
   --bs-link-color-rgb: 180, 83, 9;
   --bs-link-hover-color: #92400e;
   --bs-link-hover-color-rgb: 146, 64, 14;
   --bs-primary: #b45309;
   --bs-primary-rgb: 180, 83, 9;
+  --bs-code-color: #44403c;
   --tk-accent: #b45309;
   --tk-accent-soft: #fef3c7;
-  --tk-card: #fafaf9;
+  --tk-bg-alt: #fafaf9;
+  --tk-surface: #ffffff;
+  --tk-surface-hover: #fafaf9;
   --tk-border: #e7e5e4;
+  --tk-border-strong: #a8a29e;
   --tk-muted: #57534e;
+  --tk-subtle: #78716c;
+  --tk-code-bg: #f5f5f4;
+  --tk-shadow: 0 8px 24px rgba(28, 25, 23, 0.08);
+  --tk-glow: rgba(245, 158, 11, 0.14);
 }
 
 [data-bs-theme="dark"] {
@@ -41,15 +57,54 @@
   --bs-link-hover-color-rgb: 251, 191, 36;
   --bs-primary: #f59e0b;
   --bs-primary-rgb: 245, 158, 11;
+  --bs-code-color: #e4e4e7;
   --tk-accent: #f59e0b;
-  --tk-accent-soft: rgba(245, 158, 11, 0.12);
-  --tk-card: #18181b;
+  --tk-accent-soft: rgba(245, 158, 11, 0.1);
+  --tk-bg-alt: #111113;
+  --tk-surface: #18181b;
+  --tk-surface-hover: #1f1f23;
   --tk-border: #27272a;
+  --tk-border-strong: #3f3f46;
   --tk-muted: #a1a1aa;
+  --tk-subtle: #71717a;
+  --tk-code-bg: #1f1f23;
+  --tk-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --tk-glow: rgba(245, 158, 11, 0.08);
 }
 
 body {
   font-family: var(--bs-font-sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--tk-amber);
+  color: #0a0a0b;
+}
+
+/* Barra superior: translúcida com desfoque, como a do tooark.com. O .bg-body do Bootstrap fixa a cor com
+   !important; a opacidade entra pela variável que ele mesmo lê. */
+
+header.bg-body {
+  --bs-bg-opacity: 0.82;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+#logo {
+  width: 34px;
+  height: 34px;
+  margin: 0;
 }
 
 /* O logo é escuro (#282828): no tema escuro, invertido. */
@@ -58,30 +113,180 @@ body {
   filter: invert(1);
 }
 
-.navbar-brand {
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.navbar .nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--tk-muted);
+  transition: color var(--tk-transition);
 }
 
-#logo {
-  width: 32px;
-  height: 32px;
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: var(--bs-body-color);
 }
+
+.navbar form.search .form-control {
+  border-radius: 999px;
+  border-color: var(--tk-border);
+  background-color: var(--tk-surface);
+  font-size: 0.9rem;
+}
+
+.navbar form.search .form-control:focus {
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px var(--tk-accent-soft);
+}
+
+/* Seletor de idioma: a pílula PT | EN do tooark.com. O idioma atual fica marcado; o outro é o link. */
+.tk-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 0.5rem;
+  padding: 3px;
+  border: 1px solid var(--tk-border);
+  border-radius: 999px;
+  background: var(--tk-surface);
+  white-space: nowrap;
+}
+
+.tk-lang-item {
+  min-width: 34px;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  color: var(--tk-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  text-decoration: none;
+  transition: color var(--tk-transition);
+}
+
+a.tk-lang-item:hover {
+  color: var(--bs-body-color);
+}
+
+.tk-lang-item[aria-current="true"] {
+  background: var(--tk-amber);
+  color: #0a0a0b;
+}
+
+/* Páginas de conteúdo (pacotes e API) */
 
 article h1 {
+  font-size: clamp(1.9rem, 4vw, 2.4rem);
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 article h2 {
-  font-weight: 700;
-  margin-top: 2.5rem;
-  padding-top: 1rem;
+  margin-top: 2.75rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--tk-border);
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-article table {
-  font-size: 0.925rem;
+article h3 {
+  margin-top: 2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+article h4 {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+article h5,
+article h6 {
+  color: var(--tk-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Código em linha: neutro, com fundo próprio. O rosa do Bootstrap brigava com o âmbar dos links. */
+:not(pre) > code {
+  padding: 0.12em 0.4em;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-sm);
+  background: var(--tk-code-bg);
+  color: var(--bs-code-color);
+  font-size: 0.85em;
+  overflow-wrap: break-word;
+}
+
+a > code {
+  color: inherit;
+}
+
+article pre {
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  background: var(--tk-surface);
+}
+
+article pre > code {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Tabelas: cantos arredondados, sem linhas verticais, cabeçalho discreto. */
+article table.table {
+  border: 1px solid var(--tk-border);
+  border-collapse: separate;
+  border-radius: var(--tk-radius);
+  border-spacing: 0;
+  font-size: 0.9rem;
+  overflow: hidden;
+}
+
+article table.table > :not(caption) > * > * {
+  padding: 0.6rem 0.9rem;
+  border-width: 0 0 1px;
+  border-color: var(--tk-border);
+  background-color: transparent;
+  box-shadow: none;
+}
+
+article table.table > thead > tr > th {
+  background-color: var(--tk-bg-alt);
+  color: var(--tk-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+article table.table > tbody > tr:last-child > * {
+  border-bottom-width: 0;
+}
+
+article table.table > tbody > tr:hover > * {
+  background-color: var(--tk-bg-alt);
+}
+
+article blockquote {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--tk-accent);
+  border-radius: 0 var(--tk-radius) var(--tk-radius) 0;
+  background: var(--tk-bg-alt);
+  color: var(--bs-body-color);
+}
+
+article blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+article .alert {
+  border-radius: var(--tk-radius);
 }
 
 /* O AnchorJS (ícone de link dos títulos) injeta um @font-face com a fonte em data:, que a CSP do tooark.com
@@ -103,168 +308,336 @@ article table {
   font: 600 1rem/1 var(--bs-font-sans-serif);
 }
 
-.tk-lang {
-  display: inline-flex;
+/* Rodapé */
+
+body > footer {
+  padding: 1.75rem 0;
+  font-size: 0.85rem;
+}
+
+body > footer .flex-fill {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
-  font-weight: 600;
-  white-space: nowrap;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+.tk-footer-brand {
+  color: var(--bs-body-color);
+  font-weight: 700;
+}
+
+.tk-footer-brand small {
+  display: block;
+  color: var(--tk-subtle);
+  font-weight: 400;
+}
+
+.tk-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+}
+
+.tk-footer-links a {
+  color: var(--tk-muted);
+  text-decoration: none;
+  transition: color var(--tk-transition);
+}
+
+.tk-footer-links a:hover {
+  color: var(--bs-body-color);
 }
 
 /* Página inicial */
 
-.tk-hero {
-  display: flex;
-  gap: 2.5rem;
-  align-items: center;
-  padding: 3.5rem 0 2rem;
+body[data-layout="landing"] {
+  overflow-x: clip;
 }
 
-.tk-hero h1 {
-  font-size: clamp(2.25rem, 5vw, 3.25rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  margin: 0.25rem 0 0.75rem;
-  border: 0;
+body[data-layout="landing"] main {
+  max-width: 1200px;
+}
+
+body[data-layout="landing"] .actionbar {
+  display: none;
+}
+
+.tk-hero {
+  position: relative;
+  padding: 4.5rem 0 3.5rem;
+  text-align: center;
+}
+
+/* O brilho âmbar atrás do herói, de ponta a ponta da janela (o body corta o que passa da largura). */
+.tk-hero::before {
+  position: absolute;
+  top: -6rem;
+  bottom: 0;
+  left: 50%;
+  z-index: -1;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 60% 55% at 50% 0%, var(--tk-glow), transparent);
+  content: "";
+  pointer-events: none;
 }
 
 .tk-hero-logo {
-  flex: none;
+  display: block;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto 1.5rem;
+  opacity: 0.92;
 }
 
 .tk-eyebrow {
-  margin: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--tk-border);
+  border-radius: 999px;
+  background: var(--tk-accent-soft);
   color: var(--tk-accent);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.tk-hero h1 {
+  margin: 0 0 1rem;
+  border: 0;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
 .tk-lead {
-  max-width: 46rem;
+  max-width: 44rem;
+  margin: 0 auto 2rem;
   color: var(--tk-muted);
-  font-size: 1.15rem;
-  line-height: 1.6;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  line-height: 1.7;
 }
 
 .tk-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.75rem;
-  margin-top: 1.5rem;
 }
 
 .tk-button {
   display: inline-flex;
   align-items: center;
-  padding: 0.6rem 1.15rem;
-  border: 1px solid var(--tk-border);
-  border-radius: 10px;
+  gap: 0.5rem;
+  padding: 0.7rem 1.6rem;
+  border: 1.5px solid var(--tk-border-strong);
+  border-radius: var(--tk-radius);
   color: var(--bs-body-color);
+  font-size: 0.94rem;
   font-weight: 600;
   text-decoration: none;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  white-space: nowrap;
+  transition: transform var(--tk-transition), border-color var(--tk-transition),
+    background-color var(--tk-transition), box-shadow var(--tk-transition);
 }
 
 .tk-button:hover {
-  border-color: var(--tk-accent);
+  border-color: var(--tk-muted);
+  background: var(--tk-surface-hover);
   color: var(--bs-body-color);
+  transform: translateY(-1px);
 }
 
 /* Texto quase preto sobre o âmbar: contraste alto nos dois temas. */
 .tk-button-primary,
 .tk-button-primary:hover {
-  background: var(--tk-amber);
   border-color: var(--tk-amber);
+  background: var(--tk-amber);
   color: #0a0a0b;
 }
 
 .tk-button-primary:hover {
-  background: var(--tk-amber-hover);
   border-color: var(--tk-amber-hover);
+  background: var(--tk-amber-hover);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+/* O template marca links externos com um ícone; nos botões ele sobra. */
+.tk-button > i,
+.tk-button::after {
+  display: none;
+}
+
+.tk-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem 3.5rem;
+  margin: 3rem 0 0;
+}
+
+.tk-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.tk-stat-value {
+  color: var(--tk-accent);
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.tk-stat-label {
+  color: var(--tk-subtle);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .tk-install {
   max-width: 46rem;
-  margin-bottom: 1rem;
+  margin: 0 auto 1rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius-lg);
+  background: var(--tk-bg-alt);
   color: var(--tk-muted);
+  font-size: 0.95rem;
+}
+
+.tk-install > :last-child {
+  margin-bottom: 0;
+}
+
+.tk-install pre {
+  margin: 1rem 0;
+  border: 1px solid var(--tk-border);
+  border-radius: var(--tk-radius);
+  background: var(--tk-surface);
+}
+
+.tk-group {
+  margin-top: 3.5rem;
 }
 
 .tk-group h2 {
-  margin: 2.75rem 0 1rem;
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  border: 0;
+  font-size: 1.3rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tk-count {
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: var(--tk-accent-soft);
+  color: var(--tk-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .tk-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
   gap: 1rem;
 }
 
+/* min-width: 0 deixa o item da grade encolher abaixo da largura do nome do pacote. */
 .tk-card {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  padding: 1rem 1.15rem;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 1.35rem 1.4rem;
   border: 1px solid var(--tk-border);
-  border-radius: var(--tk-radius);
-  background: var(--tk-card);
+  border-radius: var(--tk-radius-lg);
+  background: var(--tk-surface);
   color: var(--bs-body-color);
   text-decoration: none;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .tk-card:hover,
 .tk-card:focus-visible {
-  border-color: var(--tk-accent);
+  border-color: var(--tk-border-strong);
+  box-shadow: var(--tk-shadow);
   color: var(--bs-body-color);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* O build põe um ponto de quebra depois de cada ponto dos nomes; o overflow-wrap só entra quando nem um
-   segmento cabe na coluna. min-width: 0 deixa o item da grade encolher abaixo da largura do nome. */
-.tk-card {
-  min-width: 0;
-}
-
+   segmento cabe na coluna. */
 .tk-card-title {
-  font-family: var(--bs-font-monospace);
-  font-size: 0.95rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.tk-card-text code {
+  color: var(--tk-accent);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 
 .tk-card-text {
   color: var(--tk-muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.tk-card-text strong {
+  color: var(--bs-body-color);
+  font-weight: 600;
 }
 
 .tk-card-text code {
-  font-size: 0.85em;
+  font-size: 0.82em;
 }
 
 .tk-community {
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
+}
+
+.tk-community .tk-card-title {
+  color: var(--bs-body-color);
 }
 
 @media (max-width: 576px) {
   .tk-hero {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.25rem;
-    padding-top: 1.5rem;
+    padding: 2.5rem 0 2rem;
   }
 
   .tk-hero-logo {
-    width: 72px;
-    height: 72px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .tk-button {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .tk-install {
+    padding: 1.1rem 1.15rem;
+  }
+
+  .tk-stats {
+    gap: 1.25rem 2rem;
   }
 }
 
@@ -275,7 +648,8 @@ article table {
   }
 
   .tk-card:hover,
-  .tk-card:focus-visible {
+  .tk-card:focus-visible,
+  .tk-button:hover {
     transform: none;
   }
 }

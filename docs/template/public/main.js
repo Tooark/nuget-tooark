@@ -3,10 +3,10 @@
 
 const lang = document.documentElement.lang === 'pt-BR' ? 'pt-BR' : 'en'
 
-const switchTo = {
-  en: { label: 'Ler em português', short: 'PT', hreflang: 'pt-BR' },
-  'pt-BR': { label: 'Read in English', short: 'EN', hreflang: 'en' },
-}[lang]
+const languages = [
+  { code: 'pt-BR', short: 'PT', label: 'Ler em português' },
+  { code: 'en', short: 'EN', label: 'Read in English' },
+]
 
 // O inglês fica na raiz do site e o português em pt-BR/; o docfx:rel leva à raiz do idioma atual.
 function counterpartUrl() {
@@ -16,18 +16,31 @@ function counterpartUrl() {
   return new URL((lang === 'pt-BR' ? '../' : 'pt-BR/') + page, docsetRoot).href
 }
 
+// A pílula PT | EN do tooark.com: o idioma atual fica marcado e o outro é o link.
 function addLanguageSwitch() {
   const panel = document.getElementById('navpanel')
   if (!panel || document.getElementById('tk-lang')) return
-  const link = document.createElement('a')
-  link.id = 'tk-lang'
-  link.className = 'btn border-0 tk-lang'
-  link.href = counterpartUrl()
-  link.hreflang = switchTo.hreflang
-  link.title = switchTo.label
-  link.setAttribute('aria-label', switchTo.label)
-  link.innerHTML = `<i class="bi bi-translate" aria-hidden="true"></i><span>${switchTo.short}</span>`
-  panel.appendChild(link)
+  const group = document.createElement('div')
+  group.id = 'tk-lang'
+  group.className = 'tk-lang'
+  group.setAttribute('role', 'group')
+  group.setAttribute('aria-label', lang === 'pt-BR' ? 'Idioma' : 'Language')
+  for (const item of languages) {
+    const current = item.code === lang
+    const element = document.createElement(current ? 'span' : 'a')
+    element.className = 'tk-lang-item'
+    element.textContent = item.short
+    if (current) {
+      element.setAttribute('aria-current', 'true')
+    } else {
+      element.href = counterpartUrl()
+      element.hreflang = item.code
+      element.title = item.label
+      element.setAttribute('aria-label', item.label)
+    }
+    group.appendChild(element)
+  }
+  panel.appendChild(group)
 }
 
 export default {
