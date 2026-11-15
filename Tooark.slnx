@@ -2,10 +2,12 @@
   <Project Path="Tooark.AspNetCore/Tooark.AspNetCore.csproj" />
   <Project Path="Tooark.Attributes/Tooark.Attributes.csproj" />
   <Project Path="Tooark.Dtos/Tooark.Dtos.csproj" />
+  <Project Path="Tooark.Entities.EntityFrameworkCore/Tooark.Entities.EntityFrameworkCore.csproj" />
   <Project Path="Tooark.Entities/Tooark.Entities.csproj" />
   <Project Path="Tooark.Enums/Tooark.Enums.csproj" />
   <Project Path="Tooark.Exceptions/Tooark.Exceptions.csproj" />
   <Project Path="Tooark.Extensions/Tooark.Extensions.csproj" />
+  <Project Path="Tooark.Http/Tooark.Http.csproj" />
   <Project Path="Tooark.Mediator.Abstractions/Tooark.Mediator.Abstractions.csproj" />
   <Project Path="Tooark.Mediator.EntityFrameworkCore/Tooark.Mediator.EntityFrameworkCore.csproj" />
   <Project Path="Tooark.Mediator/Tooark.Mediator.csproj" />

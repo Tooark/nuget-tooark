@@ -62,8 +62,9 @@ GROUPS = [
     ({"en": "Foundation", "pt-BR": "Fundação"}, [
         "Tooark.Notifications", "Tooark.Exceptions", "Tooark.Validations", "Tooark.Attributes", "Tooark.Enums",
         "Tooark.Utils", "Tooark.Extensions", "Tooark.Dtos", "Tooark.Entities", "Tooark.ValueObjects",
+        "Tooark.Entities.EntityFrameworkCore",
     ]),
-    ({"en": "Web", "pt-BR": "Web"}, ["Tooark.AspNetCore", "Tooark.Sanitizers"]),
+    ({"en": "Web", "pt-BR": "Web"}, ["Tooark.AspNetCore", "Tooark.Sanitizers", "Tooark.Http"]),
     ({"en": "Security", "pt-BR": "Segurança"}, ["Tooark.Securities", "Tooark.Securities.OpenId"]),
     ({"en": "Cloud", "pt-BR": "Nuvem"}, [
         "Tooark.Storage", "Tooark.Storage.Aws", "Tooark.Storage.Gcp",

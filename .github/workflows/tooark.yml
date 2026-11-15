@@ -42,6 +42,7 @@ env:
     Tooark.Dtos
     Tooark.Entities
     Tooark.ValueObjects
+    Tooark.Entities.EntityFrameworkCore
     Tooark.Securities
     Tooark.Securities.OpenId
     Tooark.Observability
@@ -49,6 +50,7 @@ env:
     Tooark.Mediator
     Tooark.Mediator.EntityFrameworkCore
     Tooark.Sanitizers
+    Tooark.Http
     Tooark.Storage
     Tooark.Storage.Aws
     Tooark.Storage.Gcp
