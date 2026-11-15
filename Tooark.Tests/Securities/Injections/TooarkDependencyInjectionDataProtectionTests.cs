@@ -449,6 +449,105 @@ public class TooarkDependencyInjectionDataProtectionTests : IDisposable
     Assert.Null(keyManagement.XmlRepository);
   }
 
+  // Monta o provider como o AddTooarkDataProtection faria dentro de um contêiner
+  private static ServiceProvider BuildContainerProvider(IConfiguration configuration, Action<KeyRingOptions>? configure = null)
+  {
+    var services = new ServiceCollection();
+    TooarkDependencyInjection.AddTooarkDataProtectionCore(services, configuration, configure, runningInContainer: true);
+
+    return services.BuildServiceProvider();
+  }
+
+  // Teste para verificar que, em contêiner e sem valor informado, a trava vem ligada e barra o startup sem armazenamento
+  [Fact]
+  public void AddTooarkDataProtection_InContainerWithoutStorage_ShouldThrowOnStartByDefault()
+  {
+    // Arrange
+    using var provider = BuildContainerProvider(BuildConfiguration([]));
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(validator.Validate);
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que, em contêiner e sem host, a trava padrão barra o primeiro uso do Data Protection
+  [Fact]
+  public void AddTooarkDataProtection_InContainerWithoutStorage_ShouldThrowOnFirstUseByDefault()
+  {
+    // Arrange
+    using var provider = BuildContainerProvider(BuildConfiguration([]));
+
+    // Act
+    var ex = Assert.Throws<InternalServerErrorException>(() => provider.GetDataProtector("tests").Protect("payload"));
+
+    // Assert
+    Assert.Contains("Options.DataProtection.KeyStorageNotConfigured", ex.GetErrorMessages());
+  }
+
+  // Teste para verificar que, em contêiner, um armazenamento configurado satisfaz a trava padrão
+  [Fact]
+  public void AddTooarkDataProtection_InContainerWithKeysPath_ShouldStart()
+  {
+    // Arrange
+    using var provider = BuildContainerProvider(BuildConfiguration(new()
+    {
+      ["KeysPath"] = _directory
+    }));
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+    Assert.Equal("payload", provider.GetDataProtector("tests").Unprotect(provider.GetDataProtector("tests").Protect("payload")));
+  }
+
+  // Teste para verificar que, em contêiner, o false informado desliga a trava padrão
+  [Fact]
+  public void AddTooarkDataProtection_InContainerWithRequiredStorageFalse_ShouldKeepAspNetCoreDefaults()
+  {
+    // Arrange
+    using var provider = BuildContainerProvider(BuildConfiguration(new()
+    {
+      ["RequirePersistentKeyStorage"] = "false"
+    }));
+
+    // Act
+    var ex = Record.Exception(() => provider.GetDataProtector("tests").Protect("payload"));
+
+    // Assert
+    Assert.Null(ex);
+    Assert.Null(provider.GetService<IStartupValidator>());
+  }
+
+  // Teste para verificar que o false informado vence o padrão de contêiner em qualquer ordem de chamada
+  [Theory]
+  [InlineData(true)]
+  [InlineData(false)]
+  public void AddTooarkDataProtection_InContainerWithExplicitFalseInAnotherCall_ShouldStart(bool explicitFirst)
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    var configuration = BuildConfiguration([]);
+    Action<KeyRingOptions> disable = options => options.RequirePersistentKeyStorage = false;
+
+    TooarkDependencyInjection.AddTooarkDataProtectionCore(services, configuration, explicitFirst ? disable : null, runningInContainer: true);
+    TooarkDependencyInjection.AddTooarkDataProtectionCore(services, configuration, explicitFirst ? null : disable, runningInContainer: true);
+
+    using var provider = services.BuildServiceProvider();
+    var validator = provider.GetRequiredService<IStartupValidator>();
+
+    // Act
+    var ex = Record.Exception(validator.Validate);
+
+    // Assert
+    Assert.Null(ex);
+  }
+
   // Teste para verificar que a última chamada define a trava, inclusive para desligá-la
   [Fact]
   public void AddTooarkDataProtection_WithRequiredStorageDisabledByLaterCall_ShouldStart()

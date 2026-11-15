@@ -294,7 +294,7 @@ Configuração exemplo para o Data Protection (todas as chaves são opcionais �
 | `KeysPath`                      | string?                                              | `null`  | Diretório das chaves. Nulo mantém o local padrão do ASP.NET Core                       |
 | `KeyLifetimeDays`               | int?                                                 | `null`  | Vida útil de cada chave em **dias** (mínimo 7). Nulo mantém os 90 dias do ASP.NET Core |
 | `DisableAutomaticKeyGeneration` | bool                                                 | `false` | Só lê as chaves, sem gerar novas (outra aplicação gira o key ring)                     |
-| `RequirePersistentKeyStorage`   | bool?                                                | `null`  | Com `true`, a aplicação não sobe sem armazenamento de chaves. Nulo mantém desligada    |
+| `RequirePersistentKeyStorage`   | bool?                                                | `null`  | Com `true`, a aplicação não sobe sem armazenamento de chaves. Nulo liga em contêiner   |
 | `CertificatePath`               | string?                                              | `null`  | Certificado RSA `.pfx`, com chave privada, que protege as chaves em repouso            |
 | `CertificatePassword`           | string?                                              | `null`  | Senha do certificado de `CertificatePath`                                              |
 | `CertificateThumbprint`         | string?                                              | `null`  | Certificado do repositório `My` (usuário ou máquina), no lugar de `CertificatePath`    |
@@ -306,8 +306,8 @@ Configuração exemplo para o Data Protection (todas as chaves são opcionais �
 > startup, o que falharia mais tarde: vida útil abaixo de 7 dias, `CertificatePath` junto com
 > `CertificateThumbprint`, `CertificatePassword` sem `CertificatePath`, certificado ausente, ilegível, sem
 > chave privada ou sem chave RSA, só um dos callbacks `ReadKeys` e `WriteKey`, e os callbacks junto com
-> `KeysPath`. A trava do armazenamento de chaves (`RequirePersistentKeyStorage`) é opcional:
-> veja [Clusters, contêineres e autoscale](#clusters-contêineres-e-autoscale).
+> `KeysPath`. A trava do armazenamento de chaves (`RequirePersistentKeyStorage`) vem ligada em contêiner e
+> desligada fora dele: veja [Clusters, contêineres e autoscale](#clusters-contêineres-e-autoscale).
 
 ### Program.cs
 
@@ -838,12 +838,45 @@ armazenamento de chaves (`Options.DataProtection.KeyStorageNotConfigured`): `Key
 e `WriteKey`, um `PersistKeysTo*` em `ConfigureDataProtection` ou um encadeado a `services.AddDataProtection()`, antes ou depois do
 `AddTooarkDataProtection`. A conferência roda no startup do host e, sem host, no primeiro uso do Data Protection.
 
-> A trava vem desligada nesta versão para não mudar o comportamento de quem já usa a v4.3.0.
->
-> ⚠️ **Muda na v5:** sem valor informado, a trava passa a ligada quando a aplicação roda em contêiner
-> (`DOTNET_RUNNING_IN_CONTAINER`, que as imagens oficiais do .NET definem, ou `KUBERNETES_SERVICE_HOST`). Uma
-> API que não usa cookies (só JWT) não depende de chaves persistentes: informe `false` para mantê-la desligada
-> também depois dessa mudança.
+Sem valor informado, o padrão depende de onde a aplicação roda:
+
+| `RequirePersistentKeyStorage` | Fora de contêiner | Em contêiner    |
+| ----------------------------- | ----------------- | --------------- |
+| não informado                 | Trava desligada   | Trava ligada    |
+| `true`                        | Trava ligada      | Trava ligada    |
+| `false`                       | Trava desligada   | Trava desligada |
+
+A aplicação é tratada como em contêiner quando um destes sinais existe no ambiente do processo:
+
+- `DOTNET_RUNNING_IN_CONTAINER` com `true` ou `1`, que as imagens oficiais do .NET (`mcr.microsoft.com/dotnet/*`)
+  já definem;
+- `KUBERNETES_SERVICE_HOST` com qualquer valor, que o Kubernetes injeta em todo pod, inclusive nos de imagens
+  próprias que não definem a primeira.
+
+Uma imagem própria fora do Kubernetes, sem nenhum dos dois, não é detectada: defina
+`DOTNET_RUNNING_IN_CONTAINER=true` na imagem ou informe `"RequirePersistentKeyStorage": true`.
+
+O valor informado sempre vence o padrão, na seção ou em código, e entre várias chamadas a
+`AddTooarkDataProtection` vale o da última que informou um valor. Uma API que não usa cookies (só JWT) nem
+protege dados com o Data Protection não depende de chaves persistentes: informe `false` para subir em contêiner
+sem armazenamento.
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "minha-api",
+    "RequirePersistentKeyStorage": false
+  }
+}
+```
+
+A trava só existe para quem registra o Data Protection pelo Tooark: `AddTooarkDataProtection`, ou
+`AddTooarkSecurities` com a seção `DataProtection` presente. Uma aplicação que não chama nenhum dos dois, ou que
+usa só o `services.AddDataProtection()` nativo, não é afetada.
+
+> ⚠️ **Mudou na v5:** na linha 4.x a trava vinha desligada em qualquer ambiente. Uma aplicação que registra o
+> Data Protection pelo Tooark em contêiner, sem armazenamento de chaves, deixa de subir ao atualizar: configure o
+> armazenamento ou informe `false`.
 
 #### ❌ Não faça: chaves presas à instância
 
@@ -868,7 +901,8 @@ app.Run();
 ```
 
 > ⚠️ **Esta configuração perde dados.** Sem `KeysPath` e sem armazenamento externo, cada contêiner gera a própria
-> chave em `~/.aspnet/DataProtection-Keys`, dentro dele. Nada falha no registro nem no startup: o log só avisa
+> chave em `~/.aspnet/DataProtection-Keys`, dentro dele. Com a trava desligada (`false`, ou um contêiner que
+> não é detectado), nada falha no registro nem no startup: o log só avisa
 > `Storing keys in a directory '…' that may not be persisted outside of the container. Protected data will be
 unavailable when container is destroyed.`
 
@@ -878,7 +912,7 @@ unavailable when container is destroyed.`
 | Deploy, restart, pod recriado ou autoscale reduzindo | A chave some com o contêiner, e todas as sessões caem de uma vez                                                                                                                                                                                                                              |
 | Um valor protegido foi gravado no banco              | **Perdido para sempre**: nenhuma instância nova tem a chave, e não há como recuperá-la                                                                                                                                                                                                        |
 
-Com `"RequirePersistentKeyStorage": true`, esta mesma configuração não sobe: o erro aparece no deploy, e não depois,
+Em contêiner, com a trava no padrão, esta mesma configuração não sobe: o erro aparece no deploy, e não depois,
 com os usuários já conectados.
 
 #### ❌ Não faça: `KeysPath` sem volume compartilhado
@@ -1584,7 +1618,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 1. **Defina `ApplicationName`** - O isolamento fica igual em todas as instâncias, independente do caminho de instalação
 2. **Compartilhe o key ring entre as instâncias** - Volume persistente em `KeysPath`, os callbacks `ReadKeys` e `WriteKey` ou um armazenamento via `ConfigureDataProtection`
-3. **Ligue `RequirePersistentKeyStorage` em contêiner** - A aplicação deixa de subir com as chaves presas à instância
+3. **Não desligue `RequirePersistentKeyStorage` em contêiner sem motivo** - Ela vem ligada e impede a aplicação de subir com as chaves presas à instância; informe `false` só em quem não depende de chaves persistentes
 4. **Nos callbacks, só insira e leia tudo** - Chave sobrescrita, filtrada ou apagada torna ilegível o que ela protegeu
 5. **Proteja as chaves em repouso** - Com `KeysPath` ou callbacks e sem certificado, as chaves ficam gravadas sem criptografia, em qualquer sistema operacional
 6. **Não use para dados de longa duração** - Colunas criptografadas no banco ficam com o `ICryptographyService`

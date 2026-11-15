@@ -103,7 +103,7 @@
   "Options.DataProtection.KeyCallbacksIncomplete": "Los callbacks ReadKeys y WriteKey de Data Protection deben indicarse juntos.",
   "Options.DataProtection.KeyLifetimeTooShort": "La vida útil de las claves de Data Protection debe ser de al menos {0} días.",
   "Options.DataProtection.KeyStorageAmbiguous": "Indique KeysPath o los callbacks ReadKeys y WriteKey de Data Protection, no ambos.",
-  "Options.DataProtection.KeyStorageNotConfigured": "El almacenamiento de las claves de Data Protection no está configurado, y las claves se perderían con la instancia. Indique KeysPath en un volumen compartido, los callbacks ReadKeys y WriteKey o un almacenamiento en ConfigureDataProtection.",
+  "Options.DataProtection.KeyStorageNotConfigured": "El almacenamiento de las claves de Data Protection no está configurado, y las claves se perderían con la instancia. Indique KeysPath en un volumen compartido, los callbacks ReadKeys y WriteKey o un almacenamiento en ConfigureDataProtection. Si la aplicación no depende de claves persistentes, indique RequirePersistentKeyStorage como false.",
   "Options.HttpClient.AttemptTimeoutInvalid": "El tiempo límite por intento del cliente HTTP debe estar entre {0} y {1} segundos, el tiempo límite total.",
   "Options.HttpClient.BaseAddressInvalid": "La dirección base del cliente HTTP debe ser una URL absoluta http o https, sin credenciales, consulta ni fragmento.",
   "Options.HttpClient.CircuitBreakerBreakInvalid": "El tiempo de circuito abierto del cliente HTTP debe estar entre {0} y {1} segundos.",

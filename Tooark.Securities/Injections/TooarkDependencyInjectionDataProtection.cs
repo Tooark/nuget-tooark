@@ -23,6 +23,8 @@ public static partial class TooarkDependencyInjection
   /// chamar <c>services.AddDataProtection()</c> e encadear o que precisar, antes ou depois. Com
   /// <see cref="KeyRingOptions.RequirePersistentKeyStorage"/> ligado, a falta de armazenamento de chaves lança
   /// <see cref="InternalServerErrorException"/> no startup do host, ou no primeiro uso do Data Protection sem host.
+  /// Sem valor informado, a trava vem ligada quando a aplicação roda em contêiner
+  /// (<c>DOTNET_RUNNING_IN_CONTAINER</c> ou <c>KUBERNETES_SERVICE_HOST</c>) e desligada fora dele.
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
   /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
@@ -33,6 +35,22 @@ public static partial class TooarkDependencyInjection
     this IServiceCollection services,
     IConfiguration configuration,
     Action<KeyRingOptions>? configure = null
+  ) => AddTooarkDataProtectionCore(services, configuration, configure, ContainerEnvironment.IsRunningInContainer());
+
+  /// <summary>
+  /// Adiciona o Data Protection com o ambiente já resolvido, para os testes fixarem se há contêiner ou não.
+  /// </summary>
+  /// <param name="services">Coleção de serviços.</param>
+  /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
+  /// <param name="configure">Ação opcional para configurar programaticamente as opções do key ring.</param>
+  /// <param name="runningInContainer">Indica se a aplicação roda em contêiner, o que liga a trava por padrão.</param>
+  /// <returns>A coleção de serviços com o Data Protection adicionado.</returns>
+  /// <exception cref="InternalServerErrorException">Quando as opções do key ring são inválidas.</exception>
+  internal static IServiceCollection AddTooarkDataProtectionCore(
+    IServiceCollection services,
+    IConfiguration configuration,
+    Action<KeyRingOptions>? configure,
+    bool runningInContainer
   )
   {
     // Carrega da configuração e aplica os overrides programáticos por cima
@@ -52,10 +70,15 @@ public static partial class TooarkDependencyInjection
     // Registra o Data Protection nativo com as opções Tooark
     options.ConfigureBuilder(services.AddDataProtection());
 
-    // Trava do armazenamento de chaves, apenas quando informada
+    // Trava do armazenamento de chaves: o valor informado vence; sem valor, vem ligada em contêiner, onde as
+    // chaves gravadas no perfil do usuário morrem com a instância
     if (options.RequirePersistentKeyStorage is bool required)
     {
       AddKeyStorageGuard(services, required);
+    }
+    else if (runningInContainer)
+    {
+      AddKeyStorageGuard(services, required: null);
     }
 
     return services;
@@ -66,16 +89,24 @@ public static partial class TooarkDependencyInjection
   /// </summary>
   /// <remarks>
   /// A conferência fica para o startup porque o armazenamento pode ser registrado depois desta chamada, encadeado a
-  /// <c>services.AddDataProtection()</c>. A última chamada define se a trava vale: uma chamada com <c>false</c>
-  /// desliga a trava ligada por uma anterior.
+  /// <c>services.AddDataProtection()</c>. A última chamada com valor informado define se a trava vale: uma chamada
+  /// com <c>false</c> desliga a trava ligada por uma anterior, e também a ligada pelo padrão de contêiner, que só
+  /// vale enquanto nenhuma chamada informar um valor.
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
-  /// <param name="required">Indica se o armazenamento de chaves é obrigatório.</param>
-  private static void AddKeyStorageGuard(IServiceCollection services, bool required)
+  /// <param name="required">Indica se o armazenamento de chaves é obrigatório; nulo liga a trava pelo padrão de contêiner.</param>
+  private static void AddKeyStorageGuard(IServiceCollection services, bool? required)
   {
-    services.Configure<KeyStorageGuardOptions>(guard => guard.Required = required);
+    if (required is bool informed)
+    {
+      services.Configure<KeyStorageGuardOptions>(guard => guard.Required = informed);
+    }
+    else
+    {
+      services.Configure<KeyStorageGuardOptions>(guard => guard.RequiredByDefault = true);
+    }
 
-    if (required)
+    if (required ?? true)
     {
       services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<KeyManagementOptions>, KeyStorageValidator>());
       services.AddOptions<KeyManagementOptions>().ValidateOnStart();
@@ -104,9 +135,20 @@ internal sealed class DataProtectionMarker
 internal sealed class KeyStorageGuardOptions
 {
   /// <summary>
-  /// Indica se o armazenamento de chaves é obrigatório.
+  /// Valor informado pela aplicação em <see cref="KeyRingOptions.RequirePersistentKeyStorage"/>; nulo quando
+  /// nenhuma chamada informou.
   /// </summary>
-  public bool Required { get; set; }
+  public bool? Required { get; set; }
+
+  /// <summary>
+  /// Indica se a trava vale pelo padrão de contêiner, na falta de um valor informado.
+  /// </summary>
+  public bool RequiredByDefault { get; set; }
+
+  /// <summary>
+  /// Indica se o armazenamento de chaves é obrigatório: o valor informado vence o padrão.
+  /// </summary>
+  public bool IsRequired => Required ?? RequiredByDefault;
 }
 
 /// <summary>
@@ -126,7 +168,7 @@ internal sealed class KeyStorageValidator(IOptions<KeyStorageGuardOptions> guard
   {
     // Sem repositório, o ASP.NET Core cai no perfil do usuário ou na memória, e em contêiner as chaves morrem com a
     // instância. Lança a exceção das demais validações do key ring, com a mensagem em chave, em vez de devolver falha.
-    if (guard.Value.Required && options.XmlRepository is null)
+    if (guard.Value.IsRequired && options.XmlRepository is null)
     {
       throw new InternalServerErrorException("Options.DataProtection.KeyStorageNotConfigured");
     }

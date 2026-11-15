@@ -89,7 +89,10 @@ public class KeyRingOptions
   /// <c>services.AddDataProtection()</c>. A trava confere que o armazenamento existe, não que ele sobrevive à
   /// instância: <see cref="KeysPath"/> precisa apontar para um volume persistente e compartilhado, e os callbacks,
   /// para um armazenamento fora da instância.
-  /// Nulo mantém o padrão, hoje desligado; informe <c>false</c> para mantê-la desligada mesmo que o padrão mude.
+  /// Nulo segue o padrão: ligada quando a aplicação roda em contêiner (variável
+  /// <c>DOTNET_RUNNING_IN_CONTAINER</c>, que as imagens oficiais do .NET definem, ou <c>KUBERNETES_SERVICE_HOST</c>)
+  /// e desligada fora dele. Informe <c>false</c> para mantê-la desligada em contêiner, como em uma API que não
+  /// depende de chaves persistentes. Na linha 4.x o padrão era sempre desligado.
   /// </remarks>
   public bool? RequirePersistentKeyStorage { get; set; } = null;
 

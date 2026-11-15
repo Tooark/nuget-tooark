@@ -292,7 +292,7 @@ Example configuration for Data Protection (every key is optional — see
 | `KeysPath`                      | string?                                              | `null`  | Key directory. Null keeps the ASP.NET Core default location                       |
 | `KeyLifetimeDays`               | int?                                                 | `null`  | Lifetime of each key in **days** (minimum 7). Null keeps the ASP.NET Core 90 days |
 | `DisableAutomaticKeyGeneration` | bool                                                 | `false` | Only reads the keys, never creates new ones (another app rotates the key ring)    |
-| `RequirePersistentKeyStorage`   | bool?                                                | `null`  | With `true`, the app does not start without a key storage. Null keeps it off      |
+| `RequirePersistentKeyStorage`   | bool?                                                | `null`  | With `true`, the app does not start without a key storage. Null: on in containers |
 | `CertificatePath`               | string?                                              | `null`  | RSA `.pfx` certificate, with private key, that protects the keys at rest          |
 | `CertificatePassword`           | string?                                              | `null`  | Password of the `CertificatePath` certificate                                     |
 | `CertificateThumbprint`         | string?                                              | `null`  | Certificate from the `My` store (user or machine), instead of `CertificatePath`   |
@@ -305,7 +305,8 @@ Example configuration for Data Protection (every key is optional — see
 > `CertificateThumbprint`, `CertificatePassword` without `CertificatePath`, a certificate that is missing,
 > unreadable, without a private key or without an RSA key, only one of the `ReadKeys` and `WriteKey` callbacks,
 > and the callbacks together with `KeysPath`. The key storage lock (`RequirePersistentKeyStorage`)
-> is opt-in: see [Clusters, containers and autoscaling](#clusters-containers-and-autoscaling).
+> is on in containers and off elsewhere: see
+> [Clusters, containers and autoscaling](#clusters-containers-and-autoscaling).
 
 ### Program.cs
 
@@ -837,12 +838,45 @@ start without a key storage (`Options.DataProtection.KeyStorageNotConfigured`): 
 `AddTooarkDataProtection`. The check runs when the host starts and, without a host, on the first use of Data
 Protection.
 
-> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior.
->
-> ⚠️ **Changes in v5:** with no value set, the lock turns on when the application runs in a container
-> (`DOTNET_RUNNING_IN_CONTAINER`, which the official .NET images define, or `KUBERNETES_SERVICE_HOST`). An API
-> that uses no cookies (JWT only) does not depend on persistent keys: set `false` to keep it off after that
-> change too.
+With no value set, the default depends on where the application runs:
+
+| `RequirePersistentKeyStorage` | Outside a container | In a container |
+| ----------------------------- | ------------------- | -------------- |
+| not set                       | Lock off            | Lock on        |
+| `true`                        | Lock on             | Lock on        |
+| `false`                       | Lock off            | Lock off       |
+
+The application is treated as running in a container when one of these signals is in the process environment:
+
+- `DOTNET_RUNNING_IN_CONTAINER` set to `true` or `1`, which the official .NET images (`mcr.microsoft.com/dotnet/*`)
+  already define;
+- `KUBERNETES_SERVICE_HOST` with any value, which Kubernetes injects into every pod, including those of custom
+  images that do not define the first one.
+
+A custom image outside Kubernetes, with neither of them, is not detected: set
+`DOTNET_RUNNING_IN_CONTAINER=true` in the image or set `"RequirePersistentKeyStorage": true`.
+
+A value that was set always wins over the default, in the section or in code, and across several calls to
+`AddTooarkDataProtection` the last one that set a value wins. An API that uses no cookies (JWT only) and
+protects no data with Data Protection does not depend on persistent keys: set `false` to start in a container
+without a storage.
+
+```json
+{
+  "DataProtection": {
+    "ApplicationName": "my-api",
+    "RequirePersistentKeyStorage": false
+  }
+}
+```
+
+The lock only exists for applications that register Data Protection through Tooark: `AddTooarkDataProtection`,
+or `AddTooarkSecurities` with the `DataProtection` section present. An application that calls neither, or uses
+only the native `services.AddDataProtection()`, is not affected.
+
+> ⚠️ **Changed in v5:** on the 4.x line the lock was off in every environment. An application that registers
+> Data Protection through Tooark in a container, without a key storage, no longer starts after the upgrade:
+> configure the storage or set `false`.
 
 #### ❌ Don't: keys tied to the instance
 
@@ -867,8 +901,8 @@ app.Run();
 ```
 
 > ⚠️ **This configuration loses data.** With no `KeysPath` and no external storage, each container creates its
-> own key in `~/.aspnet/DataProtection-Keys`, inside itself. Nothing fails on registration or at startup: the log
-> only warns `Storing keys in a directory '…' that may not be persisted outside of the container. Protected data
+> own key in `~/.aspnet/DataProtection-Keys`, inside itself. With the lock off (`false`, or a container that is
+> not detected), nothing fails on registration or at startup: the log only warns `Storing keys in a directory '…' that may not be persisted outside of the container. Protected data
 will be unavailable when container is destroyed.`
 
 | When                                               | What happens                                                                                                                                                                                                                                                                                    |
@@ -877,8 +911,8 @@ will be unavailable when container is destroyed.`
 | Deploy, restart, recreated pod or autoscaling down | The key goes away with the container, and every session drops at once                                                                                                                                                                                                                           |
 | A protected value was stored in the database       | **Lost for good**: no new instance has the key, and there is no way to recover it                                                                                                                                                                                                               |
 
-With `"RequirePersistentKeyStorage": true`, this same configuration does not start: the error shows up on deploy, not
-later, with users already signed in.
+In a container, with the lock at its default, this same configuration does not start: the error shows up on
+deploy, not later, with users already signed in.
 
 #### ❌ Don't: `KeysPath` without a shared volume
 
@@ -1583,7 +1617,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 1. **Set `ApplicationName`** - Isolation stays the same on every instance, regardless of the install path
 2. **Share the key ring across instances** - A persistent volume in `KeysPath`, the `ReadKeys` and `WriteKey` callbacks or a storage through `ConfigureDataProtection`
-3. **Turn on `RequirePersistentKeyStorage` in containers** - The application no longer starts with the keys tied to the instance
+3. **Do not turn `RequirePersistentKeyStorage` off in containers without a reason** - It is on there and stops the application from starting with the keys tied to the instance; set `false` only where persistent keys are not needed
 4. **In the callbacks, only insert and read everything** - An overwritten, filtered or deleted key makes what it protected unreadable
 5. **Protect the keys at rest** - With `KeysPath` or callbacks and no certificate, the keys are written unencrypted, on any operating system
 6. **Do not use it for long-lived data** - Encrypted database columns belong to `ICryptographyService`
