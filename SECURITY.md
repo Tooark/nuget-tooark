@@ -47,8 +47,9 @@ line** on NuGet.
 | Version | Supported                                               |
 | ------- | ------------------------------------------------------- |
 | 4.x     | ✅ Active — features, bug fixes and security fixes      |
-| 3.x     | ⚠️ Security fixes only, best effort, on the `v3` branch |
-| ≤ 2.x   | ❌ End of life — please upgrade                         |
+| 3.x     | ⚠️ Security fixes only, until December 2026 (`v3`)      |
+| 2.x     | ⚠️ Security fixes only, until December 2026 (`v2`)      |
+| ≤ 1.x   | ❌ End of life — please upgrade                         |
 
 Packages target `net8.0` and `net10.0`. When a .NET runtime reaches end of
 support by Microsoft, the corresponding target framework stops receiving
