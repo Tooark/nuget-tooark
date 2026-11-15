@@ -145,18 +145,8 @@ Configuração exemplo para token JWT com algoritmos assimétricos (_PrivateKey_
 }
 ```
 
-Configuração exemplo para criptografia AES:
-
-```json
-{
-  "Cryptography": {
-    "Algorithm": "GCM",
-    "Secret": "sua-chave-secreta-com-32-caracteres"
-  }
-}
-```
-
-Ou com chave AES pronta em Base64 (**recomendado** — a chave é usada diretamente, sem derivação):
+Configuração exemplo para criptografia AES, com a chave AES de 32 bytes em Base64 (gere com
+`openssl rand -base64 32`; a chave é usada diretamente, sem derivação):
 
 ```json
 {
@@ -244,20 +234,28 @@ Exemplo com múltiplos emissores e destinatários:
 | Propriedade    | Tipo                         | Padrão | Descrição                                                     |
 | -------------- | ---------------------------- | ------ | ------------------------------------------------------------- |
 | `Algorithm`    | string                       | `GCM`  | Modo AES-256: `GCM`, `CBC` ou `CBCUnsafe` (somente decrypt)   |
-| `Secret`       | string?                      | `null` | Chave derivada via SHA256 (compatibilidade)                   |
-| `SecretBase64` | string?                      | `null` | Chave AES de 32 bytes usada diretamente (**recomendado**)     |
+| `Secret`       | string?                      | `null` | **Obsoleto**, sai na v5. Chave derivada via SHA256            |
+| `SecretBase64` | string?                      | `null` | Chave AES de 32 bytes usada diretamente                       |
 | `CurrentKeyId` | string?                      | `null` | Identificador da chave em `Keys` que cifra os valores novos   |
 | `Keys`         | `Dictionary<string, string>` | vazio  | Chaves AES de 32 bytes em Base64, identificadas, para rotação |
 
-> Sem `Keys`, é obrigatório informar `Secret` **ou** `SecretBase64`. Quando ambos são informados,
+> Sem `Keys`, é obrigatório informar `SecretBase64` (ou o `Secret` obsoleto). Quando ambos são informados,
 > `SecretBase64` tem prioridade. O `SecretBase64` deve representar exatamente 32 bytes (AES-256) — valores
 > inválidos falham no startup. Gere uma chave com `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
-> Com `Secret`, a chave é derivada via SHA256 (mantido por compatibilidade).
 >
 > Com `Keys`, o `CurrentKeyId` é obrigatório e precisa ser um dos identificadores; cada identificador usa só
 > letras, dígitos, hífen e sublinhado (nunca ponto), e cada chave tem exatamente 32 bytes em Base64 — qualquer
 > outra coisa falha no startup. `Secret`/`SecretBase64` viram a **chave legada**: só abrem os valores gravados
 > sem prefixo de chave, e podem ser removidos quando não restar nenhum.
+>
+> ⚠️ **Muda na v5:** o `Secret` em texto está obsoleto desde a v4.8.0 e sai na v5. A chave que ele deriva é o
+> SHA-256 do texto: informe esse valor em `SecretBase64` e tudo o que já foi cifrado continua abrindo, sem
+> recifrar nada, inclusive os valores legados lidos com `CBCUnsafe`:
+> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. O `[Obsolete]` só avisa quem
+> atribui `Secret` em código; quem o define no `appsettings.json` não recebe aviso de compilação.
+>
+> ⚠️ **Muda na v5:** um `Algorithm` desconhecido (erro de digitação, como `GMC`) passa a falhar no startup. Na
+> linha 4.x ele cai em `GCM` em silêncio. Ausente ou vazio continua valendo `GCM`.
 
 #### Propriedades de `PasswordHashOptions`
 
@@ -499,7 +497,8 @@ O `JwtTokenService` grava os dados do usuário como claims. Existem dois conjunt
 - O `UserTokenDto` lê `id` e cai para `sub`, `login` e cai para `preferred_username`, então um token emitido em
   qualquer modo é lido.
 - As constantes ficam em `TooarkClaimNames`; o `RoleClaimsExtension.GetClaims` tem sobrecargas que recebem os
-  sinalizadores ou as `JwtOptions`.
+  sinalizadores ou as `JwtOptions`. A sobrecarga sem parâmetros, que fixa os nomes legados, está **obsoleta
+  desde a v4.8.0 e sai na v5**: use `GetClaims(options)`.
 
 > ⚠️ **Muda na v5:** os padrões se invertem — `EmitStandardClaims = true` e `EmitLegacyClaims = false`. Um token
 > emitido por um serviço v5 sem sinalizadores explícitos tem `sub` e não tem `id`. Defina os dois sinalizadores
@@ -535,7 +534,8 @@ serviço usa o `TimeProvider.System`, com a validação de vida útil do própri
 | `CBCUnsafe` | AES-256-CBC | ⚠️ Legado - IV zerado, **somente descriptografia** |
 
 > `CBCUnsafe` existe apenas para ler dados antigos criptografados com IV zero: criptografar neste modo
-> lança exceção (`Options.Cryptography.AlgorithmDecryptOnly`). Para novos dados, use `GCM`.
+> lança exceção (`Options.Cryptography.AlgorithmDecryptOnly`). Para novos dados, use `GCM`. O modo continua na
+> v5, somente para descriptografia.
 
 ---
 
@@ -1046,7 +1046,15 @@ if (record is null || record.ExpiresAt < DateTime.UtcNow || !SecureToken.Verify(
 O hash é SHA-256 sem salt nem fator de custo de propósito: o token tem no mínimo 128 bits aleatórios, então a
 força bruta é inviável mesmo com um hash rápido, e um hash determinístico permite achar o registro por ele. Hash
 lento com salt é para senha, que tem pouca entropia (`IPasswordHashService`). O `Create` aceita de 16 a 1024
-bytes; o `Verify` devolve `false` para qualquer coisa ausente ou malformada, nunca lança.
+bytes; o `Verify` devolve `false` para qualquer coisa ausente ou malformada, nunca lança. O `Hash` lança
+`SecureToken.TokenNotProvided` (`BadRequestException`) para um token nulo, vazio ou só com espaços.
+
+> **`SecureToken` ou Data Protection?** O `SecureToken` é um valor opaco: o hash fica no banco, então o token é
+> revogável, pode ser de uso único (apague o registro no resgate) e dura o quanto o registro durar. O protetor
+> do Data Protection ([token de link](#data-protection---protegendo-um-token-de-link)) carrega o próprio
+> conteúdo cifrado e dispensa a tabela, mas só serve para vida curta e não é revogável sem um controle à parte. Para tokens novos, prefira o
+> `SecureToken.Create` ao `GenerateString.Token` do `Tooark.Utils`, que só gera o texto e não tem hash nem
+> verificação.
 
 ### `Totp` — segundo fator com aplicativos autenticadores
 
@@ -1085,8 +1093,12 @@ user.TotpLastUsedStep = step;
 - **Proteção contra reuso**: passos iguais ou anteriores a `lastUsedStep` são recusados. Grave o `matchedStep` de
   cada código aceito e informe-o na verificação seguinte; informe um valor negativo antes do primeiro.
 - Código ausente, com tamanho errado ou com caracteres que não são dígitos devolve `false`; espaços são
-  ignorados. Um segredo que não decodifica lança `ArgumentException`, porque um segredo corrompido trancaria o
-  usuário em silêncio.
+  ignorados. Um segredo que não decodifica lança `Totp.InvalidSecret` (`InternalServerErrorException`), porque
+  um segredo corrompido trancaria o usuário em silêncio. É erro interno, e não de requisição: o segredo vem do
+  banco ou do serviço, nunca do usuário.
+- O `BuildUri` lança `Totp.IssuerNotProvided` ou `Totp.AccountNotProvided` (`BadRequestException`) para emissor
+  ou conta vazios. Faixas inválidas de `digits`, `periodSeconds`, `window` e tamanhos lançam
+  `ArgumentOutOfRangeException`: são erro de quem chama, não dado de entrada, e por isso não têm chave de tradução.
 - `Compute(secret, step, digits)` e `GetTimeStep(at, period)` expõem as peças para testes e para exibir um código
   no servidor; o `TimeProvider` do `Verify` deixa um teste controlar o relógio.
 - `digits` (6 a 8) e `periodSeconds` são configuráveis, mas nem todo aplicativo honra valores diferentes de 6 e 30.
@@ -1331,7 +1343,7 @@ var tenantId = result.TenantId;
 {
   "Cryptography": {
     "Algorithm": "GCM",
-    "Secret": "minha-chave-secreta-32-caracteres"
+    "SecretBase64": "chave-de-32-bytes-em-base64"
   }
 }
 ```
@@ -1542,7 +1554,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 1. **Prefira GCM sobre CBC** - GCM fornece autenticação integrada
 2. **Nunca use CBCUnsafe para novos dados** - Modo somente-descriptografia para compatibilidade com sistemas legados
-3. **Prefira `SecretBase64` com chave aleatória de 32 bytes** - A chave é usada diretamente, sem derivação
+3. **Use `SecretBase64` com chave aleatória de 32 bytes** - A chave é usada diretamente, sem derivação; o `Secret` em texto está obsoleto e sai na v5
 4. **Gere chaves aleatórias** - Use `openssl rand -base64 32` ou `RandomNumberGenerator.GetBytes(32)`
 5. **Adote `Keys` antes que a primeira rotação seja urgente** - Valores gravados com chaves identificadas rotacionam sem recriptografia em massa
 6. **Nunca remova uma chave com valores ainda cifrados por ela** - Confira com `KeyIdOf` ou recifre na leitura antes
@@ -1597,6 +1609,10 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 | `PasswordHashService`      | `Options.PasswordHash.SaltSizeTooSmall;16`            | `SaltSize` abaixo do mínimo                                 | Use ao menos 16 bytes                                                 | `InternalServerError` |
 | `PasswordHashService`      | `Options.PasswordHash.HashSizeTooSmall;32`            | `HashSize` abaixo do mínimo                                 | Use ao menos 32 bytes                                                 | `InternalServerError` |
 | `PasswordHashService`      | `PasswordHash.PasswordNotProvided`                    | Senha nula ou vazia em `Hash`                               | Valide a senha antes de gerar o hash                                  | `BadRequest`          |
+| `SecureToken`              | `SecureToken.TokenNotProvided`                        | Token nulo, vazio ou só com espaços em `Hash`               | Valide o token antes de gerar o hash                                  | `BadRequest`          |
+| `Totp`                     | `Totp.InvalidSecret`                                  | Segredo que não é um Base32 válido                          | Confira o segredo guardado; refaça o cadastro do segundo fator        | `InternalServerError` |
+| `Totp`                     | `Totp.IssuerNotProvided`                              | Emissor nulo ou vazio em `BuildUri`                         | Informe o nome da aplicação                                           | `BadRequest`          |
+| `Totp`                     | `Totp.AccountNotProvided`                             | Conta nula ou vazia em `BuildUri`                           | Informe a identificação da conta, como o e-mail                       | `BadRequest`          |
 | `AddTooarkDataProtection`  | `Options.DataProtection.KeyLifetimeTooShort;7`        | `KeyLifetimeDays` abaixo do mínimo                          | Use ao menos 7 dias, ou deixe nulo para os 90 dias padrão             | `InternalServerError` |
 | `AddTooarkDataProtection`  | `Options.DataProtection.CertificateAmbiguous`         | `CertificatePath` e `CertificateThumbprint` juntos          | Informe apenas um dos dois                                            | `InternalServerError` |
 | `AddTooarkDataProtection`  | `Options.DataProtection.CertificatePathNotConfigured` | `CertificatePassword` sem `CertificatePath`                 | Informe `CertificatePath` ou remova a senha                           | `InternalServerError` |
