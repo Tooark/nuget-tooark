@@ -64,21 +64,6 @@ public static class GenerateString
     return InternalGenerateString.GuidCode();
   }
 
-  /// <summary>
-  /// Gera uma string de token.
-  /// </summary>
-  /// <param name="length">O comprimento da string de token a ser gerada. Valor padrão é 256. Deve ser maior ou igual a 256.</param>
-  /// <returns>Uma string de token de no mínimo 256 caracteres.</returns>
-  /// <remarks>
-  /// Obsoleto: gera só o texto, sem hash nem verificação. Use o <c>SecureToken.Create()</c> do
-  /// <c>Tooark.Securities</c>, que acompanha <c>Hash</c> e <c>Verify</c> em tempo constante. Será removido na v5.
-  /// </remarks>
-  [Obsolete("Use Tooark.Securities.SecureToken.Create(). Will be removed in v5.")]
-  public static string Token(int length = 256)
-  {
-    return InternalGenerateString.Token(length);
-  }
-
   #endregion
 }
 
@@ -274,13 +259,6 @@ internal static class InternalGenerateString
   /// </summary>
   /// <returns>Uma string Guid sem hífens, com 32 caracteres.</returns>
   internal static string GuidCode() => Guid.NewGuid().ToString("N").ToUpperInvariant();
-
-  /// <summary>
-  /// Gera uma string de token.
-  /// </summary>
-  /// <param name="length">O comprimento da string de token a ser gerada. Valor padrão é 256. Deve ser maior ou igual a 256.</param>
-  /// <returns>Uma string de token de no mínimo 256 caracteres.</returns>
-  internal static string Token(int length = 256) => $"{GuidCode()}{Hexadecimal(length > 256 ? length - 32 : 224)}";
 
   #endregion
 
