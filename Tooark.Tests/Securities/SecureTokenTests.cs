@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Tooark.Exceptions;
 using Tooark.Securities;
 
 namespace Tooark.Tests.Securities;
@@ -78,10 +79,13 @@ public class SecureTokenTests
   [InlineData("")]
   [InlineData("   ")]
   [InlineData(null)]
-  public void Hash_ShouldThrowArgumentException_WhenTokenIsBlank(string? token)
+  public void Hash_ShouldThrowBadRequest_WhenTokenIsBlank(string? token)
   {
-    // Act & Assert
-    Assert.ThrowsAny<ArgumentException>(() => SecureToken.Hash(token!));
+    // Act
+    var exception = Assert.Throws<BadRequestException>(() => SecureToken.Hash(token!));
+
+    // Assert
+    Assert.Equal("SecureToken.TokenNotProvided", exception.Message);
   }
 
   // Testa se o token gerado confere com o próprio hash

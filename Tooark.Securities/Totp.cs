@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
 using System.Text;
+using Tooark.Exceptions;
 
 namespace Tooark.Securities;
 
@@ -71,15 +72,31 @@ public static class Totp
   /// <param name="digits">Dígitos do código: 6, 7 ou 8. Padrão: 6.</param>
   /// <param name="periodSeconds">Duração do passo em segundos. Padrão: 30.</param>
   /// <returns>A URI, com emissor e conta escapados.</returns>
-  /// <exception cref="ArgumentException">Quando o segredo não é um Base32 válido ou o emissor ou a conta estão vazios.</exception>
+  /// <exception cref="BadRequestException">Quando o emissor ou a conta estão vazios.</exception>
+  /// <exception cref="InternalServerErrorException">Quando o segredo não é um Base32 válido.</exception>
   /// <exception cref="ArgumentOutOfRangeException">Quando os dígitos ou o período estão fora da faixa.</exception>
   /// <remarks>
   /// Nem todo aplicativo honra <c>digits</c> e <c>period</c> diferentes do padrão; alguns ignoram e usam 6 e 30.
   /// </remarks>
-  public static string BuildUri(string secret, string issuer, string account, int digits = DefaultDigits, int periodSeconds = DefaultPeriodSeconds)
+  public static string BuildUri(
+    string secret,
+    string issuer,
+    string account,
+    int digits = DefaultDigits,
+    int periodSeconds = DefaultPeriodSeconds
+  )
   {
-    ArgumentException.ThrowIfNullOrWhiteSpace(issuer);
-    ArgumentException.ThrowIfNullOrWhiteSpace(account);
+    // Valida o emissor, exibido no aplicativo autenticador
+    if (string.IsNullOrWhiteSpace(issuer))
+    {
+      throw new BadRequestException("Totp.IssuerNotProvided");
+    }
+
+    // Valida a conta, que identifica o usuário no aplicativo autenticador
+    if (string.IsNullOrWhiteSpace(account))
+    {
+      throw new BadRequestException("Totp.AccountNotProvided");
+    }
 
     ValidateDigits(digits);
     ValidatePeriod(periodSeconds);
@@ -113,7 +130,7 @@ public static class Totp
   /// <param name="timeStep">Número do passo, de <see cref="GetTimeStep"/>.</param>
   /// <param name="digits">Dígitos do código: 6, 7 ou 8. Padrão: 6.</param>
   /// <returns>O código com zeros à esquerda.</returns>
-  /// <exception cref="ArgumentException">Quando o segredo não é um Base32 válido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando o segredo não é um Base32 válido.</exception>
   /// <exception cref="ArgumentOutOfRangeException">Quando os dígitos estão fora da faixa ou o passo é negativo.</exception>
   public static string Compute(string secret, long timeStep, int digits = DefaultDigits)
   {
@@ -136,7 +153,7 @@ public static class Totp
   /// <param name="periodSeconds">Duração do passo em segundos. Padrão: 30.</param>
   /// <param name="timeProvider">Relógio usado para obter o passo atual. Padrão: o relógio do sistema.</param>
   /// <returns>Verdadeiro quando o código confere em um passo ainda não usado.</returns>
-  /// <exception cref="ArgumentException">Quando o segredo não é um Base32 válido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando o segredo não é um Base32 válido.</exception>
   /// <exception cref="ArgumentOutOfRangeException">Quando a janela, os dígitos ou o período estão fora da faixa.</exception>
   /// <remarks>
   /// Um código ausente, com tamanho diferente ou com caracteres que não são dígitos devolve falso sem lançar.
@@ -228,17 +245,18 @@ public static class Totp
   }
 
   /// <summary>
-  /// Decodifica o segredo em Base32 ou falha com uma mensagem clara.
+  /// Decodifica o segredo em Base32 ou falha com a chave de mensagem <c>Totp.InvalidSecret</c>.
   /// </summary>
   /// <param name="secret">Segredo em Base32.</param>
   /// <returns>Os bytes da chave.</returns>
-  /// <exception cref="ArgumentException">Quando o segredo não é um Base32 válido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando o segredo não é um Base32 válido.</exception>
   private static byte[] DecodeSecret(string secret)
   {
-    // Um segredo corrompido impede qualquer verificação: falha alto em vez de recusar todo código em silêncio
+    // Um segredo corrompido impede qualquer verificação: falha alto em vez de recusar todo código em silêncio.
+    // É erro interno (500), não de requisição: o segredo vem do banco ou do serviço, nunca do usuário
     if (!Base32.TryDecode(secret, out var key))
     {
-      throw new ArgumentException("The TOTP secret is not a valid Base32 value.", nameof(secret));
+      throw new InternalServerErrorException("Totp.InvalidSecret");
     }
 
     return key;

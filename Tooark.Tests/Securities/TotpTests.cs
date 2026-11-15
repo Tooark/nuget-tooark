@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Securities;
 using Tooark.Tests.Moq.Util;
 
@@ -68,10 +69,13 @@ public class TotpTests
   [InlineData("1890")]
   [InlineData("")]
   [InlineData("====")]
-  public void Compute_ShouldThrowArgumentException_WhenSecretIsNotBase32(string secret)
+  public void Compute_ShouldThrowInternalServerError_WhenSecretIsNotBase32(string secret)
   {
-    // Act & Assert
-    Assert.Throws<ArgumentException>(() => Totp.Compute(secret, 1));
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => Totp.Compute(secret, 1));
+
+    // Assert
+    Assert.Equal("Totp.InvalidSecret", exception.Message);
   }
 
   // Testa se dígitos fora da faixa do RFC (6 a 8) e passo negativo são recusados
@@ -152,15 +156,30 @@ public class TotpTests
     Assert.EndsWith("&algorithm=SHA1&digits=8&period=60", uri);
   }
 
-  // Testa se emissor ou conta vazios e um segredo inválido são recusados na URI
+  // Testa se emissor ou conta vazios são recusados na URI como erro de requisição
   [Theory]
-  [InlineData(RfcSecret, "", "user")]
-  [InlineData(RfcSecret, "App", " ")]
-  [InlineData("1890", "App", "user")]
-  public void BuildUri_ShouldThrowArgumentException_WhenInputIsInvalid(string secret, string issuer, string account)
+  [InlineData(RfcSecret, "", "user", "Totp.IssuerNotProvided")]
+  [InlineData(RfcSecret, null, "user", "Totp.IssuerNotProvided")]
+  [InlineData(RfcSecret, "App", " ", "Totp.AccountNotProvided")]
+  [InlineData(RfcSecret, "App", null, "Totp.AccountNotProvided")]
+  public void BuildUri_ShouldThrowBadRequest_WhenIssuerOrAccountIsMissing(string secret, string? issuer, string? account, string expectedKey)
   {
-    // Act & Assert
-    Assert.ThrowsAny<ArgumentException>(() => Totp.BuildUri(secret, issuer, account));
+    // Act
+    var exception = Assert.Throws<BadRequestException>(() => Totp.BuildUri(secret, issuer!, account!));
+
+    // Assert
+    Assert.Equal(expectedKey, exception.Message);
+  }
+
+  // Testa se um segredo inválido na URI é erro interno: o segredo vem do serviço, não do usuário
+  [Fact]
+  public void BuildUri_ShouldThrowInternalServerError_WhenSecretIsNotBase32()
+  {
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => Totp.BuildUri("1890", "App", "user"));
+
+    // Assert
+    Assert.Equal("Totp.InvalidSecret", exception.Message);
   }
 
   // Testa se o código do passo atual é aceito e o passo é devolvido para ser gravado
@@ -288,7 +307,7 @@ public class TotpTests
     // Act & Assert
     Assert.Throws<ArgumentOutOfRangeException>(() => Totp.Verify(RfcSecret, "287082", -1, out _, window: 11));
     Assert.Throws<ArgumentOutOfRangeException>(() => Totp.Verify(RfcSecret, "287082", -1, out _, window: -1));
-    Assert.Throws<ArgumentException>(() => Totp.Verify("1890", "287082", -1, out _));
+    Assert.Equal("Totp.InvalidSecret", Assert.Throws<InternalServerErrorException>(() => Totp.Verify("1890", "287082", -1, out _)).Message);
   }
 
   // Testa o fluxo completo com um segredo gerado e o relógio avançando um passo entre os códigos

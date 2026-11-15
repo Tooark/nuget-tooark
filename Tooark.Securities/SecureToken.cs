@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Tooark.Exceptions;
 
 namespace Tooark.Securities;
 
@@ -55,10 +56,14 @@ public static class SecureToken
   /// </summary>
   /// <param name="token">Token recebido de <see cref="Create"/> ou de <see cref="RecoveryCodes"/>.</param>
   /// <returns>Hash em Base64Url sem preenchimento (43 caracteres).</returns>
-  /// <exception cref="ArgumentException">Quando o token é nulo, vazio ou só espaços.</exception>
+  /// <exception cref="BadRequestException">Quando o token é nulo, vazio ou só espaços.</exception>
   public static string Hash(string token)
   {
-    ArgumentException.ThrowIfNullOrWhiteSpace(token);
+    // Valida o token a ser guardado: sem token não há o que guardar
+    if (string.IsNullOrWhiteSpace(token))
+    {
+      throw new BadRequestException("SecureToken.TokenNotProvided");
+    }
 
     return Base64Url.Encode(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
   }
