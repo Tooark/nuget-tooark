@@ -1,8 +1,7 @@
 name: CI
 
-# Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, lista de pacotes
-# do release e grupos do site de documentação, build em Release (warnings são erros) e a suíte completa de
-# testes nos dois alvos, com cobertura.
+# Valida pull requests antes do merge: formatação (.editorconfig), lista de pacotes do release e grupos do site
+# de documentação, build em Release (warnings são erros) e a suíte completa de testes, com cobertura.
 # A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main. O job
 # "build-and-test" é status check obrigatório no ruleset da branch main: um pull request vermelho não pode ser
 # mesclado.
@@ -30,18 +29,13 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: |
-            8.0.x
-            10.0.x
+          dotnet-version: 10.0.x
 
       - name: Restore
         run: dotnet restore
 
       - name: Check formatting (.editorconfig)
         run: dotnet format --verify-no-changes --no-restore
-
-      - name: Check runtime-bound package pins are paired
-        run: bash scripts/check-package-pairs.sh
 
       - name: Check every packable project is in the release list
         run: bash scripts/check-release-packages.sh
@@ -52,7 +46,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-      - name: Test (both target frameworks, with coverage)
+      - name: Test (with coverage)
         run: >-
           dotnet test --project Tooark.Tests/Tooark.Tests.csproj --configuration Release --no-build
           --
@@ -71,8 +65,8 @@ jobs:
       - name: Coverage summary
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          # Um arquivo por alvo: coverage.cobertura.xml e coverage.cobertura.<timestamp>.xml (o coverlet.MTP
-          # não sobrescreve o existente). O ReportGenerator funde os dois num relatório só.
+          # O glob cobre o coverage.cobertura.xml e um eventual coverage.cobertura.<timestamp>.xml (o coverlet.MTP
+          # não sobrescreve o existente). O ReportGenerator funde o que encontrar num relatório só.
           reportgenerator \
             -reports:"TestResults/coverage.cobertura*.xml" \
             -targetdir:coverage-report \

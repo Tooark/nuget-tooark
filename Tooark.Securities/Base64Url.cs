@@ -4,8 +4,9 @@ namespace Tooark.Securities;
 /// Codificação Base64Url (RFC 4648, seção 5) sem preenchimento, segura para URL, cabeçalho e banco.
 /// </summary>
 /// <remarks>
-/// O .NET só traz um codificador Base64Url nativo a partir do .NET 9. Este helper cobre os dois TFMs do pacote
-/// sem dependência extra: usa o Base64 padrão e troca os caracteres <c>+</c> e <c>/</c> por <c>-</c> e <c>_</c>.
+/// Usa o Base64 padrão e troca os caracteres <c>+</c> e <c>/</c> por <c>-</c> e <c>_</c>. O helper vem da linha
+/// 4.x, que também tinha o .NET 8 como alvo, sem o codificador nativo; foi mantido porque aceita entrada com ou
+/// sem preenchimento e com espaços nas pontas, o comportamento que os hashes já gravados esperam.
 /// </remarks>
 internal static class Base64Url
 {

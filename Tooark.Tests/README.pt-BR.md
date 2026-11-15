@@ -24,8 +24,7 @@ Um único projeto cobre todos os pacotes, com uma pasta por pacote. Ele referenc
 `Tooark`, o `Tooark.AspNetCore` e os provedores de storage e de segredos, que o agregador não traz, então
 alcança toda a superfície pública sem uma referência por pacote.
 
-Os testes rodam nos **dois alvos** do repositório, `net8.0` e `net10.0`. Um teste que passe em um e
-falhe no outro indica diferença de comportamento entre os runtimes, e não um teste instável.
+Os testes rodam no único alvo do repositório, o `net10.0`.
 
 ---
 
@@ -84,7 +83,7 @@ Dois detalhes do coverlet.MTP que costumam confundir:
 - o relatório vai para o **diretório de resultados**: `TestResults/` dentro do diretório de onde o
   comando roda, ou onde `--results-directory` apontar. Use caminho absoluto quando o destino importar;
 - uma execução nunca sobrescreve um relatório existente: quando já há um, o arquivo novo ganha um
-  timestamp no nome (`coverage.cobertura.<timestamp>.xml`). Rodar os dois alvos no mesmo diretório
+  timestamp no nome (`coverage.cobertura.<timestamp>.xml`). Rodar a suíte duas vezes no mesmo diretório
   deixa, portanto, dois arquivos — use o glob (`coverage.cobertura*.xml`) e deixe o ReportGenerator
   fundi-los.
 
@@ -245,6 +244,6 @@ public class MeuTeste
 
 A coleção tem `DisableParallelization`, e roda em fase isolada. Sem isso, um teste que troca a
 cultura corre em paralelo com outro que a lê, e a falha aparece de forma intermitente — o que piora
-quando os dois alvos, `net8.0` e `net10.0`, disputam CPU na mesma máquina.
+quando a máquina está sob carga.
 
 O mesmo cuidado vale para qualquer outro estado compartilhado de processo que venha a ser exercitado.

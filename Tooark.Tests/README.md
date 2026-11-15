@@ -24,8 +24,7 @@ A single project covers every package, with one folder per package. It reference
 aggregator, `Tooark.AspNetCore` and the storage and secrets providers, which the aggregator does not bring, so
 it reaches the whole public surface without one reference per package.
 
-The tests run on the repository's **two targets**, `net8.0` and `net10.0`. A test that passes on one
-and fails on the other points to a behavior difference between the runtimes, not to a flaky test.
+The tests run on the repository's single target, `net10.0`.
 
 ---
 
@@ -84,7 +83,7 @@ Two coverlet.MTP details that tend to confuse:
 - the report goes to the **results directory**: `TestResults/` under the directory the command runs in,
   or wherever `--results-directory` points. Use an absolute path when the destination matters;
 - a run never overwrites an existing report: when one is already there, the new file gets a timestamp
-  in its name (`coverage.cobertura.<timestamp>.xml`). Running both targets into the same directory
+  in its name (`coverage.cobertura.<timestamp>.xml`). Running the suite twice into the same directory
   therefore leaves two files — glob them (`coverage.cobertura*.xml`) and let ReportGenerator merge them.
 
 ### Summary and HTML report
@@ -245,7 +244,6 @@ public class MyTest
 
 The collection has `DisableParallelization`, and runs in an isolated phase. Without it, a test that
 switches the culture runs in parallel with another that reads it, and the failure shows up
-intermittently — which gets worse when the two targets, `net8.0` and `net10.0`, compete for CPU on the
-same machine.
+intermittently — which gets worse when the machine is under load.
 
 The same care applies to any other shared process state that comes to be exercised.

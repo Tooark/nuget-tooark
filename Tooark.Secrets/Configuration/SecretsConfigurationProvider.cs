@@ -20,7 +20,8 @@ namespace Tooark.Secrets.Configuration;
 /// </para>
 /// <para>
 /// A base implementa o <see cref="IConfigurationProvider"/> direto, sem o pacote <c>Microsoft.Extensions.Configuration</c>:
-/// ele traria a versão da linha do runtime em conflito com as dependências do .NET 8 que já usam a linha 10.
+/// na linha 4.x, que também tinha o .NET 8 como alvo, ele traria a versão da linha do runtime em conflito com as
+/// dependências que já usavam a linha 10. A implementação direta foi mantida: é pequena e evita a dependência.
 /// </para>
 /// </remarks>
 /// <param name="options">As opções dos segredos.</param>

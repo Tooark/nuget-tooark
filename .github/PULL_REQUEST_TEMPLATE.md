@@ -48,14 +48,14 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 - [ ] Commits follow [Conventional Commits](https://www.conventionalcommits.org/) and are signed off (`git commit -s`)
 - [ ] `dotnet format --verify-no-changes` passes (`.editorconfig`)
 - [ ] `dotnet build --configuration Release` passes with no warnings
-- [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes on `net8.0` and `net10.0`
+- [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes
 - [ ] New behavior is covered by tests
 - [ ] New message keys are translated in `en-US`, `pt-BR` and `es-ES`
 - [ ] Package `README.md` and `README.pt-BR.md` updated **and in sync** (if the public surface, options or behavior changed)
 - [ ] Root `README.md` and `README.pt-BR.md` updated **and in sync** (if the root docs changed)
 - [ ] Links between Markdown files are absolute GitHub URLs (package READMEs are rendered on NuGet)
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
-- [ ] Runtime-bound dependency pins changed in pairs (8.0.x and 10.0.x) in `Directory.Packages.props` (`bash scripts/check-package-pairs.sh` passes)
+- [ ] Runtime-bound dependency pins in `Directory.Packages.props` stay on the 10.0.x line and move together
 - [ ] A new package is in the `PACKAGES` list of `.github/workflows/tooark.yml` (`bash scripts/check-release-packages.sh` passes)
 - [ ] A new package is in `GROUPS` of `docs/build.py` (`python docs/build.py --check` passes)
 

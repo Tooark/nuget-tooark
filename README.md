@@ -42,11 +42,11 @@ objects, JWT and cryptography, OpenID Connect SSO, OpenTelemetry observability, 
 URL sanitization, cloud object storage, secrets from vaults — and can be installed on its own or through the
 `Tooark` aggregator, which references all of them except the storage and secrets providers.
 
-All packages target **.NET 8.0** and **.NET 10.0**, share a single version number and are published together
-to the [Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
+All packages target **.NET 10.0**, share a single version number and are published together to the
+[Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
 
-> ⚠️ **Changes in v5:** .NET 8 reached end of support by Microsoft in November 2026. The 4.x line keeps both
-> targets; v5, planned for January 2027, will target **.NET 10.0** only.
+> **.NET 8:** v5 dropped the `net8.0` target, because .NET 8 reached end of support by Microsoft in November 2026.
+> Applications still on .NET 8 stay on the 4.x line, which targets both.
 
 ---
 
@@ -174,8 +174,7 @@ The application does not start, with `Options.Configuration.UnknownKey;Observabi
 
 - **.NET SDK 10.0.100 or later 10.x** — the version is pinned in
   [`global.json`](https://github.com/Tooark/nuget-tooark/blob/main/global.json) with `rollForward: latestMinor`.
-  The solution builds and tests **both** `net8.0` and `net10.0`, so the **.NET 8 runtime** must also be
-  installed to run the `net8.0` tests (`dotnet --list-runtimes` shows what you have).
+  The solution builds and tests `net10.0` only (`dotnet --list-runtimes` shows what you have).
 - **Git**.
 - Optional: Docker, to run the same security scanner as the release pipeline locally (see
   [Tooark/base-images](https://github.com/Tooark/base-images) → `samples/security-scanner-local.sh`).
@@ -198,7 +197,7 @@ the shared version number and build settings live in
 Warnings are treated as errors, so build in `Release` before opening a pull request — it is what CI runs:
 
 ```bash
-# Whole solution, both target frameworks
+# Whole solution
 dotnet build --configuration Release
 
 # A single package
@@ -212,8 +211,7 @@ dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release
 ### Tests
 
 A single project, [`Tooark.Tests`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Tests), covers
-every package, with one folder per package. It runs on both target frameworks; a test that passes on one and
-fails on the other points to a runtime difference, not to a flaky test.
+every package, with one folder per package.
 
 The suite runs on the [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro),
 the native runner of xunit.v3 4.x; `dotnet test` enters that mode through the `test.runner` setting in
@@ -221,7 +219,7 @@ the native runner of xunit.v3 4.x; `dotnet test` enters that mode through the `t
 coverage) come after `--`:
 
 ```bash
-# Everything, both target frameworks
+# Everything
 dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
 # One target framework, during development
@@ -260,8 +258,8 @@ reportgenerator \
 ```
 
 `TestResults/coveragereport/Summary.txt` has the totals per assembly; `index.html` gives every type a page
-with the source marked as covered, uncovered or partially covered branch. Running both target frameworks into
-the same directory leaves two files, and ReportGenerator merges them. The `TestResults/` folder is
+with the source marked as covered, uncovered or partially covered branch. Running the suite twice into the
+same directory leaves two files, and ReportGenerator merges them. The `TestResults/` folder is
 git-ignored. CI collects the same coverage on every pull request and publishes the report as an artifact,
 with a summary on the job page.
 
@@ -271,8 +269,8 @@ the reason is recorded in the release notes under `Notes/`.
 ### Before opening a pull request
 
 [`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) has the full
-checklist — in short: `dotnet format` clean, `Release` build with no warnings, tests green on both target
-frameworks, new behavior covered by tests, new message keys translated in the three resource files of
+checklist — in short: `dotnet format` clean, `Release` build with no warnings, tests green, new behavior
+covered by tests, new message keys translated in the three resource files of
 `Tooark.Extensions`, package READMEs (English and Portuguese) and release notes updated.
 
 ---
@@ -288,7 +286,7 @@ Quick notes:
 - Read the package's README before opening a PR — each one documents its options, behavior and error codes
 - Follow the code style in [`.editorconfig`](https://github.com/Tooark/nuget-tooark/blob/main/.editorconfig):
   `dotnet format --verify-no-changes` must pass
-- Run the `Release` build and the tests on both target frameworks locally before submitting changes
+- Run the `Release` build and the tests locally before submitting changes
 - Sign off every commit (`git commit -s`) — a CI check enforces it
 
 By participating you agree to the

@@ -43,11 +43,11 @@ observabilidade com OpenTelemetry, pipeline de mediator, sanitização de HTML e
 nuvem, segredos de cofres — e pode ser instalado sozinho ou pelo agregador `Tooark`, que referencia todos, menos
 os provedores de storage e de segredos.
 
-Todos os pacotes têm como alvo o **.NET 8.0** e o **.NET 10.0**, compartilham um único número de versão e são
-publicados juntos no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/Tooark).
+Todos os pacotes têm como alvo o **.NET 10.0**, compartilham um único número de versão e são publicados juntos
+no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/Tooark).
 
-> ⚠️ **Muda na v5:** o .NET 8 saiu do suporte da Microsoft em novembro de 2026. A linha 4.x mantém os dois
-> alvos; a v5, prevista para janeiro de 2027, terá como alvo só o **.NET 10.0**.
+> **.NET 8:** a v5 deixou de ter o `net8.0` como alvo, porque o .NET 8 saiu do suporte da Microsoft em novembro
+> de 2026. Aplicações ainda no .NET 8 ficam na linha 4.x, que tem os dois alvos.
 
 ---
 
@@ -175,8 +175,7 @@ A aplicação não sobe, com `Options.Configuration.UnknownKey;Observability;Sam
 
 - **.NET SDK 10.0.100 ou 10.x posterior** — a versão está fixada no
   [`global.json`](https://github.com/Tooark/nuget-tooark/blob/main/global.json) com `rollForward: latestMinor`.
-  A solução compila e testa **os dois** alvos, `net8.0` e `net10.0`, então o **runtime do .NET 8** também
-  precisa estar instalado para rodar os testes em `net8.0` (`dotnet --list-runtimes` mostra o que você tem).
+  A solução compila e testa só o `net10.0` (`dotnet --list-runtimes` mostra o que você tem).
 - **Git**.
 - Opcional: Docker, para rodar localmente o mesmo scanner de segurança do pipeline de release (veja
   [Tooark/base-images](https://github.com/Tooark/base-images) → `samples/security-scanner-local.sh`).
@@ -200,7 +199,7 @@ Warnings são tratados como erros, então compile em `Release` antes de abrir um
 executa:
 
 ```bash
-# Solução inteira, nos dois alvos
+# Solução inteira
 dotnet build --configuration Release
 
 # Um único pacote
@@ -214,8 +213,7 @@ dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release
 ### Testes
 
 Um único projeto, [`Tooark.Tests`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Tests), cobre
-todos os pacotes, com uma pasta por pacote. Ele roda nos dois alvos; um teste que passa em um e falha no
-outro aponta diferença entre os runtimes, e não um teste instável.
+todos os pacotes, com uma pasta por pacote.
 
 A suíte roda pelo [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro),
 o runner nativo do xunit.v3 4.x; o `dotnet test` entra nesse modo pela configuração `test.runner` do
@@ -223,7 +221,7 @@ o runner nativo do xunit.v3 4.x; o `dotnet test` entra nesse modo pela configura
 cobertura) vêm depois de `--`:
 
 ```bash
-# Tudo, nos dois alvos
+# Tudo
 dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
 # Um alvo só, durante o desenvolvimento
@@ -262,8 +260,8 @@ reportgenerator \
 ```
 
 `TestResults/coveragereport/Summary.txt` traz os totais por assembly; o `index.html` dá a cada tipo uma
-página com o código-fonte marcando linha coberta, linha descoberta e branch parcialmente coberta. Rodar os
-dois alvos no mesmo diretório deixa dois arquivos, e o ReportGenerator funde os dois. A pasta `TestResults/`
+página com o código-fonte marcando linha coberta, linha descoberta e branch parcialmente coberta. Rodar a
+suíte duas vezes no mesmo diretório deixa dois arquivos, e o ReportGenerator funde os dois. A pasta `TestResults/`
 está no `.gitignore`. O CI coleta a mesma cobertura em todo pull request e publica o relatório como artefato,
 com um resumo na página do job.
 
@@ -273,7 +271,7 @@ registrado nas notas da versão, em `Notes/`.
 ### Antes de abrir um pull request
 
 O [`CONTRIBUTING.md`](https://github.com/Tooark/nuget-tooark/blob/main/CONTRIBUTING.md) tem o checklist
-completo — em resumo: `dotnet format` limpo, build `Release` sem warnings, testes verdes nos dois alvos,
+completo — em resumo: `dotnet format` limpo, build `Release` sem warnings, testes verdes,
 comportamento novo coberto por testes, chaves de mensagem novas traduzidas nos três arquivos de recurso do
 `Tooark.Extensions`, READMEs dos pacotes (inglês e português) e notas de release atualizados.
 
@@ -291,7 +289,7 @@ Notas rápidas:
 - Leia o README do pacote antes de abrir um PR — cada um documenta as opções, o comportamento e os códigos de erro
 - Siga o estilo de código do [`.editorconfig`](https://github.com/Tooark/nuget-tooark/blob/main/.editorconfig):
   o `dotnet format --verify-no-changes` precisa passar
-- Rode localmente o build `Release` e os testes nos dois alvos antes de enviar as mudanças
+- Rode localmente o build `Release` e os testes antes de enviar as mudanças
 - Assine todo commit com sign-off (`git commit -s`) — um check da CI exige
 
 Ao participar, você concorda com o

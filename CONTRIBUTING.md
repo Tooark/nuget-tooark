@@ -51,7 +51,7 @@ Each package lives in its own folder and follows the same structure:
 | `docs/`                            | Documentation site: `build.py` renders the READMEs with DocFX; landing pages and theme         |
 | `Media/`                           | Package icon and logo                                                                          |
 | `Shared/`                          | Source files compiled into several packages as internal types (`StrictConfiguration.cs`)       |
-| `scripts/`                         | `check-package-pairs.sh` and `check-release-packages.sh` (run by CI), local SonarQube examples |
+| `scripts/`                         | `check-release-packages.sh` (run by CI), local SonarQube examples                              |
 | `.vscode/`                         | Editor task that renders the coverage report                                                   |
 
 Shared, repo-wide files:
@@ -60,7 +60,7 @@ Shared, repo-wide files:
   number** of all packages, plus build settings (`TreatWarningsAsErrors`,
   nullable, XML docs, SourceLink)
 - [`Directory.Packages.props`](Directory.Packages.props) — central package
-  management; runtime-bound packages are pinned per target framework
+  management; runtime-bound packages follow the line of the target framework
 - [`Tooark.slnx`](Tooark.slnx) — the solution
 - [`global.json`](global.json) — the .NET SDK version and the `dotnet test`
   runner (Microsoft.Testing.Platform)
@@ -75,7 +75,7 @@ Shared, repo-wide files:
 ## Development workflow
 
 **Prerequisites:** the .NET SDK pinned in [`global.json`](global.json) (10.x;
-it builds and tests both `net8.0` and `net10.0`), Git, and optionally Docker
+it builds and tests `net10.0`), Git, and optionally Docker
 to run the security scanner locally.
 
 1. **Fork** the repository and clone your fork.
@@ -112,9 +112,8 @@ to run the security scanner locally.
    in `Notes/` (see [Releasing](#releasing)).
 7. Push and open a Pull Request against `main`.
 
-> Note: for every pull request, CI checks the formatting, checks that the
-> runtime-bound pins are paired, builds in `Release` and runs the full test
-> suite on both target frameworks. The `build-and-test` check is required by
+> Note: for every pull request, CI checks the formatting, builds in `Release`
+> and runs the full test suite. The `build-and-test` check is required by
 > the `main` branch ruleset, so a red pull request cannot be merged. The
 > release pipeline additionally runs the security scanner before publishing.
 
@@ -169,12 +168,11 @@ to run the security scanner locally.
 - Package versions are managed **centrally** in `Directory.Packages.props`.
   Runtime-bound packages (`Microsoft.AspNetCore.Authentication.*`,
   `Microsoft.AspNetCore.DataProtection*`, `Microsoft.Extensions.*`,
-  `Microsoft.EntityFrameworkCore*`, `System.Security.Cryptography.Xml`) have
-  one pin per target framework and must be bumped **by hand, in pairs**
-  (8.0.x and 10.0.x) after each .NET servicing release. Dependabot is told to ignore them: it only evaluates the
-  first conditional group and would move the 8.0.x line alone.
-  `bash scripts/check-package-pairs.sh` (also run by CI) checks that both
-  groups list the same packages on the right lines. Do not put a `Version` on
+  `Microsoft.EntityFrameworkCore*`, `System.Security.Cryptography.Xml`) stay
+  on the line of the target framework (10.0.x) and move **together** after
+  each .NET servicing release. Dependabot proposes their patches and is told
+  to ignore major bumps, which only come with a new target framework, in a
+  Tooark major. Do not put a `Version` on
   a `PackageReference`.
 - **Package validation** runs on `dotnet pack` against the last published
   version (`PackageValidationBaselineVersion`): removing or changing a public
@@ -333,14 +331,14 @@ Before opening a PR, confirm:
 - [ ] Commits follow Conventional Commits and are signed off (`git commit -s`)
 - [ ] `dotnet format --verify-no-changes` passes
 - [ ] `dotnet build --configuration Release` passes with no warnings
-- [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes on both target frameworks
+- [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes
 - [ ] New behavior is covered by tests
 - [ ] New message keys are translated in `en-US`, `pt-BR` and `es-ES`
 - [ ] Package `README.md` and `README.pt-BR.md` updated **and in sync** when the public surface, options or behavior changed
 - [ ] Root `README.md` and `README.pt-BR.md` updated **and in sync** when the root docs changed
 - [ ] Links between Markdown files are absolute GitHub URLs
 - [ ] Release notes updated in `Notes/` (and `Directory.Build.props` bumped when this PR closes the release)
-- [ ] Runtime-bound pins changed in pairs (`bash scripts/check-package-pairs.sh` passes)
+- [ ] Runtime-bound pins stay on the 10.0.x line and move together
 - [ ] A new package is in the `PACKAGES` list of `.github/workflows/tooark.yml` (`bash scripts/check-release-packages.sh` passes)
 - [ ] A new package is in `GROUPS` of `docs/build.py` (`python docs/build.py --check` passes)
 - [ ] Breaking changes are called out in the release notes with a migration note

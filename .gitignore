@@ -495,7 +495,6 @@ appsettings.*.json
 scripts/**
 !scripts/example-run-sonarqube-local.ps1
 !scripts/example-run-sonarqube-local.sh
-!scripts/check-package-pairs.sh
 !scripts/check-release-packages.sh
 
 # Arquivo de documentação gerado pelo build

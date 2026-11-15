@@ -320,11 +320,7 @@ public class KeyRingOptions
 
     try
     {
-#if NET9_0_OR_GREATER
       certificate = X509CertificateLoader.LoadPkcs12FromFile(path, password);
-#else
-      certificate = new X509Certificate2(path, password);
-#endif
     }
     catch (CryptographicException)
     {

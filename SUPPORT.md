@@ -26,7 +26,7 @@ reports and feature requests.
 Please include:
 
 - **Which package** and **version** (e.g. `Tooark.Validations 4.1.0`).
-- **Target framework and runtime** (e.g. `net10.0` on Linux, `net8.0` on Windows).
+- **Target framework and runtime** (e.g. `net10.0` on Linux).
 - **A minimal reproduction** — the code, the configuration section, the input.
 - **What happened and what you expected.**
 - **Relevant logs or stack traces** (redact secrets, keys and tokens!).

@@ -6,7 +6,7 @@ namespace Tooark.Tests;
 /// <remarks>
 /// Como a cultura é um estado compartilhado de processo, esses testes não podem rodar em paralelo
 /// com outros (leitores ou escritores de cultura), sob pena de corridas não determinísticas —
-/// especialmente quando os assemblies de teste de múltiplos TFMs (net8.0 e net10.0) competem por CPU.
+/// especialmente quando a máquina está sob carga.
 /// <see cref="CollectionDefinitionAttribute.DisableParallelization"/> faz a coleção executar em fase isolada.
 /// </remarks>
 [CollectionDefinition("CultureSensitive", DisableParallelization = true)]

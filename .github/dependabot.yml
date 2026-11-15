@@ -10,12 +10,11 @@
 #     majors, because those packages only move together.
 #   - Runtime-bound packages (Microsoft.AspNetCore.Authentication.*,
 #     Microsoft.AspNetCore.DataProtection*, Microsoft.Extensions.*, EF Core,
-#     System.Security.Cryptography.Xml) are
-#     NOT handled by Dependabot. They have one pin per target framework in
-#     conditional ItemGroups, and Dependabot only evaluates the first one: it
-#     bumped the 8.0.x line and left the 10.0.x line behind (PR #54). Those
-#     pins are bumped by hand, in pairs, after each .NET servicing release;
-#     scripts/check-package-pairs.sh (run by CI) checks the structure.
+#     System.Security.Cryptography.Xml) follow the line of the single target
+#     framework (net10.0 -> 10.0.x). Dependabot bumps their minor/patch
+#     releases; a major bump is ignored, because it only happens together
+#     with a new target framework, in a Tooark major. Up to 4.x these pins
+#     were duplicated per target framework and bumped by hand.
 #   - GitHub Actions: weekly, minor/patch grouped into one PR.
 #   - The security-scanner image used by the release workflow is pinned by
 #     hand in the workflow env; Dependabot does not track it.
@@ -59,12 +58,17 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      # Runtime-bound lines, pinned per target framework: bumped by hand, in pairs.
+      # Runtime-bound lines stay on the line of the target framework: no major bumps.
       - dependency-name: "Microsoft.AspNetCore.Authentication.*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "Microsoft.AspNetCore.DataProtection*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "System.Security.Cryptography.Xml"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

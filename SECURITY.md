@@ -51,11 +51,10 @@ line** on NuGet.
 | 2.x     | ⚠️ Security fixes only, until December 2026 (`v2`) |
 | ≤ 1.x   | ❌ End of life — please upgrade                    |
 
-Packages target `net8.0` and `net10.0`. When a .NET runtime reaches end of
-support by Microsoft, the corresponding target framework stops receiving
-security fixes at the next major release. .NET 8 reached end of support in
-November 2026: the 4.x line still targets it, and v5 will target
-`net10.0` only.
+Packages target `net10.0`. When a .NET runtime reaches end of support by
+Microsoft, the corresponding target framework stops receiving security fixes
+at the next major release. .NET 8 reached end of support in November 2026:
+the 4.x line still targets it, and v5 targets `net10.0` only.
 
 Once v5 is released, the 4.x line receives only dependency updates that fix
 vulnerabilities; new features go to 5.x.
