@@ -871,8 +871,16 @@ without a storage.
 ```
 
 The lock only exists for applications that register Data Protection through Tooark: `AddTooarkDataProtection`,
-or `AddTooarkSecurities` with the `DataProtection` section present. An application that calls neither, or uses
-only the native `services.AddDataProtection()`, is not affected.
+or `AddTooarkSecurities` with the `DataProtection` section present. `AddTooarkService`, from the `Tooark`
+aggregator, calls `AddTooarkSecurities` when the `Jwt` or `Cryptography` section exists, and then the same rule
+applies. An application that goes through none of them, or uses only the native `services.AddDataProtection()`,
+is not affected. The environment is read once, when the registration is called.
+
+**Azure App Service:** with no storage configured, ASP.NET Core writes the keys to
+`%HOME%/ASP.NET/DataProtection-Keys`, a network folder that App Service shares across instances. The lock does
+not recognize that native fallback, because it only checks the configured storage: in a container on App
+Service, point `KeysPath` to the persistent folder (`/home`, with App Service storage enabled) or set `false`
+to stay on the fallback.
 
 > ⚠️ **Changed in v5:** on the 4.x line the lock was off in every environment. An application that registers
 > Data Protection through Tooark in a container, without a key storage, no longer starts after the upgrade:

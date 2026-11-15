@@ -871,8 +871,16 @@ sem armazenamento.
 ```
 
 A trava só existe para quem registra o Data Protection pelo Tooark: `AddTooarkDataProtection`, ou
-`AddTooarkSecurities` com a seção `DataProtection` presente. Uma aplicação que não chama nenhum dos dois, ou que
-usa só o `services.AddDataProtection()` nativo, não é afetada.
+`AddTooarkSecurities` com a seção `DataProtection` presente. O `AddTooarkService`, do agregador `Tooark`, chama
+o `AddTooarkSecurities` quando a seção `Jwt` ou `Cryptography` existe, e então vale a mesma regra. Uma aplicação
+que não passa por nenhum deles, ou que usa só o `services.AddDataProtection()` nativo, não é afetada. O ambiente
+é lido uma vez, na chamada do registro.
+
+**Azure App Service:** sem armazenamento configurado, o ASP.NET Core grava as chaves em
+`%HOME%/ASP.NET/DataProtection-Keys`, uma pasta de rede que o App Service compartilha entre as instâncias. A
+trava não reconhece esse fallback nativo, porque só confere o armazenamento configurado: em um contêiner no App
+Service, aponte o `KeysPath` para a pasta persistente (`/home`, com o armazenamento do App Service habilitado)
+ou informe `false` para continuar no fallback.
 
 > ⚠️ **Mudou na v5:** na linha 4.x a trava vinha desligada em qualquer ambiente. Uma aplicação que registra o
 > Data Protection pelo Tooark em contêiner, sem armazenamento de chaves, deixa de subir ao atualizar: configure o
