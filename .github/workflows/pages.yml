@@ -24,6 +24,10 @@ on:
       - "Directory.Build.props"
       - ".config/dotnet-tools.json"
       - ".github/workflows/pages.yml"
+  # Os cartões mostram os downloads de cada pacote, lidos do nuget.org no build. Sem esta execução diária o
+  # número só mudaria no próximo push que tocasse a documentação.
+  schedule:
+    - cron: "17 6 * * *"
   workflow_dispatch:
 
 # O padrão é somente leitura. Só o job deploy recebe pages: write e id-token: write, que é o que permite ao

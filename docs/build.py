@@ -21,6 +21,9 @@ import shutil
 import subprocess
 import sys
 import textwrap
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,6 +34,8 @@ BASE_URL = "https://tooark.com/nuget-tooark"
 REPO = "https://github.com/Tooark/nuget-tooark"
 BLOB = f"{REPO}/blob/main"
 TREE = f"{REPO}/tree/main"
+NUGET_INDEX = "https://api.nuget.org/v3/index.json"
+NUGET_OWNER = "Tooark"
 
 LANGS = {
     "en": {
@@ -39,6 +44,11 @@ LANGS = {
         "base_url": BASE_URL,
         "nav": {"home": "Home", "packages": "Packages", "api": "API"},
         "api_button": "API reference",
+        "downloads": "downloads",
+        "downloads_stat": "Downloads",
+        "downloads_title": "Total downloads on nuget.org as of {date}",
+        "units": [(1_000_000, "M"), (1_000, "k")],
+        "decimal": ".",
         "tagline": "Modular building blocks for .NET",
         "overview": "Overview",
         "overview_sections": ["📖 About", "🔧 Installation", "⚙️ Strict configuration", "📦 Packages"],
@@ -49,6 +59,11 @@ LANGS = {
         "base_url": f"{BASE_URL}/pt-BR",
         "nav": {"home": "Início", "packages": "Pacotes", "api": "API"},
         "api_button": "Referência da API",
+        "downloads": "downloads",
+        "downloads_stat": "Downloads",
+        "downloads_title": "Total de downloads no nuget.org em {date}",
+        "units": [(1_000_000, " mi"), (1_000, " mil")],
+        "decimal": ",",
         "tagline": "Blocos modulares para .NET",
         "overview": "Visão geral",
         "overview_sections": ["📖 Sobre o Projeto", "🔧 Instalação", "⚙️ Configuração estrita", "📦 Pacotes"],
@@ -259,6 +274,79 @@ def summary(package, lang):
     return sentence
 
 
+_DOWNLOADS = None
+
+# Ícone de download dos cartões (seta para a bandeja). SVG em linha: a CSP do tooark.com não deixa buscar
+# imagem em outro domínio, e um arquivo a mais por um traço não compensa.
+DOWNLOAD_ICON = ('<svg class="tk-card-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" '
+                 'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                 '<path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg>')
+
+
+def download_counts():
+    """Total de downloads de cada pacote no nuget.org, consultado no build.
+
+    O site não pode buscar isso no navegador: a CSP do tooark.com para este caminho só libera connect-src 'self'.
+    Então o número entra no HTML e envelhece até o próximo deploy; o workflow do Pages roda também agendado para
+    isso. O endereço da busca vem do índice de serviços do NuGet, como o protocolo pede. Qualquer falha (rede,
+    formato, tempo esgotado) devolve um dicionário vazio e os cartões saem sem o número: a contagem é um enfeite,
+    e a documentação nunca deixa de ser publicada por causa dela.
+    """
+    global _DOWNLOADS
+    if _DOWNLOADS is not None:
+        return _DOWNLOADS
+    _DOWNLOADS = {}
+    try:
+        def get(url):
+            request = urllib.request.Request(url, headers={"User-Agent": "tooark-docs-build"})
+            with urllib.request.urlopen(request, timeout=20) as response:
+                return json.load(response)
+
+        search = next(r["@id"] for r in get(NUGET_INDEX)["resources"] if r["@type"] == "SearchQueryService")
+        query = urllib.parse.urlencode({"q": f"owner:{NUGET_OWNER}", "take": 200, "prerelease": "false",
+                                        "semVerLevel": "2.0.0"})
+        for item in get(f"{search}?{query}")["data"]:
+            _DOWNLOADS[item["id"]] = int(item["totalDownloads"])
+        print(f"Downloads do nuget.org: {len(_DOWNLOADS)} pacotes, {sum(_DOWNLOADS.values())} no total.", flush=True)
+    except Exception as error:  # noqa: BLE001 - qualquer falha só tira o número dos cartões
+        _DOWNLOADS = {}
+        print(f"AVISO: não consegui ler os downloads do nuget.org ({error}); os cartões saem sem o número.",
+              flush=True)
+    return _DOWNLOADS
+
+
+def compact(number, lang):
+    """12345 -> '12.3k' (en) ou '12,3 mil' (pt-BR); abaixo de mil, o número inteiro."""
+    cfg = LANGS[lang]
+    for size, suffix in cfg["units"]:
+        if number >= size:
+            value = number / size
+            text = f"{value:.0f}" if value >= 100 else f"{value:.1f}".rstrip("0").rstrip(".")
+            return text.replace(".", cfg["decimal"]) + suffix
+    return str(number)
+
+
+def downloads_meta(package, lang):
+    """Linha de downloads do cartão; vazia para um pacote ainda não publicado ou sem a consulta."""
+    count = download_counts().get(package)
+    if not count:
+        return ""
+    cfg = LANGS[lang]
+    title = cfg["downloads_title"].format(date=datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    return (f'<span class="tk-card-meta" title="{html.escape(title)}">{DOWNLOAD_ICON}'
+            f'{compact(count, lang)} {cfg["downloads"]}</span>')
+
+
+def downloads_stat(lang):
+    """Total de downloads de todos os pacotes, para os números do topo; vazio sem a consulta."""
+    counts = download_counts()
+    total = sum(counts.get(package, 0) for _, packages in GROUPS for package in packages)
+    if not total:
+        return ""
+    return (f'<div class="tk-stat"><span class="tk-stat-value">{compact(total, lang)}</span>'
+            f'<span class="tk-stat-label">{LANGS[lang]["downloads_stat"]}</span></div>')
+
+
 def breakable(name):
     """Ponto de quebra depois de cada ponto: um nome longo (Tooark.Mediator.EntityFrameworkCore) quebra entre os
     segmentos, em vez de vazar do cartão."""
@@ -277,7 +365,8 @@ def cards(lang):
         items = "\n".join(
             f'<a class="tk-card" href="packages/{page(package)}">'
             f'<span class="tk-card-title">{breakable(package)}</span>'
-            f'<span class="tk-card-text">{inline_html(summary(package, lang))}</span></a>'
+            f'<span class="tk-card-text">{inline_html(summary(package, lang))}</span>'
+            f'{downloads_meta(package, lang)}</a>'
             for package in packages
         )
         blocks.append(f'<section class="tk-group">\n<h2>{names[lang]} <span class="tk-count">{len(packages)}</span>'
@@ -319,6 +408,7 @@ def landing(text, lang, with_api):
         "framework-count": str(len(targets)),
         "package-count": str(sum(len(packages) for _, packages in GROUPS)),
         "language-count": str(language_count()),
+        "downloads-stat": downloads_stat(lang),
         "release-notes": release_notes(),
         "api-button": api,
     }
