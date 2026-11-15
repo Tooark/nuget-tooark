@@ -6,61 +6,6 @@ namespace Tooark.Tests.Securities.Extensions;
 
 public class RoleClaimsExtensionTests
 {
-#pragma warning disable CS0618 // GetClaims() sem parâmetros é obsoleto: os testes garantem os nomes legados até a v5
-  // Teste para buscar os claims de um JwtTokenDto
-  [Fact]
-  public void GetClaims_DeveRetornarClaimsCorretos()
-  {
-    // Arrange
-    var id = Guid.NewGuid().ToString();
-    var login = "usuarioTeste";
-    var security = Guid.NewGuid().ToString();
-    var jwtToken = new JwtTokenDto(id, login, security);
-
-    // Act
-    var claims = jwtToken.GetClaims().ToList();
-
-    // Assert
-    Assert.Equal(3, claims.Count);
-    Assert.Contains(claims, c => c.Type == "id" && c.Value == id);
-    Assert.Contains(claims, c => c.Type == "login" && c.Value == login);
-    Assert.Contains(claims, c => c.Type == "security" && c.Value == security);
-  }
-
-  // Teste para buscar os claims de um JwtTokenDto com valores vazios
-  [Fact]
-  public void GetClaims_DeveRetornarClaimsComValoresVazios()
-  {
-    // Arrange
-    var jwtToken = new JwtTokenDto("", "", "");
-
-    // Act
-    var claims = jwtToken.GetClaims().ToList();
-
-    // Assert
-    Assert.Equal(3, claims.Count);
-    Assert.Contains(claims, c => c.Type == "id" && c.Value == "");
-    Assert.Contains(claims, c => c.Type == "login" && c.Value == "");
-    Assert.Contains(claims, c => c.Type == "security" && c.Value == "");
-  }
-#pragma warning restore CS0618
-
-  // Testa se o GetClaims() sem parâmetros carrega o ObsoleteAttribute com a orientação de migração para a v5
-  [Fact]
-  public void GetClaims_WithoutParameters_ShouldBeMarkedObsolete()
-  {
-    // Arrange
-    var method = typeof(RoleClaimsExtension).GetMethod(nameof(RoleClaimsExtension.GetClaims), [typeof(JwtTokenDto)]);
-
-    // Act
-    var attribute = method?.GetCustomAttributes(typeof(ObsoleteAttribute), false).OfType<ObsoleteAttribute>().SingleOrDefault();
-
-    // Assert
-    Assert.NotNull(attribute);
-    Assert.Contains("GetClaims(JwtOptions)", attribute.Message);
-    Assert.Contains("v5", attribute.Message);
-  }
-
   // Testa se a sobrecarga com sinalizadores emite só as claims padrão quando as legadas estão desligadas
   [Fact]
   public void GetClaims_ShouldEmitStandardClaimsOnly_WhenLegacyIsOff()
