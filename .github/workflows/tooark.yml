@@ -1,58 +1,93 @@
 name: Build and deploy package
 
+# Publica no NuGet a cada push em v3 cuja versão (Directory.Build.props) ainda não tem tag. Linha de
+# manutenção: só correções de segurança.
+#
+# Ordem deliberada: os pacotes são publicados ANTES de a tag e a release existirem. Se uma publicação falhar
+# no meio, nada foi marcado como lançado e o próximo push tenta de novo; "--skip-duplicate" ignora os pacotes
+# que já subiram. Só depois de tudo publicado a tag v<versão> e a GitHub Release são criadas.
+#
+# Publicação por Trusted Publishing, sem API key guardada no repositório: o job publish troca o token OIDC do
+# GitHub por uma chave temporária do nuget.org (NuGet/login). O nuget.org só emite a chave se a política
+# cadastrada lá apontar para este repositório e para este arquivo; renomear o tooark.yml exige atualizar a
+# política.
+#
+# Cada etapa roda num job próprio, com a menor permissão possível. O build executa código de terceiros
+# (restore, testes, scanner) e por isso não pode emitir token OIDC; o publish não faz checkout e só envia os
+# pacotes prontos; o release é o único com escrita no repositório.
 on:
   push:
     branches:
       - v3
   workflow_dispatch:
+
+permissions:
+  contents: read
+
 env:
-  VERSION: 0.0.0
   SECURITY_SCANNER_IMAGE: ghcr.io/tooark/security-scanner:1.9
+  NUGET_SOURCE: https://api.nuget.org/v3/index.json
+  # Projetos empacotados, em ordem de dependência
+  PACKAGES: >-
+    Tooark.Notifications
+    Tooark.Validations
+    Tooark.Enums
+    Tooark.Attributes
+    Tooark.Exceptions
+    Tooark.Utils
+    Tooark.Extensions
+    Tooark.Dtos
+    Tooark.Entities
+    Tooark.ValueObjects
+    Tooark.Securities
+    Tooark.Observability
+    Tooark.Mediator.Abstractions
+    Tooark.Mediator
+    Tooark
 
 jobs:
   check-version:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      has_tag: ${{ steps.check_tag.outputs.has_tag }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Extract version from Directory.Build.props
         id: extract_version
         run: |
           VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" Directory.Build.props)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check if the version tag exists
         id: check_tag
         run: |
           VERSION="${{ steps.extract_version.outputs.version }}"
           if [ -n "$(git ls-remote --tags origin "refs/tags/v${VERSION}")" ]; then
-            echo "has_tag=true" >> $GITHUB_OUTPUT
+            echo "has_tag=true" >> "$GITHUB_OUTPUT"
             echo "::warning::A versão v${VERSION} já existe (tag publicada). Workflow interrompido sem build e sem publicação. Atualize a versão no Directory.Build.props para lançar uma nova versão."
           else
-            echo "has_tag=false" >> $GITHUB_OUTPUT
+            echo "has_tag=false" >> "$GITHUB_OUTPUT"
             echo "Tag v${VERSION} não existe. Prosseguindo com o build e a publicação."
           fi
 
-    outputs:
-      version: ${{ steps.extract_version.outputs.version }}
-      has_tag: ${{ steps.check_tag.outputs.has_tag }}
-
-  build-and-deploy:
+  build:
     needs: check-version
     if: needs.check-version.outputs.has_tag == 'false'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
+      contents: read
+      packages: read # puxa a imagem do security-scanner do GHCR
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      - name: Set up .Net Core
-        uses: actions/setup-dotnet@v5
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             8.0.x
@@ -65,14 +100,14 @@ jobs:
         run: dotnet test
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache Trivy vulnerability DB
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/trivy
           key: security-scanner-trivy-${{ runner.os }}-${{ github.run_id }}
@@ -101,110 +136,81 @@ jobs:
 
       - name: Upload security reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-reports
           path: scan-reports/
 
       - name: Create the packages
         run: |
-          dotnet pack Tooark.Notifications/Tooark.Notifications.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Validations/Tooark.Validations.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Enums/Tooark.Enums.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Attributes/Tooark.Attributes.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Exceptions/Tooark.Exceptions.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Utils/Tooark.Utils.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Extensions/Tooark.Extensions.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Dtos/Tooark.Dtos.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Entities/Tooark.Entities.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.ValueObjects/Tooark.ValueObjects.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Securities/Tooark.Securities.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Observability/Tooark.Observability.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Mediator.Abstractions/Tooark.Mediator.Abstractions.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark.Mediator/Tooark.Mediator.csproj --configuration Release /p:NoWarn="1591"
-          dotnet pack Tooark/Tooark.csproj --configuration Release /p:NoWarn="1591"
+          for project in $PACKAGES; do
+            dotnet pack "$project/$project.csproj" --configuration Release /p:NoWarn="1591" --output artifacts/packages
+          done
+          ls -1 artifacts/packages
 
-      - name: Extract version from Directory.Build.props
-        id: extract_version
-        run: |
-          VERSION=$(grep -oPm1 "(?<=<Version>)[^<]+" Directory.Build.props)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      # O job publish recebe exatamente estes arquivos
+      - name: Upload packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-packages
+          path: artifacts/packages/
+          if-no-files-found: error
 
-      - name: Check if the version tag exists
-        id: check_tag
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Trusted Publishing: emite o token OIDC que o nuget.org troca pela chave temporária
+
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v8
+        with:
+          name: nuget-packages
+          path: artifacts/packages
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # A chave temporária expira em pouco tempo: o login fica imediatamente antes do push
+      - name: NuGet login (OIDC)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }} # nome do perfil no nuget.org, não o e-mail
+
+      - name: Publish to NuGet
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
-          if git rev-parse "v${{ env.VERSION }}" >/dev/null 2>&1; then
-            echo "Tag v${{ env.VERSION }} exists"
-            echo "has_tag=true" >> $GITHUB_OUTPUT
+          dotnet nuget push "artifacts/packages/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "$NUGET_SOURCE" \
+            --skip-duplicate
+
+  release:
+    needs: [check-version, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # cria a tag e a GitHub Release
+    env:
+      VERSION: ${{ needs.check-version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # "--latest=false": a release de uma linha de manutenção não pode tomar o lugar da versão corrente
+      - name: Create the tag and the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NOTES_FILE="Notes/v${VERSION}.md"
+          if [ -f "$NOTES_FILE" ]; then
+            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes-file "$NOTES_FILE" --latest=false
           else
-            echo "Tag v${{ env.VERSION }} does not exist"
-            echo "has_tag=false" >> $GITHUB_OUTPUT
+            echo "::warning::Arquivo de notas ${NOTES_FILE} não encontrado; a release recebe um corpo genérico."
+            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes "Automated release for version v${VERSION}" --latest=false
           fi
-
-      - name: Create a new tag and release if necessary
-        if: steps.check_tag.outputs.has_tag == 'false'
-        run: |
-          git tag "v${{ env.VERSION }}"
-          git push origin "v${{ env.VERSION }}"
-          
-          # Lê o conteúdo do arquivo de release notes
-          RELEASE_NOTES_FILE="Notes/v${{ env.VERSION }}.md"
-          if [ -f "$RELEASE_NOTES_FILE" ]; then
-            RELEASE_BODY=$(cat "$RELEASE_NOTES_FILE")
-          else
-            RELEASE_BODY="Automated release for version v${{ env.VERSION }}"
-          fi
-          
-          # Escapa o conteúdo para JSON
-          RELEASE_BODY_JSON=$(echo "$RELEASE_BODY" | jq -Rs .)
-          
-          curl --fail-with-body -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/releases \
-            -d "{\"tag_name\": \"v${{ env.VERSION }}\", \"target_commitish\": \"${{ github.ref_name }}\", \"name\": \"Release v${{ env.VERSION }}\", \"body\": $RELEASE_BODY_JSON, \"draft\": false, \"prerelease\": false}"
-
-      - name: Publish Tooark.Notifications to NuGet
-        run: dotnet nuget push Tooark.Notifications/bin/Release/Tooark.Notifications.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Validations to NuGet
-        run: dotnet nuget push Tooark.Validations/bin/Release/Tooark.Validations.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Enums to NuGet
-        run: dotnet nuget push Tooark.Enums/bin/Release/Tooark.Enums.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Attributes to NuGet
-        run: dotnet nuget push Tooark.Attributes/bin/Release/Tooark.Attributes.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Exceptions to NuGet
-        run: dotnet nuget push Tooark.Exceptions/bin/Release/Tooark.Exceptions.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Utils to NuGet
-        run: dotnet nuget push Tooark.Utils/bin/Release/Tooark.Utils.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Extensions to NuGet
-        run: dotnet nuget push Tooark.Extensions/bin/Release/Tooark.Extensions.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Dtos to NuGet
-        run: dotnet nuget push Tooark.Dtos/bin/Release/Tooark.Dtos.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.Entities to NuGet
-        run: dotnet nuget push Tooark.Entities/bin/Release/Tooark.Entities.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark.ValueObjects to NuGet
-        run: dotnet nuget push Tooark.ValueObjects/bin/Release/Tooark.ValueObjects.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
-      - name: Publish Tooark.Securities to NuGet
-        run: dotnet nuget push Tooark.Securities/bin/Release/Tooark.Securities.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
-      - name: Publish Tooark.Observability to NuGet
-        run: dotnet nuget push Tooark.Observability/bin/Release/Tooark.Observability.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
-      - name: Publish Tooark.Mediator.Abstractions to NuGet
-        run: dotnet nuget push Tooark.Mediator.Abstractions/bin/Release/Tooark.Mediator.Abstractions.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-      
-      - name: Publish Tooark.Mediator to NuGet
-        run: dotnet nuget push Tooark.Mediator/bin/Release/Tooark.Mediator.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
-
-      - name: Publish Tooark to NuGet
-        run: dotnet nuget push Tooark/bin/Release/Tooark.${{ env.VERSION }}.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
