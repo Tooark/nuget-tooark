@@ -56,6 +56,9 @@ security fixes at the next major release. .NET 8 reached end of support in
 November 2026: the 4.x line still targets it, and v5 will target
 `net10.0` only.
 
+Once v5 is released, the 4.x line receives only dependency updates that fix
+vulnerabilities; new features go to 5.x.
+
 Always update to the latest version before reporting a bug or vulnerability.
 
 ## Dependency scanning

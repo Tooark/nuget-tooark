@@ -836,9 +836,12 @@ start without a key storage (`Options.DataProtection.KeyStorageNotConfigured`): 
 `AddTooarkDataProtection`. The check runs when the host starts and, without a host, on the first use of Data
 Protection.
 
-> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior. It is
-> planned to be on by default in containers in v5.0. An API that uses no cookies (JWT only) does not depend on
-> persistent keys: set `false` to keep it off after that change too.
+> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior.
+>
+> ⚠️ **Changes in v5:** with no value set, the lock turns on when the application runs in a container
+> (`DOTNET_RUNNING_IN_CONTAINER`, which the official .NET images define, or `KUBERNETES_SERVICE_HOST`). An API
+> that uses no cookies (JWT only) does not depend on persistent keys: set `false` to keep it off after that
+> change too.
 
 #### ❌ Don't: keys tied to the instance
 

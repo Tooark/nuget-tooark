@@ -835,9 +835,12 @@ armazenamento de chaves (`Options.DataProtection.KeyStorageNotConfigured`): `Key
 e `WriteKey`, um `PersistKeysTo*` em `ConfigureDataProtection` ou um encadeado a `services.AddDataProtection()`, antes ou depois do
 `AddTooarkDataProtection`. A conferência roda no startup do host e, sem host, no primeiro uso do Data Protection.
 
-> A trava vem desligada nesta versão para não mudar o comportamento de quem já usa a v4.3.0. Está previsto
-> ligá-la por padrão em contêiner na v5.0. Uma API que não usa cookies (só JWT) não depende de chaves
-> persistentes: informe `false` para mantê-la desligada também depois dessa mudança.
+> A trava vem desligada nesta versão para não mudar o comportamento de quem já usa a v4.3.0.
+>
+> ⚠️ **Muda na v5:** sem valor informado, a trava passa a ligada quando a aplicação roda em contêiner
+> (`DOTNET_RUNNING_IN_CONTAINER`, que as imagens oficiais do .NET definem, ou `KUBERNETES_SERVICE_HOST`). Uma
+> API que não usa cookies (só JWT) não depende de chaves persistentes: informe `false` para mantê-la desligada
+> também depois dessa mudança.
 
 #### ❌ Não faça: chaves presas à instância
 
