@@ -7,14 +7,19 @@
     <PackageVersion Include="AWSSDK.S3" Version="4.0.102.4" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="coverlet.msbuild" Version="10.0.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.30" />
-    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.3.12" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.12" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.34" />
+    <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc" Version="2.3.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.14" />
+    <!--
+      Dependência transitiva do Microsoft.AspNetCore.Http, fixada aqui porque o nuspec dele aceita a 2.3.13, que
+      carrega a CVE-2026-118750 (negação de serviço). Suba junto com o Microsoft.AspNetCore.Http.
+    -->
+    <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="2.3.14" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.FileProviders.Abstractions" Version="8.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Localization" Version="8.0.30" />
+    <PackageVersion Include="Microsoft.Extensions.Localization" Version="8.0.34" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="OpenTelemetry" Version="1.18.0" />
@@ -28,7 +33,9 @@
     <PackageVersion Include="ReportGenerator" Version="5.5.11" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.2.0" />
     <!-- Correção de vulnerabilidade transitiva: 7 CVEs HIGH via AspNetCore.Mvc -> DataProtection -->
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.4" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.5" />
+    <!-- Correção de vulnerabilidade transitiva: CVE-2026-84008 (HIGH) e CVE-2026-70162 via Cryptography.Xml -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
     <!-- Correção de vulnerabilidade transitiva: ReDoS HIGH (GHSA-cmhx-cq75-c4mj) -->
     <PackageVersion Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
