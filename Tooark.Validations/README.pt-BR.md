@@ -787,6 +787,18 @@ ValidationErrorMessages.BooleanIsFalse("Ativo");   // "Validation.IsNotFalse;Ati
 As sobrecargas sem o parâmetro `message` usam essas chaves; as sobrecargas com `message` usam o texto que
 você informar, sem passar por elas.
 
+Os formatadores `Field*` montam as chaves de campo que os value objects, as entidades e a integração com o
+ASP.NET Core emitem, para a chave nunca ser digitada à mão — um erro de digitação como `Field.Invalido;Email`
+compila e só quebra a tradução em execução. Desde a v4.8.0 os pacotes do Tooark os usam internamente; as chaves
+são as mesmas.
+
+```csharp
+ValidationErrorMessages.FieldInvalid("Email");         // "Field.Invalid;Email"
+ValidationErrorMessages.FieldRequired("Email");        // "Field.Required;Email"
+ValidationErrorMessages.FieldEmpty("Id");              // "Field.Empty;Id"
+ValidationErrorMessages.FieldChangeBlocked("Id");      // "Field.ChangeBlocked;Id"
+```
+
 ---
 
 ## ⚠️ Códigos de Erro

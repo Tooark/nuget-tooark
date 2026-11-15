@@ -81,10 +81,17 @@ public class TracingOptions
   ];
 
   /// <summary>
-  /// Nome padrão do ActivitySource para tracing.
+  /// Nome do ActivitySource principal registrado no tracing, o mesmo de <c>TooarkInstrumentation.ActivitySource</c>.
   /// </summary>
   /// <remarks>
-  /// Utilizado para criar uma 'assinatura/canal' de eventos personalizados de tracing.
+  /// <para>
+  /// Ordem de resolução: o valor informado aqui (diferente do padrão <c>Tooark</c>), o <c>service.name</c>
+  /// resolvido quando ele veio de uma fonte real (opções, <c>OTEL_SERVICE_NAME</c> ou assembly de entrada) e,
+  /// por fim, <c>Tooark</c>. O nome <c>Tooark</c> continua sempre registrado como fonte adicional.
+  /// </para>
+  /// <para>
+  /// Depois do registro, o <c>IOptions&lt;ObservabilityOptions&gt;</c> do container carrega o nome resolvido.
+  /// </para>
   /// </remarks>
   public string ActivitySourceName { get; set; } = "Tooark";
 

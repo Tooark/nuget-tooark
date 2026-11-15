@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class CreatedBy : ValueObject
   {
     // Adiciona as notificações de validação do Guid do Criado Por.
     AddNotifications(new Validation()
-      .IsNotEmpty(value, "CreatedBy", "Field.Invalid;CreatedBy")
+      .IsNotEmpty(value, "CreatedBy", ValidationErrorMessages.FieldInvalid("CreatedBy"))
     );
 
     // Verifica é valido então não existe notificação

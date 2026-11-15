@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.ValueObjects;
@@ -53,7 +54,7 @@ public sealed class LinkVideo : ValueObject
     else
     {
       // Adiciona as notificação de validação do link
-      AddNotification("Field.Invalid;LinkVideo", "LinkVideo", "T.VOJ.LVI1");
+      AddNotification(ValidationErrorMessages.FieldInvalid("LinkVideo"), "LinkVideo", "T.VOJ.LVI1");
     }
   }
 

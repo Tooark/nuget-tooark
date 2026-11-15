@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -45,7 +46,7 @@ public class DelimitedString : ValueObject
   {
     // Adiciona as notificações de validação da string delimitada
     AddNotifications(new Validation()
-      .IsNotNullOrWhiteSpace(value, nameof(DelimitedString), "Field.Invalid;DelimitedString")
+      .IsNotNullOrWhiteSpace(value, nameof(DelimitedString), ValidationErrorMessages.FieldInvalid("DelimitedString"))
     );
 
     // Verifica se é válido então não existe notificação
@@ -65,7 +66,7 @@ public class DelimitedString : ValueObject
   {
     // Adiciona as notificações de validação da array de strings
     AddNotifications(new Validation()
-      .IsGreater(values?.Length ?? 0, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
+      .IsGreater(values?.Length ?? 0, 0, nameof(DelimitedString), ValidationErrorMessages.FieldInvalid("DelimitedString"))
     );
 
     // Verifica se é válido então não existe notificação
@@ -85,7 +86,7 @@ public class DelimitedString : ValueObject
   {
     // Adiciona as notificações de validação da lista de strings
     AddNotifications(new Validation()
-      .IsGreater(values?.Count ?? 0, 0, nameof(DelimitedString), "Field.Invalid;DelimitedString")
+      .IsGreater(values?.Count ?? 0, 0, nameof(DelimitedString), ValidationErrorMessages.FieldInvalid("DelimitedString"))
     );
 
     // Verifica se é válido então não existe notificação

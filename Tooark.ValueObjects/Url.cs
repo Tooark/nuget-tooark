@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public class Url : ValueObject
   {
     // Adiciona as notificações de validação da URL
     AddNotifications(new Validation()
-      .IsUrl(value, "Url", "Field.Invalid;Url")
+      .IsUrl(value, "Url", ValidationErrorMessages.FieldInvalid("Url"))
     );
 
     // Verifica é valido então não existe notificação

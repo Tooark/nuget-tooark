@@ -61,6 +61,16 @@ Ambos recebem `IConfiguration` e uma `Action<ObservabilityOptions>` opcional, e 
 registro — `AddTooarkObservability` delega para `AddTooarkOpenTelemetry`. Use o que ficar mais legível no seu
 `Program.cs`.
 
+### Instrumentação
+
+| Classe                  | Descrição                                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| `TooarkInstrumentation` | Singleton com o `ActivitySource` e o `Meter` já registrados, para os spans e as métricas da aplicação |
+
+Registrado pelo `AddTooarkOpenTelemetry` mesmo com `Enabled = false` (uma fonte sem ouvinte não faz nada),
+então injetá-lo nunca falha. Também expõe o `ServiceName` e o `ServiceVersion` resolvidos. Veja
+[Criando Traces Customizados](#criando-traces-customizados).
+
 ---
 
 ## 🔧 Instalação
@@ -308,6 +318,12 @@ builder.Services.AddTooarkOpenTelemetry(builder.Configuration, options =>
     {
         // Configuração adicional de logging
     };
+
+    options.ConfigureResource = resource =>
+    {
+        // Detectores de recurso dos pacotes contrib do OpenTelemetry (opcional, veja Comportamento Padrão)
+        // resource.AddContainerDetector();
+    };
 });
 
 var app = builder.Build();
@@ -321,40 +337,45 @@ app.Run();
 
 ### ObservabilityOptions
 
-| Propriedade                       | Tipo                      | Padrão  | Descrição                                       |
-| --------------------------------- | ------------------------- | ------- | ----------------------------------------------- |
-| `Enabled`                         | bool                      | `true`  | Habilita/desabilita Observability               |
-| `ServiceName`                     | string?                   | `null`  | Nome do serviço (inferido se não definido)      |
-| `ServiceVersion`                  | string?                   | `null`  | Versão do serviço (inferida se não definida)    |
-| `ServiceInstanceId`               | string?                   | `null`  | ID único da instância (GUID se não definido)    |
-| `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Atributos adicionais para Resource              |
-| `AllowSensitiveData`              | bool                      | `false` | Permitir dados sensíveis sem sanitização global |
-| `UseConsoleExporterInDevelopment` | bool                      | `true`  | Usar Console exporter em Development            |
-| `Tracing`                         | TracingOptions            | (novo)  | Configurações de rastreamento                   |
-| `Metrics`                         | MetricsOptions            | (novo)  | Configurações de métricas                       |
-| `Logging`                         | LoggingOptions            | (novo)  | Configurações de logging                        |
-| `Otlp`                            | OtlpOptions               | (novo)  | Configurações do exportador OTLP                |
+| Propriedade                       | Tipo                      | Padrão  | Descrição                                                                                      |
+| --------------------------------- | ------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| `Enabled`                         | bool                      | `true`  | Habilita/desabilita Observability                                                              |
+| `ServiceName`                     | string?                   | `null`  | Nome do serviço (`OTEL_SERVICE_NAME`, depois o assembly de entrada, se não definido)           |
+| `ServiceVersion`                  | string?                   | `null`  | Versão do serviço (`OTEL_RESOURCE_ATTRIBUTES`, depois a versão informacional, se não definida) |
+| `ServiceInstanceId`               | string?                   | `null`  | ID único da instância (GUID se não definido)                                                   |
+| `ResourceAttributes`              | Dictionary<string,string> | `{}`    | Atributos adicionais para Resource (mesclados com `OTEL_RESOURCE_ATTRIBUTES`)                  |
+| `AllowSensitiveData`              | bool                      | `false` | Permitir dados sensíveis sem sanitização global                                                |
+| `UseConsoleExporterInDevelopment` | bool                      | `true`  | Usar Console exporter em Development                                                           |
+| `Tracing`                         | TracingOptions            | (novo)  | Configurações de rastreamento                                                                  |
+| `Metrics`                         | MetricsOptions            | (novo)  | Configurações de métricas                                                                      |
+| `Logging`                         | LoggingOptions            | (novo)  | Configurações de logging                                                                       |
+| `Otlp`                            | OtlpOptions               | (novo)  | Configurações do exportador OTLP                                                               |
 
-Além das opções vinculáveis por `appsettings.json`, `ObservabilityOptions` expõe três callbacks que só podem
+Depois do registro, o `IOptions<ObservabilityOptions>` do container carrega os valores resolvidos:
+`ServiceName`, `ServiceVersion`, `Tracing.ActivitySourceName` e `Metrics.MeterName` deixam de ser `null` ou o
+padrão puro quando foram inferidos.
+
+Além das opções vinculáveis por `appsettings.json`, `ObservabilityOptions` expõe quatro callbacks que só podem
 ser definidos programaticamente, pela sobrecarga com `Action<ObservabilityOptions>`:
 
-| Callback           | Tipo                                  | Uso                                             |
-| ------------------ | ------------------------------------- | ----------------------------------------------- |
-| `ConfigureTracing` | `Action<TracerProviderBuilder>?`      | Instrumentações e processadores extras de trace |
-| `ConfigureMetrics` | `Action<MeterProviderBuilder>?`       | Instrumentações e readers extras de métricas    |
-| `ConfigureLogging` | `Action<OpenTelemetryLoggerOptions>?` | Ajustes extras do logging OpenTelemetry         |
+| Callback            | Tipo                                  | Uso                                                                       |
+| ------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| `ConfigureTracing`  | `Action<TracerProviderBuilder>?`      | Instrumentações e processadores extras de trace                           |
+| `ConfigureMetrics`  | `Action<MeterProviderBuilder>?`       | Instrumentações e readers extras de métricas                              |
+| `ConfigureLogging`  | `Action<OpenTelemetryLoggerOptions>?` | Ajustes extras do logging OpenTelemetry                                   |
+| `ConfigureResource` | `Action<ResourceBuilder>?`            | Detectores de recurso (nuvem, contêiner); roda por último, após os demais |
 
 ### TracingOptions
 
-| Propriedade          | Tipo                 | Padrão                       | Descrição                                   |
-| -------------------- | -------------------- | ---------------------------- | ------------------------------------------- |
-| `Enabled`            | bool                 | `true`                       | Habilita tracing                            |
-| `SamplingRatio`      | double               | `1.0`                        | Taxa de amostragem (0.0-1.0)                |
-| `IgnorePathPrefix`   | string?              | `null`                       | Prefixo a adicionar aos paths ignorados     |
-| `IgnorePaths`        | string[]             | health, metrics, traces, etc | Paths a serem ignorados no tracing          |
-| `ActivitySourceName` | string               | `Tooark`                     | Nome do ActivitySource padrão               |
-| `AdditionalSources`  | string[]             | `[]`                         | ActivitySources adicionais para capturar    |
-| `DataSensitive`      | DataSensitiveOptions | (defaults)                   | Configurações granulares de dados sensíveis |
+| Propriedade          | Tipo                 | Padrão                       | Descrição                                                                                                                  |
+| -------------------- | -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Enabled`            | bool                 | `true`                       | Habilita tracing                                                                                                           |
+| `SamplingRatio`      | double               | `1.0`                        | Taxa de amostragem (0.0-1.0)                                                                                               |
+| `IgnorePathPrefix`   | string?              | `null`                       | Prefixo a adicionar aos paths ignorados                                                                                    |
+| `IgnorePaths`        | string[]             | health, metrics, traces, etc | Paths a serem ignorados no tracing                                                                                         |
+| `ActivitySourceName` | string               | `Tooark`                     | ActivitySource principal; deixado no padrão, vira o nome do serviço, com `Tooark` como fallback e sempre registrado também |
+| `AdditionalSources`  | string[]             | `[]`                         | ActivitySources adicionais para capturar                                                                                   |
+| `DataSensitive`      | DataSensitiveOptions | (defaults)                   | Configurações granulares de dados sensíveis                                                                                |
 
 ### DataSensitiveOptions (Tracing)
 
@@ -366,14 +387,14 @@ ser definidos programaticamente, pela sobrecarga com `Action<ObservabilityOption
 
 ### MetricsOptions
 
-| Propriedade                  | Tipo     | Padrão   | Descrição                                                     |
-| ---------------------------- | -------- | -------- | ------------------------------------------------------------- |
-| `Enabled`                    | bool     | `true`   | Habilita métricas                                             |
-| `ExportIntervalMilliseconds` | int?     | `null`   | Intervalo de export OTLP (null: 60000, ou 5000 em serverless) |
-| `RuntimeMetricsEnabled`      | bool     | `true`   | Habilita métricas de runtime .NET                             |
-| `ProcessMetricsEnabled`      | bool     | `true`   | Habilita métricas de processo                                 |
-| `MeterName`                  | string   | `Tooark` | Nome do Meter padrão                                          |
-| `AdditionalMeters`           | string[] | `[]`     | Meters adicionais a registrar                                 |
+| Propriedade                  | Tipo     | Padrão   | Descrição                                                                                                         |
+| ---------------------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `Enabled`                    | bool     | `true`   | Habilita métricas                                                                                                 |
+| `ExportIntervalMilliseconds` | int?     | `null`   | Intervalo de export OTLP (null: 60000, ou 5000 em serverless)                                                     |
+| `RuntimeMetricsEnabled`      | bool     | `true`   | Habilita métricas de runtime .NET                                                                                 |
+| `ProcessMetricsEnabled`      | bool     | `true`   | Habilita métricas de processo                                                                                     |
+| `MeterName`                  | string   | `Tooark` | Meter principal; deixado no padrão, vira o nome do serviço, com `Tooark` como fallback e sempre registrado também |
+| `AdditionalMeters`           | string[] | `[]`     | Meters adicionais a registrar                                                                                     |
 
 ### LoggingOptions
 
@@ -415,23 +436,75 @@ Usadas em `Tracing:Otlp`, `Metrics:Otlp` e `Logging:Otlp`. Possuem os mesmos cam
 
 ### Resource (Identificação do Serviço)
 
-O OpenTelemetry usa Resource para identificar a origem dos dados de telemetria:
+O OpenTelemetry usa Resource para identificar a origem dos dados de telemetria. Cada valor vem da primeira fonte
+preenchida na linha; valores vazios ou só com espaços passam para a próxima:
 
-| Atributo                      | Fonte                                                                     |
-| ----------------------------- | ------------------------------------------------------------------------- |
-| `service.name`                | `ServiceName` → `AssemblyName` → `"unknown_service"`                      |
-| `service.version`             | `ServiceVersion` → `AssemblyVersion` → `"unknown_version"`                |
-| `service.instance.id`         | `ServiceInstanceId` → `OTEL_SERVICE_INSTANCE_ID` → `Guid.NewGuid()`       |
-| `deployment.environment.name` | `ASPNETCORE_ENVIRONMENT` → `DOTNET_ENVIRONMENT` → `"unknown_environment"` |
-| `deployment.environment`      | Mesmo valor acima (chave legada, mantida para compatibilidade)            |
-| `host.name`                   | `Environment.MachineName`                                                 |
-| `process.pid`                 | `Environment.ProcessId`                                                   |
-| `process.runtime.*`           | Informações do runtime .NET                                               |
+| Atributo                      | Fonte                                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `service.name`                | `ServiceName` → `OTEL_SERVICE_NAME` → nome do assembly de entrada → `"unknown_service"`                                                                       |
+| `service.version`             | `ServiceVersion` → `service.version` em `OTEL_RESOURCE_ATTRIBUTES` → `AssemblyInformationalVersion` sem o `+commit` → `AssemblyVersion` → `"unknown_version"` |
+| `service.instance.id`         | `ServiceInstanceId` → `OTEL_SERVICE_INSTANCE_ID` → `Guid.NewGuid()`                                                                                           |
+| `deployment.environment.name` | `ASPNETCORE_ENVIRONMENT` → `DOTNET_ENVIRONMENT` → `"unknown_environment"`                                                                                     |
+| `deployment.environment`      | Mesmo valor acima (chave legada, mantida para compatibilidade)                                                                                                |
+| `host.name`                   | `Environment.MachineName`                                                                                                                                     |
+| `process.pid`                 | `Environment.ProcessId`, como número                                                                                                                          |
+| `process.runtime.*`           | Informações do runtime .NET                                                                                                                                   |
+
+A versão informacional é o `<Version>` do projeto (`2.3.0`, `2.3.0-beta.1`); o sufixo `+<commit>` que o SDK
+anexa é descartado. Sem `<Version>`, o padrão do SDK resulta em `1.0.0`.
+
+> **Mudou na 4.8.0**: o `service.version` era lido da `AssemblyVersion` de quatro partes (`2.3.0.0`) e agora
+> vem da versão informacional (`2.3.0`); o `process.pid` era texto e agora é número; e a `OTEL_SERVICE_NAME`
+> era sobrescrita pelo nome do assembly e agora vence sobre ele. Revise filtros de dashboard que dependam dos
+> valores antigos.
+
+#### Atributos do ambiente (`OTEL_*`)
+
+As variáveis padrão do OpenTelemetry são respeitadas sem nenhum código. A `OTEL_RESOURCE_ATTRIBUTES` recebe uma
+lista `chave=valor` separada por vírgula e coloca cada par no Resource de traces, métricas e logs:
+
+```bash
+OTEL_SERVICE_NAME=orders-api
+OTEL_RESOURCE_ATTRIBUTES=cloud.provider=aws,cloud.region=us-east-1,k8s.cluster.name=cluster-a,tenant.id=tenant-123
+```
+
+Quando a mesma chave também está em `Observability:ResourceAttributes`, o valor do `appsettings.json` vence.
+Prefira as chaves das [convenções semânticas do OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/resource/)
+(`cloud.provider`, `cloud.region`, `k8s.cluster.name`): os backends as reconhecem, ao contrário de chaves
+livres. Um valor que muda a cada requisição, como o tenant em um deploy multi-tenant, não é atributo de
+Resource — vai no span ou no Baggage.
+
+#### Detectores de recurso (`ConfigureResource`)
+
+A detecção automática de metadados de nuvem, contêiner e host fica nos pacotes **contrib** do OpenTelemetry
+(`OpenTelemetry.Resources.AWS`, `.Azure`, `.Gcp`, `.Container`, `.Host`, `.Process`). Eles consultam o serviço
+de metadados da nuvem na inicialização, e alguns ainda estão em beta, então **não** são dependências do
+`Tooark.Observability`. Instale só os que quiser e ligue-os pelo callback `ConfigureResource`, que roda por
+último, depois dos atributos do Tooark e de `ResourceAttributes`:
+
+```csharp
+// dotnet add package OpenTelemetry.Resources.AWS
+// dotnet add package OpenTelemetry.Resources.Container
+builder.Services.AddTooarkOpenTelemetry(builder.Configuration, options =>
+{
+    options.ConfigureResource = resource => resource
+        .AddAWSECSDetector()       // OpenTelemetry.Resources.AWS
+        .AddContainerDetector();   // OpenTelemetry.Resources.Container
+});
+```
+
+O callback é opcional: o Tooark funciona igual sem ele e não depende desses pacotes. Os nomes dos métodos dos
+detectores variam entre as versões dos pacotes contrib, então confira na versão instalada. O Tooark não garante
+que os atributos adicionados por detectores de terceiros sejam aplicados — isso depende da versão do pacote e do
+ambiente em que a aplicação roda (um detector fora da sua nuvem não adiciona nada).
 
 ### Tracing
 
 Quando habilitado (`Tracing.Enabled = true`):
 
+- **Fontes**: o `ActivitySource` nomeado por `ActivitySourceName` (o nome do serviço quando o padrão é mantido)
+  mais `Tooark`, sempre registrado, mais `AdditionalSources`. Um span de uma fonte não registrada é descartado
+  em silêncio.
 - **ASP.NET Core Instrumentation**: captura automaticamente traces de requisições HTTP de entrada
 - **HTTP Client Instrumentation**: captura traces de requisições HTTP de saída (HttpClient)
 - **Filter Paths**: por padrão ignora: `/health`, `/healthz`, `/ready`, `/traces`, `/metrics`, `/logs`, `/favicon.ico`
@@ -451,6 +524,8 @@ Com `AllowSensitiveData = true`, a sanitização é desligada globalmente e as o
 
 Quando habilitado (`Metrics.Enabled = true`):
 
+- **Medidores**: o `Meter` nomeado por `MeterName` (o nome do serviço quando o padrão é mantido) mais `Tooark`,
+  sempre registrado, mais `AdditionalMeters`. Uma medição de um medidor não registrado é descartada em silêncio.
 - **ASP.NET Core Instrumentation**: métricas de requisições HTTP de entrada
 - **HTTP Client Instrumentation**: métricas de chamadas HTTP de saída
 - **Runtime Instrumentation**: métricas do runtime .NET (GC, threads, etc.) quando `RuntimeMetricsEnabled = true`
@@ -663,12 +738,22 @@ Com `appsettings.json`:
 
 ### Criando Traces Customizados
 
+Injete `TooarkInstrumentation`: o `ActivitySource` dele já está registrado com o nome resolvido (o nome do
+serviço, `orders-api` por exemplo), então os spans aparecem no backend sob o serviço, e não sob `Tooark`, e a
+aplicação nunca repete a string:
+
 ```csharp
 using System.Diagnostics;
+using Tooark.Observability;
 
-public class MeuServico
+public class PedidoService
 {
-    private static readonly ActivitySource _activitySource = new("Tooark");
+    private readonly ActivitySource _activitySource;
+
+    public PedidoService(TooarkInstrumentation telemetry)
+    {
+        _activitySource = telemetry.ActivitySource;   // nome: "orders-api"
+    }
 
     public async Task ProcessarPedido(int pedidoId)
     {
@@ -690,16 +775,29 @@ public class MeuServico
 }
 ```
 
+Um `new ActivitySource("Tooark")` estático, como nas versões anteriores, continua funcionando: a fonte `Tooark`
+está sempre registrada. Uma fonte estática com qualquer outro nome precisa constar em `Tracing.AdditionalSources`,
+ou os spans dela são descartados sem nenhum erro.
+
 ### Criando Métricas Customizadas
 
-```csharp
-using System.Diagnostics.Metrics;
+O mesmo singleton expõe o `Meter`, registrado com o `MeterName` resolvido:
 
-public class MeuServico
+```csharp
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using Tooark.Observability;
+
+public class PedidoService
 {
-    private static readonly Meter _meter = new("Tooark");
-    private static readonly Counter<long> _pedidosProcessados = _meter.CreateCounter<long>("pedidos.processados");
-    private static readonly Histogram<double> _tempoProcessamento = _meter.CreateHistogram<double>("pedidos.tempo_ms");
+    private readonly Counter<long> _pedidosProcessados;
+    private readonly Histogram<double> _tempoProcessamento;
+
+    public PedidoService(TooarkInstrumentation telemetry)
+    {
+        _pedidosProcessados = telemetry.Meter.CreateCounter<long>("pedidos.processados");
+        _tempoProcessamento = telemetry.Meter.CreateHistogram<double>("pedidos.tempo_ms");
+    }
 
     public async Task ProcessarPedido(int pedidoId)
     {
@@ -713,6 +811,9 @@ public class MeuServico
     }
 }
 ```
+
+Os instrumentos são criados uma vez por nome de medidor, então mantenha-os em campos de um singleton ou crie-os no
+construtor, como acima, em vez de a cada chamada. Um `new Meter("Tooark")` estático também continua funcionando.
 
 ---
 
@@ -747,9 +848,11 @@ public class MeuServico
 
 4. **Sem endpoint /metrics**: Este pacote usa modelo **push** (OTLP). Não expõe endpoints HTTP para scraping estilo Prometheus.
 
-5. **Normalização de ResourceAttributes**: Chaves são normalizadas automaticamente: `lowercase`, espaços → `.`, caracteres inválidos → `_`.
+5. **Normalização de ResourceAttributes**: Chaves são normalizadas automaticamente: `lowercase`, espaços → `.`, caracteres inválidos → `_`. Os pares de `OTEL_RESOURCE_ATTRIBUTES` também são aplicados; na mesma chave, o `appsettings.json` vence.
 
-6. **Callbacks para customização**: Use `ConfigureTracing`, `ConfigureMetrics` e `ConfigureLogging` para adicionar instrumentações ou configurações avançadas.
+6. **Callbacks para customização**: Use `ConfigureTracing`, `ConfigureMetrics` e `ConfigureLogging` para adicionar instrumentações ou configurações avançadas, e `ConfigureResource` para os detectores de recurso dos pacotes contrib.
+
+7. **Nomes da fonte e do medidor**: com `ActivitySourceName` e `MeterName` deixados no padrão, a fonte e o medidor principais recebem o nome do serviço, e `Tooark` segue registrado também. O `TooarkInstrumentation` entrega os dois à aplicação já registrados.
 
 ---
 

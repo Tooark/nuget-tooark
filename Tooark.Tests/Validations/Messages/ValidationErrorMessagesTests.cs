@@ -363,4 +363,56 @@ public class ValidationErrorMessagesTests
     // Assert
     Assert.Equal(expected, result);
   }
+
+  // Testa se FieldInvalid monta a chave Field.Invalid;{Propriedade}, idêntica à que os value objects emitiam à mão
+  [Theory]
+  [InlineData("Email", "Field.Invalid;Email")]
+  [InlineData(" Email ", "Field.Invalid;Email")]
+  [InlineData("Document.Cpf", "Field.Invalid;Document.Cpf")]
+  [InlineData("my property", "Field.Invalid;myproperty")]
+  public void FieldInvalid_ShouldReturnCorrectMessage(string property, string expected)
+  {
+    // Arrange & Act
+    var result = ValidationErrorMessages.FieldInvalid(property);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
+
+  // Testa se FieldRequired monta a chave Field.Required;{Propriedade}
+  [Theory]
+  [InlineData("Email", "Field.Required;Email")]
+  [InlineData(" File Format ", "Field.Required;FileFormat")]
+  public void FieldRequired_ShouldReturnCorrectMessage(string property, string expected)
+  {
+    // Arrange & Act
+    var result = ValidationErrorMessages.FieldRequired(property);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
+
+  // Testa se FieldEmpty monta a chave Field.Empty;{Propriedade}
+  [Theory]
+  [InlineData("Id", "Field.Empty;Id")]
+  public void FieldEmpty_ShouldReturnCorrectMessage(string property, string expected)
+  {
+    // Arrange & Act
+    var result = ValidationErrorMessages.FieldEmpty(property);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
+
+  // Testa se FieldChangeBlocked monta a chave Field.ChangeBlocked;{Propriedade}
+  [Theory]
+  [InlineData("CreatedBy", "Field.ChangeBlocked;CreatedBy")]
+  public void FieldChangeBlocked_ShouldReturnCorrectMessage(string property, string expected)
+  {
+    // Arrange & Act
+    var result = ValidationErrorMessages.FieldChangeBlocked(property);
+
+    // Assert
+    Assert.Equal(expected, result);
+  }
 }

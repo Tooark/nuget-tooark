@@ -1,6 +1,7 @@
 using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -28,7 +29,7 @@ public sealed class Description : ValueObject
   {
     // Adiciona as notificações de validação da descrição
     AddNotifications(new Validation()
-      .IsNotNullOrWhiteSpace(value, "Description", "Field.Invalid;Description")
+      .IsNotNullOrWhiteSpace(value, "Description", ValidationErrorMessages.FieldInvalid("Description"))
     );
 
     // Verifica se é válido então não existe notificação

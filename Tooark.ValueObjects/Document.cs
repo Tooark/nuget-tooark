@@ -1,6 +1,7 @@
 using Tooark.Enums;
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -37,7 +38,7 @@ public sealed class Document : ValueObject
 
     // Adiciona as notificações de validação do documento
     AddNotifications(new Validation()
-      .Match(number, type.ToRegex(), "Document.Number", "Field.Invalid;Document")
+      .Match(number, type.ToRegex(), "Document.Number", ValidationErrorMessages.FieldInvalid("Document"))
     );
 
     // Verifica é valido então não existe notificação
@@ -53,7 +54,7 @@ public sealed class Document : ValueObject
       else
       {
         // Adiciona uma notificação de validação do Documento
-        AddNotification($"Field.Invalid;Document.{type}", "Document.Type", "T.VOJ.DOC1");
+        AddNotification(ValidationErrorMessages.FieldInvalid($"Document.{type}"), "Document.Type", "T.VOJ.DOC1");
       }
     }
   }

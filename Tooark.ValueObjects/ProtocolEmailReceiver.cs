@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class ProtocolEmailReceiver : ValueObject
   {
     // Adiciona as notificações de validação do protocolo de Recebimento de Email
     AddNotifications(new Validation()
-      .IsProtocolEmailReceiver(value, "ProtocolEmailReceiver", "Field.Invalid;ProtocolEmailReceiver")
+      .IsProtocolEmailReceiver(value, "ProtocolEmailReceiver", ValidationErrorMessages.FieldInvalid("ProtocolEmailReceiver"))
     );
 
     // Verifica é valido então não existe notificação

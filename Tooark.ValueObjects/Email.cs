@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -42,7 +43,7 @@ public sealed class Email : ValueObject
     // Adiciona as notificações de validação do email
     AddNotifications(new Validation()
       .IsBetween(value ?? "", MinLength, MaxLength, "Email")
-      .IsEmail(value ?? "", "Email", "Field.Invalid;Email")
+      .IsEmail(value ?? "", "Email", ValidationErrorMessages.FieldInvalid("Email"))
     );
 
     // Verifica é valido então não existe notificação

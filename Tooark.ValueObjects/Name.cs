@@ -1,6 +1,7 @@
 using Tooark.Exceptions;
 using Tooark.Extensions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -28,7 +29,7 @@ public sealed class Name : ValueObject
   {
     // Adiciona as notificações de validação do nome
     AddNotifications(new Validation()
-      .IsNotNullOrWhiteSpace(value, "Name", "Field.Invalid;Name")
+      .IsNotNullOrWhiteSpace(value, "Name", ValidationErrorMessages.FieldInvalid("Name"))
     );
 
     // Verifica se é válido então não existe notificação

@@ -45,6 +45,9 @@ os provedores de storage e de segredos.
 Todos os pacotes têm como alvo o **.NET 8.0** e o **.NET 10.0**, compartilham um único número de versão e são
 publicados juntos no [perfil da Tooark no NuGet](https://www.nuget.org/profiles/Tooark).
 
+> ⚠️ **Muda na v5:** o .NET 8 saiu do suporte da Microsoft em novembro de 2026. A linha 4.x mantém os dois
+> alvos; a v5, prevista para janeiro de 2027, terá como alvo só o **.NET 10.0**.
+
 ---
 
 ## 🔧 Instalação

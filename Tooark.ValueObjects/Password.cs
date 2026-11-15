@@ -1,4 +1,5 @@
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 using Tooark.Validations.Patterns;
 
 namespace Tooark.ValueObjects;
@@ -59,7 +60,7 @@ public sealed class Password : ValueObject
 
     // Adiciona as notificações de validação da senha
     AddNotifications(new Validation()
-      .Match(value, pattern, "Password", "Field.Invalid;Password")
+      .Match(value, pattern, "Password", ValidationErrorMessages.FieldInvalid("Password"))
     );
 
     // Verifica é valido então não existe notificação

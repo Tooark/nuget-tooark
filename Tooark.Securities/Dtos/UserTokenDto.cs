@@ -54,9 +54,10 @@ public class UserTokenDto
     // Materializa uma única vez: as propriedades e os métodos de leitura consultam a mesma lista
     Claims = [.. claims];
 
-    Id = GetClaim("id");
-    Login = GetClaim("login");
-    Security = GetClaim("security");
+    // Lê o nome legado e, na falta dele, o nome padrão: um token emitido em qualquer modo é lido
+    Id = FirstClaim(TooarkClaimNames.Id, TooarkClaimNames.Subject);
+    Login = FirstClaim(TooarkClaimNames.Login, TooarkClaimNames.PreferredUsername);
+    Security = GetClaim(TooarkClaimNames.Security);
   }
 
   #endregion
@@ -87,9 +88,10 @@ public class UserTokenDto
   /// Todas as claims do token validado.
   /// </summary>
   /// <remarks>
-  /// Inclui as claims do usuário (id, login, security), as claims extras informadas na criação do token
-  /// e as registradas pelo emissor (exp, iat, nbf, iss, aud). Uma claim com vários valores (um array no
-  /// payload) aparece uma vez por valor, com o mesmo tipo. Vazia quando a validação falha.
+  /// Inclui as claims do usuário (id, login, security, e sub e preferred_username quando emitidas), as claims
+  /// extras informadas na criação do token e as registradas pelo emissor (exp, iat, nbf, iss, aud). Uma claim
+  /// com vários valores (um array no payload) aparece uma vez por valor, com o mesmo tipo. Vazia quando a
+  /// validação falha.
   /// </remarks>
   public IReadOnlyList<Claim> Claims { get; private set; } = [];
 
@@ -153,6 +155,21 @@ public class UserTokenDto
   /// <returns>Verdadeiro quando a claim existe no token, mesmo com valor vazio.</returns>
   public bool HasClaim(string type) =>
     Claims.Any(x => x.Type == type);
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Retorna o valor da primeira claim presente entre o nome legado e o nome padrão.
+  /// </summary>
+  /// <param name="legacyType">Nome legado da claim.</param>
+  /// <param name="standardType">Nome padrão da claim.</param>
+  /// <returns>O valor da claim legada, senão o da padrão, senão vazio.</returns>
+  private string FirstClaim(string legacyType, string standardType) =>
+    Claims.FirstOrDefault(x => x.Type == legacyType)?.Value
+      ?? Claims.FirstOrDefault(x => x.Type == standardType)?.Value
+      ?? string.Empty;
 
   #endregion
 }

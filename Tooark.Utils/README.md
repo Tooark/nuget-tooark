@@ -103,7 +103,9 @@ Generation of strings by specific and random criteria.
 - `Password(int len = 12, bool upper = true, bool lower = true, bool number = true, bool special = true, bool similarity = false)`: Generates a string with specific criteria.
 - `Hexadecimal(int sizeToken = 128)`: Generates a random hexadecimal string.
 - `GuidCode()`: Generates a Guid string without hyphens, with 32 characters.
-- `Token(int length = 256)`: Generates a token string.
+- `Token(int length = 256)`: Generates a token string. **Obsolete since v4.8.0, removed in v5**: it only
+  generates the text, with no hash or verification. Use `SecureToken.Create()` from `Tooark.Securities`, which
+  comes with `Hash` and constant-time `Verify`.
 
 **Behavior:**
 
@@ -243,7 +245,6 @@ string password = GenerateString.Password(); // aB3@dE1#fG2$
 string onlyLetters = GenerateString.Password(16, number: false, special: false);
 string hex = GenerateString.Hexadecimal(); // 1A2B3C4D5E6F...
 string guid = GenerateString.GuidCode(); // 1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6D
-string token = GenerateString.Token(); // 1A2B3C4D5E6F7A8B9C0D1E2F3A4B5C6DADE123E21...
 ```
 
 ### Information Lookup

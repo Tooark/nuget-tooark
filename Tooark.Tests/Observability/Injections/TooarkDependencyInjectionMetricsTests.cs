@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -9,6 +10,25 @@ namespace Tooark.Tests.Observability.Injections;
 public class TooarkDependencyInjectionMetricsTests
 {
   #region Helpers
+
+  /// <summary>
+  /// Exportador que só guarda o nome do medidor de cada métrica exportada, para verificar quais medidores o
+  /// provedor coleta sem depender do pacote de exportação em memória.
+  /// </summary>
+  private sealed class MeterNameExporter : BaseExporter<Metric>
+  {
+    public List<string> MeterNames { get; } = [];
+
+    public override ExportResult Export(in Batch<Metric> batch)
+    {
+      foreach (var metric in batch)
+      {
+        MeterNames.Add(metric.MeterName);
+      }
+
+      return ExportResult.Success;
+    }
+  }
 
   /// <summary>
   /// Cria opções de observabilidade para testes de métricas.
@@ -77,6 +97,35 @@ public class TooarkDependencyInjectionMetricsTests
     // Assert
     using var provider = builder.Build();
     Assert.NotNull(provider);
+  }
+
+  // Teste para o medidor "Tooark" seguir coletado quando o principal recebe outro nome: quem criou um
+  // Meter("Tooark") antes do nome padrão virar o nome do serviço continua tendo as métricas coletadas.
+  [Fact]
+  public void ConfigureMetrics_ShouldKeepTooarkMeterRegistered_WhenMainMeterHasAnotherName()
+  {
+    // Arrange
+    var options = CreateOptions(runtimeMetricsEnabled: false, meterName: "orders-api", useConsoleExporterInDev: false);
+    options.Metrics.ProcessMetricsEnabled = false;
+    var exporter = new MeterNameExporter();
+    var builder = Sdk.CreateMeterProviderBuilder().AddReader(new BaseExportingMetricReader(exporter));
+    var rb = ResourceBuilder.CreateDefault().AddService("svc");
+    using var mainMeter = new Meter("orders-api");
+    using var defaultMeter = new Meter("Tooark");
+    using var unregisteredMeter = new Meter($"Tooark.Tests.Unregistered.{Guid.NewGuid():N}");
+
+    // Act
+    TooarkDependencyInjection.ConfigureMetrics(builder, options, rb, isDevelopment: false);
+    using var provider = builder.Build();
+    mainMeter.CreateCounter<long>("tests.main").Add(1);
+    defaultMeter.CreateCounter<long>("tests.default").Add(1);
+    unregisteredMeter.CreateCounter<long>("tests.unregistered").Add(1);
+    provider.ForceFlush();
+
+    // Assert
+    Assert.Contains("orders-api", exporter.MeterNames);
+    Assert.Contains("Tooark", exporter.MeterNames);
+    Assert.DoesNotContain(unregisteredMeter.Name, exporter.MeterNames);
   }
 
   // Teste para RuntimeMetricsEnabled = false, AdditionalMeters vazio

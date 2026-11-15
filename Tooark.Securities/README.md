@@ -1,6 +1,6 @@
 # Tooark.Securities
 
-Security library for .NET applications, providing **AES cryptography** and **JWT authentication** services with support for multiple algorithms, plus the configuration of ASP.NET Core **Data Protection**.
+Security library for .NET applications, providing **AES cryptography** (single key or multiple keys with rotation), **JWT** issuing, validation and **Bearer authentication** with support for multiple algorithms, **password hashing** (PBKDF2), **secure tokens**, **TOTP** second factor with recovery codes, plus the configuration of ASP.NET Core **Data Protection**.
 
 📖 **Docs:** [Tooark.Securities on the site](https://tooark.com/nuget-tooark/packages/tooark.securities.html) · [All packages](https://tooark.com/nuget-tooark/) · [API reference](https://tooark.com/nuget-tooark/api/index.html)
 
@@ -14,8 +14,12 @@ Security library for .NET applications, providing **AES cryptography** and **JWT
 - [Installation](#-installation)
 - [Configuration](#️-configuration)
 - [JWT - Supported Algorithms](#-jwt---supported-algorithms)
+- [JWT - Bearer Authentication](#-jwt---bearer-authentication)
 - [Cryptography - Supported Algorithms](#-cryptography---supported-algorithms)
+- [Cryptography - Multiple Keys and Rotation](#-cryptography---multiple-keys-and-rotation)
 - [Data Protection - Key Ring](#-data-protection---key-ring)
+- [Password Hashing](#-password-hashing)
+- [Secure Tokens, TOTP and Recovery Codes](#-secure-tokens-totp-and-recovery-codes)
 - [Usage Examples](#-usage-examples)
 - [Generating Keys](#-generating-keys)
 - [Dependencies](#-dependencies)
@@ -32,25 +36,47 @@ Security library for .NET applications, providing **AES cryptography** and **JWT
 
 ### Services
 
-| Class                                                        | Description                                    |
-| ------------------------------------------------------------ | ---------------------------------------------- |
-| [`JwtTokenService`](#jwt---creating-and-validating-a-token)  | Service for creating and validating JWT tokens |
-| [`CryptographyService`](#cryptography---encrypt-and-decrypt) | AES-256 encryption/decryption service          |
+| Class                                                                     | Description                                                                             |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| [`JwtTokenService`](#jwt---creating-and-validating-a-token)               | Service for creating and validating JWT tokens                                          |
+| [`CryptographyService`](#cryptography---encrypt-and-decrypt)              | AES-256 encryption/decryption service with a single key                                 |
+| [`KeyedCryptographyService`](#-cryptography---multiple-keys-and-rotation) | AES-256 with multiple identified keys and rotation; also serves the single-key contract |
+| [`PasswordHashService`](#-password-hashing)                               | Password hashing with PBKDF2-HMAC-SHA256 in the PHC format                              |
 
 ### Interfaces
 
-| Interface              | Description                            |
-| ---------------------- | -------------------------------------- |
-| `IJwtTokenService`     | Contract for handling JWT tokens       |
-| `ICryptographyService` | Contract for AES encryption/decryption |
+| Interface                   | Description                                                                |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `IJwtTokenService`          | Contract for handling JWT tokens                                           |
+| `ICryptographyService`      | Contract for AES encryption/decryption                                     |
+| `IKeyedCryptographyService` | `ICryptographyService` plus key identification, rotation and re-encryption |
+| `IPasswordHashService`      | Contract for hashing and verifying passwords                               |
 
-| Member                           | Description                                                            |
-| -------------------------------- | ---------------------------------------------------------------------- |
-| `IJwtTokenService.Create`        | Creates the token. Synchronous: the handler exposes no async creation  |
-| `IJwtTokenService.ValidateAsync` | Validates the token. Direct path to the handler, which is asynchronous |
-| `IJwtTokenService.Validate`      | Validates the token. Synchronous wrapper of `ValidateAsync`            |
-| `ICryptographyService.Encrypt`   | Encrypts. Synchronous: in-memory AES, no I/O                           |
-| `ICryptographyService.Decrypt`   | Decrypts. Synchronous, for the same reason                             |
+| Member                                           | Description                                                                   |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `IJwtTokenService.Create`                        | Creates the token. Synchronous: the handler exposes no async creation         |
+| `IJwtTokenService.ValidateAsync`                 | Validates the token. Direct path to the handler, which is asynchronous        |
+| `IJwtTokenService.Validate`                      | Validates the token. Synchronous wrapper of `ValidateAsync`                   |
+| `ICryptographyService.Encrypt`                   | Encrypts. Synchronous: in-memory AES, no I/O                                  |
+| `ICryptographyService.Decrypt`                   | Decrypts. Synchronous, for the same reason                                    |
+| `IKeyedCryptographyService.CurrentKeyId`         | Identifier of the key that encrypts new values                                |
+| `IKeyedCryptographyService.KeyIds`               | Identifiers of every configured key                                           |
+| `IKeyedCryptographyService.Encrypt(text, keyId)` | Encrypts with a specific key                                                  |
+| `IKeyedCryptographyService.KeyIdOf`              | Reads the key identifier of a value; `null` for a legacy value without prefix |
+| `IKeyedCryptographyService.IsCurrent`            | Whether the value was encrypted with the current key                          |
+| `IKeyedCryptographyService.ReEncrypt`            | Decrypts with the key that wrote the value and encrypts with the current one  |
+| `IPasswordHashService.Hash`                      | Hashes a password with a random salt                                          |
+| `IPasswordHashService.Verify`                    | Checks a password against a stored hash, in constant time; never throws       |
+| `IPasswordHashService.NeedsRehash`               | Whether the hash uses parameters older than the current options               |
+
+### Static classes
+
+| Class              | Description                                                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `SecureToken`      | Random tokens (password reset, e-mail confirmation, API key): `Create`, `Hash` and `Verify`                       |
+| `Totp`             | Time-based one-time passwords (RFC 6238): secret, `otpauth://` URI, `Compute` and `Verify` with replay protection |
+| `RecoveryCodes`    | Second-factor recovery codes: `Generate` and `Normalize`, stored as `SecureToken` hashes                          |
+| `TooarkClaimNames` | Names of the claims the token service emits and reads (`id`, `login`, `security`, `sub`, `preferred_username`)    |
 
 ### DTOs
 
@@ -61,17 +87,18 @@ Security library for .NET applications, providing **AES cryptography** and **JWT
 
 ### Options
 
-| Class                 | Description                                                            |
-| --------------------- | ---------------------------------------------------------------------- |
-| `JwtOptions`          | JWT settings (algorithm, keys, issuer(s), audience(s), expiration)     |
-| `CryptographyOptions` | Cryptography settings (algorithm, secret or secretBase64)              |
-| `KeyRingOptions`      | Data Protection key ring (application, storage, certificate, rotation) |
+| Class                 | Description                                                                     |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `JwtOptions`          | JWT settings (algorithm, keys, issuer(s), audience(s), expiration, claim names) |
+| `CryptographyOptions` | Cryptography settings (algorithm, secret or secretBase64, identified keys)      |
+| `PasswordHashOptions` | Password hashing settings (iterations, salt size, hash size)                    |
+| `KeyRingOptions`      | Data Protection key ring (application, storage, certificate, rotation)          |
 
 ### Extensions
 
-| Class                 | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `RoleClaimsExtension` | Extension that converts `JwtTokenDto` into claims (id, login, security) |
+| Class                 | Description                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `RoleClaimsExtension` | Extension that converts `JwtTokenDto` into claims, with the legacy names, the standard names or both |
 
 ---
 
@@ -87,7 +114,7 @@ dotnet add package Tooark.Securities
 
 ### appsettings.json
 
-To configure the security services, add the `Jwt`, `Cryptography` and `DataProtection` sections to your `appsettings.json`:
+To configure the security services, add the `Jwt`, `Cryptography`, `PasswordHash` and `DataProtection` sections to your `appsettings.json`. Only the sections of the services you use are needed, and `PasswordHash` is optional even then (safe defaults):
 
 Example configuration for a JWT token with symmetric algorithms (uses _Secret_ for signing and validation):
 
@@ -118,18 +145,8 @@ Example configuration for a JWT token with asymmetric algorithms (_PrivateKey_ r
 }
 ```
 
-Example configuration for AES cryptography:
-
-```json
-{
-  "Cryptography": {
-    "Algorithm": "GCM",
-    "Secret": "your-secret-key-with-32-characters"
-  }
-}
-```
-
-Or with a ready-made AES key in Base64 (**recommended** — the key is used directly, without derivation):
+Example configuration for AES cryptography, with the 32-byte AES key in Base64 (generate it with
+`openssl rand -base64 32`; the key is used directly, without derivation):
 
 ```json
 {
@@ -140,19 +157,51 @@ Or with a ready-made AES key in Base64 (**recommended** — the key is used dire
 }
 ```
 
+Or with several identified keys, to rotate the key without re-encrypting everything at once (see
+[Cryptography - Multiple Keys and Rotation](#-cryptography---multiple-keys-and-rotation)). `SecretBase64` stays
+only while there are values written before the keys were adopted:
+
+```json
+{
+  "Cryptography": {
+    "Algorithm": "GCM",
+    "CurrentKeyId": "k2",
+    "Keys": {
+      "k1": "old-32-byte-key-in-base64",
+      "k2": "new-32-byte-key-in-base64"
+    },
+    "SecretBase64": "legacy-32-byte-key-in-base64"
+  }
+}
+```
+
+Example configuration for password hashing (every key is optional — these are the defaults):
+
+```json
+{
+  "PasswordHash": {
+    "Iterations": 600000,
+    "SaltSize": 16,
+    "HashSize": 32
+  }
+}
+```
+
 #### `JwtOptions` properties
 
-| Property         | Type      | Default | Description                                              |
-| ---------------- | --------- | ------- | -------------------------------------------------------- |
-| `Algorithm`      | string    | `ES256` | Signing algorithm. Unknown values throw                  |
-| `Secret`         | string?   | `null`  | Key for symmetric algorithms (HS256/384/512)             |
-| `PrivateKey`     | string?   | `null`  | Base64 private key (PKCS#8) for signing                  |
-| `PublicKey`      | string?   | `null`  | Base64 public key (SPKI) for validation                  |
-| `Issuer`         | string?   | `null`  | Issuer accepted on validation and written to the token   |
-| `Issuers`        | string[]? | `null`  | Additional issuers accepted on validation                |
-| `Audience`       | string?   | `null`  | Audience accepted on validation and written to the token |
-| `Audiences`      | string[]? | `null`  | Additional audiences accepted on validation              |
-| `ExpirationTime` | int       | `5`     | Token expiration in **minutes**                          |
+| Property             | Type      | Default | Description                                                                |
+| -------------------- | --------- | ------- | -------------------------------------------------------------------------- |
+| `Algorithm`          | string    | `ES256` | Signing algorithm. Unknown values throw                                    |
+| `Secret`             | string?   | `null`  | Key for symmetric algorithms (HS256/384/512)                               |
+| `PrivateKey`         | string?   | `null`  | Base64 private key (PKCS#8) for signing                                    |
+| `PublicKey`          | string?   | `null`  | Base64 public key (SPKI) for validation                                    |
+| `Issuer`             | string?   | `null`  | Issuer accepted on validation and written to the token                     |
+| `Issuers`            | string[]? | `null`  | Additional issuers accepted on validation                                  |
+| `Audience`           | string?   | `null`  | Audience accepted on validation and written to the token                   |
+| `Audiences`          | string[]? | `null`  | Additional audiences accepted on validation                                |
+| `ExpirationTime`     | int       | `5`     | Token expiration in **minutes**                                            |
+| `EmitLegacyClaims`   | bool      | `true`  | Emits the `id` and `login` claims (Tooark names)                           |
+| `EmitStandardClaims` | bool      | `false` | Emits the `sub` and `preferred_username` claims (JWT/OpenID Connect names) |
 
 > `Issuer`/`Issuers` and `Audience`/`Audiences` add up: providing any of them turns on the validation of
 > that field. When none is provided, the validation of that field is turned off. The `audience` parameter
@@ -160,6 +209,11 @@ Or with a ready-made AES key in Base64 (**recommended** — the key is used dire
 >
 > `PrivateKey` and `PublicKey` accept both the raw Base64 and the full PEM: the
 > `-----BEGIN/END ... KEY-----` delimiters and the line breaks are removed on assignment.
+>
+> ⚠️ **Changes in v5:** the claim defaults invert — `EmitStandardClaims` becomes `true` and `EmitLegacyClaims`
+> becomes `false`. Set both flags explicitly today so the upgrade does not change your tokens. At least one of
+> them must be on; both off fail at startup (`Options.Jwt.ClaimsNotConfigured`). See
+> [Claim names](#claim-names).
 
 Example with multiple issuers and audiences:
 
@@ -177,16 +231,43 @@ Example with multiple issuers and audiences:
 
 #### `CryptographyOptions` properties
 
-| Property       | Type    | Default | Description                                              |
-| -------------- | ------- | ------- | -------------------------------------------------------- |
-| `Algorithm`    | string  | `GCM`   | AES-256 mode: `GCM`, `CBC` or `CBCUnsafe` (decrypt only) |
-| `Secret`       | string? | `null`  | Key derived via SHA256 (compatibility)                   |
-| `SecretBase64` | string? | `null`  | 32-byte AES key used directly (**recommended**)          |
+| Property       | Type                         | Default | Description                                              |
+| -------------- | ---------------------------- | ------- | -------------------------------------------------------- |
+| `Algorithm`    | string                       | `GCM`   | AES-256 mode: `GCM`, `CBC` or `CBCUnsafe` (decrypt only) |
+| `Secret`       | string?                      | `null`  | **Obsolete**, removed in v5. Key derived via SHA256      |
+| `SecretBase64` | string?                      | `null`  | 32-byte AES key used directly                            |
+| `CurrentKeyId` | string?                      | `null`  | Identifier of the key in `Keys` that encrypts new values |
+| `Keys`         | `Dictionary<string, string>` | empty   | Identified 32-byte AES keys in Base64, for rotation      |
 
-> `Secret` **or** `SecretBase64` is required. When both are provided, `SecretBase64` takes precedence.
-> `SecretBase64` must represent exactly 32 bytes (AES-256) — invalid values fail at startup. Generate a
-> key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`. With `Secret`, the key is derived
-> via SHA256 (kept for compatibility).
+> Without `Keys`, `SecretBase64` (or the obsolete `Secret`) is required. When both are provided, `SecretBase64`
+> takes precedence. `SecretBase64` must represent exactly 32 bytes (AES-256) — invalid values fail at startup.
+> Generate a key with `Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))`.
+>
+> With `Keys`, `CurrentKeyId` is required and must be one of the identifiers; each identifier uses only letters,
+> digits, hyphen and underscore (never a dot), and each key is exactly 32 bytes in Base64 — anything else fails
+> at startup. `Secret`/`SecretBase64` become the **legacy key**: they only open values written without a key
+> prefix, and can be removed once none is left.
+>
+> ⚠️ **Changes in v5:** the text `Secret` is obsolete since v4.8.0 and is removed in v5. The key it derives is the
+> SHA-256 of the text: put that value in `SecretBase64` and everything already encrypted keeps opening, with no
+> re-encryption, including the legacy values read with `CBCUnsafe`:
+> `Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(secret)))`. `[Obsolete]` only warns code that
+> assigns `Secret`; setting it in `appsettings.json` raises no compiler warning.
+>
+> ⚠️ **Changes in v5:** an unknown `Algorithm` (a typo such as `GMC`) fails at startup. On the 4.x line it
+> silently falls back to `GCM`. Missing or empty still means `GCM`.
+
+#### `PasswordHashOptions` properties
+
+| Property     | Type | Default  | Description                                               |
+| ------------ | ---- | -------- | --------------------------------------------------------- |
+| `Iterations` | int  | `600000` | PBKDF2 iterations (OWASP recommendation). Minimum 100.000 |
+| `SaltSize`   | int  | `16`     | Salt size in bytes. Minimum 16                            |
+| `HashSize`   | int  | `32`     | Derived hash size in bytes. Minimum 32                    |
+
+> Values below the minimums fail at startup: a weak configuration is a configuration error, never silently
+> replaced. Raising a value does not break stored hashes — they keep validating and
+> [`NeedsRehash`](#-password-hashing) tells the login flow to rewrite them.
 
 Example configuration for Data Protection (every key is optional — see
 [Data Protection - Key Ring](#-data-protection---key-ring)):
@@ -278,6 +359,40 @@ builder.Services.AddTooarkDataProtection(builder.Configuration);
 var app = builder.Build();
 ```
 
+Or, to add only the password hashing service (`AddTooarkSecurities` already registers it, with or without the
+`PasswordHash` section):
+
+```csharp
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Adds the password hashing service; the configuration and the callback are optional
+builder.Services.AddTooarkPasswordHash(builder.Configuration, options => options.Iterations = 800_000);
+
+var app = builder.Build();
+```
+
+To authenticate the requests of an API with the tokens the service itself issues, register the `Bearer` scheme
+from the same `Jwt` section (see [JWT - Bearer Authentication](#-jwt---bearer-authentication)):
+
+```csharp
+using Tooark.Securities.Injections;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddTooarkJwtToken(builder.Configuration);   // issues the tokens
+builder.Services.AddTooarkJwtBearer(builder.Configuration);  // validates them on every request
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+```
+
+> `SecureToken`, `Totp` and `RecoveryCodes` are static classes: nothing to register.
+
 ---
 
 ## 🔐 JWT - Supported Algorithms
@@ -321,6 +436,95 @@ var app = builder.Build();
 
 ---
 
+## 🪪 JWT - Bearer Authentication
+
+`AddTooarkJwtBearer` registers the ASP.NET Core `Bearer` authentication scheme for the tokens that
+`JwtTokenService` issues. It reads the same `Jwt` section and builds the handler's `TokenValidationParameters`
+with the same rules as `Validate`: same algorithm and key (HMAC secret or public key), issuer(s), audience(s),
+required expiration and signature, zero clock skew. A token accepted by one is accepted by the other, and
+nobody repeats the key, issuer and audience in a hand-written `AddJwtBearer`.
+
+```csharp
+builder.Services.AddTooarkJwtToken(builder.Configuration);
+builder.Services.AddTooarkJwtBearer(builder.Configuration, bearer =>
+{
+    // Optional: the native options, applied last
+    bearer.Challenge = "Bearer realm=\"orders-api\"";
+});
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGet("/me", (ClaimsPrincipal user) => new
+{
+    Id = user.FindFirstValue(TooarkClaimNames.Id),
+    Login = user.FindFirstValue(TooarkClaimNames.Login)
+}).RequireAuthorization();
+```
+
+What the registration sets:
+
+- **Scheme `Bearer`** (`JwtBearerDefaults.AuthenticationScheme`) as the default authentication scheme, unless the
+  application already defined one — the first registered scheme wins, as in `Tooark.Securities.OpenId`.
+- **`MapInboundClaims = false`**: the claims reach the `ClaimsPrincipal` with the names written in the token
+  (`id`, `sub`, `login`), not with the `ClaimTypes` URIs. Read them with the `TooarkClaimNames` constants.
+- **Fail fast**: the key is loaded and validated at registration. Without a validation key (asymmetric algorithm
+  with `PrivateKey` only) the startup fails with `Options.Jwt.KeyNotConfigured;PublicKey`.
+- The `configure` callback receives the native `JwtBearerOptions` and runs last, so anything can be adjusted,
+  including the Tooark defaults.
+
+The application still needs `app.UseAuthentication()` and `app.UseAuthorization()`. A resource server that only
+validates tokens (no issuing) configures the `Jwt` section with the `PublicKey` only and calls
+`AddTooarkJwtBearer` alone.
+
+### Claim names
+
+`JwtTokenService` writes the user data as claims. Two naming sets exist, chosen by `JwtOptions`:
+
+| Data       | Legacy name (`EmitLegacyClaims`) | Standard name (`EmitStandardClaims`) | Standard            |
+| ---------- | -------------------------------- | ------------------------------------ | ------------------- |
+| `Id`       | `id`                             | `sub`                                | RFC 7519            |
+| `Login`    | `login`                          | `preferred_username`                 | OpenID Connect Core |
+| `Security` | `security`                       | `security` (no standard equivalent)  | —                   |
+
+- In the **4.x** line, the default emits the legacy names only (`EmitLegacyClaims = true`,
+  `EmitStandardClaims = false`), so existing consumers see no change.
+- With **both flags on**, the token carries both sets: the migration path. New consumers read `sub` while the old
+  ones still read `id`.
+- `UserTokenDto` reads `id` and falls back to `sub`, `login` and falls back to `preferred_username`, so a token
+  issued in any mode is read.
+- The constants live in `TooarkClaimNames`; `RoleClaimsExtension.GetClaims` has overloads taking the flags or the
+  `JwtOptions`. The parameterless overload, which hard-codes the legacy names, is **obsolete since v4.8.0 and
+  removed in v5**: use `GetClaims(options)`.
+
+> ⚠️ **Changes in v5:** the defaults invert — `EmitStandardClaims = true` and `EmitLegacyClaims = false`. A token
+> issued by a v5 service without explicit flags has `sub` and no `id`. Set the two flags explicitly in the `Jwt`
+> section today, and move the readers to `sub`/`preferred_username` (or to `UserTokenDto`, which handles both),
+> so the upgrade changes nothing.
+
+### Testing emission and expiration
+
+`JwtTokenService` has a constructor that takes a `TimeProvider`: `iat`, `nbf` and `exp` come from it, and the
+lifetime validation uses it too. A fake clock tests the expiration without waiting:
+
+```csharp
+var clock = new FakeTimeProvider(new DateTimeOffset(2026, 1, 15, 10, 0, 0, TimeSpan.Zero));
+var service = new JwtTokenService(Options.Create(jwtOptions), clock);
+
+var token = service.Create(new JwtTokenDto(userId, login, securityStamp));
+
+clock.Advance(TimeSpan.FromMinutes(jwtOptions.ExpirationTime + 1));
+var result = service.Validate(token); // result.ErrorToken == "Token.Expired"
+```
+
+When the container registers a `TimeProvider`, dependency injection picks that constructor; otherwise the
+service uses `TimeProvider.System`, with the handler's own lifetime validation.
+
+---
+
 ## 🔒 Cryptography - Supported Algorithms
 
 | Algorithm   | Mode        | Description                                |
@@ -330,7 +534,88 @@ var app = builder.Build();
 | `CBCUnsafe` | AES-256-CBC | ⚠️ Legacy - zero IV, **decryption only**   |
 
 > `CBCUnsafe` exists only to read old data encrypted with a zero IV: encrypting in this mode throws
-> (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`.
+> (`Options.Cryptography.AlgorithmDecryptOnly`). For new data, use `GCM`. The mode stays in v5, for decryption
+> only.
+
+---
+
+## 🔁 Cryptography - Multiple Keys and Rotation
+
+With a single key, rotating it means decrypting everything with the old key and encrypting with the new one, by
+hand and all at once. `IKeyedCryptographyService` keeps several identified keys: new values go out with the
+current key, old values keep opening with the key that wrote them, and each record is re-encrypted when it is
+convenient — on read, in a batch job, or never.
+
+### Configuring the keys
+
+```json
+{
+  "Cryptography": {
+    "Algorithm": "GCM",
+    "CurrentKeyId": "k2",
+    "Keys": {
+      "k1": "<Base64 of the old 32-byte key>",
+      "k2": "<Base64 of the new 32-byte key>"
+    },
+    "SecretBase64": "<Base64 of the single key used before, if there are values written with it>"
+  }
+}
+```
+
+When `Keys` is filled, `AddTooarkCryptography` (and `AddTooarkSecurities`) registers `KeyedCryptographyService` as
+**both** `ICryptographyService` and `IKeyedCryptographyService`: the code that already injects
+`ICryptographyService` starts encrypting with the current key and reading legacy values with no change. Without
+`Keys`, the single-key `CryptographyService` is registered as always. The identified keys are validated at
+startup (see the [`CryptographyOptions` properties](#cryptographyoptions-properties)).
+
+### Value format
+
+```text
+tk1.k2.AbCd...                       identified value: format version . key id . Base64 payload
+AbCd...                              legacy value, written before the keys were adopted
+```
+
+The dot does not exist in the Base64 alphabet, so a legacy value is never mistaken for an identified one. The
+payload is exactly what `CryptographyService` produces with that key and the configured algorithm.
+
+### Rotation flow
+
+1. Generate the new key (`openssl rand -base64 32`), add it to `Keys` under a new identifier and point
+   `CurrentKeyId` to it. Keep the old key in `Keys`.
+2. Deploy. New values go out with the new key; old values keep opening.
+3. Re-encrypt the stored values at your own pace — on read, as below, or in a batch job.
+4. When no value uses the old key anymore (`KeyIdOf` returns the old identifier, or `null` for legacy values),
+   remove it from `Keys` — and `SecretBase64`/`Secret` once no legacy value is left.
+
+```csharp
+public class CustomerRepository(IKeyedCryptographyService crypto, AppDbContext db)
+{
+    public async Task<string> ReadDocumentAsync(Customer customer)
+    {
+        var document = crypto.Decrypt(customer.EncryptedDocument);
+
+        // Re-encrypt on read: the record moves to the current key the first time it is used
+        if (!crypto.IsCurrent(customer.EncryptedDocument))
+        {
+            customer.EncryptedDocument = crypto.ReEncrypt(customer.EncryptedDocument);
+            await db.SaveChangesAsync();
+        }
+
+        return document;
+    }
+}
+```
+
+### Limitations
+
+- **Removing a key makes its values unreadable**: `Decrypt` fails with `Cryptography.KeyNotFound;{id}`. Only
+  remove a key after re-encrypting everything written with it.
+- **Legacy values need the legacy key**: without `Secret`/`SecretBase64`, a value without prefix fails with
+  `Cryptography.LegacyKeyNotConfigured`.
+- **One algorithm for all keys**: `Algorithm` applies to every key, including the legacy one. Changing the
+  algorithm is a re-encryption, not a rotation.
+- `ReEncrypt` returns the same text when the value is already on the current key.
+- The value grows by the prefix (`tk1.` plus the identifier and a dot): size the database column accordingly.
 
 ---
 
@@ -365,6 +650,25 @@ builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
 {
     options.ConfigureDataProtection = dataProtection => dataProtection
         .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
+});
+```
+
+For the application database with Entity Framework Core, the official package
+`Microsoft.AspNetCore.DataProtection.EntityFrameworkCore` does the same through the `DbContext`: the context
+implements `IDataProtectionKeyContext` (a `DbSet<DataProtectionKey>`) and the builder persists the keys to it.
+`Tooark.Securities` adds no Entity Framework Core dependency for that — only the application that chooses this
+storage installs the package:
+
+```csharp
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IDataProtectionKeyContext
+{
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+}
+
+builder.Services.AddTooarkDataProtection(builder.Configuration, options =>
+{
+    options.ConfigureDataProtection = dataProtection => dataProtection
+        .PersistKeysToDbContext<AppDbContext>();
 });
 ```
 
@@ -532,9 +836,12 @@ start without a key storage (`Options.DataProtection.KeyStorageNotConfigured`): 
 `AddTooarkDataProtection`. The check runs when the host starts and, without a host, on the first use of Data
 Protection.
 
-> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior. It is
-> planned to be on by default in containers in v5.0. An API that uses no cookies (JWT only) does not depend on
-> persistent keys: set `false` to keep it off after that change too.
+> The lock is off by default in this version, so applications already on v4.3.0 keep their behavior.
+>
+> ⚠️ **Changes in v5:** with no value set, the lock turns on when the application runs in a container
+> (`DOTNET_RUNNING_IN_CONTAINER`, which the official .NET images define, or `KUBERNETES_SERVICE_HOST`). An API
+> that uses no cookies (JWT only) does not depend on persistent keys: set `false` to keep it off after that
+> change too.
 
 #### ❌ Don't: keys tied to the instance
 
@@ -646,6 +953,182 @@ The lock does not check these. Before running more than one instance, also check
 `AddTooarkSecurities` registers Data Protection when the `DataProtection` section exists and has at least one
 key. If the application also calls `AddTooarkDataProtection` — to pass `ConfigureDataProtection`, for example —
 the explicit call prevails in any order: `AddTooarkSecurities` does not reapply the section on top of it.
+
+---
+
+## 🧂 Password Hashing
+
+`IPasswordHashService` hashes passwords with **PBKDF2-HMAC-SHA256**, native to .NET (`Rfc2898DeriveBytes.Pbkdf2`),
+with a random salt per password and 600.000 iterations by default — the current OWASP recommendation. The
+`Password` value object of `Tooark.ValueObjects` validates and masks a password; this service is what goes to the
+database.
+
+```csharp
+public class AccountService(IPasswordHashService passwords, IUserRepository users)
+{
+    public async Task RegisterAsync(string login, string password)
+    {
+        var user = new User(login, passwordHash: passwords.Hash(password));
+        await users.AddAsync(user);
+    }
+
+    public async Task<bool> LoginAsync(string login, string password)
+    {
+        var user = await users.FindByLoginAsync(login);
+
+        if (user is null || !passwords.Verify(password, user.PasswordHash))
+        {
+            return false;
+        }
+
+        // Parameters changed since this hash was written: rewrite it while the password is at hand
+        if (passwords.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = passwords.Hash(password);
+            await users.UpdateAsync(user);
+        }
+
+        return true;
+    }
+}
+```
+
+### Hash format
+
+```text
+$pbkdf2-sha256$i=600000$<salt in Base64>$<hash in Base64>
+```
+
+The PHC string carries the algorithm and the parameters, so the service keeps validating hashes written with
+older parameters and `NeedsRehash` points out which ones to rewrite. Salt and hash use unpadded Base64, as the
+format prescribes; `Verify` also accepts the padded form.
+
+- `Hash` throws `PasswordHash.PasswordNotProvided` for a null or empty password.
+- `Verify` never throws: a null password, a null hash or a hash in another format (another algorithm, a plain
+  text) returns `false`.
+- `NeedsRehash` returns `true` when the iterations, the salt size or the hash size differ from the current
+  options, and also for a hash it cannot read.
+
+### Why PBKDF2 and not Argon2
+
+.NET has no native Argon2. Shipping it here would force a third-party library on every consumer of the package,
+against the family's dependency policy. PBKDF2-HMAC-SHA256 with 600.000 iterations is the OWASP-recommended
+configuration for the algorithm, and the PHC prefix leaves room for another algorithm to coexist in the same
+column in the future: an old PBKDF2 hash keeps validating and is rewritten on the next login.
+
+### Tuning
+
+Each login costs one derivation; so does each attempt of an attacker who stole the hashes. Measure the time on
+your production hardware and raise `Iterations` while the login stays within budget (tens of milliseconds are
+typical). Lowering below 100.000 is refused at startup (`Options.PasswordHash.IterationsTooLow;100000`).
+
+---
+
+## 🎫 Secure Tokens, TOTP and Recovery Codes
+
+Three static classes cover the tokens an application hands to its users. None of them needs registration or
+configuration.
+
+### `SecureToken` — reset links, confirmations and API keys
+
+```csharp
+// Issue: the token goes to the user (link, e-mail, API key), only the hash goes to the database
+var token = SecureToken.Create();                 // 32 random bytes in Base64Url (43 characters)
+var hash = SecureToken.Hash(token);               // SHA-256 in Base64Url, deterministic: index the column
+await resets.StoreAsync(userId, hash, expiresAt: DateTime.UtcNow.AddHours(1));
+
+// Redeem: find the record by the hash of what came back, then compare in constant time
+var record = await resets.FindByHashAsync(SecureToken.Hash(received));
+
+if (record is null || record.ExpiresAt < DateTime.UtcNow || !SecureToken.Verify(received, record.Hash))
+{
+    return Results.Unauthorized();
+}
+```
+
+The hash is SHA-256 without salt or cost factor on purpose: the token has at least 128 random bits, so brute
+force is infeasible even with a fast hash, and a deterministic hash lets the record be found by it. Slow,
+salted hashing is for passwords, which have little entropy (`IPasswordHashService`). `Create` accepts 16 to 1024
+bytes; `Verify` returns `false` for anything missing or malformed, never throws. `Hash` throws
+`SecureToken.TokenNotProvided` (`BadRequestException`) for a null, empty or blank token.
+
+> **`SecureToken` or Data Protection?** `SecureToken` is an opaque value: the hash lives in the database, so the
+> token is revocable, can be single-use (delete the record on redemption) and lasts as long as the record does.
+> The Data Protection protector ([link token](#data-protection---protecting-a-link-token)) carries its own encrypted content and needs no
+> table, but only suits short lifetimes and cannot be revoked without separate tracking. For new tokens, prefer
+> `SecureToken.Create` over `GenerateString.Token` from `Tooark.Utils`, which only generates the text and has
+> no hash or verification.
+
+### `Totp` — second factor with authenticator apps
+
+RFC 6238 over HMAC-SHA1, 6 digits and 30-second steps: the configuration Google Authenticator, Microsoft
+Authenticator and similar apps expect.
+
+```csharp
+// Enrollment: generate the secret, store it encrypted, show the QR code built from the URI
+var secret = Totp.GenerateSecret();                                   // Base32, 20 bytes
+user.TotpSecret = crypto.Encrypt(secret);                             // ICryptographyService: whoever reads it generates valid codes
+var uri = Totp.BuildUri(secret, issuer: "MyApp", account: user.Email); // otpauth://totp/MyApp:ana%40empresa.com?secret=...
+
+// Confirm the enrollment with the first code the app shows
+if (!Totp.Verify(secret, typedCode, lastUsedStep: -1, out var step))
+{
+    return Results.BadRequest();
+}
+
+user.TotpLastUsedStep = step;                                         // the same code is never accepted twice
+```
+
+```csharp
+// Login: verify against the stored secret and the last accepted step
+var secret = crypto.Decrypt(user.TotpSecret);
+
+if (!Totp.Verify(secret, typedCode, user.TotpLastUsedStep, out var step))
+{
+    return Results.Unauthorized();
+}
+
+user.TotpLastUsedStep = step;
+```
+
+- **Clock tolerance**: `window` (default 1) accepts the previous and the next step besides the current one — 30
+  seconds each way. All the steps are computed and compared in constant time, even after a match.
+- **Replay protection**: steps equal to or earlier than `lastUsedStep` are refused. Store the `matchedStep` of
+  every accepted code and pass it back on the next verification; pass a negative value before the first one.
+- A missing code, with the wrong length or with non-digit characters returns `false`; spaces are ignored. An
+  undecodable secret throws `Totp.InvalidSecret` (`InternalServerErrorException`), because a corrupt secret would
+  silently lock the user out. It is an internal error, not a request error: the secret comes from the database
+  or the service, never from the user.
+- `BuildUri` throws `Totp.IssuerNotProvided` or `Totp.AccountNotProvided` (`BadRequestException`) for an empty
+  issuer or account. Out-of-range `digits`, `periodSeconds`, `window` and sizes throw
+  `ArgumentOutOfRangeException`: they are caller errors, not input data, so they have no translation key.
+- `Compute(secret, step, digits)` and `GetTimeStep(at, period)` expose the pieces for tests and for showing a code
+  server-side; `TimeProvider` on `Verify` lets a test drive the clock.
+- `digits` (6 to 8) and `periodSeconds` are configurable, but not every app honours values other than 6 and 30.
+
+### `RecoveryCodes` — when the authenticator is lost
+
+```csharp
+// Enrollment: generate, show once, store only the hashes
+var codes = RecoveryCodes.Generate();                                 // 10 codes like "7KQ2M-8XR4N"
+user.RecoveryCodeHashes = codes
+    .Select(code => SecureToken.Hash(RecoveryCodes.Normalize(code)))
+    .ToList();
+
+// Redeem: normalize what the user typed (case, hyphens, spaces), find the hash, delete it
+var normalized = RecoveryCodes.Normalize(typedCode);
+var match = user.RecoveryCodeHashes.FirstOrDefault(hash => SecureToken.Verify(normalized, hash));
+
+if (match is null)
+{
+    return Results.Unauthorized();
+}
+
+user.RecoveryCodeHashes.Remove(match);                                // each code is worth one use
+```
+
+The alphabet has no `0`/`O` nor `1`/`I`, so a printed code is typed without ambiguity. `Generate` returns distinct
+codes, 10 of 10 characters by default (1 to 50 codes, 8 to 32 characters).
 
 ---
 
@@ -864,7 +1347,7 @@ var tenantId = result.TenantId;
 {
   "Cryptography": {
     "Algorithm": "GCM",
-    "Secret": "my-secret-key-32-characters-long"
+    "SecretBase64": "32-byte-key-in-base64"
   }
 }
 ```
@@ -985,6 +1468,18 @@ openssl rand -base64 32
 openssl rand -base64 64
 ```
 
+### AES keys for `SecretBase64` and `Keys`
+
+```bash
+# One random 32-byte key in Base64, for SecretBase64 or for each entry of Keys
+openssl rand -base64 32
+```
+
+```csharp
+// Or in .NET
+Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+```
+
 ### RSA Keys (RS256/PS256)
 
 ```bash
@@ -1055,13 +1550,33 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 2. **Configure `ExpirationTime` appropriately** - Short-lived tokens are safer
 3. **Use `Issuer` and `Audience`** - Prevents tokens from being misused across applications
 4. **Store keys in a Secret Manager** - Never commit keys to source code
+5. **Register `AddTooarkJwtBearer` instead of a hand-written `AddJwtBearer`** - Same key, issuer and audience as the issuer, validated at startup
+6. **Set `EmitLegacyClaims` and `EmitStandardClaims` explicitly** - The v5 defaults invert; explicit flags keep the tokens stable across the upgrade
+7. **Read claims through `TooarkClaimNames` or `UserTokenDto`** - They follow both naming sets
 
 ### Cryptography
 
 1. **Prefer GCM over CBC** - GCM provides built-in authentication
 2. **Never use CBCUnsafe for new data** - Decrypt-only mode for compatibility with legacy systems
-3. **Prefer `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation
+3. **Use `SecretBase64` with a random 32-byte key** - The key is used directly, without derivation; the text `Secret` is obsolete and removed in v5
 4. **Generate random keys** - Use `openssl rand -base64 32` or `RandomNumberGenerator.GetBytes(32)`
+5. **Adopt `Keys` before the first rotation is urgent** - Values written with identified keys rotate without a big-bang re-encryption
+6. **Never remove a key with values still encrypted by it** - Check with `KeyIdOf` or re-encrypt on read first
+
+### Password hashing
+
+1. **Store only the PHC string** - Never the password, never a fast hash of it
+2. **Call `NeedsRehash` after a successful `Verify`** - The hash is rewritten while the password is at hand
+3. **Raise `Iterations` with the hardware** - Measure the login time and keep it within budget; never go below the minimum
+4. **Limit attempts** - A slow hash does not replace rate limiting on the login endpoint
+
+### Tokens and second factor
+
+1. **Store hashes, not tokens** - `SecureToken.Hash` for reset tokens, API keys and recovery codes
+2. **Give tokens an expiration** - The hash does not expire on its own; keep an `ExpiresAt` next to it
+3. **Encrypt the TOTP secret at rest** - Whoever reads it generates valid codes; use `ICryptographyService`
+4. **Persist `matchedStep`** - Without it, a code intercepted within the window is accepted twice
+5. **Show recovery codes once** - And invalidate each one on use
 
 ### Data Protection
 
@@ -1076,42 +1591,60 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 
 ## ⚠️ Error Codes and Solutions
 
-| Service                   | Message                                               | Description                                            | Solution                                                      | Exception             |
-| ------------------------- | ----------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------- | --------------------- |
-| `CryptographyService`     | `Options.NotConfigured`                               | `Options` not configured                               | Configure `CryptographyOptions`                               | `InternalServerError` |
-| `CryptographyService`     | `Options.Cryptography.SecretNotConfigured`            | No key configured                                      | Configure `Secret` or `SecretBase64` in `CryptographyOptions` | `InternalServerError` |
-| `CryptographyService`     | `Options.Cryptography.SecretBase64Invalid`            | `SecretBase64` is not valid Base64                     | Provide a valid Base64 value in `SecretBase64`                | `InternalServerError` |
-| `CryptographyService`     | `Options.Cryptography.SecretBase64InvalidSize`        | `SecretBase64` is not 32 bytes                         | Use a key of exactly 32 bytes (AES-256)                       | `InternalServerError` |
-| `CryptographyService`     | `Options.Cryptography.AlgorithmDecryptOnly`           | `CBCUnsafe` used to encrypt                            | Use `CBCUnsafe` only to decrypt legacy data                   | `InternalServerError` |
-| `CryptographyService`     | `Cryptography.PlainTextNotProvided`                   | `PlainText` not provided                               | Provide the plain text to encrypt                             | `BadRequest`          |
-| `CryptographyService`     | `Cryptography.CipherTextNotProvided`                  | `CipherText` not provided                              | Provide the encrypted text to decrypt                         | `BadRequest`          |
-| `CryptographyService`     | `Cryptography.InvalidCipherText`                      | Invalid `CipherText`                                   | Provide a valid encrypted text to decrypt                     | `BadRequest`          |
-| `AddTooarkDataProtection` | `Options.DataProtection.KeyLifetimeTooShort;7`        | `KeyLifetimeDays` below the minimum                    | Use at least 7 days, or leave it null for the default 90      | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificateAmbiguous`         | `CertificatePath` and `CertificateThumbprint` together | Provide only one of them                                      | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificatePathNotConfigured` | `CertificatePassword` without `CertificatePath`        | Provide `CertificatePath` or remove the password              | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificateNotFound;{value}`  | File or thumbprint not found                           | Check the path, or install the certificate in the `My` store  | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificateInvalid`           | Unreadable `.pfx` or wrong password                    | Check the file and `CertificatePassword`                      | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificateWithoutPrivateKey` | Certificate without a private key                      | Export the `.pfx` with the private key                        | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.CertificateNotRsa`            | Certificate without an RSA key                         | Use an RSA certificate                                        | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.KeyStorageNotConfigured`      | Lock on and no key storage configured                  | Set a shared `KeysPath`, the callbacks or an external storage | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.KeyCallbacksIncomplete`       | Only one of the `ReadKeys` and `WriteKey` callbacks    | Provide both callbacks                                        | `InternalServerError` |
-| `AddTooarkDataProtection` | `Options.DataProtection.KeyStorageAmbiguous`          | `KeysPath` together with `ReadKeys` and `WriteKey`     | Provide a single key storage                                  | `InternalServerError` |
-| `JwtTokenService`         | `Options.NotConfigured`                               | `Options` not configured                               | Configure `JwtOptions`                                        | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.SecretNotConfigured`                     | `Secret` not configured                                | Configure `Secret` in `JwtOptions` for a symmetric token      | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.SecretTooShort`                          | `Secret` below the algorithm minimum                   | Use at least 32/48/64 bytes for HS256/HS384/HS512             | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.KeysNotConfigured`                       | `Private` and `Public` not configured                  | Configure the keys in `JwtOptions` for an asymmetric token    | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.PrivateKey.InvalidSize`                  | Invalid `Private` key size                             | Use a `Private` key of at least 2048 bits                     | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.PublicKey.InvalidSize`                   | Invalid `Public` key size                              | Use a `Public` key of at least 2048 bits                      | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.PrivateKey.InvalidCurve`                 | Invalid `Private` key curve                            | Use a `Private` key with the correct curve                    | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.PublicKey.InvalidCurve`                  | Invalid `Public` key curve                             | Use a `Public` key with the correct curve                     | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.InvalidKey`                              | Invalid key                                            | [Use valid keys](#-generating-keys) for the chosen algorithm  | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.AlgorithmNotSupported`                   | Unsupported algorithm                                  | [Use a supported algorithm](#-jwt---supported-algorithms)     | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.KeyNotConfigured;PrivateKey`             | `Private` key not configured                           | Configure `PrivateKey` in `JwtOptions` to generate a token    | `InternalServerError` |
-| `JwtTokenService`         | `Options.Jwt.KeyNotConfigured;PublicKey`              | `Public` key not configured                            | Configure `PublicKey` in `JwtOptions` to validate a token     | `InternalServerError` |
-| `JwtTokenService`         | `Token.Expired`                                       | Expired token                                          | Generate a new token                                          | N/A                   |
-| `JwtTokenService`         | `Token.InvalidSignature`                              | Token with an invalid signature                        | Use only tokens with a valid signature                        | N/A                   |
-| `JwtTokenService`         | `Token.Invalid`                                       | Invalid token                                          | Use only valid tokens                                         | N/A                   |
-| `JwtTokenService`         | `InternalServerError`                                 | Internal server error                                  | Check the logs for details                                    | N/A                   |
+| Service                    | Message                                               | Description                                             | Solution                                                         | Exception             |
+| -------------------------- | ----------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------- | --------------------- |
+| `CryptographyService`      | `Options.NotConfigured`                               | `Options` not configured                                | Configure `CryptographyOptions`                                  | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.SecretNotConfigured`            | No key configured                                       | Configure `Secret` or `SecretBase64` in `CryptographyOptions`    | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.SecretBase64Invalid`            | `SecretBase64` is not valid Base64                      | Provide a valid Base64 value in `SecretBase64`                   | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.SecretBase64InvalidSize`        | `SecretBase64` is not 32 bytes                          | Use a key of exactly 32 bytes (AES-256)                          | `InternalServerError` |
+| `CryptographyService`      | `Options.Cryptography.AlgorithmDecryptOnly`           | `CBCUnsafe` used to encrypt                             | Use `CBCUnsafe` only to decrypt legacy data                      | `InternalServerError` |
+| `CryptographyService`      | `Cryptography.PlainTextNotProvided`                   | `PlainText` not provided                                | Provide the plain text to encrypt                                | `BadRequest`          |
+| `CryptographyService`      | `Cryptography.CipherTextNotProvided`                  | `CipherText` not provided                               | Provide the encrypted text to decrypt                            | `BadRequest`          |
+| `CryptographyService`      | `Cryptography.InvalidCipherText`                      | Invalid `CipherText`                                    | Provide a valid encrypted text to decrypt                        | `BadRequest`          |
+| `KeyedCryptographyService` | `Options.Cryptography.Keys.NotConfigured`             | Keyed service without keys                              | Fill `Keys` or use the single-key `Secret`/`SecretBase64`        | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotConfigured`     | `Keys` without `CurrentKeyId`                           | Point `CurrentKeyId` to one of the identifiers in `Keys`         | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.CurrentKeyId.NotFound;{id}`     | `CurrentKeyId` not among `Keys`                         | Use an identifier that exists in `Keys`                          | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.KeyId.Invalid;{id}`             | Identifier with a dot, space or other invalid character | Use only letters, digits, hyphen and underscore                  | `InternalServerError` |
+| `KeyedCryptographyService` | `Options.Cryptography.Keys.Invalid;{id}`              | Key that is not 32 bytes in Base64                      | Generate the key with `openssl rand -base64 32`                  | `InternalServerError` |
+| `KeyedCryptographyService` | `Cryptography.KeyNotFound;{id}`                       | Value encrypted with a key that is not configured       | Put the key back in `Keys`; only remove keys after re-encrypting | `BadRequest`          |
+| `KeyedCryptographyService` | `Cryptography.LegacyKeyNotConfigured`                 | Value without prefix and no `Secret`/`SecretBase64`     | Keep the legacy key until every legacy value is re-encrypted     | `BadRequest`          |
+| `PasswordHashService`      | `Options.NotConfigured`                               | `Options` not configured                                | Register with `AddTooarkPasswordHash`                            | `InternalServerError` |
+| `PasswordHashService`      | `Options.PasswordHash.IterationsTooLow;100000`        | `Iterations` below the minimum                          | Use at least 100.000 iterations (default 600.000)                | `InternalServerError` |
+| `PasswordHashService`      | `Options.PasswordHash.SaltSizeTooSmall;16`            | `SaltSize` below the minimum                            | Use at least 16 bytes                                            | `InternalServerError` |
+| `PasswordHashService`      | `Options.PasswordHash.HashSizeTooSmall;32`            | `HashSize` below the minimum                            | Use at least 32 bytes                                            | `InternalServerError` |
+| `PasswordHashService`      | `PasswordHash.PasswordNotProvided`                    | Null or empty password in `Hash`                        | Validate the password before hashing                             | `BadRequest`          |
+| `SecureToken`              | `SecureToken.TokenNotProvided`                        | Null, empty or blank token in `Hash`                    | Validate the token before hashing                                | `BadRequest`          |
+| `Totp`                     | `Totp.InvalidSecret`                                  | Secret that is not a valid Base32 value                 | Check the stored secret; enroll the second factor again          | `InternalServerError` |
+| `Totp`                     | `Totp.IssuerNotProvided`                              | Null or empty issuer in `BuildUri`                      | Provide the application name                                     | `BadRequest`          |
+| `Totp`                     | `Totp.AccountNotProvided`                             | Null or empty account in `BuildUri`                     | Provide the account identification, such as the e-mail           | `BadRequest`          |
+| `AddTooarkDataProtection`  | `Options.DataProtection.KeyLifetimeTooShort;7`        | `KeyLifetimeDays` below the minimum                     | Use at least 7 days, or leave it null for the default 90         | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificateAmbiguous`         | `CertificatePath` and `CertificateThumbprint` together  | Provide only one of them                                         | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificatePathNotConfigured` | `CertificatePassword` without `CertificatePath`         | Provide `CertificatePath` or remove the password                 | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificateNotFound;{value}`  | File or thumbprint not found                            | Check the path, or install the certificate in the `My` store     | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificateInvalid`           | Unreadable `.pfx` or wrong password                     | Check the file and `CertificatePassword`                         | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificateWithoutPrivateKey` | Certificate without a private key                       | Export the `.pfx` with the private key                           | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.CertificateNotRsa`            | Certificate without an RSA key                          | Use an RSA certificate                                           | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.KeyStorageNotConfigured`      | Lock on and no key storage configured                   | Set a shared `KeysPath`, the callbacks or an external storage    | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.KeyCallbacksIncomplete`       | Only one of the `ReadKeys` and `WriteKey` callbacks     | Provide both callbacks                                           | `InternalServerError` |
+| `AddTooarkDataProtection`  | `Options.DataProtection.KeyStorageAmbiguous`          | `KeysPath` together with `ReadKeys` and `WriteKey`      | Provide a single key storage                                     | `InternalServerError` |
+| `JwtTokenService`          | `Options.NotConfigured`                               | `Options` not configured                                | Configure `JwtOptions`                                           | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.SecretNotConfigured`                     | `Secret` not configured                                 | Configure `Secret` in `JwtOptions` for a symmetric token         | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.SecretTooShort`                          | `Secret` below the algorithm minimum                    | Use at least 32/48/64 bytes for HS256/HS384/HS512                | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.KeysNotConfigured`                       | `Private` and `Public` not configured                   | Configure the keys in `JwtOptions` for an asymmetric token       | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.PrivateKey.InvalidSize`                  | Invalid `Private` key size                              | Use a `Private` key of at least 2048 bits                        | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.PublicKey.InvalidSize`                   | Invalid `Public` key size                               | Use a `Public` key of at least 2048 bits                         | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.PrivateKey.InvalidCurve`                 | Invalid `Private` key curve                             | Use a `Private` key with the correct curve                       | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.PublicKey.InvalidCurve`                  | Invalid `Public` key curve                              | Use a `Public` key with the correct curve                        | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.InvalidKey`                              | Invalid key                                             | [Use valid keys](#-generating-keys) for the chosen algorithm     | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.AlgorithmNotSupported`                   | Unsupported algorithm                                   | [Use a supported algorithm](#-jwt---supported-algorithms)        | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.KeyNotConfigured;PrivateKey`             | `Private` key not configured                            | Configure `PrivateKey` in `JwtOptions` to generate a token       | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.KeyNotConfigured;PublicKey`              | `Public` key not configured                             | Configure `PublicKey` in `JwtOptions` to validate a token        | `InternalServerError` |
+| `JwtTokenService`          | `Options.Jwt.ClaimsNotConfigured`                     | `EmitLegacyClaims` and `EmitStandardClaims` both off    | Turn on at least one of the two claim sets                       | `InternalServerError` |
+| `AddTooarkJwtBearer`       | `Options.Jwt.KeyNotConfigured;PublicKey`              | No validation key for the `Bearer` scheme               | Configure `Secret` (HMAC) or `PublicKey` in the `Jwt` section    | `InternalServerError` |
+| `JwtTokenService`          | `Token.Expired`                                       | Expired token                                           | Generate a new token                                             | N/A                   |
+| `JwtTokenService`          | `Token.InvalidSignature`                              | Token with an invalid signature                         | Use only tokens with a valid signature                           | N/A                   |
+| `JwtTokenService`          | `Token.Invalid`                                       | Invalid token                                           | Use only valid tokens                                            | N/A                   |
+| `JwtTokenService`          | `InternalServerError`                                 | Internal server error                                   | Check the logs for details                                       | N/A                   |
 
 ---
 

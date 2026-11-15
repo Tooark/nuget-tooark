@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public class ZipCode : ValueObject
   {
     // Adiciona as notificações de validação do código postal.
     AddNotifications(new Validation()
-      .IsZipCode(value, "ZipCode", "Field.Invalid;ZipCode")
+      .IsZipCode(value, "ZipCode", ValidationErrorMessages.FieldInvalid("ZipCode"))
     );
 
     // Verifica é valido então não existe notificação

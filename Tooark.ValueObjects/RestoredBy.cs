@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class RestoredBy : ValueObject
   {
     // Adiciona as notificações de validação do Guid do Restaurado Por.
     AddNotifications(new Validation()
-      .IsNotEmpty(value, "RestoredBy", "Field.Invalid;RestoredBy")
+      .IsNotEmpty(value, "RestoredBy", ValidationErrorMessages.FieldInvalid("RestoredBy"))
     );
 
     // Verifica se é válido então não existe notificação

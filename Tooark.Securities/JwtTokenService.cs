@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -41,36 +39,21 @@ public class JwtTokenService : IJwtTokenService
   private readonly JwtOptions _jwtOptions;
 
   /// <summary>
-  /// Algoritmo de assinatura utilizado (ex: HS256, RS256).
+  /// Chaves de assinatura e de validação carregadas das opções.
   /// </summary>
-  private readonly string _algorithm;
+  private readonly JwtSigningKeys _keys;
 
   /// <summary>
-  /// Chave de segurança para criação de tokens.
+  /// Relógio usado na emissão e na validação da vida útil do token.
   /// </summary>
-  private readonly SecurityKey? _createKey;
-
-  /// <summary>
-  /// Chave de segurança para validação de tokens.
-  /// </summary>
-  private readonly SecurityKey? _validationKey;
-
-  /// <summary>
-  /// Indica se o token pode ser criado.
-  /// </summary>
-  private readonly bool _createToken = false;
-
-  /// <summary>
-  /// Indica se o token pode ser validado.
-  /// </summary>
-  private readonly bool _validateToken = false;
+  private readonly TimeProvider _timeProvider;
 
   #endregion
 
   #region Constructors
 
   /// <summary>
-  /// Construtor do serviço de token JWT.
+  /// Construtor do serviço de token JWT, com o relógio do sistema.
   /// </summary>
   /// <param name="jwtOptions">Opções de configuração do JWT.</param>
   /// <param name="logger">Logger do serviço. Opcional: quando não fornecido, usa um logger nulo interno,
@@ -81,167 +64,47 @@ public class JwtTokenService : IJwtTokenService
   /// <exception cref="InternalServerErrorException">Quando a chave RSA tem tamanho inválido.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave ECDsa tem curva inválida.</exception>
   /// <exception cref="InternalServerErrorException">Quando a chave é inválida ou o algoritmo não é suportado.</exception>
+  /// <exception cref="InternalServerErrorException">Quando nenhum conjunto de claims (legado ou padrão) está habilitado.</exception>
   public JwtTokenService(IOptions<JwtOptions> jwtOptions, ILogger<JwtTokenService>? logger = null)
+    : this(jwtOptions, TimeProvider.System, logger)
+  { }
+
+  /// <summary>
+  /// Construtor do serviço de token JWT com um relógio próprio, para testar emissão e expiração sem esperar o tempo passar.
+  /// </summary>
+  /// <param name="jwtOptions">Opções de configuração do JWT.</param>
+  /// <param name="timeProvider">Relógio da emissão (<c>iat</c>, <c>nbf</c>, <c>exp</c>) e da validação da vida útil.
+  /// Com <see cref="TimeProvider.System"/>, a validação fica com o handler.</param>
+  /// <param name="logger">Logger do serviço. Opcional: quando não fornecido, usa um logger nulo interno,
+  /// sem registrar fallbacks globais de logging no container.</param>
+  /// <exception cref="ArgumentNullException">Quando o relógio é nulo.</exception>
+  /// <exception cref="InternalServerErrorException">Quando as opções não estão configuradas.</exception>
+  /// <exception cref="InternalServerErrorException">Quando a chave secreta não está configurada para algoritmos simétricos.</exception>
+  /// <exception cref="InternalServerErrorException">Quando as chaves pública/privada não estão configuradas para algoritmos assimétricos.</exception>
+  /// <exception cref="InternalServerErrorException">Quando a chave RSA tem tamanho inválido.</exception>
+  /// <exception cref="InternalServerErrorException">Quando a chave ECDsa tem curva inválida.</exception>
+  /// <exception cref="InternalServerErrorException">Quando a chave é inválida ou o algoritmo não é suportado.</exception>
+  /// <exception cref="InternalServerErrorException">Quando nenhum conjunto de claims (legado ou padrão) está habilitado.</exception>
+  public JwtTokenService(IOptions<JwtOptions> jwtOptions, TimeProvider timeProvider, ILogger<JwtTokenService>? logger = null)
   {
+    ArgumentNullException.ThrowIfNull(timeProvider);
+
     // Configura o logger (fallback interno para NullLogger quando logging não está configurado)
     _logger = logger ?? NullLogger<JwtTokenService>.Instance;
+    _timeProvider = timeProvider;
 
     // Valida se as opções foram configuradas corretamente
     _jwtOptions = jwtOptions.Value
       ?? throw new InternalServerErrorException("Options.NotConfigured");
 
-    // Suporte a algoritmo e chave simétrica ou assimétrica
-    _algorithm = _jwtOptions.Algorithm;
-
-    // Verifica se o algoritmo é simétrico ou assimétrico
-    if (_algorithm.StartsWith("HS")) // HMAC (simétrico)
+    // Um token sem id nem sub não identifica ninguém: falha no startup
+    if (!_jwtOptions.EmitLegacyClaims && !_jwtOptions.EmitStandardClaims)
     {
-      var secret = _jwtOptions.Secret ?? throw new InternalServerErrorException("Options.Jwt.SecretNotConfigured");
-      var keyBytes = Encoding.UTF8.GetBytes(secret);
-
-      // RFC 7518: a chave HMAC deve ter ao menos o tamanho da saída do hash (HS256: 32, HS384: 48, HS512: 64 bytes)
-      var minKeyBytes = _algorithm switch
-      {
-        "HS384" => 48,
-        "HS512" => 64,
-        _ => 32
-      };
-
-      // Valida o tamanho mínimo no startup (secrets curtos tornam a chave HMAC forçável e falhariam em runtime com erro obscuro)
-      if (keyBytes.Length < minKeyBytes)
-      {
-        throw new InternalServerErrorException($"Options.Jwt.SecretTooShort;{minKeyBytes}");
-      }
-
-      _createKey = new SymmetricSecurityKey(keyBytes);
-      _validationKey = _createKey;
-
-      _createToken = true;
-      _validateToken = true;
+      throw new InternalServerErrorException("Options.Jwt.ClaimsNotConfigured");
     }
-    else
-    {
-      // Verifica se a chave privada existe para permitir criação de token
-      if (!string.IsNullOrWhiteSpace(_jwtOptions.PrivateKey))
-      {
-        _createToken = true;
-      }
 
-      // Valida se a chave pública existe para permitir validação de token
-      if (!string.IsNullOrWhiteSpace(_jwtOptions.PublicKey))
-      {
-        _validateToken = true;
-      }
-
-      // Verifica se ao menos uma chave está configurada (fail-fast para todas as famílias assimétricas: RSA, PSS e ECDsa)
-      if (!_createToken && !_validateToken)
-      {
-        throw new InternalServerErrorException("Options.Jwt.KeysNotConfigured");
-      }
-
-      // Carrega chaves pública e privada, caso não exista a privada, usa a pública
-      var privateKeyBytes = _createToken ? Convert.FromBase64String(_jwtOptions.PrivateKey!) : null;
-      var publicKeyBytes = _validateToken ? Convert.FromBase64String(_jwtOptions.PublicKey!) : null;
-
-      // Configura chaves de assinatura e validação de chave assimétrica
-      if (_algorithm.StartsWith("RS") || _algorithm.StartsWith("PS")) // RSA ou PSS (assimétrico)
-      {
-        try
-        {
-          // Verifica se deve criar a chave de criação
-          if (_createToken && privateKeyBytes != null)
-          {
-            // Carrega chave privada
-            var privateRsa = RSA.Create();
-            privateRsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
-
-            // Valida tamanho mínimo da chave RSA
-            if (privateRsa.KeySize < 2048)
-            {
-              throw new InternalServerErrorException("Options.Jwt.PrivateKey.InvalidSize");
-            }
-
-            // Configura chave de criação
-            _createKey = new RsaSecurityKey(privateRsa);
-          }
-
-          // Verifica se deve criar a chave de validação
-          if (_validateToken && publicKeyBytes != null)
-          {
-            // Carrega chave pública
-            var publicRsa = RSA.Create();
-            publicRsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
-
-            // Valida tamanho mínimo da chave RSA
-            if (publicRsa.KeySize < 2048)
-            {
-              throw new InternalServerErrorException("Options.Jwt.PublicKey.InvalidSize");
-            }
-
-            // Configura chave de validação
-            _validationKey = new RsaSecurityKey(publicRsa);
-          }
-        }
-        catch (CryptographicException ex)
-        {
-          _logger.LogError("Error loading RSA key into JWT.\n{exception}", ex);
-
-          throw new InternalServerErrorException("Options.Jwt.InvalidKey");
-        }
-      }
-      else if (_algorithm.StartsWith("ES")) // ECDsa (assimétrico)
-      {
-        try
-        {
-          // Resolve o tamanho da chave ECDsa conforme o algoritmo (ES256/ES384/ES512)
-          var keySize = int.TryParse(_algorithm.Split("ES")[1], out int ks) ? ks : 0;
-
-          // Verifica se deve criar a chave de criação
-          if (_createToken && privateKeyBytes != null)
-          {
-            // Carrega chave privada
-            var privateEcdsa = ECDsa.Create();
-            privateEcdsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
-
-            // Valida curva da chave ECDsa conforme o algoritmo
-            if (privateEcdsa.KeySize < keySize)
-            {
-              throw new InternalServerErrorException("Options.Jwt.PrivateKey.InvalidCurve");
-            }
-
-            // Configura chave de criação
-            _createKey = new ECDsaSecurityKey(privateEcdsa);
-          }
-
-          // Verifica se deve criar a chave de validação
-          if (_validateToken && publicKeyBytes != null)
-          {
-            // Carrega chave pública
-            var publicEcdsa = ECDsa.Create();
-            publicEcdsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
-
-            // Valida curva da chave ECDsa conforme o algoritmo
-            if (publicEcdsa.KeySize < keySize)
-            {
-              throw new InternalServerErrorException("Options.Jwt.PublicKey.InvalidCurve");
-            }
-
-            // Configura chave de validação
-            _validationKey = new ECDsaSecurityKey(publicEcdsa);
-          }
-        }
-        catch (CryptographicException ex)
-        {
-          _logger.LogError("Error loading ECDsa key into JWT.\n{exception}", ex);
-
-          throw new InternalServerErrorException("Options.Jwt.InvalidKey");
-        }
-      }
-      else
-      {
-        throw new InternalServerErrorException("Options.Jwt.AlgorithmNotSupported");
-      }
-    }
+    // Carrega as chaves com as mesmas regras do esquema de autenticação (fail-fast)
+    _keys = JwtSigningKeys.Load(_jwtOptions, _logger);
   }
 
   #endregion
@@ -252,24 +115,29 @@ public class JwtTokenService : IJwtTokenService
   public string Create(JwtTokenDto data, string? audience = null, IEnumerable<Claim>? extraClaims = null)
   {
     // Valida se pode criar o token
-    if (!_createToken || _createKey == null)
+    if (!_keys.CanCreate)
     {
       throw new InternalServerErrorException("Options.Jwt.KeyNotConfigured;PrivateKey");
     }
 
     // Configura propriedades do token
     var expiryTime = _jwtOptions.ExpirationTime;
-    var baseClaims = data.GetClaims();
+    var baseClaims = data.GetClaims(_jwtOptions);
 
     // Adiciona claims extras, se fornecidos
     var claims = extraClaims is null
     ? baseClaims
     : baseClaims.Concat(extraClaims);
 
+    // Todas as marcas de tempo saem do mesmo relógio, para que um relógio de teste controle a emissão inteira
+    var now = _timeProvider.GetUtcNow().UtcDateTime;
+
     var tokenDescriptor = new SecurityTokenDescriptor
     {
-      Expires = DateTime.UtcNow.AddMinutes(expiryTime),
-      SigningCredentials = new SigningCredentials(_createKey, _algorithm),
+      IssuedAt = now,
+      NotBefore = now,
+      Expires = now.AddMinutes(expiryTime),
+      SigningCredentials = new SigningCredentials(_keys.CreateKey, _keys.Algorithm),
       Subject = new ClaimsIdentity(claims)
     };
 
@@ -298,7 +166,7 @@ public class JwtTokenService : IJwtTokenService
   public async Task<UserTokenDto> ValidateAsync(string token, string? audience = null)
   {
     // Valida se pode validar o token
-    if (!_validateToken || _validationKey == null)
+    if (!_keys.CanValidate)
     {
       throw new InternalServerErrorException("Options.Jwt.KeyNotConfigured;PublicKey");
     }
@@ -307,7 +175,7 @@ public class JwtTokenService : IJwtTokenService
     {
       // Valida o token: o handler expõe a validação apenas de forma assíncrona
       var result = await _tokenHandler
-        .ValidateTokenAsync(token, BuildValidationParameters(audience))
+        .ValidateTokenAsync(token, JwtValidation.BuildParameters(_jwtOptions, _keys.ValidationKey!, audience, _timeProvider))
         .ConfigureAwait(false);
 
       return MapValidationResult(result);
@@ -331,49 +199,6 @@ public class JwtTokenService : IJwtTokenService
   #endregion
 
   #region Private Methods
-
-  /// <summary>
-  /// Monta os parâmetros de validação do token a partir das opções e do destinatário informado.
-  /// </summary>
-  /// <param name="audience">Destinatário do token que sobrescreve o destinatário padrão do Options.</param>
-  /// <returns>Parâmetros de validação do token.</returns>
-  private TokenValidationParameters BuildValidationParameters(string? audience)
-  {
-    // Define issuer e audiences efetivos com base nas opções e parâmetros
-    var effectiveIssuer = _jwtOptions.Issuer;
-    var effectiveIssuers = _jwtOptions.Issuers;
-
-    // Se um audience for informado no parâmetro, ele tem prioridade sobre as opções
-    var effectiveAudience = !string.IsNullOrWhiteSpace(audience)
-      ? audience
-      : _jwtOptions.Audience;
-    var effectiveAudiences = !string.IsNullOrWhiteSpace(audience)
-      ? [audience]
-      : _jwtOptions.Audiences;
-
-    // Verifica se deve validar issuer/audience com base em qualquer configuração disponível
-    var issuers = !string.IsNullOrWhiteSpace(effectiveIssuer) || effectiveIssuers?.Length > 0;
-    var audiences = !string.IsNullOrWhiteSpace(effectiveAudience) || effectiveAudiences?.Length > 0;
-
-    return new TokenValidationParameters
-    {
-      ClockSkew = TimeSpan.Zero,
-      IssuerSigningKey = _validationKey,
-      RequireExpirationTime = true,
-      RequireSignedTokens = true,
-      ValidateIssuerSigningKey = true,
-      ValidateLifetime = true,
-      // Issuer
-      ValidIssuer = effectiveIssuer,
-      ValidIssuers = effectiveIssuers,
-      // Audience
-      ValidAudience = effectiveAudience,
-      ValidAudiences = effectiveAudiences,
-      ValidateIssuer = issuers,
-      ValidateAudience = audiences,
-      RequireAudience = audiences
-    };
-  }
 
   /// <summary>
   /// Converte o resultado da validação do handler nos dados do usuário ou no erro correspondente.

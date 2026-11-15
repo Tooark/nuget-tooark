@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class DeletedBy : ValueObject
   {
     // Adiciona as notificações de validação do Guid do Deletado Por.
     AddNotifications(new Validation()
-      .IsNotEmpty(value, "DeletedBy", "Field.Invalid;DeletedBy")
+      .IsNotEmpty(value, "DeletedBy", ValidationErrorMessages.FieldInvalid("DeletedBy"))
     );
 
     // Verifica se é válido então não existe notificação

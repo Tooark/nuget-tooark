@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class Letter : ValueObject
   {
     // Adiciona as notificações de validação da string de letras.
     AddNotifications(new Validation()
-      .IsLetter(value, "Letter", "Field.Invalid;Letter")
+      .IsLetter(value, "Letter", ValidationErrorMessages.FieldInvalid("Letter"))
     );
 
     // Verifica é valido então não existe notificação

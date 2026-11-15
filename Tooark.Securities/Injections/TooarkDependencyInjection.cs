@@ -12,6 +12,10 @@ public static partial class TooarkDependencyInjection
   /// <summary>
   /// Adiciona os serviços de Securities ao container de injeção de dependência, permitindo configuração de options.
   /// </summary>
+  /// <remarks>
+  /// O serviço de hash de senha é registrado sempre, porque tem padrão seguro e não exige seção; a seção
+  /// <c>PasswordHash</c> é lida quando existe. Os demais serviços dependem da própria seção existir.
+  /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
   /// <param name="configuration">Configuração da aplicação (IConfiguration).</param>
   /// <returns>A coleção de serviços com os serviços de Securities adicionados.</returns>
@@ -34,6 +38,9 @@ public static partial class TooarkDependencyInjection
     {
       AddTooarkDataProtection(services, configuration);
     }
+
+    // O hash de senha não exige configuração: registra sempre, lendo a seção quando ela existe
+    AddTooarkPasswordHash(services, configuration);
 
     return services;
   }

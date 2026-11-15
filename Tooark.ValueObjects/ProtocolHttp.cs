@@ -1,5 +1,6 @@
 using Tooark.Exceptions;
 using Tooark.Validations;
+using Tooark.Validations.Messages;
 
 namespace Tooark.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed class ProtocolHttp : ValueObject
   {
     // Adiciona as notificações de validação do protocolo HTTP
     AddNotifications(new Validation()
-      .IsProtocolHttp(value, "ProtocolHttp", "Field.Invalid;ProtocolHttp")
+      .IsProtocolHttp(value, "ProtocolHttp", ValidationErrorMessages.FieldInvalid("ProtocolHttp"))
     );
 
     // Verifica é valido então não existe notificação

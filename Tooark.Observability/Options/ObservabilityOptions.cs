@@ -1,5 +1,6 @@
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace Tooark.Observability.Options;
@@ -26,18 +27,35 @@ public class ObservabilityOptions
   public bool Enabled { get; set; } = true;
 
   /// <summary>
-  /// Nome do serviço para identificação nos traces/metrics/logs.
+  /// Nome do serviço para identificação nos traces/metrics/logs (<c>service.name</c>).
   /// </summary>
   /// <remarks>
-  /// Se não informado, será inferido do AssemblyName ou "unknown_service".
+  /// <para>
+  /// Ordem de resolução: este valor, a variável de ambiente <c>OTEL_SERVICE_NAME</c>, o nome do assembly de
+  /// entrada e, por fim, <c>unknown_service</c>. Valores vazios ou só com espaços passam para a próxima fonte.
+  /// </para>
+  /// <para>
+  /// Depois do registro, o <c>IOptions&lt;ObservabilityOptions&gt;</c> do container carrega o valor resolvido,
+  /// e não mais <c>null</c>.
+  /// </para>
   /// </remarks>
   public string? ServiceName { get; set; }
 
   /// <summary>
-  /// Versão do serviço para identificação nos traces/metrics/logs.
+  /// Versão do serviço para identificação nos traces/metrics/logs (<c>service.version</c>).
   /// </summary>
   /// <remarks>
-  /// Se não informado, será inferido do AssemblyVersion ou "unknown_version".
+  /// <para>
+  /// Ordem de resolução: este valor, a chave <c>service.version</c> da variável de ambiente
+  /// <c>OTEL_RESOURCE_ATTRIBUTES</c>, a <c>AssemblyInformationalVersion</c> do assembly de entrada sem o sufixo
+  /// <c>+commit</c> (o <c>&lt;Version&gt;</c> do projeto, como <c>2.3.0</c> ou <c>2.3.0-beta.1</c>), a
+  /// <c>AssemblyVersion</c> e, por fim, <c>unknown_version</c>. Valores vazios ou só com espaços passam para a
+  /// próxima fonte.
+  /// </para>
+  /// <para>
+  /// Depois do registro, o <c>IOptions&lt;ObservabilityOptions&gt;</c> do container carrega o valor resolvido,
+  /// e não mais <c>null</c>.
+  /// </para>
   /// </remarks>
   public string? ServiceVersion { get; set; }
 
@@ -53,14 +71,20 @@ public class ObservabilityOptions
   /// Atributos adicionais a serem adicionados ao Resource do OpenTelemetry.
   /// </summary>
   /// <remarks>
-  /// Útil para tags como region, cluster, tenant, etc.
-  /// Exemplo:
+  /// <para>
+  /// Útil para atributos como nuvem, região, cluster e tenant. Prefira as chaves das convenções semânticas do
+  /// OpenTelemetry, que os backends reconhecem. Exemplo:
   /// {
-  ///   "provider.name": "aws",
-  ///   "provider.region": "us-east-1",
-  ///   "provider.cluster": "cluster-a",
+  ///   "cloud.provider": "aws",
+  ///   "cloud.region": "us-east-1",
+  ///   "k8s.cluster.name": "cluster-a",
   ///   "tenant.id": "tenant-123"
   /// }
+  /// </para>
+  /// <para>
+  /// A variável de ambiente <c>OTEL_RESOURCE_ATTRIBUTES</c> (<c>chave=valor,chave=valor</c>) também entra no
+  /// Resource, sem código. Quando a mesma chave vem das duas fontes, este dicionário vence.
+  /// </para>
   /// </remarks>
   public Dictionary<string, string> ResourceAttributes { get; set; } = [];
 
@@ -124,6 +148,24 @@ public class ObservabilityOptions
   /// Callback para configuração adicional do OpenTelemetryLoggerOptions.
   /// </summary>
   public Action<OpenTelemetryLoggerOptions>? ConfigureLogging { get; set; }
+
+  /// <summary>
+  /// Callback para configuração adicional do <see cref="ResourceBuilder"/>, executado por último, depois dos
+  /// atributos do Tooark e de <see cref="ResourceAttributes"/>.
+  /// </summary>
+  /// <remarks>
+  /// <para>
+  /// Uso típico: instalar os detectores de recurso dos pacotes contrib do OpenTelemetry
+  /// (<c>OpenTelemetry.Resources.AWS</c>, <c>.Azure</c>, <c>.Gcp</c>, <c>.Container</c>, <c>.Host</c>,
+  /// <c>.Process</c>), que consultam o ambiente na inicialização e preenchem atributos como
+  /// <c>cloud.provider</c> e <c>container.id</c>.
+  /// </para>
+  /// <para>
+  /// Opcional. O Tooark não depende desses pacotes e não garante que os atributos que eles adicionam sejam
+  /// aplicados: isso depende da versão instalada e do ambiente em que a aplicação roda.
+  /// </para>
+  /// </remarks>
+  public Action<ResourceBuilder>? ConfigureResource { get; set; }
 
   #endregion
 }

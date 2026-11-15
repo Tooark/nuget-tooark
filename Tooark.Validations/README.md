@@ -787,6 +787,17 @@ ValidationErrorMessages.BooleanIsFalse("Active");   // "Validation.IsNotFalse;Ac
 The overloads without the `message` parameter use those keys; the overloads with `message` use the text you
 provide, without going through them.
 
+The `Field*` formatters build the field keys that the value objects, the entities and the ASP.NET Core
+integration emit, so the key is never typed by hand — a typo such as `Field.Invalido;Email` compiles and only
+breaks the translation at runtime. Since v4.8.0 the Tooark packages use them internally; the keys are the same.
+
+```csharp
+ValidationErrorMessages.FieldInvalid("Email");         // "Field.Invalid;Email"
+ValidationErrorMessages.FieldRequired("Email");        // "Field.Required;Email"
+ValidationErrorMessages.FieldEmpty("Id");              // "Field.Empty;Id"
+ValidationErrorMessages.FieldChangeBlocked("Id");      // "Field.ChangeBlocked;Id"
+```
+
 ---
 
 ## ⚠️ Error Codes

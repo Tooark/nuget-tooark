@@ -474,6 +474,32 @@ public class TooarkDependencyInjectionTracingTests
     Assert.NotNull(provider);
   }
 
+  // Teste para a fonte "Tooark" seguir registrada quando a principal recebe outro nome: quem criou um
+  // ActivitySource("Tooark") antes do nome padrão virar o nome do serviço continua tendo os spans capturados.
+  [Fact]
+  public void ConfigureTracing_ShouldKeepTooarkSourceRegistered_WhenMainSourceHasAnotherName()
+  {
+    // Arrange
+    var options = CreateOptions(activitySourceName: "orders-api", otlpEnabled: false, useConsoleExporterInDev: false);
+    var builder = Sdk.CreateTracerProviderBuilder();
+    var rb = ResourceBuilder.CreateDefault().AddService("svc");
+    using var mainSource = new ActivitySource("orders-api");
+    using var defaultSource = new ActivitySource("Tooark");
+    using var unregisteredSource = new ActivitySource($"Tooark.Tests.Unregistered.{Guid.NewGuid():N}");
+
+    // Act
+    TooarkDependencyInjection.ConfigureTracing(builder, options, rb, isDevelopment: false);
+    using var provider = builder.Build();
+    using var mainActivity = mainSource.StartActivity("main");
+    using var defaultActivity = defaultSource.StartActivity("default");
+    using var unregisteredActivity = unregisteredSource.StartActivity("unregistered");
+
+    // Assert
+    Assert.NotNull(mainActivity);
+    Assert.NotNull(defaultActivity);
+    Assert.Null(unregisteredActivity);
+  }
+
   #endregion
 
   #region ConfigureTracing - Additional Tests

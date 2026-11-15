@@ -44,6 +44,9 @@ URL sanitization, cloud object storage, secrets from vaults — and can be insta
 All packages target **.NET 8.0** and **.NET 10.0**, share a single version number and are published together
 to the [Tooark profile on NuGet](https://www.nuget.org/profiles/Tooark).
 
+> ⚠️ **Changes in v5:** .NET 8 reached end of support by Microsoft in November 2026. The 4.x line keeps both
+> targets; v5, planned for January 2027, will target **.NET 10.0** only.
+
 ---
 
 ## 🔧 Installation

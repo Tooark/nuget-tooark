@@ -206,4 +206,16 @@ public class JwtOptionsTests
     // Assert
     Assert.Equal(10, options.ExpirationTime);
   }
+
+  // Testa se o padrão da 4.x emite as claims legadas e não as padrão; a v5 inverte os dois valores
+  [Fact]
+  public void ClaimFlags_ShouldDefaultToLegacyOnly()
+  {
+    // Arrange & Act
+    var options = new JwtOptions();
+
+    // Assert
+    Assert.True(options.EmitLegacyClaims);
+    Assert.False(options.EmitStandardClaims);
+  }
 }

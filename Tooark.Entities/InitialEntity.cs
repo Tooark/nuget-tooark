@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Tooark.Exceptions;
+using Tooark.Validations.Messages;
 using Tooark.ValueObjects;
 
 namespace Tooark.Entities;
@@ -82,7 +83,7 @@ public abstract class InitialEntity : BaseEntity
     // A autoria da criação é registrada uma única vez
     if (CreatedById != Guid.Empty)
     {
-      throw Failure("Field.ChangeBlocked;CreatedBy", "CreatedBy", "T.ENT.INI1");
+      throw Failure(ValidationErrorMessages.FieldChangeBlocked("CreatedBy"), "CreatedBy", "T.ENT.INI1");
     }
 
     // Valida o argumento sem acumular notificação na entidade

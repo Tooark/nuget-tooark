@@ -349,6 +349,51 @@ public static class ValidationErrorMessages
 
   #endregion
 
+  #region Field Messages
+
+  /// <summary>
+  /// Mensagem de erro para campo inválido.
+  /// </summary>
+  /// <remarks>
+  /// O campo {0} é inválido. Monta a chave <c>Field.Invalid;{Propriedade}</c>, a mesma que os value objects, as
+  /// entidades e a integração com o ASP.NET Core emitem, para a chave nunca ser digitada à mão.
+  /// </remarks>
+  /// <param name="property">Propriedade da validação.</param>
+  /// <returns>Mensagem de erro.</returns>
+  public static string FieldInvalid(string property) => $"Field.Invalid;{PropertyNormalize(property)}";
+
+  /// <summary>
+  /// Mensagem de erro para campo obrigatório ausente.
+  /// </summary>
+  /// <remarks>
+  /// O campo {0} é obrigatório. Monta a chave <c>Field.Required;{Propriedade}</c>.
+  /// </remarks>
+  /// <param name="property">Propriedade da validação.</param>
+  /// <returns>Mensagem de erro.</returns>
+  public static string FieldRequired(string property) => $"Field.Required;{PropertyNormalize(property)}";
+
+  /// <summary>
+  /// Mensagem de erro para campo vazio.
+  /// </summary>
+  /// <remarks>
+  /// O campo {0} está vazio. Monta a chave <c>Field.Empty;{Propriedade}</c>.
+  /// </remarks>
+  /// <param name="property">Propriedade da validação.</param>
+  /// <returns>Mensagem de erro.</returns>
+  public static string FieldEmpty(string property) => $"Field.Empty;{PropertyNormalize(property)}";
+
+  /// <summary>
+  /// Mensagem de erro para campo que não pode ser alterado.
+  /// </summary>
+  /// <remarks>
+  /// O campo {0} não pode ser alterado. Monta a chave <c>Field.ChangeBlocked;{Propriedade}</c>.
+  /// </remarks>
+  /// <param name="property">Propriedade da validação.</param>
+  /// <returns>Mensagem de erro.</returns>
+  public static string FieldChangeBlocked(string property) => $"Field.ChangeBlocked;{PropertyNormalize(property)}";
+
+  #endregion
+
   #region Properties
 
   /// <summary>
