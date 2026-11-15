@@ -64,6 +64,10 @@ and `Tooark.Sanitizers`. The rest depends on the configuration:
   section exists, Data Protection;
 - with the `Observability` section, it registers `Tooark.Observability`.
 
+To make the application fail at startup when one of those sections has a mistyped key, turn on
+[strict configuration](https://github.com/Tooark/nuget-tooark/blob/main/README.md#️-strict-configuration)
+(`"Tooark": { "StrictConfiguration": true }`).
+
 What depends on your application stays out and is registered on its own: the unit of work, the ASP.NET Core
 responses, JWT Bearer authentication, OpenID Connect SSO, storage and secrets. The sections below show each
 one.

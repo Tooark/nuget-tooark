@@ -23,6 +23,7 @@ observability, mediator and more — each one a package, all released together.
 
 - [About](#-about)
 - [Installation](#-installation)
+- [Strict configuration](#️-strict-configuration)
 - [Packages](#-packages)
 - [Documentation](#-documentation)
 - [Local development](#-local-development)
@@ -71,6 +72,46 @@ Installing through the aggregator does not register everything: `AddTooarkServic
 your application — the unit of work, the ASP.NET Core responses, JWT Bearer authentication, OpenID Connect SSO,
 storage and secrets — which are set up on their own. See the
 [aggregator's configuration](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.md#️-configuration).
+
+---
+
+## ⚙️ Strict configuration
+
+By default, .NET silently ignores a mistyped key in a configuration section: the option keeps its default value
+and nothing warns you.
+
+```json
+"Observability": {
+  "Tracing": { "SampligRatio": 0.1 }
+}
+```
+
+In the example, `SampligRatio` is misspelled, and sampling stays at `1.0`. With the option below, every section
+read by a Tooark package fails at startup when it has a key the package does not know:
+
+```json
+"Tooark": { "StrictConfiguration": true }
+```
+
+The application does not start, with `Options.Configuration.UnknownKey;Observability;SampligRatio`
+(`InternalServerErrorException`), which names the section and the key.
+
+- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
+  `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
+- **Only what the registered packages read.** The check runs at registration (`AddTooark...`): a package the
+  application does not register checks nothing, and the application's other sections (`Logging`, your own) are
+  left alone.
+- **Missing keys stay optional.** The option only refuses what is extra, never what is absent.
+- **Every configuration source counts.** An environment variable such as `Jwt__Anything`, or a secret loaded
+  from a store into the section, is also a key of the section and is refused.
+- **Two providers of the same family:** `Tooark.Storage.Aws` and `Tooark.Storage.Gcp` read the `Storage` section,
+  and the `Tooark.Secrets` providers read the `Secrets` section, each with its own keys. With two of them
+  registered in the same application, one refuses the other's keys: keep the option off in that case.
+- **Invalid value:** anything other than `true` or `false` fails at startup
+  (`Options.Configuration.StrictInvalid`), instead of counting as off.
+
+> ⚠️ **Changes in v5:** the option is off on the 4.x line and becomes on by default in v5. Turn it on in staging
+> now to find the wrong keys before the upgrade; to keep it off in v5, set `false`.
 
 ---
 

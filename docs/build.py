@@ -41,7 +41,7 @@ LANGS = {
         "api_button": "API reference",
         "tagline": "Modular building blocks for .NET",
         "overview": "Overview",
-        "overview_sections": ["📖 About", "🔧 Installation", "📦 Packages"],
+        "overview_sections": ["📖 About", "🔧 Installation", "⚙️ Strict configuration", "📦 Packages"],
     },
     "pt-BR": {
         "readme": "README.pt-BR.md",
@@ -51,7 +51,7 @@ LANGS = {
         "api_button": "Referência da API",
         "tagline": "Blocos modulares para .NET",
         "overview": "Visão geral",
-        "overview_sections": ["📖 Sobre o Projeto", "🔧 Instalação", "📦 Pacotes"],
+        "overview_sections": ["📖 Sobre o Projeto", "🔧 Instalação", "⚙️ Configuração estrita", "📦 Pacotes"],
     },
 }
 

@@ -64,6 +64,10 @@ e `Tooark.Sanitizers`. O restante depende da configuração:
   Protection;
 - com a seção `Observability`, registra o `Tooark.Observability`.
 
+Para a aplicação falhar no startup quando uma dessas seções trouxer uma chave digitada errada, ligue a
+[configuração estrita](https://github.com/Tooark/nuget-tooark/blob/main/README.pt-BR.md#️-configuração-estrita)
+(`"Tooark": { "StrictConfiguration": true }`).
+
 O que depende da sua aplicação fica de fora e é registrado à parte: a unidade de trabalho, as respostas do
 ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID Connect, o storage e os segredos. As seções abaixo
 mostram cada um.

@@ -23,6 +23,7 @@ observabilidade, mediator e mais — cada um em um pacote, todos lançados junto
 
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Instalação](#-instalação)
+- [Configuração estrita](#️-configuração-estrita)
 - [Pacotes](#-pacotes)
 - [Documentação](#-documentação)
 - [Desenvolvimento local](#-desenvolvimento-local)
@@ -72,6 +73,46 @@ Instalar pelo agregador não registra tudo: o `AddTooarkService` deixa de fora o
 unidade de trabalho, as respostas do ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID Connect, o storage
 e os segredos —, que se configura à parte. Veja a
 [configuração do agregador](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.pt-BR.md#️-configuração).
+
+---
+
+## ⚙️ Configuração estrita
+
+Por padrão, o .NET ignora em silêncio uma chave digitada errada numa seção de configuração: a opção fica no
+valor padrão e nada avisa.
+
+```json
+"Observability": {
+  "Tracing": { "SampligRatio": 0.1 }
+}
+```
+
+No exemplo, `SampligRatio` está escrito errado, e a amostragem continua em `1.0`. Com a opção abaixo, toda
+seção lida por um pacote Tooark passa a falhar no startup quando traz uma chave que o pacote não conhece:
+
+```json
+"Tooark": { "StrictConfiguration": true }
+```
+
+A aplicação não sobe, com `Options.Configuration.UnknownKey;Observability;SampligRatio`
+(`InternalServerErrorException`), que aponta a seção e a chave.
+
+- **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
+  `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
+- **Só o que os pacotes registrados leem.** A conferência acontece no registro (`AddTooark...`): um pacote que a
+  aplicação não registra não confere nada, e as outras seções da aplicação (`Logging`, as suas) não são tocadas.
+- **Chaves ausentes continuam opcionais.** A opção só recusa o que sobra, nunca o que falta.
+- **Toda fonte de configuração conta.** Uma variável de ambiente como `Jwt__Qualquer`, ou um segredo carregado
+  de um cofre para dentro da seção, também é uma chave da seção e é recusada.
+- **Dois provedores da mesma família:** `Tooark.Storage.Aws` e `Tooark.Storage.Gcp` leem a seção `Storage`, e os
+  provedores do `Tooark.Secrets` leem a seção `Secrets`, cada um com as próprias chaves. Com dois deles
+  registrados na mesma aplicação, um recusa as chaves do outro: mantenha a opção desligada nesse caso.
+- **Valor inválido:** qualquer coisa diferente de `true` ou `false` falha no startup
+  (`Options.Configuration.StrictInvalid`), em vez de valer como desligada.
+
+> ⚠️ **Muda na v5:** a opção vem desligada na linha 4.x e passa a ligada por padrão na v5. Ligue-a em
+> homologação desde já para encontrar as chaves erradas antes da troca de versão; para mantê-la desligada na v5,
+> informe `false`.
 
 ---
 
