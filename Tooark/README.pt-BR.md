@@ -57,8 +57,16 @@ services.AddTooarkService(configuration);
 ```
 
 Essa única chamada registra `Tooark.Dtos`, `Tooark.Extensions`, `Tooark.ValueObjects`, `Tooark.Mediator`
-e `Tooark.Sanitizers`, e acrescenta `Tooark.Securities` e `Tooark.Observability` quando as seções de
-configuração correspondentes existem.
+e `Tooark.Sanitizers`. O restante depende da configuração:
+
+- com a seção `Jwt` ou `Cryptography`, registra o `Tooark.Securities`: o serviço de token JWT e a criptografia
+  (cada um quando a própria seção existe), o hash de senha e, quando a seção `DataProtection` existe, o Data
+  Protection;
+- com a seção `Observability`, registra o `Tooark.Observability`.
+
+O que depende da sua aplicação fica de fora e é registrado à parte: a unidade de trabalho, as respostas do
+ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID Connect, o storage e os segredos. As seções abaixo
+mostram cada um.
 
 ### Onde os manipuladores do mediador são procurados
 
@@ -92,6 +100,37 @@ Fica de fora do `AddTooarkService`, porque depende do tipo do seu contexto do En
 using Tooark.Mediator.EntityFrameworkCore.Injections;
 
 services.AddTooarkMediatorUnitOfWork<MeuDbContext>();
+```
+
+### Respostas do ASP.NET Core
+
+Também ficam de fora do `AddTooarkService`, porque mudam o corpo das respostas HTTP da sua API. Registre o que
+a aplicação usa:
+
+```csharp
+using Tooark.AspNetCore.Injections;
+
+services.AddTooarkModelStateEnvelope(); // falhas de validação do [ApiController] no envelope do Tooark
+services.AddTooarkProblemDetails();     // exceções do Tooark como application/problem+json (RFC 9457)
+
+app.UseExceptionHandler();              // exigido pelo AddTooarkProblemDetails
+```
+
+Os detalhes estão no
+[Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md).
+
+### Autenticação JWT Bearer
+
+O `AddTooarkService` registra o serviço que emite e valida tokens, mas não o esquema de autenticação. Quem
+protege endpoints com `[Authorize]` registra o esquema `Bearer`, que lê a mesma seção `Jwt`:
+
+```csharp
+using Tooark.Securities.Injections;
+
+services.AddTooarkJwtBearer(configuration);
+
+app.UseAuthentication();
+app.UseAuthorization();
 ```
 
 ### SSO com OpenID Connect
@@ -143,7 +182,7 @@ Descrição: Este pacote fornece atributos personalizados para uso em projetos .
 
 ### [Tooark.AspNetCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.AspNetCore/README.pt-BR.md)
 
-Descrição: Este pacote reúne os recursos que dependem do ASP.NET Core, como a leitura de erros do `ModelState`.
+Descrição: Este pacote reúne os recursos que dependem do ASP.NET Core: a leitura dos erros do `ModelState`, o envelope das falhas de validação e as respostas Problem Details (RFC 9457) para as exceções do Tooark.
 
 ### [Tooark.Dtos](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Dtos/README.pt-BR.md)
 
@@ -183,7 +222,7 @@ Descrição: Este pacote move a persistência do Entity Framework Core para o pi
 
 ### [Tooark.Observability](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Observability/README.pt-BR.md)
 
-Descrição: Este pacote fornece ferramentas para monitoramento e observabilidade da aplicação.
+Descrição: Este pacote integra o OpenTelemetry (traces, métricas e logs) pela configuração, com a identidade do serviço resolvida e a instrumentação pronta para injeção.
 
 ### [Tooark.Sanitizers](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Sanitizers/README.pt-BR.md)
 
@@ -195,7 +234,7 @@ Descrição: Este pacote carrega segredos e parâmetros de cofres (AWS, Google C
 
 ### [Tooark.Securities](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities/README.pt-BR.md)
 
-Descrição: Este pacote oferece funcionalidades para segurança, incluindo criptografia e autenticação.
+Descrição: Este pacote oferece JWT (emissão, validação e autenticação Bearer), criptografia AES com rotação de chaves, hash de senha, tokens seguros, TOTP com códigos de recuperação e a configuração do Data Protection.
 
 ### [Tooark.Securities.OpenId](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Securities.OpenId/README.pt-BR.md)
 

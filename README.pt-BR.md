@@ -68,8 +68,9 @@ dotnet add package Tooark.Secrets.Aws   # ou Tooark.Secrets.Gcp, Tooark.Secrets.
 Ou apenas o que você precisa — cada pacote pode ser instalado individualmente (veja a tabela abaixo). O código
 de cada pacote fica na sua própria pasta deste repositório, junto com o README.
 
-Instalar pelo agregador não registra tudo: o `AddTooarkService` deixa de fora a unidade de trabalho, o SSO com
-OpenID Connect, o storage e os segredos, que se configuram à parte — veja a
+Instalar pelo agregador não registra tudo: o `AddTooarkService` deixa de fora o que depende da sua aplicação — a
+unidade de trabalho, as respostas do ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID Connect, o storage
+e os segredos —, que se configura à parte. Veja a
 [configuração do agregador](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.pt-BR.md#️-configuração).
 
 ---
