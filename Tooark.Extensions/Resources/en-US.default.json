@@ -85,6 +85,7 @@
   "Options.Configuration.StrictInvalid": "The value {0} of Tooark:StrictConfiguration is invalid. Use true or false.",
   "Options.Configuration.UnknownKey": "The configuration section {0} has unknown keys: {1}.",
   "Options.Cryptography.AlgorithmDecryptOnly": "Algorithm {0} can only be used for decryption.",
+  "Options.Cryptography.AlgorithmNotSupported": "Encryption algorithm {0} is not supported. Use GCM, CBC or CBCUnsafe.",
   "Options.Cryptography.CurrentKeyId.NotConfigured": "The current encryption key identifier (CurrentKeyId) is not configured.",
   "Options.Cryptography.CurrentKeyId.NotFound": "The current encryption key {0} is not among the configured keys.",
   "Options.Cryptography.KeyId.Invalid": "The encryption key identifier {0} is invalid. Use only letters, digits, hyphen and underscore.",

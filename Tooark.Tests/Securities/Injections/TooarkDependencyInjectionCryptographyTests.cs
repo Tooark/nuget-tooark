@@ -64,6 +64,27 @@ public class TooarkDependencyInjectionCryptographyTests
     Assert.Equal("Options.Cryptography.SecretNotConfigured", exception.Message);
   }
 
+  // Testa se um algoritmo digitado errado na configuração falha no registro, em vez de cair em GCM em silêncio
+  [Fact]
+  public void AddTooarkCryptography_WithUnknownAlgorithm_ShouldFailAtRegistration()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { $"{CryptographyOptions.Section}:Algorithm", "GMC" },
+        { $"{CryptographyOptions.Section}:SecretBase64", CryptographyTestKeys.FromText("initialization-vector-test") }
+      })
+      .Build();
+
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => services.AddTooarkCryptography(configuration));
+
+    // Assert
+    Assert.Equal("Options.Cryptography.AlgorithmNotSupported;GMC", exception.Message);
+  }
+
   // Testa se sem chaves identificadas o serviço de chave única é registrado e o identificado não existe
   [Fact]
   public void AddTooarkCryptography_WithoutKeys_ShouldRegisterSingleKeyServiceOnly()

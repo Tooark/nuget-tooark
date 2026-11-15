@@ -1,3 +1,5 @@
+using Tooark.Exceptions;
+
 namespace Tooark.Securities.Options;
 
 /// <summary>
@@ -32,18 +34,23 @@ public class CryptographyOptions
   /// Valores válidos (case insensitive):
   ///   - "CBC"  que representa o modo AES-256-CBC
   ///   - "GCM"  que representa o modo AES-256-GCM
-  ///   - "CBCUnsafe" que representa o modo AES-256-CBC com IV zerado (legado)
+  ///   - "CBCUnsafe" que representa o modo AES-256-CBC com IV zerado (legado, somente descriptografia)
+  /// Ausente, vazio ou só com espaços vale "GCM". Qualquer outro valor lança exceção: em configuração de
+  /// segurança, um algoritmo digitado errado nunca deve ser substituído em silêncio por outro. Na linha 4.x um
+  /// valor desconhecido caía em "GCM".
   /// </remarks>
+  /// <exception cref="InternalServerErrorException">Quando o valor não corresponde a um algoritmo suportado.</exception>
   public string Algorithm
   {
     get => _algorithm;
-    set => _algorithm = value?.ToUpperInvariant() switch
+    set => _algorithm = value?.Trim().ToUpperInvariant() switch
     {
+      null or "" => "GCM",
       "CBC" => "CBC",
       "GCM" => "GCM",
       "CBCUNSAFE" => "CBCZeroIv",
-      _ => "GCM"
-    } ?? "GCM";
+      _ => throw new InternalServerErrorException($"Options.Cryptography.AlgorithmNotSupported;{value}")
+    };
   }
 
   /// <summary>

@@ -85,6 +85,7 @@
   "Options.Configuration.StrictInvalid": "El valor {0} de Tooark:StrictConfiguration no es válido. Use true o false.",
   "Options.Configuration.UnknownKey": "La sección de configuración {0} tiene claves desconocidas: {1}.",
   "Options.Cryptography.AlgorithmDecryptOnly": "El algoritmo {0} solo puede usarse para descifrar.",
+  "Options.Cryptography.AlgorithmNotSupported": "El algoritmo de cifrado {0} no es compatible. Use GCM, CBC o CBCUnsafe.",
   "Options.Cryptography.CurrentKeyId.NotConfigured": "El identificador de la clave de cifrado actual (CurrentKeyId) no está configurado.",
   "Options.Cryptography.CurrentKeyId.NotFound": "La clave de cifrado actual {0} no está entre las claves configuradas.",
   "Options.Cryptography.KeyId.Invalid": "El identificador de clave de cifrado {0} no es válido. Use solo letras, dígitos, guion y guion bajo.",

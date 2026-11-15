@@ -262,14 +262,13 @@ public class CryptographyServiceTests
 
   #region Encrypt Tests - Default Algorithm
 
-  // Testa a criptografia com algoritmo desconhecido (deve usar GCM por padrão)
+  // Testa a criptografia sem algoritmo informado (deve usar GCM por padrão)
   [Fact]
   public void Encrypt_DefaultAlgorithm_ShouldUseGCM()
   {
     // Arrange
     var cryptoOptions = new CryptographyOptions
     {
-      Algorithm = "UNKNOWN",
       SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     };
     var options = MEOptions.Options.Create(cryptoOptions);
@@ -552,7 +551,7 @@ public class CryptographyServiceTests
 
   #region Decrypt Tests - Default Algorithm
 
-  // Testa a descriptografia com algoritmo desconhecido (deve usar GCM por padrão)
+  // Testa a descriptografia sem algoritmo informado (deve usar GCM por padrão)
   [Fact]
   public void Decrypt_DefaultAlgorithm_ShouldUseGCM()
   {
@@ -562,13 +561,12 @@ public class CryptographyServiceTests
     var plainText = "Hello, World!";
     var encrypted = gcmService.Encrypt(plainText);
 
-    // Create service with unknown algorithm (should default to GCM)
-    var unknownOptions = new CryptographyOptions
+    // Create service without an algorithm (should default to GCM)
+    var defaultOptions = new CryptographyOptions
     {
-      Algorithm = "UNKNOWN",
       SecretBase64 = CryptographyTestKeys.FromText("mysupersecretkey1234567890ABCDEF")
     };
-    var options = MEOptions.Options.Create(unknownOptions);
+    var options = MEOptions.Options.Create(defaultOptions);
     var service = new CryptographyService(options);
 
     // Act

@@ -1,3 +1,4 @@
+using Tooark.Exceptions;
 using Tooark.Securities.Options;
 
 namespace Tooark.Tests.Securities.Options;
@@ -9,7 +10,10 @@ public class CryptographyOptionsTests
   [InlineData("CBC", "CBC")]
   [InlineData("GCM", "GCM")]
   [InlineData("CBCUnsafe", "CBCZeroIv")]
-  [InlineData("invalid", "GCM")]
+  [InlineData("cbcunsafe", "CBCZeroIv")]
+  [InlineData(" gcm ", "GCM")]
+  [InlineData("", "GCM")]
+  [InlineData("   ", "GCM")]
   [InlineData(null, "GCM")]
   public void Algorithm_SetValue_MapsToExpectedAlgorithm(string? input, string expected)
   {
@@ -21,6 +25,20 @@ public class CryptographyOptionsTests
 
     // Assert
     Assert.Contains(expected, options.Algorithm, StringComparison.OrdinalIgnoreCase);
+  }
+
+  // Testa se um algoritmo desconhecido falha, em vez de cair em GCM em silêncio como na linha 4.x
+  [Theory]
+  [InlineData("invalid")]
+  [InlineData("GMC")]
+  [InlineData("CBCZeroIv")]
+  public void Algorithm_SetUnknownValue_ShouldThrowInternalServerError(string input)
+  {
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => new CryptographyOptions { Algorithm = input });
+
+    // Assert
+    Assert.Equal($"Options.Cryptography.AlgorithmNotSupported;{input}", exception.Message);
   }
 
   // Teste para verificar a chave em Base64
