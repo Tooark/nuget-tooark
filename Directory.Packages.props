@@ -20,7 +20,7 @@
       Tooark.Utils e o consumidor resolve a corrigida. Suba junto com o Microsoft.AspNetCore.Http.
     -->
     <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="2.3.14" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageVersion Include="Moq" Version="4.21.0" />
     <PackageVersion Include="OpenTelemetry" Version="1.20.1" />
     <PackageVersion Include="OpenTelemetry.Exporter.Console" Version="1.20.1" />
@@ -35,8 +35,7 @@
     -->
     <PackageVersion Include="OpenTelemetry.Instrumentation.Process" Version="1.20.1-rc.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
-    <PackageVersion Include="ReportGenerator" Version="5.5.12" />
-    <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
+    <PackageVersion Include="ReportGenerator" Version="5.6.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.1" />
   </ItemGroup>
@@ -69,7 +68,7 @@
     Manutenção: todo pacote aqui DEVE ter um par equivalente no grupo net8.0 acima (mesmo Id, versão da linha 8.0.x).
   -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-    <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
+    <PackageVersion Include="coverlet.MTP" Version="10.1.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection" Version="10.0.15" />
