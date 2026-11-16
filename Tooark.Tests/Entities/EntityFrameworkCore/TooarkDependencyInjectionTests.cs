@@ -324,8 +324,7 @@ public class TooarkDependencyInjectionTests : EntityFrameworkCoreTestBase
     Assert.Equal(0, await NewContext(provider).Articles.CountAsync(Token));
   }
 
-  // Testa a lacuna conhecida do pool sem validação de escopos: o usuário com escopo é resolvido no provedor
-  // raiz, vira uma instância única e não enxerga o estado da requisição
+  // Testa a lacuna conhecida do pool sem validação de escopos: o usuário com escopo não enxerga a requisição
   [Fact]
   public async Task AddDbContextPool_ShouldNotSeeRequestState_WhenCurrentUserIsScopedAndScopesAreNotValidated()
   {
@@ -346,7 +345,7 @@ public class TooarkDependencyInjectionTests : EntityFrameworkCoreTestBase
     var context = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
     context.Database.EnsureCreated();
 
-    // Act
+    // Act - o usuário com escopo é resolvido no provedor raiz e vira uma instância única da aplicação
     context.Articles.Add(new Article { Title = "Novidades" });
     await context.SaveChangesAsync(Token);
 

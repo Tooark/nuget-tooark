@@ -347,8 +347,7 @@ public class TooarkEntityInterceptorTests : EntityFrameworkCoreTestBase
     Assert.Equal(OtherUserId, reloaded.UpdatedById);
   }
 
-  // Testa a limitação da entidade desconectada que o handler carimbou antes de anexar: o rastreio não tem o
-  // valor original para comparar, então o interceptor carimba de novo
+  // Testa a limitação da entidade desconectada que o handler carimbou antes de anexar: ela é carimbada de novo
   [Fact]
   public async Task Update_ShouldStampAgain_WhenDetachedEntityWasStampedBeforeUpdate()
   {
@@ -361,7 +360,7 @@ public class TooarkEntityInterceptorTests : EntityFrameworkCoreTestBase
 
     var detached = await NewContext(provider).Articles.AsNoTracking().SingleAsync(Token);
 
-    // Act
+    // Act - o Update não deixa no rastreio o valor original que denunciaria o carimbo do handler
     detached.Title = "Atualizado";
     detached.SetUpdatedBy(OtherUserId);
 
@@ -375,8 +374,7 @@ public class TooarkEntityInterceptorTests : EntityFrameworkCoreTestBase
     Assert.Equal(UserId, reloaded.UpdatedById);
   }
 
-  // Testa se a entidade versionada desconectada, carimbada antes de anexar, falha na concorrência: a versão
-  // que o Update toma como original já não é a que está no banco
+  // Testa se a entidade versionada desconectada, carimbada antes de anexar, falha na concorrência
   [Fact]
   public async Task Update_ShouldThrowConcurrency_WhenDetachedVersionedEntityWasStampedBeforeUpdate()
   {
@@ -389,7 +387,7 @@ public class TooarkEntityInterceptorTests : EntityFrameworkCoreTestBase
 
     var detached = await NewContext(provider).Documents.AsNoTracking().SingleAsync(Token);
 
-    // Act
+    // Act - a versão que o Update toma como original já não é a que está no banco
     detached.Title = "Aditivo";
     detached.SetUpdatedBy(OtherUserId);
 

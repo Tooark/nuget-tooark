@@ -371,8 +371,7 @@ public class SoftDeleteTests : EntityFrameworkCoreTestBase
     Assert.Null((await verification.Shipments.SingleAsync(Token)).OrderId);
   }
 
-  // Testa o dependente com exclusão lógica de um principal apagado de verdade: o Entity Framework reaplica a
-  // cascata ao salvar e o dependente obrigatório é apagado junto, com ON DELETE CASCADE no banco
+  // Testa se o dependente obrigatório com exclusão lógica é apagado junto com o principal apagado de verdade
   [Fact]
   public async Task Remove_ShouldReallyDeleteSoftDeletableDependents_WhenPrincipalIsReallyDeleted()
   {
@@ -383,7 +382,7 @@ public class SoftDeleteTests : EntityFrameworkCoreTestBase
     seed.Articles.Add(new Article { Title = "Novidades", Comments = [new Comment { Text = "Ótimo" }] });
     await seed.SaveChangesAsync(Token);
 
-    // Act
+    // Act - o Entity Framework reaplica a cascata ao salvar, depois do interceptor
     var context = NewContext(provider);
     context.Articles.Remove(await context.Articles.Include(a => a.Comments).SingleAsync(Token));
     await context.SaveChangesAsync(Token);
@@ -395,8 +394,7 @@ public class SoftDeleteTests : EntityFrameworkCoreTestBase
     Assert.Equal(0, await verification.Comments.IgnoreQueryFilters().CountAsync(Token));
   }
 
-  // Testa o mesmo caso sem a cascata no banco, para provar que quem apaga o dependente é o Entity Framework:
-  // se a linha ficasse só marcada como excluída, a chave estrangeira barraria a remoção do principal
+  // Testa o mesmo caso sem ON DELETE CASCADE no banco: quem apaga o dependente é o Entity Framework
   [Fact]
   public async Task Remove_ShouldReallyDeleteSoftDeletableDependents_WhenPrincipalIsReallyDeletedWithoutDatabaseCascade()
   {
@@ -408,7 +406,7 @@ public class SoftDeleteTests : EntityFrameworkCoreTestBase
     seed.Articles.Add(new Article { Title = "Novidades", Comments = [new Comment { Text = "Ótimo" }] });
     await seed.SaveChangesAsync(Token);
 
-    // Act
+    // Act - se a linha ficasse só marcada como excluída, a chave estrangeira barraria a remoção do principal
     var context = NewStandaloneContext<ClientCascadeDbContext>(options => new ClientCascadeDbContext(options), connection, provider);
     context.Articles.Remove(await context.Articles.Include(a => a.Comments).SingleAsync(Token));
     await context.SaveChangesAsync(Token);
