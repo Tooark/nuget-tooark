@@ -148,6 +148,58 @@ public class HtmlSanitizerServiceTests
     Assert.Equal("<p class=\"destaque\">x</p>", resultado);
   }
 
+  // Testa se o name sai dos elementos que o navegador expõe no document (DOM clobbering), mesmo liberado
+  [Theory]
+  [InlineData("<img name=\"getElementById\" src=\"https://tooark.com/a.png\">", "<img src=\"https://tooark.com/a.png\">")]
+  [InlineData("<form name=\"f\"><input name=\"q\"></form>", "<form><input name=\"q\"></form>")]
+  public void Sanitize_ShouldRemoveNameFromNamedPropertyTags_EvenWhenAllowed(string html, string esperado)
+  {
+    // Arrange
+    var padrao = Criar();
+    var liberado = Criar(new HtmlOptions { AllowedTags = ["img", "form", "input"], AllowedAttributes = ["src", "name"] });
+
+    // Act
+    var resultadoPadrao = padrao.Sanitize(html);
+    var resultadoLiberado = liberado.Sanitize(html);
+
+    // Assert
+    Assert.Equal(esperado, resultadoPadrao);
+    Assert.Equal(esperado, resultadoLiberado);
+  }
+
+  // Testa se o name continua nas âncoras, que ficam fora da lista de elementos expostos no document
+  [Fact]
+  public void Sanitize_ShouldKeepNameOnAnchors()
+  {
+    // Arrange
+    var sanitizador = Criar();
+    const string html = "<a name=\"secao\" href=\"https://tooark.com\">link</a>";
+
+    // Act
+    var resultado = sanitizador.Sanitize(html);
+
+    // Assert
+    Assert.Equal(html, resultado);
+  }
+
+  // Testa se o contenteditable sai por padrão e só fica quando liberado na lista de atributos
+  [Fact]
+  public void Sanitize_ShouldRemoveContentEditable_UnlessAllowed()
+  {
+    // Arrange
+    var padrao = Criar();
+    var liberado = Criar(new HtmlOptions { AllowedAttributes = ["contenteditable"] });
+    const string html = "<div contenteditable=\"true\">x</div>";
+
+    // Act
+    var resultadoPadrao = padrao.Sanitize(html);
+    var resultadoLiberado = liberado.Sanitize(html);
+
+    // Assert
+    Assert.Equal("<div>x</div>", resultadoPadrao);
+    Assert.Equal(html, resultadoLiberado);
+  }
+
   // Testa se a configuração que libera uma tag executável é recusada
   [Theory]
   [InlineData("script")]
