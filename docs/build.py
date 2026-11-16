@@ -302,11 +302,24 @@ def download_counts():
             with urllib.request.urlopen(request, timeout=20) as response:
                 return json.load(response)
 
-        search = next(r["@id"] for r in get(NUGET_INDEX)["resources"] if r["@type"] == "SearchQueryService")
+        searches = list(dict.fromkeys(
+            r["@id"] for r in get(NUGET_INDEX)["resources"] if r["@type"] == "SearchQueryService"))
         query = urllib.parse.urlencode({"q": f"owner:{NUGET_OWNER}", "take": 200, "prerelease": "false",
                                         "semVerLevel": "2.0.0"})
-        for item in get(f"{search}?{query}")["data"]:
-            _DOWNLOADS[item["id"]] = int(item["totalDownloads"])
+        # O NuGet tem mais de uma réplica da busca, e elas não são atualizadas ao mesmo tempo: a primeira da lista
+        # pode estar milhares de downloads atrás do que o nuget.org mostra. Como a contagem só cresce, vale o maior
+        # valor de cada pacote entre as réplicas que responderem.
+        failures = []
+        for search in searches:
+            try:
+                data = get(f"{search}?{query}")["data"]
+            except Exception as error:  # noqa: BLE001 - uma réplica fora do ar não tira o número das outras
+                failures.append(f"{urllib.parse.urlsplit(search).netloc}: {error}")
+                continue
+            for item in data:
+                _DOWNLOADS[item["id"]] = max(_DOWNLOADS.get(item["id"], 0), int(item["totalDownloads"]))
+        if failures and len(failures) == len(searches):
+            raise RuntimeError("; ".join(failures))
         print(f"Downloads do nuget.org: {len(_DOWNLOADS)} pacotes, {sum(_DOWNLOADS.values())} no total.", flush=True)
     except Exception as error:  # noqa: BLE001 - qualquer falha só tira o número dos cartões
         _DOWNLOADS = {}
@@ -316,12 +329,16 @@ def download_counts():
 
 
 def compact(number, lang):
-    """12345 -> '12.3k' (en) ou '12,3 mil' (pt-BR); abaixo de mil, o número inteiro."""
+    """12345 -> '12.3k' (en) ou '12,3 mil' (pt-BR); abaixo de mil, o número inteiro.
+
+    O valor é truncado, e não arredondado: 195622 sai como '195 mil', nunca como '196 mil'. Um contador que mostra
+    mais do que o nuget.org parece errado para quem compara os dois.
+    """
     cfg = LANGS[lang]
     for size, suffix in cfg["units"]:
         if number >= size:
-            value = number / size
-            text = f"{value:.0f}" if value >= 100 else f"{value:.1f}".rstrip("0").rstrip(".")
+            tenths = number * 10 // size
+            text = str(tenths // 10) if tenths >= 1000 or tenths % 10 == 0 else f"{tenths // 10}.{tenths % 10}"
             return text.replace(".", cfg["decimal"]) + suffix
     return str(number)
 
