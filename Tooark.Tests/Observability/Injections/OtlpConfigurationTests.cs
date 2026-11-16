@@ -100,6 +100,12 @@ public class OtlpConfigurationTests
           var read = await stream.ReadAsync(buffer, _stop.Token);
           var line = Encoding.ASCII.GetString(buffer, 0, read).Split('\n')[0].Trim();
 
+          // Conexão aberta e fechada sem enviar nada não é uma requisição
+          if (line.Length == 0)
+          {
+            continue;
+          }
+
           lock (_requestLines)
           {
             _requestLines.Add(line);
