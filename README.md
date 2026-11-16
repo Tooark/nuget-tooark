@@ -69,8 +69,8 @@ Or install only what you need — every package can be installed individually (s
 code of each package lives in its own folder of this repository, together with its README.
 
 Installing through the aggregator does not register everything: `AddTooarkService` leaves out what depends on
-your application — the unit of work, the ASP.NET Core responses, JWT Bearer authentication, OpenID Connect SSO,
-storage and secrets — which are set up on their own. See the
+your application — the unit of work, entity auditing, the ASP.NET Core responses, JWT Bearer authentication,
+OpenID Connect SSO, the HTTP client, storage and secrets — which are set up on their own. See the
 [aggregator's configuration](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.md#️-configuration).
 
 ---

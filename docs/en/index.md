@@ -38,9 +38,9 @@ dotnet add package Tooark.Secrets.Aws   # secrets provider: Aws, Gcp or Vault
 ```
 
   <p>Installing through the aggregator does not register everything: <code>AddTooarkService</code> leaves out
-  what depends on your application — the unit of work, the ASP.NET Core responses, JWT Bearer authentication,
-  OpenID Connect SSO, storage and secrets. <a href="packages/tooark.md#-configuration">See how to set them
-  up</a>.</p>
+  what depends on your application — the unit of work, entity auditing, the ASP.NET Core responses, JWT Bearer
+  authentication, OpenID Connect SSO, the HTTP client, storage and secrets.
+  <a href="packages/tooark.md#-configuration">See how to set them up</a>.</p>
 </div>
 
 <!-- tooark:packages -->
