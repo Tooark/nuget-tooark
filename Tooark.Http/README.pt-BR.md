@@ -147,11 +147,12 @@ Um handler adicionado assim fica dentro do handler de resiliência, então roda 
 
 ### Opções da guarda — `HttpClient:OutboundGuard`
 
-| Propriedade       | Tipo       | Padrão  | Descrição                                                                                                                  |
-| ----------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `Enabled`         | `bool`     | `false` | Liga a guarda no cliente `Tooark`. Vem desligada porque esse cliente em geral chama serviços internos                      |
-| `AllowedHosts`    | `string[]` | nenhum  | Nomes de host liberados da conferência de endereço: um nome exato ou um sufixo iniciado por ponto (`.interna.exemplo.com`) |
-| `AllowedNetworks` | `string[]` | nenhuma | Blocos CIDR, IPv4 ou IPv6, liberados da lista de bloqueio (`10.20.0.0/16`, `fd00:1::/64`)                                  |
+| Propriedade                       | Tipo       | Padrão  | Descrição                                                                                                                  |
+| --------------------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Enabled`                         | `bool`     | `false` | Liga a guarda no cliente `Tooark`. Vem desligada porque esse cliente em geral chama serviços internos                      |
+| `AllowedHosts`                    | `string[]` | nenhum  | Nomes de host liberados da conferência de endereço: um nome exato ou um sufixo iniciado por ponto (`.interna.exemplo.com`) |
+| `AllowedNetworks`                 | `string[]` | nenhuma | Blocos CIDR, IPv4 ou IPv6, liberados da lista de bloqueio (`10.20.0.0/16`, `fd00:1::/64`)                                  |
+| `AllowUnresolvedHostsBehindProxy` | `bool`     | `false` | Com um [proxy de saída](#com-um-proxy-de-saída), deixa passar o nome que a aplicação não consegue resolver                 |
 
 ---
 
@@ -484,15 +485,35 @@ no segundo salto.
 ### Com um proxy de saída
 
 Com um proxy (as variáveis `HTTP_PROXY`/`HTTPS_PROXY` ou o `SocketsHttpHandler.Proxy`), a conexão é aberta **para o
-proxy**, e é o proxy quem resolve o nome do destino. A conferência na conexão passa a ver só o endereço do proxy. O
-que acontece nesse caso:
+proxy**, e é o proxy quem resolve o nome do destino. A conferência na conexão passa a ver só o endereço do proxy.
+Por isso, quando a requisição vai por um proxy, a guarda confere o destino **antes de enviar**: resolve o nome pelo
+DNS da própria aplicação e aplica a mesma regra.
 
-- **Coberto**: um IP literal na URL da requisição (`http://10.0.0.5/`, `http://[::1]/`, `http://2130706433/`), que
-  um handler da requisição confere antes da conexão.
-- **Não coberto**: um nome que resolve para um endereço interno, e os saltos de um redirecionamento. Só o proxy os
-  vê. Bloqueie as faixas internas nas regras do próprio proxy e considere desligar o `AllowAutoRedirect`.
+- **IP literal na URL** (`http://10.0.0.5/`, `http://[::1]/`, `http://2130706433/`): conferido na requisição.
+- **Nome que resolve para um endereço interno**: recusado com `Http.OutboundBlocked;{host}`, sem chegar ao proxy.
+  Em `https`, nem o `CONNECT` é enviado.
+- **Nome em `AllowedHosts`**: não é consultado nem precisa resolver. É o caso do serviço interno que só o proxy
+  alcança.
+- **Nome que a aplicação não consegue resolver**: a guarda recusa o que não consegue conferir. A requisição falha
+  como falha de conexão (`Http.ConnectionFailed`, repetida pela resiliência), sem chegar ao proxy. Em redes em que
+  só o proxy tem DNS para nomes externos, ligue `AllowUnresolvedHostsBehindProxy`: os nomes que a aplicação não
+  resolve passam sem conferência, e o bloqueio das faixas internas fica com as regras do proxy.
+- **URI que o proxy dispensa** (`NO_PROXY`, `BypassList`): vai direto ao destino e é conferida na conexão, como
+  sem proxy.
 - **O próprio proxy**: um proxy interno é um endereço bloqueado. Libere-o pelo nome em `AllowedHosts`; liberar a
   rede dele em `AllowedNetworks` liberaria também os IPs literais dessa rede.
+
+> ⚠️ **Com um proxy, a guarda é um filtro, e não uma garantia.** O proxy resolve o nome de novo, e um DNS
+> controlado por quem ataca pode responder um endereço público para a aplicação e um interno para o proxy. Os
+> saltos de um redirecionamento também são resolvidos só pelo proxy. Bloqueie as faixas internas nas regras do
+> próprio proxy e considere desligar o `AllowAutoRedirect`.
+
+A mesma conferência antes do envio vale quando o handler primário do cliente não é o da guarda, por exemplo um
+`ConfigurePrimaryHttpMessageHandler` chamado depois do `AddTooarkOutboundGuard`: sem a conferência na conexão, o
+nome é resolvido e conferido na requisição.
+
+> ⚠️ **Mudou na v5:** na v4.9.0, com um proxy, só o IP literal da URL era conferido, e um nome que resolvia para
+> um endereço interno seguia para o proxy.
 
 ### Do que a guarda não protege
 

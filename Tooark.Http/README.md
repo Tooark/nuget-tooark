@@ -148,11 +148,12 @@ A handler added this way sits inside the resilience handler, so it runs once per
 
 ### Guard options — `HttpClient:OutboundGuard`
 
-| Property          | Type       | Default | Description                                                                                                          |
-| ----------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `Enabled`         | `bool`     | `false` | Turns the guard on for the `Tooark` client. It is off by default because this client usually calls internal services |
-| `AllowedHosts`    | `string[]` | none    | Host names exempt from the address check: an exact name, or a suffix starting with a dot (`.internal.example.com`)   |
-| `AllowedNetworks` | `string[]` | none    | CIDR blocks, IPv4 or IPv6, exempt from the block list (`10.20.0.0/16`, `fd00:1::/64`)                                |
+| Property                          | Type       | Default | Description                                                                                                          |
+| --------------------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| `Enabled`                         | `bool`     | `false` | Turns the guard on for the `Tooark` client. It is off by default because this client usually calls internal services |
+| `AllowedHosts`                    | `string[]` | none    | Host names exempt from the address check: an exact name, or a suffix starting with a dot (`.internal.example.com`)   |
+| `AllowedNetworks`                 | `string[]` | none    | CIDR blocks, IPv4 or IPv6, exempt from the block list (`10.20.0.0/16`, `fd00:1::/64`)                                |
+| `AllowUnresolvedHostsBehindProxy` | `bool`     | `false` | With an [outbound proxy](#with-an-outbound-proxy), lets through a name the application cannot resolve                |
 
 ---
 
@@ -484,14 +485,34 @@ second hop.
 
 With a proxy (the `HTTP_PROXY`/`HTTPS_PROXY` variables or `SocketsHttpHandler.Proxy`), the connection is opened
 **to the proxy**, and the proxy resolves the destination name. The connection check then sees only the proxy
-address. What happens in that case:
+address. So, when the request goes through a proxy, the guard checks the destination **before sending**: it
+resolves the name with the application's own DNS and applies the same rule.
 
-- **Covered**: an IP literal in the request URL (`http://10.0.0.5/`, `http://[::1]/`, `http://2130706433/`), which
-  a request handler checks before the connection.
-- **Not covered**: a name that resolves to an internal address, and the hops of a redirect. Only the proxy sees
-  them. Block the internal ranges in the proxy's own rules, and consider turning `AllowAutoRedirect` off.
+- **IP literal in the URL** (`http://10.0.0.5/`, `http://[::1]/`, `http://2130706433/`): checked on the request.
+- **Name that resolves to an internal address**: refused with `Http.OutboundBlocked;{host}`, without reaching the
+  proxy. For `https`, not even the `CONNECT` is sent.
+- **Name in `AllowedHosts`**: it is not looked up and does not need to resolve. This is the internal service that
+  only the proxy can reach.
+- **Name the application cannot resolve**: the guard refuses what it cannot check. The request fails as a
+  connection failure (`Http.ConnectionFailed`, retried by resilience), without reaching the proxy. On networks
+  where only the proxy has DNS for external names, turn `AllowUnresolvedHostsBehindProxy` on: the names the
+  application cannot resolve go through unchecked, and blocking the internal ranges is left to the proxy's rules.
+- **URI the proxy bypasses** (`NO_PROXY`, `BypassList`): it goes straight to the destination and is checked on the
+  connection, as without a proxy.
 - **The proxy itself**: an internal proxy is a blocked address. Allow it by name in `AllowedHosts`; allowing its
   network in `AllowedNetworks` would also allow IP literals in that network.
+
+> ⚠️ **With a proxy, the guard is a filter, not a guarantee.** The proxy resolves the name again, and a DNS
+> controlled by an attacker can answer a public address to the application and an internal one to the proxy. The
+> hops of a redirect are also resolved only by the proxy. Block the internal ranges in the proxy's own rules, and
+> consider turning `AllowAutoRedirect` off.
+
+The same check before sending applies when the client's primary handler is not the guard's, for example a
+`ConfigurePrimaryHttpMessageHandler` called after `AddTooarkOutboundGuard`: with no check on the connection, the
+name is resolved and checked on the request.
+
+> ⚠️ **Changed in v5:** in v4.9.0, with a proxy, only the IP literal in the URL was checked, and a name that
+> resolved to an internal address went on to the proxy.
 
 ### What the guard does not protect against
 

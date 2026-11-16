@@ -61,7 +61,8 @@ public class HttpInjectionTests
       ["HttpClient:Resilience"] = "false",
       ["HttpClient:OutboundGuard:Enabled"] = "true",
       ["HttpClient:OutboundGuard:AllowedHosts:0"] = ".interna.exemplo.com",
-      ["HttpClient:OutboundGuard:AllowedNetworks:0"] = "10.20.0.0/16"
+      ["HttpClient:OutboundGuard:AllowedNetworks:0"] = "10.20.0.0/16",
+      ["HttpClient:OutboundGuard:AllowUnresolvedHostsBehindProxy"] = "true"
     });
     var services = new ServiceCollection();
 
@@ -85,6 +86,7 @@ public class HttpInjectionTests
     Assert.True(options.OutboundGuard.Enabled);
     Assert.Equal(".interna.exemplo.com", Assert.Single(options.OutboundGuard.AllowedHosts));
     Assert.Equal("10.20.0.0/16", Assert.Single(options.OutboundGuard.AllowedNetworks));
+    Assert.True(options.OutboundGuard.AllowUnresolvedHostsBehindProxy);
 
     // O endereço base ganha a barra final, e sem a resiliência o cliente aplica o tempo limite total
     Assert.Equal("https://api.exemplo.com/v1/", client.BaseAddress?.AbsoluteUri);

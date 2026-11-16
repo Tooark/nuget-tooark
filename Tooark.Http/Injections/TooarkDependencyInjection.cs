@@ -52,7 +52,9 @@ public static partial class TooarkDependencyInjection
   /// <remarks>
   /// Aqui a guarda entra ligada. O handler primário do cliente passa a ser um <see cref="SocketsHttpHandler"/> cujo
   /// <see cref="SocketsHttpHandler.ConnectCallback"/> resolve o nome, recusa os endereços bloqueados e conecta ao
-  /// endereço conferido; um handler na requisição confere o IP literal do host. Um <see cref="SocketsHttpHandler"/>
+  /// endereço conferido; um handler na requisição confere o IP literal do host e, quando a conexão não vai
+  /// enxergar o destino (um proxy de saída, ou um handler primário que não é o da guarda), o próprio nome, resolvido
+  /// pelo DNS da aplicação. Um <see cref="SocketsHttpHandler"/>
   /// já configurado é mantido, com o <c>ConnectCallback</c> trocado; um handler primário de outro tipo, como o
   /// <see cref="HttpClientHandler"/>, é substituído, e a configuração dele se perde. Chame este método <b>depois</b> do
   /// handler de resiliência e de qualquer configuração do handler primário: assim a recusa não é repetida nem
@@ -189,7 +191,9 @@ public static partial class TooarkDependencyInjection
     builder.UseSocketsHttpHandler((handler, provider) =>
       handler.ConnectCallback = new OutboundConnector(policy, provider.GetRequiredService<IHostResolver>()).ConnectAsync);
 
-    builder.AddHttpMessageHandler(() => new OutboundGuardHandler(policy));
+    // O handler da requisição usa a mesma conferência do nome quando a conexão não vai enxergar o destino
+    builder.AddHttpMessageHandler(provider =>
+      new OutboundGuardHandler(policy, new OutboundConnector(policy, provider.GetRequiredService<IHostResolver>())));
 
     return builder;
   }

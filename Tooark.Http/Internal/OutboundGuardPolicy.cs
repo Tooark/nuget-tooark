@@ -37,6 +37,15 @@ internal sealed class OutboundGuardPolicy
 
   #endregion
 
+  #region Properties
+
+  /// <summary>
+  /// Indica se, com um proxy de saída, o nome que a aplicação não consegue resolver passa sem conferência.
+  /// </summary>
+  internal bool AllowUnresolvedHostsBehindProxy { get; }
+
+  #endregion
+
   #region Constructor
 
   /// <summary>
@@ -45,11 +54,13 @@ internal sealed class OutboundGuardPolicy
   /// <param name="hosts">Nomes de host liberados por comparação exata.</param>
   /// <param name="suffixes">Sufixos liberados, com o ponto inicial.</param>
   /// <param name="networks">Redes liberadas da lista de bloqueio.</param>
-  private OutboundGuardPolicy(HashSet<string> hosts, string[] suffixes, IPNetwork[] networks)
+  /// <param name="allowUnresolvedHostsBehindProxy">Se o nome que não resolve passa quando há um proxy de saída.</param>
+  private OutboundGuardPolicy(HashSet<string> hosts, string[] suffixes, IPNetwork[] networks, bool allowUnresolvedHostsBehindProxy)
   {
     _hosts = hosts;
     _suffixes = suffixes;
     _networks = networks;
+    AllowUnresolvedHostsBehindProxy = allowUnresolvedHostsBehindProxy;
   }
 
   #endregion
@@ -92,7 +103,7 @@ internal sealed class OutboundGuardPolicy
       networks.Add(network);
     }
 
-    return new OutboundGuardPolicy(hosts, [.. suffixes], [.. networks]);
+    return new OutboundGuardPolicy(hosts, [.. suffixes], [.. networks], options.AllowUnresolvedHostsBehindProxy);
   }
 
   /// <summary>

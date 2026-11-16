@@ -41,6 +41,18 @@ public class OutboundGuardOptions
   /// </remarks>
   public string[] AllowedNetworks { get; set; } = [];
 
+  /// <summary>
+  /// Com um proxy de saída, deixa passar o nome de host que a aplicação não consegue resolver. Padrão: falso.
+  /// </summary>
+  /// <remarks>
+  /// Com um proxy, quem abre a conexão com o destino é o proxy, e a guarda confere o nome resolvendo-o pelo DNS da
+  /// própria aplicação antes de enviar a requisição. Quando o nome não resolve, a guarda não tem o que conferir: por
+  /// padrão a requisição falha como uma falha de conexão, sem chegar ao proxy. Ligue esta opção só em redes em que a
+  /// aplicação não tem DNS para nomes externos e depende do proxy para resolvê-los; nesse caso os nomes que ela não
+  /// resolve passam sem conferência, e o bloqueio das faixas internas fica por conta das regras do proxy.
+  /// </remarks>
+  public bool AllowUnresolvedHostsBehindProxy { get; set; }
+
   #endregion
 
   #region Validate

@@ -18,6 +18,13 @@ internal interface IHostResolver
   /// <param name="cancellationToken">Token de cancelamento.</param>
   /// <returns>Os endereços IP do host, na ordem em que devem ser tentados.</returns>
   Task<IPAddress[]> ResolveAsync(string host, CancellationToken cancellationToken);
+
+  /// <summary>
+  /// Resolve o nome de host de forma síncrona, para o envio síncrono do <see cref="HttpClient"/>.
+  /// </summary>
+  /// <param name="host">O nome de host.</param>
+  /// <returns>Os endereços IP do host, na ordem em que devem ser tentados.</returns>
+  IPAddress[] Resolve(string host);
 }
 
 /// <summary>
@@ -28,4 +35,7 @@ internal sealed class DnsHostResolver : IHostResolver
   /// <inheritdoc />
   public Task<IPAddress[]> ResolveAsync(string host, CancellationToken cancellationToken) =>
     Dns.GetHostAddressesAsync(host, cancellationToken);
+
+  /// <inheritdoc />
+  public IPAddress[] Resolve(string host) => Dns.GetHostAddresses(host);
 }

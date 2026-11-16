@@ -370,11 +370,15 @@ public class OutboundGuardConnectionTests
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
   }
 
-  // Monta um cliente com a guarda e um handler primário falso, como fica a conferência quando há um proxy de saída:
-  // a conexão não passa pelo ConnectCallback da guarda, e sobra a conferência do host da requisição
+  // Monta um cliente com a guarda e um handler primário falso, como fica a conferência quando a conexão não passa
+  // pelo ConnectCallback da guarda: sobra a conferência feita na requisição, com o DNS trocado
   private static (ServiceProvider Provider, HttpClient Client) ComProxy(FakeHttpMessageHandler handler, params string[] redes)
   {
     var services = new ServiceCollection();
+
+    services.AddSingleton<IHostResolver>(new FakeHostResolver()
+      .Map("nome-publico.exemplo.com", "93.184.216.34")
+      .Map("webhook.exemplo.com", "93.184.216.34"));
 
     services.AddHttpClient("proxy")
       .AddTooarkOutboundGuard(options => options.AllowedNetworks = redes)
@@ -415,12 +419,13 @@ public class OutboundGuardConnectionTests
     }
   }
 
-  // Testa o que a conferência do host da requisição deixa passar: IP público, rede liberada e nome, que só a conexão confere
+  // Testa o que a conferência do host da requisição deixa passar: IP público, rede liberada e nome que resolve para
+  // um endereço público
   [Theory]
   [InlineData("http://93.184.216.34/")]
   [InlineData("http://10.20.0.5/")]
-  [InlineData("http://nome-que-o-proxy-resolve.exemplo.com/")]
-  public async Task RequestHostCheck_ShouldLetPublicLiteralAllowedNetworkAndNamesThrough(string url)
+  [InlineData("http://nome-publico.exemplo.com/")]
+  public async Task RequestHostCheck_ShouldLetPublicLiteralAllowedNetworkAndPublicNamesThrough(string url)
   {
     // Arrange
     var handler = new FakeHttpMessageHandler(_ => FakeHttpMessageHandler.Empty(HttpStatusCode.OK));

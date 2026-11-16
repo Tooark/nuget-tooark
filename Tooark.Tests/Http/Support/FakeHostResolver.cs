@@ -44,4 +44,7 @@ internal sealed class FakeHostResolver : IHostResolver
       ? Task.FromResult(addresses)
       : Task.FromException<IPAddress[]>(new SocketException((int)SocketError.HostNotFound));
   }
+
+  /// <inheritdoc />
+  public IPAddress[] Resolve(string host) => ResolveAsync(host, CancellationToken.None).GetAwaiter().GetResult();
 }

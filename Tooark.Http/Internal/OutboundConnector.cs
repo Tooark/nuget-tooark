@@ -76,11 +76,44 @@ internal sealed class OutboundConnector(OutboundGuardPolicy policy, IHostResolve
     // Um IP literal na URL não passa pelo DNS, mas passa pela mesma regra
     if (IPAddress.TryParse(host, out var literal))
     {
-      return policy.IsBlocked(literal) ? throw new OutboundBlockedException(host) : [OutboundGuard.Normalize(literal)];
+      return CheckLiteral(host, literal);
     }
 
-    var addresses = await resolver.ResolveAsync(host, cancellationToken).ConfigureAwait(false);
+    return Check(host, await resolver.ResolveAsync(host, cancellationToken).ConfigureAwait(false));
+  }
 
+  /// <summary>
+  /// Resolve o host e confere os endereços contra a regra da guarda, de forma síncrona.
+  /// </summary>
+  /// <param name="host">O host da requisição: um nome ou um endereço IP literal.</param>
+  /// <returns>Os endereços conferidos.</returns>
+  /// <exception cref="OutboundBlockedException">Quando o destino está bloqueado.</exception>
+  internal IPAddress[] Resolve(string host) =>
+    IPAddress.TryParse(host, out var literal) ? CheckLiteral(host, literal) : Check(host, resolver.Resolve(host));
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Confere um endereço IP literal contra a regra da guarda.
+  /// </summary>
+  /// <param name="host">O host como veio na URL.</param>
+  /// <param name="literal">O endereço interpretado.</param>
+  /// <returns>O endereço conferido.</returns>
+  /// <exception cref="OutboundBlockedException">Quando o endereço está bloqueado.</exception>
+  private IPAddress[] CheckLiteral(string host, IPAddress literal) =>
+    policy.IsBlocked(literal) ? throw new OutboundBlockedException(host) : [OutboundGuard.Normalize(literal)];
+
+  /// <summary>
+  /// Confere os endereços de um nome contra a regra da guarda.
+  /// </summary>
+  /// <param name="host">O nome de host.</param>
+  /// <param name="addresses">Os endereços que o nome resolveu.</param>
+  /// <returns>Os endereços conferidos, na ordem em que devem ser tentados.</returns>
+  /// <exception cref="OutboundBlockedException">Quando algum endereço está bloqueado e o nome não está liberado.</exception>
+  private IPAddress[] Check(string host, IPAddress[] addresses)
+  {
     // O IPv4 mapeado em IPv6 é conferido e conectado como IPv4, o destino que ele de fato tem
     addresses = Array.ConvertAll(addresses, OutboundGuard.Normalize);
 
