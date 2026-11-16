@@ -111,9 +111,8 @@ A conferência vem ligada por padrão (na linha 4.x era opcional). Para desligá
 - **Valor inválido:** qualquer coisa diferente de `true` ou `false` falha no startup
   (`Options.Configuration.StrictInvalid`), em vez de ser ignorada.
 
-> ⚠️ **Muda na v5:** a opção vem desligada na linha 4.x e passa a ligada por padrão na v5. Ligue-a em
-> homologação desde já para encontrar as chaves erradas antes da troca de versão; para mantê-la desligada na v5,
-> informe `false`.
+> ⚠️ **Mudou na v5:** na linha 4.x a opção vinha desligada. Ela existe desde a v4.9.0: ligue-a na 4.x, em
+> homologação, para encontrar as chaves erradas antes da troca de versão.
 
 ---
 

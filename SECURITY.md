@@ -48,7 +48,9 @@ line** on NuGet.
 | ------- | --------------------------------------------------- |
 | 5.x     | ✅ Active — features, bug fixes and security fixes  |
 | 4.x     | ⚠️ Dependency updates that fix vulnerabilities only |
-| ≤ 3.x   | ❌ End of life — please upgrade                     |
+| 3.x     | ⚠️ Security fixes only, until December 2026 (`v3`)  |
+| 2.x     | ⚠️ Security fixes only, until December 2026 (`v2`)  |
+| ≤ 1.x   | ❌ End of life — please upgrade                     |
 
 Packages target `net10.0`. When a .NET runtime reaches end of support by
 Microsoft, the corresponding target framework stops receiving security fixes

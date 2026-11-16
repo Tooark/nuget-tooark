@@ -111,8 +111,8 @@ The check is on by default (on the 4.x line it was opt-in). To turn it off:
 - **Invalid value:** anything other than `true` or `false` fails at startup
   (`Options.Configuration.StrictInvalid`), instead of being ignored.
 
-> ⚠️ **Changes in v5:** the option is off on the 4.x line and becomes on by default in v5. Turn it on in staging
-> now to find the wrong keys before the upgrade; to keep it off in v5, set `false`.
+> ⚠️ **Changed in v5:** on the 4.x line the option was off. It has existed since v4.9.0: turn it on in staging
+> on 4.x to find the wrong keys before the upgrade.
 
 ---
 

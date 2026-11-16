@@ -4,9 +4,10 @@ namespace Tooark.Securities;
 /// Nomes das claims que o <see cref="JwtTokenService"/> emite e o <see cref="Dtos.UserTokenDto"/> lê.
 /// </summary>
 /// <remarks>
-/// As claims legadas (<see cref="Id"/>, <see cref="Login"/>) são as emitidas por padrão na linha 4.x. As padrão
-/// (<see cref="Subject"/>, <see cref="PreferredUsername"/>) seguem o JWT (RFC 7519) e o OpenID Connect e são
-/// opt-in por <see cref="Options.JwtOptions.EmitStandardClaims"/>. Na v5 os padrões se invertem.
+/// As claims padrão (<see cref="Subject"/>, <see cref="PreferredUsername"/>) seguem o JWT (RFC 7519) e o OpenID
+/// Connect e são as emitidas por padrão (<see cref="Options.JwtOptions.EmitStandardClaims"/>). As legadas
+/// (<see cref="Id"/>, <see cref="Login"/>), que eram o padrão da linha 4.x, são opt-in por
+/// <see cref="Options.JwtOptions.EmitLegacyClaims"/>.
 /// </remarks>
 public static class TooarkClaimNames
 {
