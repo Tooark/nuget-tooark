@@ -6,16 +6,24 @@
 # Scope:
 #   - NuGet: weekly, against the central pins in Directory.Packages.props.
 #     Minor/patch updates are grouped into one PR; the test tooling (xunit,
-#     coverlet, Microsoft.Testing.*) is grouped separately and may include
-#     majors, because those packages only move together.
+#     Microsoft.Testing.*, Microsoft.NET.Test.Sdk) is grouped separately and
+#     may include majors, because those packages only move together.
 #   - Runtime-bound packages (Microsoft.AspNetCore.Authentication.*,
 #     Microsoft.AspNetCore.DataProtection*, Microsoft.Extensions.*, EF Core,
-#     System.Security.Cryptography.Xml) are
+#     System.Security.Cryptography.Xml, coverlet.MTP) are
 #     NOT handled by Dependabot. They have one pin per target framework in
 #     conditional ItemGroups, and Dependabot only evaluates the first one: it
-#     bumped the 8.0.x line and left the 10.0.x line behind (PR #54). Those
-#     pins are bumped by hand, in pairs, after each .NET servicing release;
-#     scripts/check-package-pairs.sh (run by CI) checks the structure.
+#     bumped the 8.0.x line and left the 10.0.x line behind (PR #54), and it
+#     moved coverlet.MTP 10.x into the net8.0 group, dragging
+#     Microsoft.Extensions.DependencyInjection 10.x along (PRs #77 and #86).
+#     Those pins are bumped by hand, in pairs, after each .NET servicing
+#     release; scripts/check-package-pairs.sh (run by CI) checks the structure.
+#   - Packages whose next line dropped net8.0 (OpenTelemetry >= 1.21, which
+#     falls back to netstandard and Microsoft.Extensions.* 11.0 there; AWSSDK
+#     >= 4.1, which brings System.IO.Hashing 11.0, unsupported on net8.0) are
+#     ignored from that line on while this branch targets net8.0 (PR #87).
+#     They are bumped on release/v5 (net10.0 only); drop those ignore entries
+#     when net8.0 leaves this branch.
 #   - GitHub Actions: weekly, minor/patch grouped into one PR.
 #   - The security-scanner image used by the release workflow is pinned by
 #     hand in the workflow env; Dependabot does not track it.
@@ -40,12 +48,11 @@ updates:
       include: "scope"
     groups:
       # xunit.v3 and xunit.runner.visualstudio are released together and a
-      # major of one needs the major of the other; coverlet.MTP follows the
-      # Microsoft.Testing.Platform line shipped by xunit.
+      # major of one needs the major of the other. coverlet.MTP is not here:
+      # it is pinned per target framework (see ignore below).
       test-tooling:
         patterns:
           - "xunit*"
-          - "coverlet*"
           - "Microsoft.Testing.*"
           - "Microsoft.NET.Test.Sdk"
         update-types:
@@ -65,6 +72,15 @@ updates:
       - dependency-name: "Microsoft.Extensions.*"
       - dependency-name: "Microsoft.EntityFrameworkCore*"
       - dependency-name: "System.Security.Cryptography.Xml"
+      # coverlet.MTP 10.x requires Microsoft.Extensions.* 10.x even on net8.0,
+      # so it stays on 8.0.x in the net8.0 group and on 10.x in the net10.0 one.
+      - dependency-name: "coverlet.MTP"
+      # Lines that dropped net8.0: bumped on release/v5 only. Remove these two
+      # entries when net8.0 leaves this branch.
+      - dependency-name: "OpenTelemetry*"
+        versions: [">= 1.21.0"]
+      - dependency-name: "AWSSDK.*"
+        versions: [">= 4.1.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
