@@ -44,11 +44,11 @@ All packages in this repository share one version number and are released
 together. Security fixes are published as a new patch of the **current major
 line** on NuGet.
 
-| Version | Supported                                               |
-| ------- | ------------------------------------------------------- |
-| 5.x     | ✅ Active — features, bug fixes and security fixes      |
-| 4.x     | ⚠️ Dependency updates that fix vulnerabilities only     |
-| ≤ 3.x   | ❌ End of life — please upgrade                         |
+| Version | Supported                                           |
+| ------- | --------------------------------------------------- |
+| 5.x     | ✅ Active — features, bug fixes and security fixes  |
+| 4.x     | ⚠️ Dependency updates that fix vulnerabilities only |
+| ≤ 3.x   | ❌ End of life — please upgrade                     |
 
 Packages target `net10.0`. When a .NET runtime reaches end of support by
 Microsoft, the corresponding target framework stops receiving security fixes
