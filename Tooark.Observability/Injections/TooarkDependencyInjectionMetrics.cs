@@ -99,7 +99,7 @@ public static partial class TooarkDependencyInjection
       // Configura OTLP exporter
       builder.AddOtlpExporter((exporterOptions, readerOptions) =>
       {
-        ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions);
+        ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions, OtlpMetricsPath);
 
         // Métricas usam reader periódico (não o processador Batch): configura o intervalo de exportação
         readerOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds =

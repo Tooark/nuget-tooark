@@ -39,7 +39,7 @@ public class OtlpOptions
   /// <remarks>
   /// Valores possíveis:
   /// - "grpc": usa gRPC para comunicação.
-  /// - "http": usa HTTP com payload em protobuf.
+  /// - "http" (ou "http/protobuf", como o OpenTelemetry escreve): usa HTTP com payload em protobuf.
   /// </remarks>
   public EProtocolOtlp Protocol { get; set; } = "grpc";
 
@@ -50,6 +50,8 @@ public class OtlpOptions
   /// Exemplo:
   /// - "http://localhost:4317" para gRPC
   /// - "http://localhost:4318" para HTTP/protobuf.
+  /// No HTTP o caminho do sinal (<c>/v1/traces</c>, <c>/v1/metrics</c> ou <c>/v1/logs</c>) é acrescentado ao
+  /// endereço na exportação; um endereço que já termina no caminho de um sinal é usado como está.
   /// </remarks>
   public string? Endpoint { get; set; }
 

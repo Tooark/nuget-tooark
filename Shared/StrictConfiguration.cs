@@ -85,23 +85,24 @@ internal static partial class StrictConfiguration
   /// <param name="section">Caminho da seção, como <c>Jwt</c> ou <c>OpenId:Entra</c>.</param>
   /// <param name="options">Instância que recebe os valores.</param>
   /// <exception cref="InternalServerErrorException">Quando a seção traz uma chave desconhecida e a configuração estrita está ligada.</exception>
+  /// <exception cref="TooarkException">Quando um valor é recusado pelo tipo da própria opção, com a configuração estrita ligada ou não.</exception>
   internal static void Bind(IConfiguration configuration, string section, object options)
   {
     var source = configuration.GetSection(section);
-
-    // Desligada, a leitura é a de sempre: nenhuma mudança de comportamento para quem não optou
-    if (!IsEnabled(configuration))
-    {
-      source.Bind(options);
-
-      return;
-    }
+    var strict = IsEnabled(configuration);
 
     try
     {
-      source.Bind(options, binder => binder.ErrorOnUnknownConfiguration = true);
+      // Desligada, a leitura é a de sempre: nenhuma mudança de comportamento para quem não optou
+      source.Bind(options, binder => binder.ErrorOnUnknownConfiguration = strict);
     }
-    catch (InvalidOperationException exception) when (exception.Message.Contains(BinderMarker, StringComparison.Ordinal))
+    catch (InvalidOperationException exception) when (exception.InnerException is TooarkException inner)
+    {
+      // O valor foi recusado pelo próprio tipo da opção (um protocolo que não existe, por exemplo), e o binder
+      // embrulha a falha da conversão: devolve a exceção original, com a chave de mensagem
+      ExceptionDispatchInfo.Capture(inner).Throw();
+    }
+    catch (InvalidOperationException exception) when (strict && exception.Message.Contains(BinderMarker, StringComparison.Ordinal))
     {
       // O binder já fez a comparação, inclusive nos objetos aninhados: a exceção dele vira a do Tooark, com a
       // chave de mensagem, a seção e os nomes que ele não reconheceu

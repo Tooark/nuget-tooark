@@ -54,6 +54,9 @@ public class StrictConfigurationTests
         ["Observability:Enabled"] = "false",
         ["Observability:ServiceName"] = "tests",
         ["Observability:Tracing:SamplingRatio"] = "0.5",
+        ["Observability:Otlp:Protocol"] = "http",
+        ["Observability:Otlp:ExportProcessorType"] = "simple",
+        ["Observability:Tracing:Otlp:Protocol"] = "grpc",
         ["Observability:ResourceAttributes:deployment.environment"] = "tests"
       },
       "Observability:Tracing:SampligRatio", "SampligRatio",

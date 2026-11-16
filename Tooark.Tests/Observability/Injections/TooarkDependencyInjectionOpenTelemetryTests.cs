@@ -937,7 +937,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.Equal(OtlpExportProtocol.Grpc, exporter.Protocol);
@@ -966,11 +966,11 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.Equal(OtlpExportProtocol.HttpProtobuf, exporter.Protocol);
-    Assert.Equal(new Uri(url), exporter.Endpoint);
+    Assert.Equal(new Uri($"{url}/v1/traces"), exporter.Endpoint);
     Assert.Equal(ExportProcessorType.Simple, exporter.ExportProcessorType);
     Assert.Equal(2048, exporter.BatchExportProcessorOptions.MaxQueueSize); // Default do OpenTelemetry
     Assert.Equal(512, exporter.BatchExportProcessorOptions.MaxExportBatchSize); // Default do OpenTelemetry
@@ -1002,7 +1002,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.Equal(ExportProcessorType.Batch, exporter.ExportProcessorType);
@@ -1026,7 +1026,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.NotNull(exporter.BatchExportProcessorOptions);
@@ -1056,7 +1056,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.NotNull(exporter.BatchExportProcessorOptions);
@@ -1083,7 +1083,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
 
     // Act
     var resolved = TooarkDependencyInjection.ResolveOtlpOptions(options, null);
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, resolved);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, resolved, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.NotNull(exporter.BatchExportProcessorOptions);
@@ -1105,7 +1105,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     };
 
     // Act
-    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt);
+    TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath);
 
     // Assert
     Assert.Equal(new Uri("https://collector.example.com:4317"), exporter.Endpoint);
@@ -1125,7 +1125,7 @@ public class TooarkDependencyInjectionOpenTelemetryTests
     var opt = new OtlpOptions { Endpoint = endpoint };
 
     // Act & Assert
-    var ex = Assert.Throws<InternalServerErrorException>(() => TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt));
+    var ex = Assert.Throws<InternalServerErrorException>(() => TooarkDependencyInjection.ConfigureOtlpExporter(exporter, opt, TooarkDependencyInjection.OtlpTracesPath));
     Assert.Contains("Options.Otlp.Endpoint.Invalid", ex.Message);
   }
 

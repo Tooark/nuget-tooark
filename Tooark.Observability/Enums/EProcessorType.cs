@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using OpenTelemetry;
 using Tooark.Exceptions;
 
@@ -6,6 +7,7 @@ namespace Tooark.Observability.Enums;
 /// <summary>
 /// Enumeração para os tipos de processador de exportação OTLP.
 /// </summary>
+[TypeConverter(typeof(EProcessorTypeConverter))]
 public sealed class EProcessorType
 {
   #region Processor Types OTLP

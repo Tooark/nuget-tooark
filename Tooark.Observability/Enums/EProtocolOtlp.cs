@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using OpenTelemetry.Exporter;
 using Tooark.Exceptions;
 
@@ -6,6 +7,7 @@ namespace Tooark.Observability.Enums;
 /// <summary>
 /// Enumeração para os protocolos de comunicação OTLP.
 /// </summary>
+[TypeConverter(typeof(EProtocolOtlpConverter))]
 public sealed class EProtocolOtlp
 {
   #region Protocolos OTLP
@@ -68,7 +70,7 @@ public sealed class EProtocolOtlp
   /// <returns>Uma instância de <see cref="EProtocolOtlp"/>.</returns>
   private static EProtocolOtlp FromDescription(string description) => description?.ToLowerInvariant() switch
   {
-    "http" => Http,
+    "http" or "http/protobuf" => Http,
     "grpc" => Grpc,
     _ => throw new InternalServerErrorException($"Invalid.Parameter;{description}")
   };

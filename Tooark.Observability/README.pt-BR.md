@@ -417,6 +417,10 @@ ser definidos programaticamente, pela sobrecarga com `Action<ObservabilityOption
 | `Headers`             | string?          | `null`   | Headers (formato: `key1=value1,key2=value2`)      |
 | `Batch`               | OtlpBatchOptions | defaults | Opções do batch                                   |
 
+**Protocolo HTTP e o caminho do sinal.** Com `"Protocol": "http"`, cada sinal é enviado para o seu caminho: `/v1/traces`, `/v1/metrics` e `/v1/logs`. Informe só o endereço do coletor (`http://otel-collector:4318`) ou a URL base do provedor (`https://.../otlp`), no OTLP global ou no de um sinal: o pacote acrescenta o caminho. Um endereço que já termina em um desses caminhos é usado como está. No gRPC o endereço nunca é alterado.
+
+`http/protobuf`, como o OpenTelemetry escreve, é aceito como `http`. Um valor que não existe em `Protocol` ou em `ExportProcessorType` impede a aplicação de subir, com `Invalid.Parameter;{valor}`.
+
 ### OtlpBatchOptions
 
 | Propriedade                   | Tipo | Padrão  | Descrição                               |

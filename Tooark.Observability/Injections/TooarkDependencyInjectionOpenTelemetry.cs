@@ -24,6 +24,30 @@ namespace Tooark.Observability.Injections;
 /// </summary>
 public static partial class TooarkDependencyInjection
 {
+  #region Constants
+
+  /// <summary>
+  /// Caminho do sinal de traces no OTLP sobre HTTP.
+  /// </summary>
+  internal const string OtlpTracesPath = "v1/traces";
+
+  /// <summary>
+  /// Caminho do sinal de métricas no OTLP sobre HTTP.
+  /// </summary>
+  internal const string OtlpMetricsPath = "v1/metrics";
+
+  /// <summary>
+  /// Caminho do sinal de logs no OTLP sobre HTTP.
+  /// </summary>
+  internal const string OtlpLogsPath = "v1/logs";
+
+  /// <summary>
+  /// Caminhos dos sinais no OTLP sobre HTTP.
+  /// </summary>
+  private static readonly string[] OtlpSignalPaths = [OtlpTracesPath, OtlpMetricsPath, OtlpLogsPath];
+
+  #endregion
+
   /// <summary>
   /// Adiciona os serviços de OpenTelemetry ao container de injeção de dependência.
   /// </summary>
@@ -428,17 +452,60 @@ public static partial class TooarkDependencyInjection
   }
 
   /// <summary>
-  /// Configura as opções do exportador OTLP.
+  /// Resolve o endereço para onde um sinal é exportado.
   /// </summary>
-  /// <param name="otlpOptions">OtlpExporterOptions a ser configurado.</param>
-  /// <param name="options">Opções de OTLP.</param>
-  internal static void ConfigureOtlpExporter(OtlpExporterOptions otlpOptions, OtlpOptions options)
+  /// <remarks>
+  /// <para>
+  /// No gRPC o endereço é o do coletor, sem caminho. No HTTP cada sinal tem o seu caminho
+  /// (<c>/v1/traces</c>, <c>/v1/metrics</c> e <c>/v1/logs</c>), e o SDK do OpenTelemetry não o acrescenta quando
+  /// o endereço é definido por código: um <c>http://coletor:4318</c> faria o <c>POST</c> na raiz, que o coletor
+  /// recusa. Por isso o caminho do sinal é acrescentado aqui.
+  /// </para>
+  /// <para>
+  /// Um endereço que já termina no caminho de um sinal é usado como está: é o de quem já informava o endereço
+  /// completo, e ele não muda.
+  /// </para>
+  /// </remarks>
+  /// <param name="options">Opções de OTLP já resolvidas para o sinal.</param>
+  /// <param name="signalPath">Caminho do sinal: <see cref="OtlpTracesPath"/>, <see cref="OtlpMetricsPath"/> ou <see cref="OtlpLogsPath"/>.</param>
+  /// <returns>O endereço efetivo da exportação.</returns>
+  /// <exception cref="InternalServerErrorException">Quando o endpoint é nulo ou não é uma URI absoluta válida.</exception>
+  internal static Uri ResolveOtlpEndpoint(OtlpOptions options, string signalPath)
   {
     // Valida o endpoint
     ValidateOtlpEndpoint(options);
 
-    // Configura o endpoint e protocolo (não-nulo garantido por ValidateOtlpEndpoint)
-    otlpOptions.Endpoint = new Uri(options.Endpoint!);
+    // Não-nulo garantido por ValidateOtlpEndpoint
+    var endpoint = new Uri(options.Endpoint!);
+
+    if (options.Protocol.ToProtocol() != OtlpExportProtocol.HttpProtobuf)
+    {
+      return endpoint;
+    }
+
+    var path = endpoint.AbsolutePath.TrimEnd('/');
+
+    // Quem já informa o endereço completo de um sinal continua com ele
+    if (OtlpSignalPaths.Any(known => path.EndsWith($"/{known}", StringComparison.OrdinalIgnoreCase)))
+    {
+      return endpoint;
+    }
+
+    // O UriBuilder preserva a query string e a porta do endereço informado
+    return new UriBuilder(endpoint) { Path = $"{path}/{signalPath}" }.Uri;
+  }
+
+  /// <summary>
+  /// Configura as opções do exportador OTLP.
+  /// </summary>
+  /// <param name="otlpOptions">OtlpExporterOptions a ser configurado.</param>
+  /// <param name="options">Opções de OTLP.</param>
+  /// <param name="signalPath">Caminho do sinal no protocolo HTTP: <see cref="OtlpTracesPath"/>, <see cref="OtlpMetricsPath"/> ou <see cref="OtlpLogsPath"/>.</param>
+  internal static void ConfigureOtlpExporter(OtlpExporterOptions otlpOptions, OtlpOptions options, string signalPath)
+  {
+    // Configura o endpoint e protocolo. O endereço efetivo fica só no exportador: gravá-lo de volta nas opções
+    // levaria o caminho de um sinal para o seguinte
+    otlpOptions.Endpoint = ResolveOtlpEndpoint(options, signalPath);
     otlpOptions.Protocol = options.Protocol;
 
     // Configura o tipo de processador de exportação
