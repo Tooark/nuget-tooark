@@ -351,8 +351,16 @@ The notifications of the exception depend on the body of the error response:
     "status": 400,
     "title": "Bad Request",
     "errors": [
-      { "code": "T.VLD.STR1", "key": "Email", "message": "Field Email is required" },
-      { "code": "T.VLD.NUM3", "key": "Age", "message": "Field Age must be greater than 18" }
+      {
+        "code": "T.VLD.STR1",
+        "key": "Email",
+        "message": "Field Email is required"
+      },
+      {
+        "code": "T.VLD.NUM3",
+        "key": "Age",
+        "message": "Field Age must be greater than 18"
+      }
     ]
   }
   ```

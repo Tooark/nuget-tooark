@@ -351,8 +351,16 @@ As notificações da exceção dependem do corpo da resposta de erro:
     "status": 400,
     "title": "Bad Request",
     "errors": [
-      { "code": "T.VLD.STR1", "key": "Email", "message": "O campo Email é obrigatório" },
-      { "code": "T.VLD.NUM3", "key": "Idade", "message": "O campo Idade deve ser maior que 18" }
+      {
+        "code": "T.VLD.STR1",
+        "key": "Email",
+        "message": "O campo Email é obrigatório"
+      },
+      {
+        "code": "T.VLD.NUM3",
+        "key": "Idade",
+        "message": "O campo Idade deve ser maior que 18"
+      }
     ]
   }
   ```
