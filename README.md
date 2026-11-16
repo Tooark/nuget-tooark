@@ -77,7 +77,7 @@ OpenID Connect SSO, the HTTP client, storage and secrets — which are set up on
 
 ## ⚙️ Strict configuration
 
-By default, .NET silently ignores a mistyped key in a configuration section: the option keeps its default value
+On its own, .NET silently ignores a mistyped key in a configuration section: the option keeps its default value
 and nothing warns you.
 
 ```json
@@ -86,15 +86,16 @@ and nothing warns you.
 }
 ```
 
-In the example, `SampligRatio` is misspelled, and sampling stays at `1.0`. With the option below, every section
-read by a Tooark package fails at startup when it has a key the package does not know:
+In the example, `SampligRatio` is misspelled, and sampling would stay at `1.0`. That is why every section read
+by a Tooark package fails at startup when it has a key the package does not know: the application does not
+start, with `Options.Configuration.UnknownKey;Observability;SampligRatio` (`InternalServerErrorException`),
+which names the section and the key.
+
+The check is on by default (on the 4.x line it was opt-in). To turn it off:
 
 ```json
-"Tooark": { "StrictConfiguration": true }
+"Tooark": { "StrictConfiguration": false }
 ```
-
-The application does not start, with `Options.Configuration.UnknownKey;Observability;SampligRatio`
-(`InternalServerErrorException`), which names the section and the key.
 
 - **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
   `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
@@ -106,9 +107,9 @@ The application does not start, with `Options.Configuration.UnknownKey;Observabi
   from a store into the section, is also a key of the section and is refused.
 - **Two providers of the same family:** `Tooark.Storage.Aws` and `Tooark.Storage.Gcp` read the `Storage` section,
   and the `Tooark.Secrets` providers read the `Secrets` section, each with its own keys. With two of them
-  registered in the same application, one refuses the other's keys: keep the option off in that case.
+  registered in the same application, one refuses the other's keys: turn the option off in that case.
 - **Invalid value:** anything other than `true` or `false` fails at startup
-  (`Options.Configuration.StrictInvalid`), instead of counting as off.
+  (`Options.Configuration.StrictInvalid`), instead of being ignored.
 
 > ⚠️ **Changes in v5:** the option is off on the 4.x line and becomes on by default in v5. Turn it on in staging
 > now to find the wrong keys before the upgrade; to keep it off in v5, set `false`.

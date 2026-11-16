@@ -11,16 +11,15 @@ namespace Tooark.Shared;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Por padrão o binder do .NET ignora em silêncio uma chave que não corresponde a nenhuma propriedade: um erro
-/// de digitação como <c>"SampligRatio"</c> deixa a opção no valor padrão, sem aviso. Com
-/// <c>"Tooark": { "StrictConfiguration": true }</c> na configuração, toda seção lida por um pacote Tooark passa a
-/// falhar no startup quando traz uma chave desconhecida, com <c>Options.Configuration.UnknownKey</c>.
+/// O binder do .NET ignora em silêncio uma chave que não corresponde a nenhuma propriedade: um erro de digitação
+/// como <c>"SampligRatio"</c> deixa a opção no valor padrão, sem aviso. Por isso toda seção lida por um pacote
+/// Tooark falha no startup quando traz uma chave desconhecida, com <c>Options.Configuration.UnknownKey</c>.
+/// <c>"Tooark": { "StrictConfiguration": false }</c> desliga a conferência; na linha 4.x ela era opt-in.
 /// </para>
 /// <para>
 /// Este arquivo é compilado dentro de cada pacote que lê configuração (item <c>Compile</c> com <c>Link</c> no
 /// .csproj), como tipo interno: assim a regra e o padrão ficam em um lugar só, sem API pública nova e sem levar
-/// o binder de configuração para o <c>Tooark.Exceptions</c>. A v5 liga a opção por padrão trocando só
-/// <see cref="DefaultEnabled"/>.
+/// o binder de configuração para o <c>Tooark.Exceptions</c>.
 /// </para>
 /// </remarks>
 internal static partial class StrictConfiguration
@@ -40,7 +39,7 @@ internal static partial class StrictConfiguration
   /// <summary>
   /// Valor da configuração estrita quando a chave não é informada.
   /// </summary>
-  internal const bool DefaultEnabled = false;
+  internal const bool DefaultEnabled = true;
 
   /// <summary>
   /// Trecho da mensagem com que o binder do .NET acusa as chaves desconhecidas. As mensagens do runtime não são
@@ -93,7 +92,7 @@ internal static partial class StrictConfiguration
 
     try
     {
-      // Desligada, a leitura é a de sempre: nenhuma mudança de comportamento para quem não optou
+      // Desligada, a leitura é a do binder do .NET, que ignora o que não reconhece
       source.Bind(options, binder => binder.ErrorOnUnknownConfiguration = strict);
     }
     catch (InvalidOperationException exception) when (exception.InnerException is TooarkException inner)

@@ -78,7 +78,7 @@ OpenID Connect, o cliente HTTP, o storage e os segredos —, que se configura à
 
 ## ⚙️ Configuração estrita
 
-Por padrão, o .NET ignora em silêncio uma chave digitada errada numa seção de configuração: a opção fica no
+Sozinho, o .NET ignora em silêncio uma chave digitada errada numa seção de configuração: a opção fica no
 valor padrão e nada avisa.
 
 ```json
@@ -87,15 +87,16 @@ valor padrão e nada avisa.
 }
 ```
 
-No exemplo, `SampligRatio` está escrito errado, e a amostragem continua em `1.0`. Com a opção abaixo, toda
-seção lida por um pacote Tooark passa a falhar no startup quando traz uma chave que o pacote não conhece:
+No exemplo, `SampligRatio` está escrito errado, e a amostragem continuaria em `1.0`. Por isso toda seção lida
+por um pacote Tooark falha no startup quando traz uma chave que o pacote não conhece: a aplicação não sobe, com
+`Options.Configuration.UnknownKey;Observability;SampligRatio` (`InternalServerErrorException`), que aponta a
+seção e a chave.
+
+A conferência vem ligada por padrão (na linha 4.x era opcional). Para desligá-la:
 
 ```json
-"Tooark": { "StrictConfiguration": true }
+"Tooark": { "StrictConfiguration": false }
 ```
-
-A aplicação não sobe, com `Options.Configuration.UnknownKey;Observability;SampligRatio`
-(`InternalServerErrorException`), que aponta a seção e a chave.
 
 - **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
   `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
@@ -106,9 +107,9 @@ A aplicação não sobe, com `Options.Configuration.UnknownKey;Observability;Sam
   de um cofre para dentro da seção, também é uma chave da seção e é recusada.
 - **Dois provedores da mesma família:** `Tooark.Storage.Aws` e `Tooark.Storage.Gcp` leem a seção `Storage`, e os
   provedores do `Tooark.Secrets` leem a seção `Secrets`, cada um com as próprias chaves. Com dois deles
-  registrados na mesma aplicação, um recusa as chaves do outro: mantenha a opção desligada nesse caso.
+  registrados na mesma aplicação, um recusa as chaves do outro: desligue a opção nesse caso.
 - **Valor inválido:** qualquer coisa diferente de `true` ou `false` falha no startup
-  (`Options.Configuration.StrictInvalid`), em vez de valer como desligada.
+  (`Options.Configuration.StrictInvalid`), em vez de ser ignorada.
 
 > ⚠️ **Muda na v5:** a opção vem desligada na linha 4.x e passa a ligada por padrão na v5. Ligue-a em
 > homologação desde já para encontrar as chaves erradas antes da troca de versão; para mantê-la desligada na v5,

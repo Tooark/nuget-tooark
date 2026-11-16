@@ -279,7 +279,7 @@ public class TooarkDependencyInjectionTests
     var inMemorySettings = new Dictionary<string, string?>
     {
       // Configurações de Observability
-      { $"{ObservabilityOptions.Section}:Enable", "true" }
+      { $"{ObservabilityOptions.Section}:Enabled", "true" }
     };
 
     IConfiguration configuration = new ConfigurationBuilder()

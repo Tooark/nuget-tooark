@@ -40,16 +40,38 @@ public class TooarkDependencyInjectionCryptographyTests
     Assert.Equal(CryptographyTestKeys.FromText("initialization-vector-test"), options.Value.SecretBase64);
   }
 
-  // Testa se um Secret em texto esquecido na configuração, removido na v5, é ignorado e o serviço falha por
-  // falta de chave, em vez de cifrar com uma chave que ninguém configurou
+  // Testa se um Secret em texto esquecido na configuração, removido na v5, é apontado no registro pela
+  // configuração estrita, que é o padrão: a mensagem diz a seção e a chave que sobrou
   [Fact]
-  public void AddTooarkCryptography_WithOnlyTheRemovedTextSecret_ShouldFailForMissingKey()
+  public void AddTooarkCryptography_WithOnlyTheRemovedTextSecret_ShouldFailAtRegistration()
   {
     // Arrange
     var services = new ServiceCollection();
     IConfiguration configuration = new ConfigurationBuilder()
       .AddInMemoryCollection(new Dictionary<string, string?>
       {
+        { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
+      })
+      .Build();
+
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => services.AddTooarkCryptography(configuration));
+
+    // Assert
+    Assert.Equal("Options.Configuration.UnknownKey;Cryptography;Secret", exception.Message);
+  }
+
+  // Testa se, com a configuração estrita desligada, o Secret em texto esquecido é ignorado e o serviço falha
+  // por falta de chave, em vez de cifrar com uma chave que ninguém configurou
+  [Fact]
+  public void AddTooarkCryptography_WithOnlyTheRemovedTextSecret_ShouldFailForMissingKey_WhenStrictConfigurationIsOff()
+  {
+    // Arrange
+    var services = new ServiceCollection();
+    IConfiguration configuration = new ConfigurationBuilder()
+      .AddInMemoryCollection(new Dictionary<string, string?>
+      {
+        { "Tooark:StrictConfiguration", "false" },
         { $"{CryptographyOptions.Section}:Secret", "initialization-vector-test" }
       })
       .Build();

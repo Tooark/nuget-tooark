@@ -18,9 +18,10 @@ using StorageGcp = Tooark.Storage.Gcp.Injections.TooarkDependencyInjection;
 
 namespace Tooark.Tests.Configuration;
 
-// Configuração estrita ("Tooark": { "StrictConfiguration": true }): cada registro que lê uma seção é exercitado
-// com a opção desligada (chave desconhecida ignorada, como sempre), ligada com chave desconhecida (falha no
-// registro, com a chave de mensagem) e ligada só com chaves conhecidas (não pode acusar falso positivo).
+// Configuração estrita, ligada por padrão na v5 ("Tooark": { "StrictConfiguration": false } desliga): cada
+// registro que lê uma seção é exercitado sem a opção e com ela ligada (chave desconhecida falha no registro, com
+// a chave de mensagem; só chaves conhecidas não podem acusar falso positivo) e com ela desligada (chave
+// desconhecida ignorada, como na linha 4.x).
 public class StrictConfigurationTests
 {
   #region Helpers
@@ -211,14 +212,30 @@ public class StrictConfigurationTests
 
   #endregion
 
-  // Testa se, sem a opção, uma chave desconhecida continua sendo ignorada: é o comportamento da linha 4.x
+  // Testa se, sem a opção, a chave desconhecida já falha no registro: a configuração estrita é o padrão da v5
   [Theory]
   [MemberData(nameof(SiteNames))]
-  public void Register_ShouldIgnoreUnknownKey_WhenStrictConfigurationIsNotSet(string name)
+  public void Register_ShouldFailAtRegistration_WhenStrictConfigurationIsNotSet(string name)
   {
     // Arrange
     var site = Find(name);
     var configuration = Build(site, withUnknownKey: true, strict: null);
+
+    // Act
+    var exception = Assert.Throws<InternalServerErrorException>(() => site.Register(new ServiceCollection(), configuration));
+
+    // Assert
+    Assert.Equal($"Options.Configuration.UnknownKey;{site.Section};{site.UnknownName}", exception.Message);
+  }
+
+  // Testa se, sem a opção, uma seção só com chaves conhecidas é aceita: o padrão não pode acusar falso positivo
+  [Theory]
+  [MemberData(nameof(SiteNames))]
+  public void Register_ShouldAcceptKnownKeys_WhenStrictConfigurationIsNotSet(string name)
+  {
+    // Arrange
+    var site = Find(name);
+    var configuration = Build(site, withUnknownKey: false, strict: null);
 
     // Act
     var exception = Record.Exception(() => site.Register(new ServiceCollection(), configuration));
@@ -227,7 +244,7 @@ public class StrictConfigurationTests
     Assert.Null(exception);
   }
 
-  // Testa se a opção informada como false também mantém a chave desconhecida ignorada
+  // Testa se a opção informada como false mantém a chave desconhecida ignorada, como na linha 4.x
   [Theory]
   [MemberData(nameof(SiteNames))]
   public void Register_ShouldIgnoreUnknownKey_WhenStrictConfigurationIsOff(string name)
