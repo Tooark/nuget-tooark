@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tooark.Exceptions;
+using Tooark.Http.Injections;
 using Tooark.Observability.Injections;
 using Tooark.Sanitizers.Injections;
 using Tooark.Secrets.Aws.Options;
@@ -63,6 +64,19 @@ public class StrictConfigurationTests
       new() { ["Sanitizers:Url:AllowedSchemes:0"] = "https" },
       "Sanitizers:Urls", "Urls",
       (services, configuration) => services.AddTooarkSanitizers(configuration)),
+
+    new Site(
+      "HttpClient", "HttpClient",
+      new()
+      {
+        ["HttpClient:BaseAddress"] = "https://api.exemplo.com/v1",
+        ["HttpClient:RetryCount"] = "2",
+        ["HttpClient:OutboundGuard:Enabled"] = "true",
+        ["HttpClient:OutboundGuard:AllowedHosts:0"] = ".exemplo.com",
+        ["HttpClient:OutboundGuard:AllowedNetworks:0"] = "10.0.0.0/8"
+      },
+      "HttpClient:OutboundGuard:AllowedHost", "AllowedHost",
+      (services, configuration) => services.AddTooarkHttpClient(configuration)),
 
     new Site(
       "JwtToken", "Jwt",

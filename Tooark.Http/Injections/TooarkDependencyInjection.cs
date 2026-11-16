@@ -34,7 +34,7 @@ public static partial class TooarkDependencyInjection
     this IServiceCollection services,
     IConfiguration configuration,
     Action<HttpClientOptions>? configure = null
-  ) => AddClient(services, configuration.GetSection(HttpClientOptions.Section), configure);
+  ) => AddClient(services, configuration, configure);
 
   /// <summary>
   /// Adiciona o <see cref="IHttpClientService"/> e o cliente nomeado do Tooark, sem ler a configuração da aplicação.
@@ -80,19 +80,23 @@ public static partial class TooarkDependencyInjection
   /// Valida as opções e registra o cliente nomeado e o serviço.
   /// </summary>
   /// <param name="services">Coleção de serviços.</param>
-  /// <param name="section">A seção de configuração, quando houver.</param>
+  /// <param name="configuration">A configuração da aplicação, quando houver.</param>
   /// <param name="configure">Ação opcional para configurar programaticamente as opções.</param>
   /// <returns>A coleção de serviços com o cliente HTTP adicionado.</returns>
   private static IServiceCollection AddClient(
     IServiceCollection services,
-    IConfigurationSection? section,
+    IConfiguration? configuration,
     Action<HttpClientOptions>? configure
   )
   {
     // Carrega da configuração e aplica os overrides programáticos por cima
     void Apply(HttpClientOptions options)
     {
-      section?.Bind(options);
+      if (configuration is not null)
+      {
+        StrictConfiguration.Bind(configuration, HttpClientOptions.Section, options);
+      }
+
       configure?.Invoke(options);
     }
 
