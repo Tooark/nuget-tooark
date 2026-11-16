@@ -6,8 +6,8 @@
 # Scope:
 #   - NuGet: weekly, against the central pins in Directory.Packages.props.
 #     Minor/patch updates are grouped into one PR; the test tooling (xunit,
-#     coverlet, Microsoft.Testing.*) is grouped separately and may include
-#     majors, because those packages only move together.
+#     Microsoft.Testing.*, Microsoft.NET.Test.Sdk) is grouped separately and
+#     may include majors, because those packages only move together.
 #   - Runtime-bound packages (Microsoft.AspNetCore.Authentication.*,
 #     Microsoft.AspNetCore.DataProtection*, Microsoft.Extensions.*, EF Core,
 #     System.Security.Cryptography.Xml) follow the line of the single target
@@ -39,12 +39,11 @@ updates:
       include: "scope"
     groups:
       # xunit.v3 and xunit.runner.visualstudio are released together and a
-      # major of one needs the major of the other; coverlet.MTP follows the
-      # Microsoft.Testing.Platform line shipped by xunit.
+      # major of one needs the major of the other. coverlet.MTP is not here:
+      # it is pinned per target framework (see ignore below).
       test-tooling:
         patterns:
           - "xunit*"
-          - "coverlet*"
           - "Microsoft.Testing.*"
           - "Microsoft.NET.Test.Sdk"
         update-types:

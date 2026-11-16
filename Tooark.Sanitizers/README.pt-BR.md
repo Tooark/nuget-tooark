@@ -107,6 +107,12 @@ os serviços.
 Cada lista informada **substitui** a lista padrão do HtmlSanitizer. Ausente ou vazia, fica a padrão, que já é uma
 lista de permissão segura para HTML de formatação.
 
+Dois atributos têm tratamento à parte (HtmlSanitizer 11). O `contenteditable` não está na lista padrão: inclua em
+`AllowedAttributes` se o conteúdo precisar. O `name` sai sempre de `embed`, `form`, `iframe`, `img` e `object`,
+mesmo liberado, porque o navegador expõe esses nomes como propriedades de `document` e `window`, e um
+`<img name="getElementById">` substituiria a função da página (DOM clobbering). Nos demais elementos, como âncoras
+`<a name>` e campos de formulário, o `name` segue a lista de atributos.
+
 | Propriedade            | Tipo       | Padrão                 | Descrição                                                                                                          |
 | ---------------------- | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `AllowedTags`          | `string[]` | lista do HtmlSanitizer | Tags permitidas. `script`, `object`, `embed`, `applet`, `base`, `meta`, `link`, `frame` e `frameset` são recusadas |
@@ -298,7 +304,7 @@ var wysiwyg = new WysiwygSanitizerService(opcoes);
 | Pacote                                                                                                                                          | Versão   | Descrição                                 |
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceções (`InternalServerErrorException`) |
-| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 10.x     | Sanitização de HTML, sobre o AngleSharp   |
+| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 11.x     | Sanitização de HTML, sobre o AngleSharp   |
 | [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Leitura das opções da configuração        |
 | [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container                     |
 

@@ -107,6 +107,12 @@ than once does not duplicate the services.
 Each list provided **replaces** HtmlSanitizer's default list. Missing or empty, the default stays, which is already a
 safe allowlist for formatting HTML.
 
+Two attributes get special treatment (HtmlSanitizer 11). `contenteditable` is not in the default list: add it to
+`AllowedAttributes` if the content needs it. `name` is always removed from `embed`, `form`, `iframe`, `img` and
+`object`, even when allowed, because browsers expose those names as properties of `document` and `window` and a
+`<img name="getElementById">` would replace the page's function (DOM clobbering). On other elements, such as
+`<a name>` anchors and form fields, `name` follows the attribute list.
+
 | Property               | Type       | Default              | Description                                                                                                      |
 | ---------------------- | ---------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `AllowedTags`          | `string[]` | HtmlSanitizer's list | Allowed tags. `script`, `object`, `embed`, `applet`, `base`, `meta`, `link`, `frame` and `frameset` are rejected |
@@ -297,12 +303,12 @@ var wysiwyg = new WysiwygSanitizerService(options);
 
 ## 📋 Dependencies
 
-| Package                                                                                                                                         | Version  | Description                                 |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------- |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Exceptions (`InternalServerErrorException`) |
-| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 10.x     | HTML sanitization, on top of AngleSharp     |
-| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x     | Reading the options from configuration      |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                      |
+| Package                                                                                                                                         | Version | Description                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------- |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x     | Exceptions (`InternalServerErrorException`) |
+| [`HtmlSanitizer`](https://www.nuget.org/packages/HtmlSanitizer)                                                                                 | 11.x    | HTML sanitization, on top of AngleSharp     |
+| [`Microsoft.Extensions.Options.ConfigurationExtensions`](https://www.nuget.org/packages/Microsoft.Extensions.Options.ConfigurationExtensions)   | 10.x    | Reading the options from configuration      |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x    | Container registration                      |
 
 ---
 
