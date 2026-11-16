@@ -265,7 +265,7 @@ O `IgnoreQueryFilters()` desliga o filtro combinado por inteiro: o da aplicaçã
 
 ### Filtros nomeados (Entity Framework Core 10)
 
-O Entity Framework Core 10 tem filtros de consulta nomeados e não aceita um filtro nomeado e um sem nome na mesma entidade. O comportamento é o mesmo nos dois frameworks de destino — um filtro sem nome, combinado com o da aplicação — com uma exceção que só existe no Entity Framework Core 10: quando a entidade já tem filtros **nomeados**, o filtro de excluídos também entra como filtro nomeado, com o nome `ModelBuilderExtensions.SoftDeleteFilterName` (`"Tooark.SoftDelete"`). Assim ele pode ser desligado sozinho:
+O Entity Framework Core 10 tem filtros de consulta nomeados e não aceita um filtro nomeado e um sem nome na mesma entidade. Por padrão o filtro de excluídos é um filtro sem nome, combinado com o da aplicação, com uma exceção: quando a entidade já tem filtros **nomeados**, o filtro de excluídos também entra como filtro nomeado, com o nome `ModelBuilderExtensions.SoftDeleteFilterName` (`"Tooark.SoftDelete"`). Assim ele pode ser desligado sozinho:
 
 ```csharp
 var withDeleted = await context.Products
@@ -467,8 +467,8 @@ catch (DbUpdateConcurrencyException)
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------- |
 | [`Tooark.Entities`](https://www.nuget.org/packages/Tooark.Entities)                                                                             | 4.x      | Entidades base e os métodos de auditoria     |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Erros de configuração e de autor ausente     |
-| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Interceptor, rastreio de alterações e modelo |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Registro no container                        |
+| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 10.x     | Interceptor, rastreio de alterações e modelo |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Registro no container                        |
 
 O pacote integra o agregador `Tooark`, então quem instala `Tooark` já o recebe.
 

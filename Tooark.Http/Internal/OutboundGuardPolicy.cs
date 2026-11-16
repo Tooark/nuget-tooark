@@ -188,7 +188,7 @@ internal sealed class OutboundGuardPolicy
   /// <remarks>
   /// O endereço que não é o da rede (<c>10.20.0.1/16</c>) é recusado, para não liberar por engano uma faixa maior que
   /// a pretendida. A leitura é feita aqui, e não pelo <see cref="IPNetwork.TryParse(string, out IPNetwork)"/>, porque
-  /// o do .NET 8 recusa esse endereço e o do .NET 10 o aceita, zerando os bits depois do prefixo.
+  /// ele aceita esse endereço, zerando os bits depois do prefixo.
   /// </remarks>
   /// <param name="entry">A entrada da lista.</param>
   /// <param name="network">A rede interpretada.</param>

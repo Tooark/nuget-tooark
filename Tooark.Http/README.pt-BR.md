@@ -596,7 +596,7 @@ services.AddHttpClient(HttpClientService.ClientName).ConfigurePrimaryHttpMessage
 | Pacote                                                                                                        | Versão   | Descrição                                                   |
 | ------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------- |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                       | 4.x      | Exceções e, por ele, o `NotificationItem`                   |
-| [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) | 8.x/10.x | Handler padrão de resiliência (Polly), `IHttpClientFactory` |
+| [`Microsoft.Extensions.Http.Resilience`](https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience) | 10.x     | Handler padrão de resiliência (Polly), `IHttpClientFactory` |
 
 O `Tooark.Observability` **não** é uma dependência: veja [Observabilidade](#-observabilidade).
 

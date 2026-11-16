@@ -137,7 +137,6 @@ public static class ModelBuilderExtensions
     var parameter = Expression.Parameter(root.ClrType, "entity");
     var notDeleted = Expression.Not(Expression.Property(parameter, DeletedProperty));
 
-#if NET10_0_OR_GREATER
     var declared = root.GetDeclaredQueryFilters();
 
     // O Entity Framework Core 10 não aceita filtro nomeado e filtro sem nome na mesma entidade: quando a
@@ -150,9 +149,6 @@ public static class ModelBuilderExtensions
     }
 
     var existing = declared.FirstOrDefault(filter => filter.IsAnonymous)?.Expression;
-#else
-    var existing = root.GetQueryFilter();
-#endif
 
     // Uma entidade tem um único filtro sem nome: definir outro apagaria o da aplicação, então os dois são
     // combinados em uma só expressão.

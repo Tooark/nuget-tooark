@@ -265,7 +265,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ### Named filters (Entity Framework Core 10)
 
-Entity Framework Core 10 has named query filters and does not accept a named and an unnamed filter on the same entity. The behavior is the same on both target frameworks — an unnamed filter, combined with the application's — with one exception that only exists on Entity Framework Core 10: when the entity already has **named** filters, the soft delete filter is added as a named filter too, under `ModelBuilderExtensions.SoftDeleteFilterName` (`"Tooark.SoftDelete"`). It can then be turned off on its own:
+Entity Framework Core 10 has named query filters and does not accept a named and an unnamed filter on the same entity. By default the soft delete filter is an unnamed filter, combined with the application's, with one exception: when the entity already has **named** filters, the soft delete filter is added as a named filter too, under `ModelBuilderExtensions.SoftDeleteFilterName` (`"Tooark.SoftDelete"`). It can then be turned off on its own:
 
 ```csharp
 var withDeleted = await context.Products
@@ -467,8 +467,8 @@ catch (DbUpdateConcurrencyException)
 | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
 | [`Tooark.Entities`](https://www.nuget.org/packages/Tooark.Entities)                                                                             | 4.x      | Base entities and their audit methods      |
 | [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                                                         | 4.x      | Configuration and missing author errors    |
-| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 8.x/10.x | Interceptor, change tracking and the model |
-| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 8.x/10.x | Container registration                     |
+| [`Microsoft.EntityFrameworkCore`](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore)                                                 | 10.x     | Interceptor, change tracking and the model |
+| [`Microsoft.Extensions.DependencyInjection.Abstractions`](https://www.nuget.org/packages/Microsoft.Extensions.DependencyInjection.Abstractions) | 10.x     | Container registration                     |
 
 The package is part of the `Tooark` aggregator, so whoever installs `Tooark` already gets it.
 

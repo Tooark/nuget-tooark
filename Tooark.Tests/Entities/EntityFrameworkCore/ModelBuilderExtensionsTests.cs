@@ -317,7 +317,6 @@ public class ModelBuilderExtensionsTests : EntityFrameworkCoreTestBase
 
   #endregion
 
-#if NET10_0_OR_GREATER
   #region Filtros nomeados (Entity Framework Core 10)
 
   // Testa o motivo do filtro nomeado: o Entity Framework Core 10 não aceita filtro nomeado e sem nome na mesma entidade
@@ -362,7 +361,6 @@ public class ModelBuilderExtensionsTests : EntityFrameworkCoreTestBase
   }
 
   #endregion
-#endif
 }
 
 // Contexto em que a aplicação define o próprio filtro antes das convenções
@@ -440,7 +438,6 @@ public class KeylessDbContext(DbContextOptions<KeylessDbContext> options) : DbCo
   }
 }
 
-#if NET10_0_OR_GREATER
 // Contexto em que a aplicação usa filtros nomeados
 public class NamedFilterDbContext(DbContextOptions<NamedFilterDbContext> options) : DbContext(options)
 {
@@ -465,4 +462,3 @@ public class MixedFiltersDbContext(DbContextOptions<MixedFiltersDbContext> optio
     modelBuilder.Entity<Category>().HasQueryFilter(category => !category.Deleted);
   }
 }
-#endif

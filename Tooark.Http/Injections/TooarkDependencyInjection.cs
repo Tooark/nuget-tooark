@@ -184,7 +184,7 @@ public static partial class TooarkDependencyInjection
   {
     builder.Services.TryAddSingleton<IHostResolver, DnsHostResolver>();
 
-    // O handler primário padrão do .NET 8 é o HttpClientHandler, que não expõe o ConnectCallback; um
+    // O handler primário pode ser um HttpClientHandler, que não expõe o ConnectCallback; um
     // SocketsHttpHandler já configurado pela aplicação é mantido
     builder.UseSocketsHttpHandler((handler, provider) =>
       handler.ConnectCallback = new OutboundConnector(policy, provider.GetRequiredService<IHostResolver>()).ConnectAsync);
