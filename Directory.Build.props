@@ -43,12 +43,12 @@
       intencionais: a remoção do Notification.Clear(), do RoleClaimsExtension.GetClaims() sem parâmetros, do
       GenerateString.Token() e do CryptographyOptions.Secret, a troca dos padrões das claims do JWT, o
       Cryptography:Algorithm desconhecido que passa a falhar, a trava do Data Protection ligada por padrão em
-      contêiner e a saída do alvo net8.0. Antes de publicar a
-      5.0.0, restaure a baseline na última 4.x publicada (4.8.0) e gere o CompatibilitySuppressions.xml com
+      contêiner, a configuração estrita ligada por padrão e a saída do alvo net8.0. Antes de publicar a
+      5.0.0, restaure a baseline na última 4.x publicada (4.9.0) e gere o CompatibilitySuppressions.xml com
       "dotnet pack /p:GenerateCompatibilitySuppressionFile=true", para que só as quebras documentadas nas notas
       passem pela validação.
     -->
-    <!-- <PackageValidationBaselineVersion>4.8.0</PackageValidationBaselineVersion> -->
+    <!-- <PackageValidationBaselineVersion>4.9.0</PackageValidationBaselineVersion> -->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
