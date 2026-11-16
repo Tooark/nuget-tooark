@@ -3,13 +3,13 @@ name: CI
 # Valida pull requests antes do merge: formatação (.editorconfig), pares de pins do runtime, lista de pacotes
 # do release e grupos do site de documentação, build em Release (warnings são erros) e a suíte completa de
 # testes nos dois alvos, com cobertura.
-# A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main. O job
-# "build-and-test" é status check obrigatório no ruleset da branch main: um pull request vermelho não pode ser
+# A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em v4. O job
+# "build-and-test" deve ser status check obrigatório no ruleset da branch v4, para um pull request vermelho não poder ser
 # mesclado.
 on:
   pull_request:
     branches:
-      - main
+      - v4
   workflow_dispatch:
 
 permissions:

@@ -1,10 +1,12 @@
 name: Build and deploy package
 
-# Publica no NuGet a cada push em main cuja versão (Directory.Build.props) ainda não tem tag. A validação de
+# Linha de manutenção 4.x. A branch v4 recebe só correções; as funcionalidades novas vão para a linha 5.x, na main.
+#
+# Publica no NuGet a cada push em v4 cuja versão (Directory.Build.props) ainda não tem tag. A validação de
 # pull request fica no ci.yml; aqui build, testes e scanner de segurança rodam de novo como última barreira.
 #
 # Ordem deliberada: os pacotes são publicados ANTES de a tag e a release existirem. Se uma publicação falhar
-# no meio, nada foi marcado como lançado e o próximo push em main tenta de novo; "--skip-duplicate" ignora os
+# no meio, nada foi marcado como lançado e o próximo push em v4 tenta de novo; "--skip-duplicate" ignora os
 # pacotes que já subiram. Só depois de tudo publicado a tag v<versão> e a GitHub Release são criadas.
 #
 # Publicação por Trusted Publishing, sem API key guardada no repositório: o job publish troca o token OIDC do
@@ -18,7 +20,7 @@ name: Build and deploy package
 on:
   push:
     branches:
-      - main
+      - v4
   workflow_dispatch:
 
 permissions:
@@ -220,14 +222,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      # "--latest=false": a release de uma linha de manutenção não pode tomar o lugar da versão corrente
       - name: Create the tag and the GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NOTES_FILE="Notes/v${VERSION}.md"
           if [ -f "$NOTES_FILE" ]; then
-            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes-file "$NOTES_FILE" --latest
+            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes-file "$NOTES_FILE" --latest=false
           else
             echo "::warning::Arquivo de notas ${NOTES_FILE} não encontrado; a release recebe um corpo genérico."
-            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes "Automated release for version v${VERSION}" --latest
+            gh release create "v${VERSION}" --target "$GITHUB_SHA" --title "Release v${VERSION}" --notes "Automated release for version v${VERSION}" --latest=false
           fi
