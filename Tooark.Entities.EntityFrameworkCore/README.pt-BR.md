@@ -229,7 +229,7 @@ Quando a aplicação remove um principal, o Entity Framework Core marca para rem
 | Tipos owned de um dono excluído logicamente                                   | Mantidos, com os valores deles                                                                                                                    |
 | Dependente obrigatório tirado da coleção do principal (órfão)                 | Excluído logicamente quando suporta, mantendo a chave estrangeira                                                                                 |
 
-O principal é apagado de verdade quando não suporta exclusão lógica, quando já está excluído logicamente ou quando o `SoftDelete` está desligado. O resultado é o mesmo quando o contexto adia a cascata (`ChangeTracker.CascadeDeleteTiming`).
+O principal é apagado de verdade quando não suporta exclusão lógica, quando já está excluído logicamente ou quando o `SoftDelete` está desligado. A remoção de um principal dá o mesmo resultado quando o contexto adia a cascata (`ChangeTracker.CascadeDeleteTiming`).
 
 Para excluir logicamente um principal junto com todos os dependentes, carregue-os (`Include`) antes de chamar o `Remove()`.
 

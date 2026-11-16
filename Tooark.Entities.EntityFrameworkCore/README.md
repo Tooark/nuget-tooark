@@ -229,7 +229,7 @@ When the application removes a principal, Entity Framework Core marks the **load
 | Owned types of a soft-deleted owner                                     | Kept, with their values                                                                                                                    |
 | Required dependent taken out of the principal's collection (orphan)     | Soft-deleted when it supports it, keeping its foreign key                                                                                  |
 
-A principal is deleted for real when it does not support soft delete, when it is already soft-deleted, or when `SoftDelete` is off. The result is the same when the context defers the cascade (`ChangeTracker.CascadeDeleteTiming`).
+A principal is deleted for real when it does not support soft delete, when it is already soft-deleted, or when `SoftDelete` is off. Removing a principal gives the same result when the context defers the cascade (`ChangeTracker.CascadeDeleteTiming`).
 
 To soft-delete a principal together with all its dependents, load them (`Include`) before calling `Remove()`.
 
