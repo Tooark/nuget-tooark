@@ -11,10 +11,11 @@ Example: "Closes #46 — adds Tooark.Securities.OpenId with the Entra and Google
 - [ ] `Tooark.AspNetCore`
 - [ ] `Tooark.Attributes`
 - [ ] `Tooark.Dtos`
-- [ ] `Tooark.Entities`
+- [ ] `Tooark.Entities` / `Tooark.Entities.EntityFrameworkCore`
 - [ ] `Tooark.Enums`
 - [ ] `Tooark.Exceptions`
 - [ ] `Tooark.Extensions` (incl. translations in `Resources/`)
+- [ ] `Tooark.Http`
 - [ ] `Tooark.Mediator` / `Tooark.Mediator.Abstractions` / `Tooark.Mediator.EntityFrameworkCore`
 - [ ] `Tooark.Notifications`
 - [ ] `Tooark.Observability`

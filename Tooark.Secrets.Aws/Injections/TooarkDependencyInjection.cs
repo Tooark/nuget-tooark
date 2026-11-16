@@ -36,7 +36,7 @@ public static partial class TooarkDependencyInjection
     // Carrega da configuração e aplica os overrides programáticos por cima
     void Apply(AwsSecretsOptions options)
     {
-      configuration.GetSection(SecretsOptions.Section).Bind(options);
+      StrictConfiguration.Bind(configuration, SecretsOptions.Section, options);
       configure?.Invoke(options);
     }
 

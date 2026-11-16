@@ -50,6 +50,7 @@ Each package lives in its own folder and follows the same structure:
 | `Notes/vX.Y.Z.md`                  | Release notes, one file per version (used as the GitHub Release body)                          |
 | `docs/`                            | Documentation site: `build.py` renders the READMEs with DocFX; landing pages and theme         |
 | `Media/`                           | Package icon and logo                                                                          |
+| `Shared/`                          | Source files compiled into several packages as internal types (`StrictConfiguration.cs`)       |
 | `scripts/`                         | `check-package-pairs.sh` and `check-release-packages.sh` (run by CI), local SonarQube examples |
 | `.vscode/`                         | Editor task that renders the coverage report                                                   |
 
@@ -142,6 +143,10 @@ to run the security scanner locally.
 - **Dependency injection** follows the `TooarkDependencyInjection` partial
   class pattern: `AddTooark<Thing>(IConfiguration, Action<Options>?)`,
   options bound from a named section with an `Options.Section` constant.
+  Read the section with `StrictConfiguration.Bind` (linked from `Shared/`
+  in the `.csproj`, as in `Tooark.Sanitizers`), never with `section.Bind`
+  directly, so `Tooark:StrictConfiguration` covers the package, and add the
+  registration to `Tooark.Tests/Configuration/StrictConfigurationTests.cs`.
 - **ASP.NET Core stays in the packages that need it.** Anything that requires
   the `Microsoft.AspNetCore.App` shared framework goes into a package that
   declares it (`Tooark.AspNetCore`, `Tooark.Dtos`, `Tooark.Observability`,

@@ -128,26 +128,28 @@ registrado nas notas da versão, em `Notes/`.
 
 Uma pasta por pacote, espelhando a estrutura do projeto testado:
 
-| Pasta            | Pacote testado                                                                  |
-| ---------------- | ------------------------------------------------------------------------------- |
-| `AspNetCore/`    | `Tooark.AspNetCore`                                                             |
-| `Attributes/`    | `Tooark.Attributes`                                                             |
-| `Dtos/`          | `Tooark.Dtos`                                                                   |
-| `Entities/`      | `Tooark.Entities`                                                               |
-| `Enums/`         | `Tooark.Enums`                                                                  |
-| `Exceptions/`    | `Tooark.Exceptions`                                                             |
-| `Extensions/`    | `Tooark.Extensions`                                                             |
-| `Injections/`    | `Tooark` (o agregador)                                                          |
-| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore`                     |
-| `Notifications/` | `Tooark.Notifications`                                                          |
-| `Observability/` | `Tooark.Observability`                                                          |
-| `Sanitizers/`    | `Tooark.Sanitizers`                                                             |
-| `Secrets/`       | `Tooark.Secrets`, `.Aws` (`Aws/`), `.Gcp` (`Gcp/`) e `.Vault` (`Vault/`)        |
-| `Securities/`    | `Tooark.Securities` e `Tooark.Securities.OpenId` (`OpenId/`)                    |
-| `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) e `Tooark.Storage.Gcp` (`Gcp/`) |
-| `Utils/`         | `Tooark.Utils`                                                                  |
-| `Validations/`   | `Tooark.Validations`                                                            |
-| `ValueObjects/`  | `Tooark.ValueObjects`                                                           |
+| Pasta            | Pacote testado                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| `AspNetCore/`    | `Tooark.AspNetCore`                                                                         |
+| `Attributes/`    | `Tooark.Attributes`                                                                         |
+| `Configuration/` | Configuração estrita (`Tooark:StrictConfiguration`), em todos os pacotes que leem uma seção |
+| `Dtos/`          | `Tooark.Dtos`                                                                               |
+| `Entities/`      | `Tooark.Entities` e `Tooark.Entities.EntityFrameworkCore` (`EntityFrameworkCore/`)          |
+| `Enums/`         | `Tooark.Enums`                                                                              |
+| `Exceptions/`    | `Tooark.Exceptions`                                                                         |
+| `Extensions/`    | `Tooark.Extensions`                                                                         |
+| `Http/`          | `Tooark.Http`                                                                               |
+| `Injections/`    | `Tooark` (o agregador)                                                                      |
+| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` e `.EntityFrameworkCore`                                 |
+| `Notifications/` | `Tooark.Notifications`                                                                      |
+| `Observability/` | `Tooark.Observability`                                                                      |
+| `Sanitizers/`    | `Tooark.Sanitizers`                                                                         |
+| `Secrets/`       | `Tooark.Secrets`, `.Aws` (`Aws/`), `.Gcp` (`Gcp/`) e `.Vault` (`Vault/`)                    |
+| `Securities/`    | `Tooark.Securities` e `Tooark.Securities.OpenId` (`OpenId/`)                                |
+| `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) e `Tooark.Storage.Gcp` (`Gcp/`)             |
+| `Utils/`         | `Tooark.Utils`                                                                              |
+| `Validations/`   | `Tooark.Validations`                                                                        |
+| `ValueObjects/`  | `Tooark.ValueObjects`                                                                       |
 
 Duas pastas não contêm testes:
 

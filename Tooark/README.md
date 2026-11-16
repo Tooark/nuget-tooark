@@ -64,9 +64,13 @@ and `Tooark.Sanitizers`. The rest depends on the configuration:
   section exists, Data Protection;
 - with the `Observability` section, it registers `Tooark.Observability`.
 
-What depends on your application stays out and is registered on its own: the unit of work, the ASP.NET Core
-responses, JWT Bearer authentication, OpenID Connect SSO, storage and secrets. The sections below show each
-one.
+To make the application fail at startup when one of those sections has a mistyped key, turn on
+[strict configuration](https://github.com/Tooark/nuget-tooark/blob/main/README.md#️-strict-configuration)
+(`"Tooark": { "StrictConfiguration": true }`).
+
+What depends on your application stays out and is registered on its own: the unit of work, entity auditing on
+Entity Framework Core, the ASP.NET Core responses, JWT Bearer authentication, OpenID Connect SSO, the HTTP
+client, storage and secrets. The sections below show each one.
 
 ### Where the mediator handlers are looked up
 
@@ -101,6 +105,24 @@ using Tooark.Mediator.EntityFrameworkCore.Injections;
 
 services.AddTooarkMediatorUnitOfWork<MyDbContext>();
 ```
+
+### Entity auditing and soft delete
+
+They also stay out of `AddTooarkService`, because they depend on your context and on who the current user is in
+your application. The interceptor stamps the audit fields and turns `Remove()` into a soft delete:
+
+```csharp
+using Tooark.Entities.EntityFrameworkCore.Extensions;
+using Tooark.Entities.EntityFrameworkCore.Injections;
+
+services.AddTooarkEntityFrameworkCore<MyCurrentUser>(); // MyCurrentUser implements ICurrentUser
+services.AddDbContext<MyDbContext>((provider, options) => options
+  .UseNpgsql(connectionString)
+  .AddTooarkInterceptors(provider));
+```
+
+In `OnModelCreating`, call `modelBuilder.ApplyTooarkConventions()` last. The details are in
+[Tooark.Entities.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities.EntityFrameworkCore/README.md).
 
 ### ASP.NET Core responses
 
@@ -145,6 +167,20 @@ using Tooark.Securities.OpenId.Injections;
 services.AddTooarkEntraSso(configuration);   // reads OpenId:Entra
 services.AddTooarkGoogleSso(configuration);  // reads OpenId:Google
 ```
+
+### HTTP client
+
+It also stays out of `AddTooarkService`: not every application calls other services, and the registration
+creates a client with resilience. Register it when the application needs it:
+
+```csharp
+using Tooark.Http.Injections;
+
+services.AddTooarkHttpClient(configuration); // reads HttpClient
+```
+
+The details, including the outbound guard against SSRF, are in
+[Tooark.Http](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Http/README.md).
 
 ### Storage
 
@@ -193,6 +229,10 @@ Description: This package contains data transfer objects (DTOs) that ease the co
 
 Description: This package defines the domain entities used by the application.
 
+### [Tooark.Entities.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities.EntityFrameworkCore/README.md)
+
+Description: This package plugs the entities into Entity Framework Core: it stamps the audit fields, turns `Remove()` into a soft delete and applies the soft delete filter and the concurrency token.
+
 ### [Tooark.Enums](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.md)
 
 Description: This package contains the enum definitions used across the application.
@@ -204,6 +244,10 @@ Description: This package provides custom exceptions for use in .NET projects.
 ### [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.md)
 
 Description: This package provides extension methods for common .NET types and classes.
+
+### [Tooark.Http](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Http/README.md)
+
+Description: This package makes the outbound HTTP calls: a thin JSON service over `IHttpClientFactory`, with resilience, errors in the Tooark standard and an outbound guard against SSRF.
 
 ### [Tooark.Notifications](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Notifications/README.md)
 

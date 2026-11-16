@@ -64,9 +64,13 @@ e `Tooark.Sanitizers`. O restante depende da configuração:
   Protection;
 - com a seção `Observability`, registra o `Tooark.Observability`.
 
-O que depende da sua aplicação fica de fora e é registrado à parte: a unidade de trabalho, as respostas do
-ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID Connect, o storage e os segredos. As seções abaixo
-mostram cada um.
+Para a aplicação falhar no startup quando uma dessas seções trouxer uma chave digitada errada, ligue a
+[configuração estrita](https://github.com/Tooark/nuget-tooark/blob/main/README.pt-BR.md#️-configuração-estrita)
+(`"Tooark": { "StrictConfiguration": true }`).
+
+O que depende da sua aplicação fica de fora e é registrado à parte: a unidade de trabalho, a auditoria das
+entidades no Entity Framework Core, as respostas do ASP.NET Core, a autenticação JWT Bearer, o SSO com OpenID
+Connect, o cliente HTTP, o storage e os segredos. As seções abaixo mostram cada um.
 
 ### Onde os manipuladores do mediador são procurados
 
@@ -101,6 +105,24 @@ using Tooark.Mediator.EntityFrameworkCore.Injections;
 
 services.AddTooarkMediatorUnitOfWork<MeuDbContext>();
 ```
+
+### Auditoria e exclusão lógica das entidades
+
+Também ficam de fora do `AddTooarkService`, porque dependem do seu contexto e de quem é o usuário atual na sua
+aplicação. O interceptor preenche os campos de auditoria e converte o `Remove()` em exclusão lógica:
+
+```csharp
+using Tooark.Entities.EntityFrameworkCore.Extensions;
+using Tooark.Entities.EntityFrameworkCore.Injections;
+
+services.AddTooarkEntityFrameworkCore<MeuCurrentUser>(); // MeuCurrentUser implementa ICurrentUser
+services.AddDbContext<MeuDbContext>((provider, options) => options
+  .UseNpgsql(connectionString)
+  .AddTooarkInterceptors(provider));
+```
+
+No `OnModelCreating`, chame `modelBuilder.ApplyTooarkConventions()` por último. Os detalhes estão no
+[Tooark.Entities.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities.EntityFrameworkCore/README.pt-BR.md).
 
 ### Respostas do ASP.NET Core
 
@@ -144,6 +166,20 @@ using Tooark.Securities.OpenId.Injections;
 services.AddTooarkEntraSso(configuration);   // lê OpenId:Entra
 services.AddTooarkGoogleSso(configuration);  // lê OpenId:Google
 ```
+
+### Cliente HTTP
+
+Também fica de fora do `AddTooarkService`: nem toda aplicação chama outros serviços, e o registro cria um cliente
+com resiliência. Registre quando a aplicação precisar:
+
+```csharp
+using Tooark.Http.Injections;
+
+services.AddTooarkHttpClient(configuration); // lê HttpClient
+```
+
+Os detalhes, inclusive a guarda de saída contra SSRF, estão no
+[Tooark.Http](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Http/README.pt-BR.md).
 
 ### Storage
 
@@ -192,6 +228,10 @@ Descrição: Este pacote contém objetos de transferência de dados (DTOs) para 
 
 Descrição: Este pacote define as entidades do domínio utilizadas na aplicação.
 
+### [Tooark.Entities.EntityFrameworkCore](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Entities.EntityFrameworkCore/README.pt-BR.md)
+
+Descrição: Este pacote liga as entidades ao Entity Framework Core: preenche os campos de auditoria, converte o `Remove()` em exclusão lógica e aplica o filtro de excluídos e o token de concorrência.
+
 ### [Tooark.Enums](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Enums/README.pt-BR.md)
 
 Descrição: Este pacote contém definições de enums utilizados em várias partes da aplicação.
@@ -203,6 +243,10 @@ Descrição: Este pacote fornece exceções personalizadas para uso em projetos 
 ### [Tooark.Extensions](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Extensions/README.pt-BR.md)
 
 Descrição: Este pacote fornece métodos de extensão para tipos e classes comuns do .NET.
+
+### [Tooark.Http](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Http/README.pt-BR.md)
+
+Descrição: Este pacote faz as chamadas HTTP de saída: um serviço JSON fino sobre o `IHttpClientFactory`, com resiliência, erros no padrão do Tooark e uma guarda de saída contra SSRF.
 
 ### [Tooark.Notifications](https://github.com/Tooark/nuget-tooark/blob/main/Tooark.Notifications/README.pt-BR.md)
 

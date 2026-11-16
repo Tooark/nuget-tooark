@@ -31,12 +31,14 @@ public static partial class TooarkDependencyInjection
     Action<PasswordHashOptions>? configure = null
   )
   {
-    var section = configuration?.GetSection(PasswordHashOptions.Section);
-
     // Carrega da configuração e aplica os overrides programáticos por cima
     void Apply(PasswordHashOptions options)
     {
-      section?.Bind(options);
+      if (configuration is not null)
+      {
+        StrictConfiguration.Bind(configuration, PasswordHashOptions.Section, options);
+      }
+
       configure?.Invoke(options);
     }
 

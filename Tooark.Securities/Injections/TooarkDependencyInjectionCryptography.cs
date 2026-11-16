@@ -34,7 +34,7 @@ public static partial class TooarkDependencyInjection
 
     // Lê as opções para decidir qual serviço registrar
     var options = new CryptographyOptions();
-    section.Bind(options);
+    StrictConfiguration.Bind(configuration, CryptographyOptions.Section, options);
 
     // Chaves identificadas: um único serviço atende as duas interfaces
     if (options.Keys.Count > 0)

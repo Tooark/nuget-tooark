@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Http</PackageId>
+    <Title>Tooark.Http</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, http, httpclient, resilience, ssrf, .NET</PackageTags>
+    <Summary>Outbound HTTP for .NET projects: a thin service over IHttpClientFactory, resilience and an SSRF guard.</Summary>
+    <PackageDescription>Library for outbound HTTP in .NET projects: a thin JSON service over IHttpClientFactory with resilience, error mapping to the Tooark exceptions and an outbound guard against SSRF.</PackageDescription>
+    <Description>Library for outbound HTTP in .NET projects: a thin JSON service over IHttpClientFactory with resilience, error mapping to the Tooark exceptions and an outbound guard against SSRF.</Description>
+    <!--
+      Pacote novo na v4.9.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
+      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
+    -->
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+  <!-- Leitura das seções com a configuração estrita opcional, compartilhada como código-fonte (tipo interno) -->
+  <ItemGroup>
+    <Compile Include="..\Shared\StrictConfiguration.cs" Link="Shared\StrictConfiguration.cs" />
+    <Using Include="Tooark.Shared" />
+  </ItemGroup>
+
+</Project>

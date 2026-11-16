@@ -46,7 +46,7 @@ public static partial class TooarkDependencyInjection
 
     // Carrega e valida as chaves no startup, e não na primeira requisição
     var options = new JwtOptions();
-    section.Bind(options);
+    StrictConfiguration.Bind(configuration, JwtOptions.Section, options);
 
     var keys = JwtSigningKeys.Load(options);
 

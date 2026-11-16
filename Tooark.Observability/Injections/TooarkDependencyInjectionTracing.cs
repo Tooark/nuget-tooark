@@ -115,7 +115,7 @@ public static partial class TooarkDependencyInjection
       // Configura OTLP exporter
       builder.AddOtlpExporter(exporterOptions =>
       {
-        ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions);
+        ConfigureOtlpExporter(exporterOptions, effectiveOtlpOptions, OtlpTracesPath);
       });
 
       hasOtlpExporter = true;

@@ -23,6 +23,7 @@ observability, mediator and more — each one a package, all released together.
 
 - [About](#-about)
 - [Installation](#-installation)
+- [Strict configuration](#️-strict-configuration)
 - [Packages](#-packages)
 - [Documentation](#-documentation)
 - [Local development](#-local-development)
@@ -68,9 +69,49 @@ Or install only what you need — every package can be installed individually (s
 code of each package lives in its own folder of this repository, together with its README.
 
 Installing through the aggregator does not register everything: `AddTooarkService` leaves out what depends on
-your application — the unit of work, the ASP.NET Core responses, JWT Bearer authentication, OpenID Connect SSO,
-storage and secrets — which are set up on their own. See the
+your application — the unit of work, entity auditing, the ASP.NET Core responses, JWT Bearer authentication,
+OpenID Connect SSO, the HTTP client, storage and secrets — which are set up on their own. See the
 [aggregator's configuration](https://github.com/Tooark/nuget-tooark/blob/main/Tooark/README.md#️-configuration).
+
+---
+
+## ⚙️ Strict configuration
+
+By default, .NET silently ignores a mistyped key in a configuration section: the option keeps its default value
+and nothing warns you.
+
+```json
+"Observability": {
+  "Tracing": { "SampligRatio": 0.1 }
+}
+```
+
+In the example, `SampligRatio` is misspelled, and sampling stays at `1.0`. With the option below, every section
+read by a Tooark package fails at startup when it has a key the package does not know:
+
+```json
+"Tooark": { "StrictConfiguration": true }
+```
+
+The application does not start, with `Options.Configuration.UnknownKey;Observability;SampligRatio`
+(`InternalServerErrorException`), which names the section and the key.
+
+- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
+  `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
+- **Only what the registered packages read.** The check runs at registration (`AddTooark...`): a package the
+  application does not register checks nothing, and the application's other sections (`Logging`, your own) are
+  left alone.
+- **Missing keys stay optional.** The option only refuses what is extra, never what is absent.
+- **Every configuration source counts.** An environment variable such as `Jwt__Anything`, or a secret loaded
+  from a store into the section, is also a key of the section and is refused.
+- **Two providers of the same family:** `Tooark.Storage.Aws` and `Tooark.Storage.Gcp` read the `Storage` section,
+  and the `Tooark.Secrets` providers read the `Secrets` section, each with its own keys. With two of them
+  registered in the same application, one refuses the other's keys: keep the option off in that case.
+- **Invalid value:** anything other than `true` or `false` fails at startup
+  (`Options.Configuration.StrictInvalid`), instead of counting as off.
+
+> ⚠️ **Changes in v5:** the option is off on the 4.x line and becomes on by default in v5. Turn it on in staging
+> now to find the wrong keys before the upgrade; to keep it off in v5, set `false`.
 
 ---
 
@@ -83,9 +124,11 @@ storage and secrets — which are set up on their own. See the
 | `Tooark.Attributes`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Attributes.svg)](https://nuget.org/packages/Tooark.Attributes)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Attributes.svg)](https://nuget.org/packages/Tooark.Attributes)                                     | `dotnet add package Tooark.Attributes`                   |
 | `Tooark.Dtos`                         | [![NuGet](https://img.shields.io/nuget/v/Tooark.Dtos.svg)](https://nuget.org/packages/Tooark.Dtos)                                                 | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Dtos.svg)](https://nuget.org/packages/Tooark.Dtos)                                                 | `dotnet add package Tooark.Dtos`                         |
 | `Tooark.Entities`                     | [![NuGet](https://img.shields.io/nuget/v/Tooark.Entities.svg)](https://nuget.org/packages/Tooark.Entities)                                         | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Entities.svg)](https://nuget.org/packages/Tooark.Entities)                                         | `dotnet add package Tooark.Entities`                     |
+| `Tooark.Entities.EntityFrameworkCore` | [![NuGet](https://img.shields.io/nuget/v/Tooark.Entities.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Entities.EntityFrameworkCore) | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Entities.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Entities.EntityFrameworkCore) | `dotnet add package Tooark.Entities.EntityFrameworkCore` |
 | `Tooark.Enums`                        | [![NuGet](https://img.shields.io/nuget/v/Tooark.Enums.svg)](https://nuget.org/packages/Tooark.Enums)                                               | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Enums.svg)](https://nuget.org/packages/Tooark.Enums)                                               | `dotnet add package Tooark.Enums`                        |
 | `Tooark.Exceptions`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Exceptions.svg)](https://nuget.org/packages/Tooark.Exceptions)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Exceptions.svg)](https://nuget.org/packages/Tooark.Exceptions)                                     | `dotnet add package Tooark.Exceptions`                   |
 | `Tooark.Extensions`                   | [![NuGet](https://img.shields.io/nuget/v/Tooark.Extensions.svg)](https://nuget.org/packages/Tooark.Extensions)                                     | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Extensions.svg)](https://nuget.org/packages/Tooark.Extensions)                                     | `dotnet add package Tooark.Extensions`                   |
+| `Tooark.Http`                         | [![NuGet](https://img.shields.io/nuget/v/Tooark.Http.svg)](https://nuget.org/packages/Tooark.Http)                                                 | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Http.svg)](https://nuget.org/packages/Tooark.Http)                                                 | `dotnet add package Tooark.Http`                         |
 | `Tooark.Mediator`                     | [![NuGet](https://img.shields.io/nuget/v/Tooark.Mediator.svg)](https://nuget.org/packages/Tooark.Mediator)                                         | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Mediator.svg)](https://nuget.org/packages/Tooark.Mediator)                                         | `dotnet add package Tooark.Mediator`                     |
 | `Tooark.Mediator.Abstractions`        | [![NuGet](https://img.shields.io/nuget/v/Tooark.Mediator.Abstractions.svg)](https://nuget.org/packages/Tooark.Mediator.Abstractions)               | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Mediator.Abstractions.svg)](https://nuget.org/packages/Tooark.Mediator.Abstractions)               | `dotnet add package Tooark.Mediator.Abstractions`        |
 | `Tooark.Mediator.EntityFrameworkCore` | [![NuGet](https://img.shields.io/nuget/v/Tooark.Mediator.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Mediator.EntityFrameworkCore) | [![Nuget](https://img.shields.io/nuget/dt/Tooark.Mediator.EntityFrameworkCore.svg)](https://nuget.org/packages/Tooark.Mediator.EntityFrameworkCore) | `dotnet add package Tooark.Mediator.EntityFrameworkCore` |

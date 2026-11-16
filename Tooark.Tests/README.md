@@ -127,26 +127,28 @@ is recorded in the release notes, under `Notes/`.
 
 One folder per package, mirroring the structure of the package under test:
 
-| Folder           | Package under test                                                                |
-| ---------------- | --------------------------------------------------------------------------------- |
-| `AspNetCore/`    | `Tooark.AspNetCore`                                                               |
-| `Attributes/`    | `Tooark.Attributes`                                                               |
-| `Dtos/`          | `Tooark.Dtos`                                                                     |
-| `Entities/`      | `Tooark.Entities`                                                                 |
-| `Enums/`         | `Tooark.Enums`                                                                    |
-| `Exceptions/`    | `Tooark.Exceptions`                                                               |
-| `Extensions/`    | `Tooark.Extensions`                                                               |
-| `Injections/`    | `Tooark` (the aggregator)                                                         |
-| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` and `.EntityFrameworkCore`                     |
-| `Notifications/` | `Tooark.Notifications`                                                            |
-| `Observability/` | `Tooark.Observability`                                                            |
-| `Sanitizers/`    | `Tooark.Sanitizers`                                                               |
-| `Secrets/`       | `Tooark.Secrets`, `.Aws` (`Aws/`), `.Gcp` (`Gcp/`) and `.Vault` (`Vault/`)        |
-| `Securities/`    | `Tooark.Securities` and `Tooark.Securities.OpenId` (`OpenId/`)                    |
-| `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) and `Tooark.Storage.Gcp` (`Gcp/`) |
-| `Utils/`         | `Tooark.Utils`                                                                    |
-| `Validations/`   | `Tooark.Validations`                                                              |
-| `ValueObjects/`  | `Tooark.ValueObjects`                                                             |
+| Folder           | Package under test                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `AspNetCore/`    | `Tooark.AspNetCore`                                                                            |
+| `Attributes/`    | `Tooark.Attributes`                                                                            |
+| `Configuration/` | Strict configuration (`Tooark:StrictConfiguration`), across every package that reads a section |
+| `Dtos/`          | `Tooark.Dtos`                                                                                  |
+| `Entities/`      | `Tooark.Entities` and `Tooark.Entities.EntityFrameworkCore` (`EntityFrameworkCore/`)           |
+| `Enums/`         | `Tooark.Enums`                                                                                 |
+| `Exceptions/`    | `Tooark.Exceptions`                                                                            |
+| `Extensions/`    | `Tooark.Extensions`                                                                            |
+| `Http/`          | `Tooark.Http`                                                                                  |
+| `Injections/`    | `Tooark` (the aggregator)                                                                      |
+| `Mediator/`      | `Tooark.Mediator`, `.Abstractions` and `.EntityFrameworkCore`                                  |
+| `Notifications/` | `Tooark.Notifications`                                                                         |
+| `Observability/` | `Tooark.Observability`                                                                         |
+| `Sanitizers/`    | `Tooark.Sanitizers`                                                                            |
+| `Secrets/`       | `Tooark.Secrets`, `.Aws` (`Aws/`), `.Gcp` (`Gcp/`) and `.Vault` (`Vault/`)                     |
+| `Securities/`    | `Tooark.Securities` and `Tooark.Securities.OpenId` (`OpenId/`)                                 |
+| `Storage/`       | `Tooark.Storage`, `Tooark.Storage.Aws` (`Aws/`) and `Tooark.Storage.Gcp` (`Gcp/`)              |
+| `Utils/`         | `Tooark.Utils`                                                                                 |
+| `Validations/`   | `Tooark.Validations`                                                                           |
+| `ValueObjects/`  | `Tooark.ValueObjects`                                                                          |
 
 Two folders hold no tests:
 

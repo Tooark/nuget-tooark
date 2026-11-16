@@ -33,7 +33,7 @@ public static partial class TooarkDependencyInjection
     // Carrega da configuração, completa com o ambiente e aplica os overrides programáticos por cima
     void Apply(VaultSecretsOptions options)
     {
-      configuration.GetSection(SecretsOptions.Section).Bind(options);
+      StrictConfiguration.Bind(configuration, SecretsOptions.Section, options);
       configure?.Invoke(options);
       options.ApplyEnvironment(Environment.GetEnvironmentVariable);
     }

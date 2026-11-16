@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <PackageId>Tooark.Entities.EntityFrameworkCore</PackageId>
+    <Title>Tooark.Entities.EntityFrameworkCore</Title>
+    <Authors>Paulo Sergio de Freitas Junior</Authors>
+    <PackageTags>tooark, toolkit, entities, entityframeworkcore, audit, softdelete, concurrency, .NET</PackageTags>
+    <Summary>Entity Framework Core integration for the Tooark entities: audit stamping, soft delete and concurrency.</Summary>
+    <PackageDescription>Library that plugs the Tooark entities into Entity Framework Core: an interceptor that stamps the audit fields and turns Remove() into a soft delete, and model conventions for the soft delete filter and the concurrency token.</PackageDescription>
+    <Description>Library that plugs the Tooark entities into Entity Framework Core: an interceptor that stamps the audit fields and turns Remove() into a soft delete, and model conventions for the soft delete filter and the concurrency token.</Description>
+    <!--
+      Pacote novo na v4.9.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
+      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
+    -->
+    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tooark.Entities\Tooark.Entities.csproj" />
+    <ProjectReference Include="..\Tooark.Exceptions\Tooark.Exceptions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+</Project>

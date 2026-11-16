@@ -25,7 +25,7 @@ public static class SecretsOptionsReader
     var options = new T();
     var configuration = builder as IConfiguration ?? builder.Build();
 
-    configuration.GetSection(SecretsOptions.Section).Bind(options);
+    StrictConfiguration.Bind(configuration, SecretsOptions.Section, options);
     configure?.Invoke(options);
 
     return options;
