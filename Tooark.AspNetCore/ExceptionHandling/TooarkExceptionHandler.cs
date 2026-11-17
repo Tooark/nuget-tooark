@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Tooark.Exceptions;
 using Tooark.Extensions;
 
@@ -18,6 +20,13 @@ namespace Tooark.AspNetCore.ExceptionHandling;
 /// <see cref="TooarkException.GetNotifications"/>, com as mensagens traduzidas pelo localizador. Qualquer outra
 /// exceção é devolvida ao ASP.NET Core, que responde o 500 padrão do <c>AddProblemDetails</c>, sem detalhes da
 /// exceção.
+/// <para>
+/// Cada exceção respondida é registrada no log no nível de <see cref="TooarkProblemDetailsOptions"/>, lidas
+/// do container da requisição: por padrão <c>Warning</c> para 4xx e <c>Error</c>, com a pilha de chamadas, para
+/// 5xx. No .NET 10 o <c>UseExceptionHandler</c> não registra a exceção que um <see cref="IExceptionHandler"/>
+/// tratou, então este é o único registro dela; no .NET 8 o middleware registra a exceção como <c>Error</c>
+/// antes de chamar o manipulador.
+/// </para>
 /// <para>
 /// O corpo é escrito pelo <see cref="IProblemDetailsService"/>, que aplica o <c>type</c> padrão do status e o
 /// <c>CustomizeProblemDetails</c> da aplicação. Quando o serviço recusa a escrita, por exemplo por um
@@ -47,6 +56,11 @@ public sealed class TooarkExceptionHandler : IExceptionHandler
   /// </summary>
   private readonly IStringLocalizer _localizer;
 
+  /// <summary>
+  /// Opções padrão, usadas quando o container da requisição não tem as opções do manipulador.
+  /// </summary>
+  private static readonly TooarkProblemDetailsOptions DefaultOptions = new();
+
   #endregion
 
   #region Constructors
@@ -61,6 +75,10 @@ public sealed class TooarkExceptionHandler : IExceptionHandler
   /// <param name="localizer">
   /// Localizador das mensagens; sem registro, usa o localizador JSON do <c>Tooark.Extensions</c>.
   /// </param>
+  /// <remarks>
+  /// As <see cref="TooarkProblemDetailsOptions"/> não entram pelo construtor: são lidas do container da
+  /// requisição a cada exceção, e sem registro valem os padrões.
+  /// </remarks>
   public TooarkExceptionHandler(
     ILogger<TooarkExceptionHandler>? logger = null,
     IProblemDetailsService? problemDetailsService = null,
@@ -96,15 +114,7 @@ public sealed class TooarkExceptionHandler : IExceptionHandler
 
     var statusCode = (int)tooarkException.GetStatusCode();
 
-    // Um erro do cliente é esperado em operação normal; um erro do servidor pede atenção
-    if (statusCode >= StatusCodes.Status500InternalServerError)
-    {
-      _logger.LogError(exception, "Tooark exception answered with status {StatusCode}: {Message}", statusCode, exception.Message);
-    }
-    else
-    {
-      _logger.LogWarning("Tooark exception answered with status {StatusCode}: {Message}", statusCode, exception.Message);
-    }
+    Log(httpContext, statusCode, exception);
 
     var problemDetails = TooarkProblemDetailsBuilder.Build(
       statusCode,
@@ -135,6 +145,33 @@ public sealed class TooarkExceptionHandler : IExceptionHandler
     await TypedResults.Problem(problemDetails).ExecuteAsync(httpContext).ConfigureAwait(false);
 
     return true;
+  }
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Registra a exceção respondida no nível configurado para o status.
+  /// </summary>
+  /// <param name="httpContext">Contexto da requisição, de onde vêm as opções.</param>
+  /// <param name="statusCode">Status da resposta.</param>
+  /// <param name="exception">Exceção respondida.</param>
+  private void Log(HttpContext httpContext, int statusCode, Exception exception)
+  {
+    // O monitor reflete a configuração atual; um manipulador criado fora do container usa os padrões
+    var options = httpContext.RequestServices?.GetService<IOptionsMonitor<TooarkProblemDetailsOptions>>()?.CurrentValue;
+    var logLevel = (options ?? DefaultOptions).GetLogLevel(statusCode);
+
+    if (!_logger.IsEnabled(logLevel))
+    {
+      return;
+    }
+
+    // Só um erro do servidor leva a pilha de chamadas; o de cliente é esperado e basta a mensagem
+    var loggedException = statusCode >= StatusCodes.Status500InternalServerError ? exception : null;
+
+    _logger.Log(logLevel, loggedException, "Tooark exception answered with status {StatusCode}: {Message}", statusCode, exception.Message);
   }
 
   #endregion
