@@ -35,13 +35,25 @@ public abstract class FileEntity : InitialEntity
   /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
   protected FileEntity(FileStorage file, Title title, CreatedBy createdById) : base(createdById)
   {
-    // Valida os argumentos sem acumular notificação na entidade
-    EnsureValid(file, "FileStorage");
-    EnsureValid(title, "Title");
+    SetFile(file, title);
+  }
 
-    FileName = file.Name;
-    Title = title;
-    Link = file.Link;
+  /// <summary>
+  /// Construtor da classe FileEntity com identificador definido.
+  /// </summary>
+  /// <remarks>
+  /// O identificador informado é o único atribuído: nenhum outro é gerado antes.
+  /// </remarks>
+  /// <param name="id">Identificador único do arquivo.</param>
+  /// <param name="file">O nome e link do arquivo.</param>
+  /// <param name="title">O título do arquivo.</param>
+  /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador é vazio, ou quando o criador, o arquivo ou o título está ausente ou é inválido.
+  /// </exception>
+  protected FileEntity(Guid id, FileStorage file, Title title, CreatedBy createdById) : base(id, createdById)
+  {
+    SetFile(file, title);
   }
 
   /// <summary>
@@ -55,7 +67,63 @@ public abstract class FileEntity : InitialEntity
   /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
   protected FileEntity(FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById) : base(createdById)
   {
+    SetFile(file, title, fileFormat, type, size);
+  }
+
+  /// <summary>
+  /// Construtor da classe FileEntity com identificador definido.
+  /// </summary>
+  /// <remarks>
+  /// O identificador informado é o único atribuído: nenhum outro é gerado antes.
+  /// </remarks>
+  /// <param name="id">Identificador único do arquivo.</param>
+  /// <param name="file">O nome e link do arquivo.</param>
+  /// <param name="title">O título do arquivo.</param>
+  /// <param name="fileFormat">O formato do arquivo.</param>
+  /// <param name="type">O tipo do arquivo.</param>
+  /// <param name="size">O tamanho do arquivo.</param>
+  /// <param name="createdById">O identificador do usuário que criou o arquivo.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador é vazio, ou quando o criador, o arquivo, o título, o formato ou o tamanho está
+  /// ausente ou é inválido.
+  /// </exception>
+  protected FileEntity(Guid id, FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById)
+    : base(id, createdById)
+  {
+    SetFile(file, title, fileFormat, type, size);
+  }
+
+  #endregion
+
+  #region Private Methods
+
+  /// <summary>
+  /// Valida e atribui o nome, o link e o título do arquivo.
+  /// </summary>
+  /// <param name="file">O nome e link do arquivo.</param>
+  /// <param name="title">O título do arquivo.</param>
+  private void SetFile(FileStorage file, Title title)
+  {
     // Valida os argumentos sem acumular notificação na entidade
+    EnsureValid(file, "FileStorage");
+    EnsureValid(title, "Title");
+
+    FileName = file.Name;
+    Title = title;
+    Link = file.Link;
+  }
+
+  /// <summary>
+  /// Valida e atribui o nome, o link, o título, o formato, o tipo e o tamanho do arquivo.
+  /// </summary>
+  /// <param name="file">O nome e link do arquivo.</param>
+  /// <param name="title">O título do arquivo.</param>
+  /// <param name="fileFormat">O formato do arquivo.</param>
+  /// <param name="type">O tipo do arquivo.</param>
+  /// <param name="size">O tamanho do arquivo.</param>
+  private void SetFile(FileStorage file, Title title, string fileFormat, EFileType type, long size)
+  {
+    // Valida todos os argumentos antes de atribuir qualquer um, sem acumular notificação na entidade
     EnsureValid(file, "FileStorage");
     EnsureValid(title, "Title");
     EnsureValid(

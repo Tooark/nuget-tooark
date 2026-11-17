@@ -35,6 +35,22 @@ public abstract class InitialEntity : BaseEntity
     SetCreatedBy(createdById);
   }
 
+  /// <summary>
+  /// Cria uma nova instância da entidade inicial com identificador definido.
+  /// </summary>
+  /// <remarks>
+  /// O identificador informado é o único atribuído: nenhum outro é gerado antes.
+  /// </remarks>
+  /// <param name="id">Identificador único da entidade.</param>
+  /// <param name="createdById">O identificador do usuário que criou a entidade.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador da entidade é vazio, ou quando o do criador está ausente ou é inválido.
+  /// </exception>
+  protected InitialEntity(Guid id, CreatedBy createdById) : base(id)
+  {
+    SetCreatedBy(createdById);
+  }
+
   #endregion
 
   #region Properties

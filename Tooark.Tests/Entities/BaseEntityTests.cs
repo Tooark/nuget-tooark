@@ -1,4 +1,5 @@
 using Tooark.Entities;
+using Tooark.Exceptions;
 
 namespace Tooark.Tests.Entities;
 
@@ -41,25 +42,26 @@ public class BaseEntityTests
     Assert.Equal(newId, entity.Id);
   }
 
-  // Teste se construtor com Guid.Empty gera uma notificação
+  // Teste se construtor com Guid.Empty lança a exceção com o código do identificador vazio
   [Fact]
-  public void Constructor_WithEmptyGuid_ShouldGenerateNotification()
+  public void Constructor_WithEmptyGuid_ShouldThrowBadRequest()
   {
     // Arrange
     var emptyId = Guid.Empty;
 
     // Act
-    var entity = new TestEntity(emptyId);
+    var ex = Assert.Throws<BadRequestException>(() => new TestEntity(emptyId));
 
     // Assert
-    Assert.False(entity.IsValid);
-    Assert.Equal("Field.Empty;Id", entity.Notifications.First());
-    Assert.Equal(Guid.Empty, entity.Id);
+    var notification = Assert.Single(ex.GetNotifications());
+    Assert.Equal("T.ENT.BAS1", notification.Code);
+    Assert.Equal("Id", notification.Key);
+    Assert.Equal("Field.Empty;Id", notification.Message);
   }
 
-  // Teste se não permite trocar a identidade após criação
+  // Teste se não permite trocar a identidade após criação, sem deixar notificação na entidade
   [Fact]
-  public void SetId_AfterConstruction_ShouldGenerateNotificationAndKeepId()
+  public void SetId_AfterConstruction_ShouldThrowAndKeepId()
   {
     // Arrange
     var entity = new TestEntity();
@@ -67,12 +69,45 @@ public class BaseEntityTests
     var newId = Guid.NewGuid();
 
     // Act
-    entity.TrySetId(newId);
+    var ex = Assert.Throws<BadRequestException>(() => entity.TrySetId(newId));
 
     // Assert
-    Assert.False(entity.IsValid);
+    Assert.Equal("T.ENT.BAS2", Assert.Single(ex.GetNotifications()).Code);
     Assert.Equal(originalId, entity.Id);
-    Assert.Contains(entity.Notifications, n => n.Code == "T.ENT.BAS2");
+    Assert.True(entity.IsValid);
+  }
+
+  // Teste se SetId com Guid.Empty lança a exceção e mantém o identificador
+  [Fact]
+  public void SetId_WithEmptyGuid_ShouldThrowAndKeepId()
+  {
+    // Arrange
+    var entity = new TestEntity();
+    var originalId = entity.Id;
+
+    // Act
+    var ex = Assert.Throws<BadRequestException>(() => entity.TrySetId(Guid.Empty));
+
+    // Assert
+    Assert.Equal("T.ENT.BAS1", Assert.Single(ex.GetNotifications()).Code);
+    Assert.Equal(originalId, entity.Id);
+    Assert.True(entity.IsValid);
+  }
+
+  // Teste se SetId com o mesmo identificador é aceito sem efeito
+  [Fact]
+  public void SetId_WithSameGuid_ShouldKeepId()
+  {
+    // Arrange
+    var entity = new TestEntity();
+    var originalId = entity.Id;
+
+    // Act
+    entity.TrySetId(originalId);
+
+    // Assert
+    Assert.Equal(originalId, entity.Id);
+    Assert.True(entity.IsValid);
   }
 
   // Teste se Equals retorna verdadeiro para o mesmo Guid

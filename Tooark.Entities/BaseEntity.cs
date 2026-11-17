@@ -25,9 +25,11 @@ public abstract class BaseEntity : Notification, IEquatable<Guid>, IEquatable<Ba
   /// Construtor para criar uma entidade com identificador definido.
   /// </summary>
   /// <remarks>
-  /// Útil para cenários de seed/testes/factories onde o Id precisa ser determinístico.
+  /// Útil para cenários de seed/testes/factories onde o Id precisa ser determinístico. Não gera um
+  /// identificador antes: o informado é o único atribuído.
   /// </remarks>
   /// <param name="id">Identificador único da entidade.</param>
+  /// <exception cref="BadRequestException">Quando o identificador informado é vazio.</exception>
   protected BaseEntity(Guid id)
   {
     SetId(id);
@@ -64,23 +66,28 @@ public abstract class BaseEntity : Notification, IEquatable<Guid>, IEquatable<Ba
   /// O Id deve ser efetivamente imutável após definido. Este método existe
   /// apenas para ser usado internamente (ex.: construtores/factories) e não
   /// permite trocar a identidade de uma entidade já criada.
+  /// <para>
+  /// O construtor sem parâmetros já gera um identificador, então chamar este método no construtor de uma
+  /// classe derivada que não repassou o id para a base lança <c>T.ENT.BAS2</c>. Para criar a entidade com um
+  /// identificador informado, use o construtor que recebe o id, que existe em cada classe base.
+  /// </para>
   /// </remarks>
   /// <param name="id">O valor do identificador a ser definido.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador informado é vazio, ou quando a entidade já tem outro identificador.
+  /// </exception>
   protected void SetId(Guid id)
   {
     // Verifica se o identificador é vazio
     if (id == Guid.Empty)
     {
-      // Adiciona uma notificação de erro
-      AddNotification(ValidationErrorMessages.FieldEmpty("Id"), "Id", "T.ENT.BAS1");
-      return;
+      throw Failure(ValidationErrorMessages.FieldEmpty("Id"), "Id", "T.ENT.BAS1");
     }
 
     // Não permitir mutação de identidade após definição
     if (Id != Guid.Empty && Id != id)
     {
-      AddNotification(ValidationErrorMessages.FieldChangeBlocked("Id"), "Id", "T.ENT.BAS2");
-      return;
+      throw Failure(ValidationErrorMessages.FieldChangeBlocked("Id"), "Id", "T.ENT.BAS2");
     }
 
     Id = id;
