@@ -356,7 +356,11 @@ converter à mão, nos dois sentidos, veja a [conversão entre os formatos](#con
 
 **OpenAPI.** O `ProblemDetails` já é o tipo de erro que o ASP.NET Core assume para `[ApiController]`, então um
 `[ProducesResponseType(StatusCodes.Status404NotFound)]` documenta a resposta; nas minimal APIs,
-`.ProducesProblem(StatusCodes.Status404NotFound)` faz o mesmo. A extensão `errors` não é descrita pelo framework.
+`.ProducesProblem(StatusCodes.Status404NotFound)` faz o mesmo. A extensão `errors` não é descrita pelo framework. Com a
+`ConvertValidationProblems` ligada, documente a falha de validação como `ProblemDetails`
+(`.ProducesProblem(StatusCodes.Status400BadRequest)`, ou
+`[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]` nos controllers), e não com
+`.ProducesValidationProblem()`: o esquema do `HttpValidationProblemDetails` descreve `errors` como um objeto por campo.
 
 ### Resultados para minimal APIs
 
