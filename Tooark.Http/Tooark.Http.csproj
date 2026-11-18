@@ -9,11 +9,6 @@
     <Summary>Outbound HTTP for .NET projects: a thin service over IHttpClientFactory, resilience and an SSRF guard.</Summary>
     <PackageDescription>Library for outbound HTTP in .NET projects: a thin JSON service over IHttpClientFactory with resilience, error mapping to the Tooark exceptions and an outbound guard against SSRF.</PackageDescription>
     <Description>Library for outbound HTTP in .NET projects: a thin JSON service over IHttpClientFactory with resilience, error mapping to the Tooark exceptions and an outbound guard against SSRF.</Description>
-    <!--
-      Pacote novo na v4.9.0: ainda não existe versão publicada para comparar a API. Remova esta linha depois da
-      primeira publicação, para que o pacote passe a ser validado contra a baseline do Directory.Build.props.
-    -->
-    <PackageValidationBaselineVersion></PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup>

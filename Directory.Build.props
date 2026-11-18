@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>4.9.0</Version>
+    <Version>4.10.0</Version>
     <Owners>Tooark</Owners>
     <Company>Tooark</Company>
     <Copyright>Copyright (c) 2026 Tooark</Copyright>
@@ -11,7 +11,8 @@
     <RepositoryBaseUrl>https://github.com/Tooark/nuget-tooark</RepositoryBaseUrl>
     <RepositoryUrl>$(RepositoryBaseUrl)</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryBaseUrl)/tree/main/$(MSBuildProjectName)</PackageProjectUrl>
-    <PackageReleaseNotes>$(RepositoryBaseUrl)/blob/main/Notes/v$(Version).md</PackageReleaseNotes>
+    <!-- Linha de manutenção: as notas da 4.x publicadas daqui ficam na própria branch v4 -->
+    <PackageReleaseNotes>$(RepositoryBaseUrl)/blob/v4/Notes/v$(Version).md</PackageReleaseNotes>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!--
@@ -38,7 +39,7 @@
       versão major, atualize a baseline para a última versão da linha anterior ou remova-a temporariamente.
     -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>4.8.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>4.9.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

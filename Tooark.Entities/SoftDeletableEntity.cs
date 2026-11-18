@@ -31,6 +31,19 @@ public abstract class SoftDeletableEntity : DetailedEntity
   /// <param name="createdById">O identificador do usuário que criou a entidade.</param>
   protected SoftDeletableEntity(CreatedBy createdById) : base(createdById) { }
 
+  /// <summary>
+  /// Cria uma nova instância da entidade exclusão lógica com identificador definido.
+  /// </summary>
+  /// <remarks>
+  /// O identificador informado é o único atribuído: nenhum outro é gerado antes.
+  /// </remarks>
+  /// <param name="id">Identificador único da entidade.</param>
+  /// <param name="createdById">O identificador do usuário que criou a entidade.</param>
+  /// <exception cref="BadRequestException">
+  /// Quando o identificador da entidade é vazio, ou quando o do criador está ausente ou é inválido.
+  /// </exception>
+  protected SoftDeletableEntity(Guid id, CreatedBy createdById) : base(id, createdById) { }
+
   #endregion
 
   #region Properties
