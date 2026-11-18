@@ -59,9 +59,11 @@ internal sealed class LoopbackServer : IAsyncDisposable
     {
       await _loop;
     }
-    catch (Exception exception) when (exception is OperationCanceledException or SocketException or ObjectDisposedException)
+    catch (Exception exception) when (exception is OperationCanceledException or SocketException or ObjectDisposedException
+      or InvalidOperationException)
     {
-      // O laço termina pelo cancelamento ou pelo fechamento do listener
+      // O laço termina pelo cancelamento ou pelo fechamento do listener; se ele voltar ao AcceptTcpClientAsync
+      // entre o cancelamento e o Stop, o listener parado lança InvalidOperationException ("Not listening")
     }
 
     _stop.Dispose();
