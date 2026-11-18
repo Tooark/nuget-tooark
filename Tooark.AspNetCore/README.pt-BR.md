@@ -132,6 +132,9 @@ O que muda para o cliente:
 | Erros               | por campo: `{"Email": ["..."]}`, sem tradução       | uma lista única: `["..."]`, traduzida  |
 | Demais propriedades | `type`, `title`, `status`, `traceId`                | `data`, `pagination`, `metadata`       |
 
+Com o [`AddTooarkProblemDetails`](#problem-details-para-as-exceções), a coluna do ASP.NET Core passa a sair com a lista
+`errors` do Tooark, traduzida, a menos que a `ConvertValidationProblems` seja desligada.
+
 **O envelope não escolhe as mensagens.** Ele muda o corpo da resposta, não o que a validação registra no
 ModelState. Com `<Nullable>enable</Nullable>`, um campo não anulável com atributo do `Tooark.Attributes` chega
 ausente com duas mensagens: a chave `Field.Required`, traduzida, e o `The Email field is required.` do
@@ -209,6 +212,8 @@ cliente.
 - `TooarkExceptionHandler`: o `IExceptionHandler` que o registro acrescenta. Pode ser registrado sozinho com
   `AddExceptionHandler<TooarkExceptionHandler>()`, ao lado do `AddProblemDetails()`.
 - `ProblemDetailsError`: um item da lista `errors` do corpo, com `code`, `key` e `message`.
+- `TooarkProblemDetailsOptions`: o nível do log de cada exceção tratada e a conversão das falhas de validação do
+  ASP.NET Core para a lista `errors`.
 
 Sem ele, uma `NotFoundException` lançada em um endpoint é uma exceção como outra qualquer: o ASP.NET Core
 responde 500, e o status e a mensagem que a exceção carrega se perdem. O registro acrescenta o
@@ -285,14 +290,65 @@ builder.Services.AddTooarkProblemDetails(options =>
     context.ProblemDetails.Extensions["application"] = "orders-api");
 ```
 
-**Independente do envelope.** O [`AddTooarkModelStateEnvelope`](#resposta-de-validação) molda a falha de
-validação dos controllers com `[ApiController]`, que acontece antes da action, com o `ResponseDto`. Este registro
-molda as exceções, que acontecem durante a action, e nenhum dos dois altera o outro. Uma API pode usar os dois, ou
-escolher Problem Details para tudo deixando de registrar o envelope. Chamar o registro duas vezes não repete o
-manipulador.
+**Independente do envelope.** O [`AddTooarkModelStateEnvelope`](#resposta-de-validação) molda a falha de validação dos
+controllers com `[ApiController]`, que acontece antes da action, com o `ResponseDto`. Este registro molda as exceções,
+que acontecem durante a action, e nenhum dos dois altera o outro. Uma API pode usar os dois, ou escolher Problem Details
+para tudo deixando de registrar o envelope: sem ele, a falha de validação também sai na lista `errors` do Tooark (veja
+abaixo). Chamar o registro duas vezes não repete o manipulador.
 
 **Log.** A exceção tratada é registrada na categoria `Tooark.AspNetCore.ExceptionHandling.TooarkExceptionHandler`:
-`Warning` para um status 4xx, `Error` para um 5xx.
+`Information` para um status 4xx, com o status e a mensagem, e `Error` para um 5xx, com a exceção e a pilha de
+chamadas. No .NET 10 o `UseExceptionHandler` não registra a exceção que um `IExceptionHandler` tratou, então este
+é o único registro. Um 404 ou um 409 faz parte da operação normal; para mudar o nível, por faixa ou por status,
+configure as `TooarkProblemDetailsOptions`:
+
+```csharp
+builder.Services.Configure<TooarkProblemDetailsOptions>(options =>
+{
+  options.ClientErrorLogLevel = LogLevel.Information;                // 4xx (padrão)
+  options.ServerErrorLogLevel = LogLevel.Error;                      // 5xx (padrão)
+  options.StatusCodeLogLevels[StatusCodes.Status401Unauthorized] = LogLevel.Warning;
+  options.StatusCodeLogLevels[StatusCodes.Status404NotFound] = LogLevel.Debug;
+});
+```
+
+O nível de um status em `StatusCodeLogLevels` vence o nível da faixa dele, e `LogLevel.None` tira o status do
+log. As opções são só por código: não há seção de configuração para elas. Na 4.x, onde surgiram (v4.10.0), o
+padrão dos 4xx era `Warning`.
+
+**Falhas de validação no formato do Tooark.** O `ValidationProblemDetails` do ASP.NET Core traz `errors` como um objeto
+com as mensagens por campo, e o Problem Details do Tooark traz `errors` como a lista de `code`, `key` e `message`. Para
+o cliente receber um único formato, as falhas de validação do ASP.NET Core também saem na lista do Tooark, uma entrada
+por mensagem, com o campo em `key`, o código padrão `T.ERR` e a mensagem traduzida: uma chave como
+`Field.Required;Email` chega traduzida, e o texto do framework chega como ele o escreve. O `status`, o `type`, o
+`traceId` e as extensões do `CustomizeProblemDetails` continuam no corpo, e o `title` passa a ser a frase padrão do
+status, como nas exceções. O `CustomizeProblemDetails` roda antes da conversão, sobre o problema do ASP.NET Core: um
+`title` ou um `detail` definido nele é substituído.
+
+```json
+// Formato do ASP.NET Core
+{ "status": 400, "title": "One or more validation errors occurred.", "errors": { "Email": ["The Email field is required."] } }
+
+// Como sai com o AddTooarkProblemDetails
+{ "status": 400, "title": "Bad Request", "detail": "The Email field is required.", "errors": [{ "code": "T.ERR", "key": "Email", "message": "The Email field is required." }] }
+```
+
+| Origem da falha                                                | Convertida                                                         |
+| -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Validação automática do `[ApiController]`                      | Sim                                                                |
+| Validação automática do `[ApiController]` com o envelope       | Não: o [envelope](#resposta-de-validação) responde o `ResponseDto` |
+| `ValidationProblem()` de um controller                         | Sim                                                                |
+| Validação das minimal APIs (`AddValidation`)                   | Sim                                                                |
+| `Results.ValidationProblem` e `TypedResults.ValidationProblem` | Sim                                                                |
+
+A conversão vem ligada desde a v5; na 4.x ela surgiu desligada, na v4.10.0. Para manter o formato do ASP.NET
+Core, desligue-a:
+
+```csharp
+builder.Services.Configure<TooarkProblemDetailsOptions>(options => options.ConvertValidationProblems = false);
+```
+
+Para converter à mão, nos dois sentidos, veja a [conversão entre os formatos](#conversão-entre-os-formatos-de-validação).
 
 **OpenAPI.** O `ProblemDetails` já é o tipo de erro que o ASP.NET Core assume para `[ApiController]`, então um
 `[ProducesResponseType(StatusCodes.Status404NotFound)]` documenta a resposta; nas minimal APIs,
@@ -317,6 +373,34 @@ confira `IsValid` antes de chamá-lo.
 
 Os resultados não dependem do `AddTooarkProblemDetails`: traduzem as mensagens com o localizador do
 `Tooark.Extensions` por conta própria, no idioma da requisição.
+
+### Conversão entre os formatos de validação
+
+- `ValidationProblemExtension.ToNotificationItems(IDictionary<string, string[]>)`: converte as mensagens por
+  campo do ASP.NET Core em itens de notificação do Tooark, um por mensagem, com o campo como chave e o código
+  padrão `T.ERR`.
+- `ValidationProblemExtension.ToNotificationItems(HttpValidationProblemDetails)`: o mesmo, a partir do problema de
+  validação.
+- `ValidationProblemExtension.ToValidationErrors(IEnumerable<NotificationItem>)`: o caminho de volta, com os
+  itens agrupados pela chave e as mensagens traduzidas. O código de cada item se perde: o formato do ASP.NET Core
+  não tem onde guardá-lo.
+
+A conversão é explícita, e não um operador implícito: um campo com várias mensagens vira vários itens, e o caminho
+de volta perde o código, o que uma conversão implícita esconderia. O framework também nunca chamaria um operador
+ao escrever a resposta; para isso existe o `ConvertValidationProblems`. Uma mensagem em branco vira
+`Field.Invalid;{campo}`, ou `BadRequest` sem campo, como no `GetErrors`.
+
+```csharp
+using Tooark.AspNetCore.Extensions;
+using Tooark.AspNetCore.Results;
+
+// Do formato do ASP.NET Core para a lista do Tooark
+var itens = problema.ToNotificationItems();
+return TooarkResults.ValidationProblem(itens);
+
+// Da lista do Tooark para o formato do ASP.NET Core (com a conversão desligada)
+return Results.ValidationProblem(pedido.Notifications.ToValidationErrors());
+```
 
 ### Integração com as validações
 
@@ -349,7 +433,7 @@ separados não reduziria nada.
 ### Namespaces
 
 As extensões ficam em `Tooark.AspNetCore.Extensions`, os registros em `Tooark.AspNetCore.Injections`, o
-manipulador de exceções em `Tooark.AspNetCore.ExceptionHandling` e os resultados de minimal API em
+manipulador de exceções e as opções dele em `Tooark.AspNetCore.ExceptionHandling` e os resultados de minimal API em
 `Tooark.AspNetCore.Results`.
 
 ---

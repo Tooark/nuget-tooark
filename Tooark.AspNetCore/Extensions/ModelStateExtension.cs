@@ -47,6 +47,6 @@ public static class ModelStateExtension
   /// </summary>
   /// <param name="key">Chave do campo no <see cref="ModelStateDictionary"/>.</param>
   /// <returns>A chave de campo inválido, ou de requisição inválida quando não há campo.</returns>
-  private static string MessageWithoutText(string key) =>
+  internal static string MessageWithoutText(string key) =>
     string.IsNullOrEmpty(key) ? "BadRequest" : ValidationErrorMessages.FieldInvalid(key);
 }

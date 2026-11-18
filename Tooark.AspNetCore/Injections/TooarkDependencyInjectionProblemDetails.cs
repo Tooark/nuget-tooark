@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Tooark.AspNetCore.ExceptionHandling;
 using Tooark.Exceptions;
 
@@ -30,9 +32,17 @@ public static partial class TooarkDependencyInjection
   /// </para>
   /// <para>
   /// Independe do <see cref="AddTooarkModelStateEnvelope"/>: a falha de validação dos controllers com
-  /// <c>[ApiController]</c> continua respondendo o que o envelope define. Este registro cobre as exceções e,
-  /// com o <c>TooarkResults</c>, as notificações devolvidas pelas minimal APIs. Chamar mais de uma vez não
-  /// repete o manipulador.
+  /// <c>[ApiController]</c> continua respondendo o que o envelope define. Este registro cobre as exceções, as
+  /// notificações devolvidas pelas minimal APIs com o <c>TooarkResults</c> e, por padrão, as falhas de validação
+  /// do ASP.NET Core que não passam pelo envelope
+  /// (<see cref="TooarkProblemDetailsOptions.ConvertValidationProblems"/>). Chamar mais de uma vez não repete o
+  /// manipulador nem a conversão.
+  /// </para>
+  /// <para>
+  /// As <see cref="TooarkProblemDetailsOptions"/>, configuradas com
+  /// <c>services.Configure&lt;TooarkProblemDetailsOptions&gt;(...)</c>, definem o nível do log de cada exceção
+  /// respondida (por padrão <c>Information</c> para 4xx e <c>Error</c> para 5xx) e se os problemas de validação
+  /// do ASP.NET Core saem na lista <c>errors</c> do Tooark (ligado por padrão).
   /// </para>
   /// </remarks>
   /// <param name="services">Coleção de serviços.</param>
@@ -62,6 +72,12 @@ public static partial class TooarkDependencyInjection
 
     // O manipulador entra uma única vez: o AddExceptionHandler do ASP.NET Core repetiria o registro
     services.TryAddEnumerable(ServiceDescriptor.Singleton<IExceptionHandler, TooarkExceptionHandler>());
+
+    // A conversão dos problemas de validação fica registrada e age enquanto a opção estiver ligada; o MVC escreve
+    // os dele pelos formatadores, e os demais passam pelo serviço de Problem Details
+    services.TryAddEnumerable(
+      ServiceDescriptor.Singleton<IPostConfigureOptions<ProblemDetailsOptions>, ValidationProblemPostConfigure>());
+    services.TryAddEnumerable(ServiceDescriptor.Singleton<IConfigureOptions<MvcOptions>, ValidationProblemMvcSetup>());
 
     // Retorna os serviços
     return services;
