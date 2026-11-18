@@ -91,8 +91,9 @@ public static class Exemplo
 A exceção do valor ausente é diferente da do valor inválido: `null` produz `Field.Required;<campo>`, e
 valor presente mas reprovado produz `Field.Invalid;<campo>`.
 
-O `SetId` do `BaseEntity` é a única exceção: ele **acumula notificação** em vez de lançar, porque roda
-no construtor. Verifique `IsValid` depois de construir uma entidade com identificador informado.
+O `SetId` do `BaseEntity` segue a mesma regra desde a v4.10.0: lança `BadRequestException` com `T.ENT.BAS1` para
+identificador vazio e `T.ENT.BAS2` quando a entidade já tem outro identificador. Até a v4.9.0 ele acumulava
+notificação, e um identificador recusado passava despercebido se ninguém conferisse o `IsValid`.
 
 Já `ValidateNotDeleted()` acumula notificação de propósito — é o método para checar sem interromper o
 fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
@@ -109,9 +110,12 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
   - `BaseEntity()` — gera `Id` automaticamente
   - `BaseEntity(Guid id)` — define `Id` determinístico (seed/testes/factories)
 - **Observações**
-  - O `Id` tem setter privado. Classes derivadas definem o identificador pelo `SetId` protegido, que
-    recusa `Guid.Empty` e recusa trocar a identidade de uma entidade já criada — nos dois casos por
-    notificação, sem lançar.
+  - O `Id` tem setter privado. Classes derivadas definem o identificador pelo `SetId` protegido, que lança
+    `BadRequestException` para `Guid.Empty` (`T.ENT.BAS1`) e para a troca da identidade de uma entidade já
+    criada (`T.ENT.BAS2`). Informar de novo o mesmo identificador é aceito, sem efeito.
+  - O construtor sem parâmetros já gera um `Id`, e os construtores que recebem só o criador também. Uma
+    classe derivada que chama o `SetId` depois de um deles recebe `T.ENT.BAS2`. Para criar a entidade com um
+    identificador informado, use o construtor que recebe o `id`: toda classe base tem um.
   - A igualdade compara **tipo e identificador**: entidades de tipos diferentes com o mesmo `Id` não
     são iguais. A comparação aceita herança nos dois sentidos, para não quebrar com os proxies de
     carregamento tardio do Entity Framework.
@@ -122,10 +126,16 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
 - **Propriedades**
   - `CreatedById` (Guid) — coluna `created_by` (`uuid`)
   - `CreatedAt` (DateTime/UTC) — coluna `created_at` (`timestamp with time zone`)
+- **Construtores (para classes derivadas)**
+  - `InitialEntity()` — gera `Id`, sem criador (Entity Framework)
+  - `InitialEntity(CreatedBy createdById)` — gera `Id` e registra o criador
+  - `InitialEntity(Guid id, CreatedBy createdById)` — usa o `Id` informado e registra o criador
 - **Métodos**
   - `SetCreatedBy(CreatedBy createdById)`
 - **Observações**
   - Herda de `BaseEntity`.
+  - Não há construtor só com o `id`: o `CreatedBy` converte implicitamente de `Guid`, então o
+    `: base(algumGuid)` de uma classe derivada continua significando o criador.
   - `SetCreatedBy` recebe o Value Object `CreatedBy`, que aceita conversão implícita a partir de `Guid`.
   - Em caso de dados inválidos, lança `BadRequestException`.
   - [Exemplos de Uso](#entidade-inicial).
@@ -135,6 +145,8 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
 - **Propriedades**
   - `UpdatedById` (Guid) — coluna `updated_by` (`uuid`)
   - `UpdatedAt` (DateTime/UTC) — coluna `updated_at` (`timestamp with time zone`)
+- **Construtores (para classes derivadas)**
+  - `DetailedEntity()`, `DetailedEntity(CreatedBy createdById)` e `DetailedEntity(Guid id, CreatedBy createdById)`
 - **Métodos**
   - `SetCreatedBy(CreatedBy createdById)` — define também `UpdatedById` e `UpdatedAt`, iguais aos da criação
   - `SetUpdatedBy(UpdatedBy updatedById)`
@@ -148,6 +160,8 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
 
 - **Propriedades**
   - `Version` (long) — coluna `version` (`bigint`), valor padrão `1`
+- **Construtores (para classes derivadas)**
+  - `VersionedEntity()`, `VersionedEntity(CreatedBy createdById)` e `VersionedEntity(Guid id, CreatedBy createdById)`
 - **Métodos**
   - `SetUpdatedBy(UpdatedBy updatedById)` — atualiza e incrementa a versão
 - **Observações**
@@ -159,6 +173,8 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
 
 - **Propriedades**
   - `Deleted` (bool) — coluna `deleted` (`bool`), valor padrão `false`
+- **Construtores (para classes derivadas)**
+  - `SoftDeletableEntity()`, `SoftDeletableEntity(CreatedBy createdById)` e `SoftDeletableEntity(Guid id, CreatedBy createdById)`
 - **Métodos**
   - `ValidateNotDeleted()` — valida se não está deletada e adiciona notificação
   - `EnsureNotDeleted()` — lança exception se estiver deletada
@@ -178,6 +194,8 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
   - `DeletedAt` (DateTime?) — coluna `deleted_at` (`timestamp with time zone`)
   - `RestoredById` (Guid?) — coluna `restored_by` (`uuid`)
   - `RestoredAt` (DateTime?) — coluna `restored_at` (`timestamp with time zone`)
+- **Construtores (para classes derivadas)**
+  - `AuditableEntity()`, `AuditableEntity(CreatedBy createdById)` e `AuditableEntity(Guid id, CreatedBy createdById)`
 - **Métodos**
   - `ValidateNotDeleted()` — valida se não está deletada e adiciona notificação
   - `EnsureNotDeleted()` — lança exception se estiver deletada
@@ -201,6 +219,8 @@ fluxo. Quem quer interromper usa `EnsureNotDeleted()`, que lança.
 - **Construtores (para classes derivadas)**
   - `FileEntity(FileStorage file, Title title, CreatedBy createdById)`
   - `FileEntity(FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById)`
+  - `FileEntity(Guid id, FileStorage file, Title title, CreatedBy createdById)`
+  - `FileEntity(Guid id, FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById)`
 - **Observações**
   - Herda de `InitialEntity`.
   - `FileStorage` e `Title` são Value Objects. Em caso de dados inválidos, lança `BadRequestException`.
@@ -238,6 +258,30 @@ public class Program
     var produtoDeterministico = new Produto(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
   }
 }
+```
+
+### Entidade com auditoria e identificador informado
+
+O identificador vai para o construtor da base, junto com o criador. Não chame o `SetId` depois de um
+construtor que já gerou um: ele lança `T.ENT.BAS2`.
+
+```csharp
+using Tooark.Entities;
+using Tooark.ValueObjects;
+
+public class Pedido : AuditableEntity
+{
+  // Entity Framework
+  private Pedido() { }
+
+  // Identificador gerado pela entidade
+  public Pedido(CreatedBy createdById) : base(createdById) { }
+
+  // Identificador informado por quem chama (chave de idempotência, importação, id gerado no cliente)
+  public Pedido(Guid id, CreatedBy createdById) : base(id, createdById) { }
+}
+
+var pedido = new Pedido(Guid.CreateVersion7(), usuarioAtualId);
 ```
 
 ### [Entidade Inicial](#initialentity)
@@ -442,13 +486,13 @@ Os códigos de erro para notificações seguem o padrão `T.ENT.<SIGLA><N>` (ex.
 
 Códigos emitidos pelas entidades:
 
-| Código       | Emissor                                  | Situação                            |
-| ------------ | ---------------------------------------- | ----------------------------------- |
-| `T.ENT.BAS1` | `BaseEntity.SetId`                       | Identificador vazio                 |
-| `T.ENT.BAS2` | `BaseEntity.SetId`                       | Tentativa de trocar o identificador |
-| `T.ENT.INI1` | `InitialEntity.SetCreatedBy`             | Autoria da criação já registrada    |
-| `T.ENT.SOF1` | `SoftDeletableEntity.ValidateNotDeleted` | Registro excluído logicamente       |
-| `T.ENT.AUD1` | `AuditableEntity.ValidateNotDeleted`     | Registro excluído logicamente       |
+| Código       | Emissor                                       | Situação                            |
+| ------------ | --------------------------------------------- | ----------------------------------- |
+| `T.ENT.BAS1` | `BaseEntity.SetId` e os construtores com `id` | Identificador vazio                 |
+| `T.ENT.BAS2` | `BaseEntity.SetId`                            | Tentativa de trocar o identificador |
+| `T.ENT.INI1` | `InitialEntity.SetCreatedBy`                  | Autoria da criação já registrada    |
+| `T.ENT.SOF1` | `SoftDeletableEntity.ValidateNotDeleted`      | Registro excluído logicamente       |
+| `T.ENT.AUD1` | `AuditableEntity.ValidateNotDeleted`          | Registro excluído logicamente       |
 
 O código acompanha a notificação, esteja ela registrada na entidade ou transportada pela exceção. As
 mensagens que vêm dos objetos de valor — `Field.Invalid;CreatedBy` e as demais — são emitidas pelo
@@ -460,8 +504,8 @@ Tabela de erros/notificações:
 
 | Entidade              | Mensagem                        | Descrição                           | Solução                                                                  | Retorno      |
 | --------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ | ------------ |
-| `BaseEntity`          | `Field.Empty;Id`                | Identificador vazio                 | Defina um identificador válido para a entidade                           | Notification |
-| `BaseEntity`          | `Field.ChangeBlocked;Id`        | Identificador não pode ser alterado | Não troque o identificador de uma entidade já criada                     | Notification |
+| `BaseEntity`          | `Field.Empty;Id`                | Identificador vazio                 | Defina um identificador válido para a entidade                           | Exception    |
+| `BaseEntity`          | `Field.ChangeBlocked;Id`        | Identificador não pode ser alterado | Passe o identificador ao construtor da base em vez de chamar o `SetId`   | Exception    |
 | `InitialEntity`       | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |
 | `InitialEntity`       | `Field.Invalid;CreatedBy`       | Campo do Criador inválido           | Informe um criador válido                                                | Exception    |
 | `DetailedEntity`      | `Field.ChangeBlocked;CreatedBy` | Criador já registrado               | A autoria da criação é definida uma única vez; não a redefina            | Exception    |

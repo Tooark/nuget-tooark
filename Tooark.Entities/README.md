@@ -90,8 +90,9 @@ public static class Example
 The exception for a missing value differs from the one for an invalid value: `null` produces
 `Field.Required;<field>`, and a value that is present but rejected produces `Field.Invalid;<field>`.
 
-`BaseEntity.SetId` is the only exception: it **accumulates a notification** instead of throwing, because it
-runs in the constructor. Check `IsValid` after building an entity with a provided identifier.
+`BaseEntity.SetId` follows the same rule since v4.10.0: it throws `BadRequestException` with `T.ENT.BAS1` for an
+empty identifier and `T.ENT.BAS2` when the entity already has another identifier. Up to v4.9.0 it accumulated a
+notification, so a rejected identifier went unnoticed unless `IsValid` was checked.
 
 `ValidateNotDeleted()`, on the other hand, accumulates a notification on purpose — it is the method to check
 without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which throws.
@@ -109,8 +110,11 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
   - `BaseEntity(Guid id)` — sets a deterministic `Id` (seed/tests/factories)
 - **Notes**
   - `Id` has a private setter. Derived classes set the identifier through the protected `SetId`, which
-    rejects `Guid.Empty` and rejects changing the identity of an already created entity — in both cases by
-    notification, without throwing.
+    throws `BadRequestException` for `Guid.Empty` (`T.ENT.BAS1`) and for changing the identity of an already
+    created entity (`T.ENT.BAS2`). Passing the same identifier again is accepted with no effect.
+  - The parameterless constructor already generates an `Id`, and so do the constructors that only receive the
+    creator. A derived class that calls `SetId` after one of them gets `T.ENT.BAS2`. To create an entity with
+    a provided identifier, use the constructor that receives the `id`: every base class has one.
   - Equality compares **type and identifier**: entities of different types with the same `Id` are not
     equal. The comparison accepts inheritance in both directions, so it does not break with Entity
     Framework lazy-loading proxies.
@@ -121,10 +125,16 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
 - **Properties**
   - `CreatedById` (Guid) — column `created_by` (`uuid`)
   - `CreatedAt` (DateTime/UTC) — column `created_at` (`timestamp with time zone`)
+- **Constructors (for derived classes)**
+  - `InitialEntity()` — generates `Id`, without creator (Entity Framework)
+  - `InitialEntity(CreatedBy createdById)` — generates `Id` and records the creator
+  - `InitialEntity(Guid id, CreatedBy createdById)` — uses the provided `Id` and records the creator
 - **Methods**
   - `SetCreatedBy(CreatedBy createdById)`
 - **Notes**
   - Inherits from `BaseEntity`.
+  - There is no constructor with only the `id`: `CreatedBy` converts implicitly from `Guid`, so a derived
+    class's `: base(someGuid)` keeps meaning the creator.
   - `SetCreatedBy` receives the `CreatedBy` Value Object, which accepts implicit conversion from `Guid`.
   - On invalid data, throws `BadRequestException`.
   - [Usage Examples](#initial-entity).
@@ -134,6 +144,8 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
 - **Properties**
   - `UpdatedById` (Guid) — column `updated_by` (`uuid`)
   - `UpdatedAt` (DateTime/UTC) — column `updated_at` (`timestamp with time zone`)
+- **Constructors (for derived classes)**
+  - `DetailedEntity()`, `DetailedEntity(CreatedBy createdById)` and `DetailedEntity(Guid id, CreatedBy createdById)`
 - **Methods**
   - `SetCreatedBy(CreatedBy createdById)` — also sets `UpdatedById` and `UpdatedAt`, equal to the creation ones
   - `SetUpdatedBy(UpdatedBy updatedById)`
@@ -147,6 +159,8 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
 
 - **Properties**
   - `Version` (long) — column `version` (`bigint`), default value `1`
+- **Constructors (for derived classes)**
+  - `VersionedEntity()`, `VersionedEntity(CreatedBy createdById)` and `VersionedEntity(Guid id, CreatedBy createdById)`
 - **Methods**
   - `SetUpdatedBy(UpdatedBy updatedById)` — updates and increments the version
 - **Notes**
@@ -158,6 +172,8 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
 
 - **Properties**
   - `Deleted` (bool) — column `deleted` (`bool`), default value `false`
+- **Constructors (for derived classes)**
+  - `SoftDeletableEntity()`, `SoftDeletableEntity(CreatedBy createdById)` and `SoftDeletableEntity(Guid id, CreatedBy createdById)`
 - **Methods**
   - `ValidateNotDeleted()` — validates that it is not deleted and adds a notification
   - `EnsureNotDeleted()` — throws an exception if it is deleted
@@ -177,6 +193,8 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
   - `DeletedAt` (DateTime?) — column `deleted_at` (`timestamp with time zone`)
   - `RestoredById` (Guid?) — column `restored_by` (`uuid`)
   - `RestoredAt` (DateTime?) — column `restored_at` (`timestamp with time zone`)
+- **Constructors (for derived classes)**
+  - `AuditableEntity()`, `AuditableEntity(CreatedBy createdById)` and `AuditableEntity(Guid id, CreatedBy createdById)`
 - **Methods**
   - `ValidateNotDeleted()` — validates that it is not deleted and adds a notification
   - `EnsureNotDeleted()` — throws an exception if it is deleted
@@ -200,6 +218,8 @@ without interrupting the flow. To interrupt, use `EnsureNotDeleted()`, which thr
 - **Constructors (for derived classes)**
   - `FileEntity(FileStorage file, Title title, CreatedBy createdById)`
   - `FileEntity(FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById)`
+  - `FileEntity(Guid id, FileStorage file, Title title, CreatedBy createdById)`
+  - `FileEntity(Guid id, FileStorage file, Title title, string fileFormat, EFileType type, long size, CreatedBy createdById)`
 - **Notes**
   - Inherits from `InitialEntity`.
   - `FileStorage` and `Title` are Value Objects. On invalid data, throws `BadRequestException`.
@@ -237,6 +257,30 @@ public class Program
     var deterministicProduct = new Product(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
   }
 }
+```
+
+### Entity with auditing and a provided identifier
+
+The identifier goes to the base constructor, together with the creator. Do not call `SetId` after a
+constructor that has already generated one: it throws `T.ENT.BAS2`.
+
+```csharp
+using Tooark.Entities;
+using Tooark.ValueObjects;
+
+public class Order : AuditableEntity
+{
+  // Entity Framework
+  private Order() { }
+
+  // Identifier generated by the entity
+  public Order(CreatedBy createdById) : base(createdById) { }
+
+  // Identifier provided by the caller (idempotency key, import, identifier generated by the client)
+  public Order(Guid id, CreatedBy createdById) : base(id, createdById) { }
+}
+
+var order = new Order(Guid.CreateVersion7(), currentUserId);
 ```
 
 ### [Initial Entity](#initialentity)
@@ -441,13 +485,13 @@ Notification error codes follow the `T.ENT.<ABBR><N>` pattern (e.g. `T.ENT.BAS1`
 
 Codes emitted by the entities:
 
-| Code         | Emitter                                  | Situation                            |
-| ------------ | ---------------------------------------- | ------------------------------------ |
-| `T.ENT.BAS1` | `BaseEntity.SetId`                       | Empty identifier                     |
-| `T.ENT.BAS2` | `BaseEntity.SetId`                       | Attempt to change the identifier     |
-| `T.ENT.INI1` | `InitialEntity.SetCreatedBy`             | Creation authorship already recorded |
-| `T.ENT.SOF1` | `SoftDeletableEntity.ValidateNotDeleted` | Record soft deleted                  |
-| `T.ENT.AUD1` | `AuditableEntity.ValidateNotDeleted`     | Record soft deleted                  |
+| Code         | Emitter                                      | Situation                            |
+| ------------ | -------------------------------------------- | ------------------------------------ |
+| `T.ENT.BAS1` | `BaseEntity.SetId` and the `id` constructors | Empty identifier                     |
+| `T.ENT.BAS2` | `BaseEntity.SetId`                           | Attempt to change the identifier     |
+| `T.ENT.INI1` | `InitialEntity.SetCreatedBy`                 | Creation authorship already recorded |
+| `T.ENT.SOF1` | `SoftDeletableEntity.ValidateNotDeleted`     | Record soft deleted                  |
+| `T.ENT.AUD1` | `AuditableEntity.ValidateNotDeleted`         | Record soft deleted                  |
 
 The code travels with the notification, whether it is recorded on the entity or carried by the exception.
 Messages coming from the value objects — `Field.Invalid;CreatedBy` and the others — are emitted by
@@ -456,36 +500,36 @@ reports `ProtocolHttp`, which is the internal value object of `FileStorage`, not
 
 Error/notification table:
 
-| Entity                | Message                         | Description                  | Solution                                                            | Returns      |
-| --------------------- | ------------------------------- | ---------------------------- | ------------------------------------------------------------------- | ------------ |
-| `BaseEntity`          | `Field.Empty;Id`                | Empty identifier             | Set a valid identifier for the entity                               | Notification |
-| `BaseEntity`          | `Field.ChangeBlocked;Id`        | Identifier cannot be changed | Do not change the identifier of an already created entity           | Notification |
-| `InitialEntity`       | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                 | Exception    |
-| `InitialEntity`       | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                             | Exception    |
-| `DetailedEntity`      | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                 | Exception    |
-| `DetailedEntity`      | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                             | Exception    |
-| `DetailedEntity`      | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                             | Exception    |
-| `VersionedEntity`     | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                 | Exception    |
-| `VersionedEntity`     | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                             | Exception    |
-| `VersionedEntity`     | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                             | Exception    |
-| `SoftDeletableEntity` | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                 | Exception    |
-| `SoftDeletableEntity` | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                             | Exception    |
-| `SoftDeletableEntity` | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                             | Exception    |
-| `SoftDeletableEntity` | `Record.Deleted`                | Record deleted               | Consider whether the record must be restored before operating on it | Notification |
-| `SoftDeletableEntity` | `Record.Deleted`                | Record deleted               | Restore the record if needed before operating on it                 | Exception    |
-| `AuditableEntity`     | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                 | Exception    |
-| `AuditableEntity`     | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                             | Exception    |
-| `AuditableEntity`     | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                             | Exception    |
-| `AuditableEntity`     | `Field.Invalid;DeletedBy`       | Invalid Deleter field        | Provide a valid deleter                                             | Exception    |
-| `AuditableEntity`     | `Field.Invalid;RestoredBy`      | Invalid Restorer field       | Provide a valid restorer                                            | Exception    |
-| `AuditableEntity`     | `Record.Deleted`                | Record deleted               | Consider whether the record must be restored before operating on it | Notification |
-| `AuditableEntity`     | `Record.Deleted`                | Record deleted               | Restore the record if needed before operating on it                 | Exception    |
-| `FileEntity`          | `Field.Invalid;ProtocolHttp`    | Invalid file link            | Provide a valid HTTP or HTTPS link                                  | Exception    |
-| `FileEntity`          | `Field.Invalid;Title`           | Invalid file title           | Provide a valid title                                               | Exception    |
-| `FileEntity`          | `Field.Required;FileStorage`    | File not provided            | Provide the file's `FileStorage`                                    | Exception    |
-| `FileEntity`          | `Field.Required;Title`          | Title not provided           | Provide the file's `Title`                                          | Exception    |
-| `FileEntity`          | `Field.Required;FileFormat`     | File format not provided     | Provide the file format                                             | Exception    |
-| `FileEntity`          | `Field.Invalid;Size`            | Negative file size           | Provide a size greater than or equal to zero                        | Exception    |
+| Entity                | Message                         | Description                  | Solution                                                               | Returns      |
+| --------------------- | ------------------------------- | ---------------------------- | ---------------------------------------------------------------------- | ------------ |
+| `BaseEntity`          | `Field.Empty;Id`                | Empty identifier             | Set a valid identifier for the entity                                  | Exception    |
+| `BaseEntity`          | `Field.ChangeBlocked;Id`        | Identifier cannot be changed | Pass the identifier to the base constructor instead of calling `SetId` | Exception    |
+| `InitialEntity`       | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                    | Exception    |
+| `InitialEntity`       | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                                | Exception    |
+| `DetailedEntity`      | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                    | Exception    |
+| `DetailedEntity`      | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                                | Exception    |
+| `DetailedEntity`      | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                                | Exception    |
+| `VersionedEntity`     | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                    | Exception    |
+| `VersionedEntity`     | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                                | Exception    |
+| `VersionedEntity`     | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                                | Exception    |
+| `SoftDeletableEntity` | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                    | Exception    |
+| `SoftDeletableEntity` | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                                | Exception    |
+| `SoftDeletableEntity` | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                                | Exception    |
+| `SoftDeletableEntity` | `Record.Deleted`                | Record deleted               | Consider whether the record must be restored before operating on it    | Notification |
+| `SoftDeletableEntity` | `Record.Deleted`                | Record deleted               | Restore the record if needed before operating on it                    | Exception    |
+| `AuditableEntity`     | `Field.ChangeBlocked;CreatedBy` | Creator already recorded     | Creation authorship is set once; do not redefine it                    | Exception    |
+| `AuditableEntity`     | `Field.Invalid;CreatedBy`       | Invalid Creator field        | Provide a valid creator                                                | Exception    |
+| `AuditableEntity`     | `Field.Invalid;UpdatedBy`       | Invalid Updater field        | Provide a valid updater                                                | Exception    |
+| `AuditableEntity`     | `Field.Invalid;DeletedBy`       | Invalid Deleter field        | Provide a valid deleter                                                | Exception    |
+| `AuditableEntity`     | `Field.Invalid;RestoredBy`      | Invalid Restorer field       | Provide a valid restorer                                               | Exception    |
+| `AuditableEntity`     | `Record.Deleted`                | Record deleted               | Consider whether the record must be restored before operating on it    | Notification |
+| `AuditableEntity`     | `Record.Deleted`                | Record deleted               | Restore the record if needed before operating on it                    | Exception    |
+| `FileEntity`          | `Field.Invalid;ProtocolHttp`    | Invalid file link            | Provide a valid HTTP or HTTPS link                                     | Exception    |
+| `FileEntity`          | `Field.Invalid;Title`           | Invalid file title           | Provide a valid title                                                  | Exception    |
+| `FileEntity`          | `Field.Required;FileStorage`    | File not provided            | Provide the file's `FileStorage`                                       | Exception    |
+| `FileEntity`          | `Field.Required;Title`          | Title not provided           | Provide the file's `Title`                                             | Exception    |
+| `FileEntity`          | `Field.Required;FileFormat`     | File format not provided     | Provide the file format                                                | Exception    |
+| `FileEntity`          | `Field.Invalid;Size`            | Negative file size           | Provide a size greater than or equal to zero                           | Exception    |
 
 Applies to every entity: a **null** argument produces `Field.Required;<field>` — `CreatedBy`, `UpdatedBy`,
 `DeletedBy` or `RestoredBy`, depending on the operation — as an `Exception`.

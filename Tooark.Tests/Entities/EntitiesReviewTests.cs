@@ -388,11 +388,10 @@ public class EntitiesReviewTests
       CultureInfo.CurrentCulture = new CultureInfo("pt-BR");
 
       // Act
-      var entidade = new ComId(Guid.Empty);
+      var ex = Assert.Throws<BadRequestException>(() => new ComId(Guid.Empty));
 
       // Assert
-      Assert.False(entidade.IsValid);
-      Assert.Equal("Field.Empty;Id", entidade.Messages.First());
+      Assert.Equal("Field.Empty;Id", Assert.Single(ex.GetErrorMessages()));
     }
     finally
     {
