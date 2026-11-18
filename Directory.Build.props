@@ -11,7 +11,8 @@
     <RepositoryBaseUrl>https://github.com/Tooark/nuget-tooark</RepositoryBaseUrl>
     <RepositoryUrl>$(RepositoryBaseUrl)</RepositoryUrl>
     <PackageProjectUrl>$(RepositoryBaseUrl)/tree/main/$(MSBuildProjectName)</PackageProjectUrl>
-    <PackageReleaseNotes>$(RepositoryBaseUrl)/blob/main/Notes/v$(Version).md</PackageReleaseNotes>
+    <!-- Linha de manutenção: as notas da 4.x publicadas daqui ficam na própria branch v4 -->
+    <PackageReleaseNotes>$(RepositoryBaseUrl)/blob/v4/Notes/v$(Version).md</PackageReleaseNotes>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!--
