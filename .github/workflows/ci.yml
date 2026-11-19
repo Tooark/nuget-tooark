@@ -1,7 +1,8 @@
 name: CI
 
 # Valida pull requests antes do merge: formatação (.editorconfig), lista de pacotes do release e grupos do site
-# de documentação, build em Release (warnings são erros) e a suíte completa de testes, com cobertura.
+# de documentação, build em Release (warnings são erros), validação de pacote contra a baseline e a suíte
+# completa de testes, com cobertura.
 # A publicação continua exclusiva do workflow de release (tooark.yml), disparado no push em main. O job
 # "build-and-test" é status check obrigatório no ruleset da branch main: um pull request vermelho não pode ser
 # mesclado.
@@ -45,6 +46,12 @@ jobs:
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
+
+      # O pack roda a validação de pacote contra a baseline (PackageValidationBaselineVersion): uma quebra de API
+      # que não esteja no CompatibilitySuppressions.xml do pacote falha o pull request, e não só a publicação.
+      # Os pacotes gerados aqui são descartados; quem publica é o tooark.yml.
+      - name: Pack (package validation)
+        run: dotnet pack --configuration Release --no-build --output artifacts/packages
 
       - name: Test (with coverage)
         run: >-

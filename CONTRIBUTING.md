@@ -88,6 +88,7 @@ to run the security scanner locally.
    ```bash
    dotnet format                      # fixes whitespace, BOM and final newline
    dotnet build --configuration Release
+   dotnet pack --configuration Release --no-build  # package validation against the baseline
    dotnet test --project Tooark.Tests/Tooark.Tests.csproj
 
    # One target and one package, during development
@@ -112,8 +113,8 @@ to run the security scanner locally.
    in `Notes/` (see [Releasing](#releasing)).
 7. Push and open a Pull Request against `main`.
 
-> Note: for every pull request, CI checks the formatting, builds in `Release`
-> and runs the full test suite. The `build-and-test` check is required by
+> Note: for every pull request, CI checks the formatting, builds in `Release`,
+> validates the packages against the baseline and runs the full test suite. The `build-and-test` check is required by
 > the `main` branch ruleset, so a red pull request cannot be merged. The
 > release pipeline additionally runs the security scanner before publishing.
 
@@ -338,6 +339,7 @@ Before opening a PR, confirm:
 - [ ] `dotnet format --verify-no-changes` passes
 - [ ] `dotnet build --configuration Release` passes with no warnings
 - [ ] `dotnet test --project Tooark.Tests/Tooark.Tests.csproj` passes
+- [ ] `dotnet pack --configuration Release` passes (package validation); an intentional break is in the release notes and in the `CompatibilitySuppressions.xml` of the package
 - [ ] New behavior is covered by tests
 - [ ] New message keys are translated in `en-US`, `pt-BR` and `es-ES`
 - [ ] Package `README.md` and `README.pt-BR.md` updated **and in sync** when the public surface, options or behavior changed
