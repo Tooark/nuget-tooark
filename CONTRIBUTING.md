@@ -176,8 +176,14 @@ to run the security scanner locally.
   a `PackageReference`.
 - **Package validation** runs on `dotnet pack` against the last published
   version (`PackageValidationBaselineVersion`): removing or changing a public
-  member fails the pack. That is expected for a major release — update the
-  baseline in the same PR that bumps the major.
+  member fails the pack. A major release keeps the baseline on the last
+  version of the previous line and records each intentional break, also
+  listed in the release notes, in the `CompatibilitySuppressions.xml` of the
+  package, generated with
+  `dotnet pack -c Release -p:GenerateCompatibilitySuppressionFile=true`.
+  Review the generated entries before committing: an entry the notes do not
+  list is an accidental break. After the major ships, the baseline moves to
+  it and the suppression files are deleted.
 - Prefer the official Tooark packages and the .NET framework over new
   third-party dependencies. Adding one needs a justification in the PR; a
   dependency that drags the ASP.NET Core shared framework into a base

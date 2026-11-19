@@ -39,16 +39,15 @@
     -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <!--
-      v5: a baseline fica desligada enquanto a major está em desenvolvimento, porque as quebras abaixo são
-      intencionais: a remoção do Notification.Clear(), do RoleClaimsExtension.GetClaims() sem parâmetros, do
-      GenerateString.Token() e do CryptographyOptions.Secret, a troca dos padrões das claims do JWT, o
-      Cryptography:Algorithm desconhecido que passa a falhar, a trava do Data Protection ligada por padrão em
-      contêiner, a configuração estrita ligada por padrão e a saída do alvo net8.0. Antes de publicar a
-      5.0.0, restaure a baseline na última 4.x publicada (4.9.0) e gere o CompatibilitySuppressions.xml com
-      "dotnet pack /p:GenerateCompatibilitySuppressionFile=true", para que só as quebras documentadas nas notas
-      passem pela validação.
+      v5: a baseline é a 4.10.0, a última 4.x. As quebras de API intencionais da major (a saída do alvo
+      net8.0 e os membros obsoletos removidos, listados em Notes/v5.0.0.md) ficam registradas no
+      CompatibilitySuppressions.xml de cada pacote afetado; qualquer outra quebra falha o "dotnet pack".
+      Ao incorporar uma quebra nova, documente-a nas notas e gere os arquivos de novo com
+      "dotnet pack -c Release -p:GenerateCompatibilitySuppressionFile=true". As trocas de padrão (claims,
+      configuração estrita, log) não aparecem aqui, porque não mudam a assinatura de nenhum membro. Depois
+      de publicar a 5.0.0, a baseline passa para ela e os CompatibilitySuppressions.xml saem.
     -->
-    <!-- <PackageValidationBaselineVersion>4.9.0</PackageValidationBaselineVersion> -->
+    <PackageValidationBaselineVersion>4.10.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
