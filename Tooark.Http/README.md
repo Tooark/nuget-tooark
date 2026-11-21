@@ -37,16 +37,18 @@ pattern and the conversion of every failure into an exception that carries `Noti
 
 ## 📖 Overview
 
-| Piece                        | What it does                                                                                   |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| `IHttpClientService`         | GET, POST, PUT, PATCH and DELETE with JSON, plus `SendAsync` for everything else               |
-| `AddTooarkHttpClient`        | Registers the service and the named client `Tooark`, with resilience configured by the options |
-| `AddTooarkOutboundGuard`     | Adds the outbound guard to any named or typed client of the application                        |
-| `OutboundGuard.IsBlocked`    | The block list as a pure function, for validations of the application itself                   |
-| `HttpRequestFailedException` | The error response of the called service, with the original status and its errors              |
-| `OutboundBlockedException`   | The destination refused by the guard                                                           |
+| Piece                        | What it does                                                                                  |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `IHttpClientService`         | GET, POST, PUT, PATCH and DELETE with JSON; `SendAsync` and `SendStreamingAsync` for the rest |
+| `AddTooarkHttpClient`        | Registers the service and the default client, `Tooark`, with resilience set up by the options |
+| `AddTooarkNamedHttpClient`   | Registers a named client with its own options, and its service as a keyed service             |
+| `HttpClientServiceExtension` | The verb methods with a per-call adjustment of the request, such as a header                  |
+| `AddTooarkOutboundGuard`     | Adds the outbound guard to any named or typed client of the application                       |
+| `OutboundGuard.IsBlocked`    | The block list as a pure function, for validations of the application itself                  |
+| `HttpRequestFailedException` | The error response of the called service, with the original status, its errors and its body   |
+| `OutboundBlockedException`   | The destination refused by the guard                                                          |
 
-- **Thin layer**: no `new HttpClient()`, no pipeline of its own. The named client is resolved from
+- **Thin layer**: no `new HttpClient()`, no pipeline of its own. The client is resolved from
   `IHttpClientFactory` on every call, so handler rotation and DNS refresh keep working.
 - **Failures in the Tooark standard**: an error status, a timeout, an open circuit, a connection failure and a
   blocked destination each become a Tooark exception with a message key.
@@ -81,6 +83,7 @@ guard lists:
     "TotalTimeoutSeconds": 30,
     "AttemptTimeoutSeconds": 10,
     "RetryCount": 3,
+    "RetryNonIdempotentMethods": false,
     "RetryDelayMilliseconds": 2000,
     "CircuitBreakerFailureRatio": 0.1,
     "CircuitBreakerMinimumThroughput": 100,
@@ -113,11 +116,12 @@ builder.Services.AddTooarkHttpClient(options =>
 ```
 
 With both configuration and code, the code adjustment applies on top of the section. The options are validated at
-registration. Only the first registration counts: the handlers of a named client accumulate, and a second
-registration would stack another resilience handler and multiply the retries.
+registration. Only the first registration of the default client counts: the handlers of a client in
+`IHttpClientFactory` accumulate, and a second registration would stack another resilience handler and multiply the
+retries. For another destination, with other options, register a [named client](#named-clients).
 
-The client is the named client `HttpClientService.ClientName` (`"Tooark"`). Anything else it needs goes through the
-standard `IHttpClientFactory` API, after the registration:
+The default client is the `IHttpClientFactory` client named `HttpClientService.ClientName` (`"Tooark"`). Anything
+else it needs goes through the standard `IHttpClientFactory` API, after the registration:
 
 ```csharp
 using Tooark.Http;
@@ -128,16 +132,18 @@ builder.Services
   .AddHttpMessageHandler<MyAuthenticationHandler>();
 ```
 
-A handler added this way sits inside the resilience handler, so it runs once per attempt.
+A handler added this way sits inside the resilience handler, so it runs once per attempt. A header that changes
+on every call does not go here: use the [methods with a request adjustment](#per-call-headers).
 
 ### Client options — `HttpClient`
 
 | Property                          | Type     | Default | Description                                                                                               |
 | --------------------------------- | -------- | ------- | --------------------------------------------------------------------------------------------------------- |
 | `BaseAddress`                     | `string` | none    | Absolute `http` or `https` URL, without credentials, query string or fragment. Required for relative URIs |
-| `TotalTimeoutSeconds`             | `int`    | `30`    | Time limit of the whole call, all attempts and the body read included. From 1 to 3600                     |
+| `TotalTimeoutSeconds`             | `int`    | `30`    | Time limit of the call: all attempts and the body read (streaming: up to the headers). From 1 to 3600     |
 | `AttemptTimeoutSeconds`           | `int`    | `10`    | Time limit of each attempt, up to the response headers. From 1 to `TotalTimeoutSeconds`                   |
 | `RetryCount`                      | `int`    | `3`     | Retries after the first attempt. From 0 to 10; `0` turns retries off                                      |
+| `RetryNonIdempotentMethods`       | `bool`   | `false` | Also retries POST and PATCH; with `false`, only the other verbs. On 4.x the default was `true`            |
 | `RetryDelayMilliseconds`          | `int`    | `2000`  | Base delay between attempts; it grows exponentially, with jitter. From 0 to 60000                         |
 | `CircuitBreakerFailureRatio`      | `double` | `0.1`   | Failure ratio, from 0 to 1, that opens the circuit within the sampling window                             |
 | `CircuitBreakerMinimumThroughput` | `int`    | `100`   | Minimum number of requests in the window before the ratio is evaluated. At least 2                        |
@@ -146,14 +152,102 @@ A handler added this way sits inside the resilience handler, so it runs once per
 | `Resilience`                      | `bool`   | `true`  | Registers the resilience handler. With `false`, only `TotalTimeoutSeconds` still applies                  |
 | `OutboundGuard`                   | object   | —       | Options of the [outbound guard](#-outbound-guard), below                                                  |
 
+`RetryNonIdempotentMethods` exists since v4.11.0, and **in v5 its default became `false`**: a failure of a POST or
+of a PATCH is returned on the first attempt, and the other verbs are still retried. For the 4.x behavior, where
+every verb was retried, set `"RetryNonIdempotentMethods": true`. The details are in [Resilience](#-resilience).
+
+A [named client](#named-clients) has the same options, in the section `HttpClients:{name}`.
+
 ### Guard options — `HttpClient:OutboundGuard`
 
 | Property                          | Type       | Default | Description                                                                                                          |
 | --------------------------------- | ---------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `Enabled`                         | `bool`     | `false` | Turns the guard on for the `Tooark` client. It is off by default because this client usually calls internal services |
+| `Enabled`                         | `bool`     | `false` | Turns the guard on for the client. It is off by default because the default client typically calls internal services |
 | `AllowedHosts`                    | `string[]` | none    | Host names exempt from the address check: an exact name, or a suffix starting with a dot (`.internal.example.com`)   |
 | `AllowedNetworks`                 | `string[]` | none    | CIDR blocks, IPv4 or IPv6, exempt from the block list (`10.20.0.0/16`, `fd00:1::/64`)                                |
 | `AllowUnresolvedHostsBehindProxy` | `bool`     | `false` | With an [outbound proxy](#with-an-outbound-proxy), lets through a name the application cannot resolve                |
+
+For a named client, the guard section is `HttpClients:{name}:OutboundGuard`.
+
+### Named clients
+
+Since v4.11.0, `AddTooarkNamedHttpClient` registers one client per destination, each with its own options: base
+address, timeouts, retries, circuit breaker and outbound guard. The options of each client come from the section
+`HttpClients:{name}` (the constant `HttpClientOptions.NamedSection`), with the same keys as the `HttpClient`
+section. The `HttpClients` section, in the plural, sits **next to** the `HttpClient` section, not inside it:
+
+```json
+{
+  "HttpClient": {
+    "BaseAddress": "https://api.example.com/v1"
+  },
+  "HttpClients": {
+    "models": {
+      "BaseAddress": "https://models.example.com/",
+      "TotalTimeoutSeconds": 300,
+      "AttemptTimeoutSeconds": 300,
+      "CircuitBreakerSamplingSeconds": 600
+    },
+    "payments": {
+      "BaseAddress": "https://payments.example.com/v2",
+      "RetryNonIdempotentMethods": false
+    }
+  }
+}
+```
+
+```csharp
+using Tooark.Http.Injections;
+
+// The default client, from the HttpClient section
+builder.Services.AddTooarkHttpClient(builder.Configuration);
+
+// Each named client reads its own section: HttpClients:models and HttpClients:payments
+builder.Services.AddTooarkNamedHttpClient("models", builder.Configuration);
+builder.Services.AddTooarkNamedHttpClient("payments", builder.Configuration, options => options.RetryCount = 1);
+
+// Or without reading the configuration, only with adjustments in code
+builder.Services.AddTooarkNamedHttpClient("reports", options =>
+{
+  options.BaseAddress = "https://reports.example.com";
+  options.RetryCount = 0;
+});
+```
+
+The `IHttpClientService` of each client is a keyed service, and the key is the name:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Tooark.Http.Interfaces;
+
+public sealed record QuestionDto(string Text);
+public sealed record AnswerDto(string Text);
+
+public sealed class ModelGateway([FromKeyedServices("models")] IHttpClientService http)
+{
+  // Goes to https://models.example.com/v1/answers, with the timeouts of the "models" client
+  public Task<AnswerDto?> AskAsync(QuestionDto question, CancellationToken cancellationToken) =>
+    http.PostAsync<QuestionDto, AnswerDto>("v1/answers", question, cancellationToken);
+}
+
+// Or straight from the service provider
+var payments = provider.GetRequiredKeyedService<IHttpClientService>("payments");
+```
+
+- **The default client does not change.** The `IHttpClientService` without a key is still the one of the `Tooark`
+  client, and it does not need to be registered for a named client to work.
+- **The name is also the client name in `IHttpClientFactory`.** A fixed header or an authentication handler goes
+  through `AddHttpClient("models")`, after the registration, as with the default client. For that reason, do not
+  use the name of a client the application already registers for another purpose.
+- **Rejected names**: the name cannot be empty, contain `:` or be `Tooark`. The registration throws
+  `ArgumentException`.
+- **Only the first registration of each name counts**, as with the default client.
+- **The options are validated at registration**, with the same `Options.HttpClient.*` messages as the default
+  client, without the client name.
+- **Strict configuration**: the `HttpClients:{name}` section of each registered client is checked, like the
+  `HttpClient` section. With `"Tooark": { "StrictConfiguration": true }`, an unknown key fails at registration with
+  a message such as `Options.Configuration.UnknownKey;HttpClients:models;TotalTimeout`. See
+  [strict configuration](https://github.com/Tooark/nuget-tooark/blob/main/README.md#️-strict-configuration).
 
 ---
 
@@ -163,20 +257,22 @@ A handler added this way sits inside the resilience handler, so it runs once per
 `System.Text.Json` and `JsonSerializerDefaults.Web`: camelCase names, case-insensitive reading, numbers accepted as
 strings.
 
-| Method                                       | Request body | Response body |
-| -------------------------------------------- | ------------ | ------------- |
-| `GetAsync<TResponse>(uri)`                   | —            | JSON          |
-| `PostAsync<TRequest, TResponse>(uri, body)`  | JSON         | JSON          |
-| `PostAsync<TRequest>(uri, body)`             | JSON         | not read      |
-| `PutAsync<TRequest, TResponse>(uri, body)`   | JSON         | JSON          |
-| `PutAsync<TRequest>(uri, body)`              | JSON         | not read      |
-| `PatchAsync<TRequest, TResponse>(uri, body)` | JSON         | JSON          |
-| `PatchAsync<TRequest>(uri, body)`            | JSON         | not read      |
-| `DeleteAsync(uri)`                           | —            | not read      |
-| `DeleteAsync<TResponse>(uri)`                | —            | JSON          |
-| `SendAsync(HttpRequestMessage)`              | the caller's | raw response  |
+| Method                                       | Request body | Response body                   |
+| -------------------------------------------- | ------------ | ------------------------------- |
+| `GetAsync<TResponse>(uri)`                   | —            | JSON                            |
+| `PostAsync<TRequest, TResponse>(uri, body)`  | JSON         | JSON                            |
+| `PostAsync<TRequest>(uri, body)`             | JSON         | not read                        |
+| `PutAsync<TRequest, TResponse>(uri, body)`   | JSON         | JSON                            |
+| `PutAsync<TRequest>(uri, body)`              | JSON         | not read                        |
+| `PatchAsync<TRequest, TResponse>(uri, body)` | JSON         | JSON                            |
+| `PatchAsync<TRequest>(uri, body)`            | JSON         | not read                        |
+| `DeleteAsync(uri)`                           | —            | not read                        |
+| `DeleteAsync<TResponse>(uri)`                | —            | JSON                            |
+| `SendAsync(HttpRequestMessage)`              | the caller's | raw response                    |
+| `SendStreamingAsync(HttpRequestMessage)`     | the caller's | raw response, body not read yet |
 
-Every method takes an optional `CancellationToken` as the last parameter.
+Every method takes an optional `CancellationToken` as the last parameter. The verb methods also have versions that
+take a request adjustment before the token: see [Per-call headers](#per-call-headers).
 
 ```csharp
 using Tooark.Http.Interfaces;
@@ -228,13 +324,58 @@ The rules of the JSON methods:
   to `/v1/customers/7`. A relative URI that **starts with a slash** replaces the whole path: `/customers/7` goes to
   `/customers/7`, without `/v1`.
 
+### Per-call headers
+
+For a header that changes on every call (the user's authorization, an idempotency key, a different `Accept`), the
+verb methods have, since v4.11.0, versions that take an `Action<HttpRequestMessage>` right before the cancellation
+token. They are extension methods in the namespace `Tooark.Http.Extensions`, for `GetAsync`, `PostAsync`,
+`PutAsync`, `PatchAsync` and `DeleteAsync`:
+
+```csharp
+using System.Net.Http.Headers;
+using Tooark.Http.Extensions;
+using Tooark.Http.Interfaces;
+
+public sealed record OrderDto(int ProductId, int Quantity);
+public sealed record ReceiptDto(string Protocol);
+
+public sealed class OrderGateway(IHttpClientService http)
+{
+  // The authorization is the one of the user of this call, not a fixed one of the client
+  public Task<ReceiptDto?> CreateAsync(OrderDto order, string userToken, CancellationToken cancellationToken) =>
+    http.PostAsync<OrderDto, ReceiptDto>(
+      "orders",
+      order,
+      request => request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", userToken),
+      cancellationToken);
+
+  // The idempotency key lets the called service recognize a retry of the same order
+  public Task ConfirmAsync(OrderDto order, Guid key, CancellationToken cancellationToken) =>
+    http.PostAsync(
+      "orders/confirmations",
+      order,
+      request => request.Headers.Add("Idempotency-Key", key.ToString()),
+      cancellationToken);
+}
+```
+
+- **Same behavior as the interface methods**: JSON both ways, `HttpRequestFailedException` on an error status and
+  transport failures as the Tooark exceptions.
+- **The action runs once**, before the first attempt, and retries resend the same request. A value that must
+  change on every attempt goes into a handler of the client, which runs once per attempt.
+- **Same header on every call**: configure the client, with the `ConfigureHttpClient` shown in the configuration
+  section.
+- **Another implementation of `IHttpClientService`** (a test fake, a decorator): the call goes through its
+  `SendAsync`, with the same JSON and the same error conversion.
+
 ### `SendAsync`: the escape hatch
 
-For what the verb methods do not cover (custom headers, a body that is not JSON, reading the status), build the
+For what the verb methods do not cover (a body that is not JSON, reading the status, another verb), build the
 `HttpRequestMessage` and call `SendAsync`. The request goes through the same client, with the resilience and the
 guard, and the response comes back with its body already loaded in memory. An error status does **not** throw
 here; transport failures (timeout, open circuit, connection, blocked destination) do, as in the other methods. The
-caller disposes the response.
+caller disposes the response. Just to add a header to a JSON call, prefer the methods of
+[Per-call headers](#per-call-headers), which keep the JSON reading and the conversion of the error status.
 
 ```csharp
 using var request = new HttpRequestMessage(HttpMethod.Head, $"files/{id}");
@@ -245,6 +386,51 @@ using var response = await http.SendAsync(request, cancellationToken);
 var exists = response.StatusCode == HttpStatusCode.OK;
 ```
 
+### `SendStreamingAsync`: the streaming response
+
+Since v4.11.0, `SendStreamingAsync` returns the response as soon as the headers arrive, without loading the body
+in memory. It is the send for long or continuous responses: server-sent events (`text/event-stream`), the chunked
+response of a language model, a large file. The request goes through the same client, with the resilience and the
+guard, and, as in `SendAsync`, an error status does **not** throw.
+
+```csharp
+using System.Net.Http.Headers;
+using Tooark.Http.Exceptions;
+
+using var request = new HttpRequestMessage(HttpMethod.Get, "events");
+request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+// The token applies up to the headers; the caller disposes the response
+using var response = await http.SendStreamingAsync(request, cancellationToken);
+
+if (!response.IsSuccessStatusCode)
+{
+  // An error status does not throw: the decision is the caller's
+  throw new HttpRequestFailedException(response.StatusCode, response.RequestMessage?.RequestUri);
+}
+
+// The deadline of the body read is the one of the token passed to it, not the timeout of the call
+await using var body = await response.Content.ReadAsStreamAsync(cancellationToken);
+using var reader = new StreamReader(body);
+
+while (await reader.ReadLineAsync(cancellationToken) is { } line)
+{
+  // Each line arrives as soon as the called service sends it
+}
+```
+
+- **Timeout**: `TotalTimeoutSeconds` and the token passed to the method apply up to the response headers. The body
+  read may last longer than the timeout of the call, and nothing cuts it by itself: control its deadline with your
+  own token, passed to `ReadAsStreamAsync` and to every read.
+- **Disposal**: the caller disposes the response, which releases the connection, also when giving up on the body
+  halfway.
+- **Failures**: up to the headers, the retries and the Tooark exceptions apply (timeout, open circuit, connection,
+  blocked destination), as in the other methods. A failure **while reading the body** arrives as the transport
+  exception (`IOException`, `HttpRequestException`), not as a Tooark exception, and is not retried.
+- **Other implementations**: the method has a default implementation in the interface. A hand-written
+  implementation of `IHttpClientService`, written before it existed, keeps compiling and serves it through
+  `SendAsync`, with the body already loaded.
+
 ---
 
 ## 🔁 Resilience
@@ -252,28 +438,41 @@ var exists = response.StatusCode == HttpStatusCode.OK;
 With `Resilience` on (the default), the client gets the **standard resilience handler** of
 `Microsoft.Extensions.Http.Resilience`, configured from the options. Its strategies, from the outside in:
 
-| Strategy            | Default                                                     | Option                                 |
-| ------------------- | ----------------------------------------------------------- | -------------------------------------- |
-| Concurrency limiter | 1000 simultaneous requests, no queue                        | not configurable here                  |
-| Total timeout       | 30 s                                                        | `TotalTimeoutSeconds`                  |
-| Retry               | 3 retries, exponential from 2 s, jitter                     | `RetryCount`, `RetryDelayMilliseconds` |
-| Circuit breaker     | 10% failures of at least 100 requests in 30 s; open for 5 s | `CircuitBreaker*`                      |
-| Attempt timeout     | 10 s                                                        | `AttemptTimeoutSeconds`                |
+| Strategy            | Default                                                     | Option                                                              |
+| ------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Concurrency limiter | 1000 simultaneous requests, no queue                        | not configurable here                                               |
+| Total timeout       | 30 s                                                        | `TotalTimeoutSeconds`                                               |
+| Retry               | 3 retries, exponential from 2 s, jitter                     | `RetryCount`, `RetryDelayMilliseconds`, `RetryNonIdempotentMethods` |
+| Circuit breaker     | 10% failures of at least 100 requests in 30 s; open for 5 s | `CircuitBreaker*`                                                   |
+| Attempt timeout     | 10 s                                                        | `AttemptTimeoutSeconds`                                             |
 
 What you need to know to tune it:
 
 - **What is retried**: a connection failure, an attempt timeout and the responses `408`, `429` and `5xx`. A
   `Retry-After` header of the response is honored. The other `4xx` are not retried.
-- **Every verb is retried, POST and PATCH included.** That is the behavior of the standard handler. If the called
-  service is not idempotent, set `RetryCount` to `0`, or make the operation idempotent (an idempotency key, for
-  instance).
+- **POST and PATCH are not retried, by default.** The two verbs are not idempotent: a retry can repeat the effect
+  of a call the called service had already processed (an order created twice, a charge made twice). So the failure
+  of a POST or of a PATCH is returned on the first attempt, both on a `5xx` response and on a connection failure.
+  GET, PUT and DELETE are still retried, and the failure of the POST or of the PATCH still counts in the circuit.
+  The rule looks at the verb of the request, so it also applies to `SendAsync`, to `SendStreamingAsync` and to the
+  methods with a request adjustment.
+- **To retry POST and PATCH**, set `RetryNonIdempotentMethods: true` on the client that calls an idempotent
+  service, for example one that accepts an idempotency key sent [per call](#per-call-headers). With
+  `RetryCount: 0` or `Resilience: false` nothing is retried, and the option has no effect.
+- **Changed in v5**: on the 4.x line every verb was retried, as in the standard handler, and
+  `RetryNonIdempotentMethods`, which appeared in v4.11.0, was on. To keep that behavior, set
+  `"RetryNonIdempotentMethods": true`.
 - **Timeouts**: the attempt timeout and the handler's total timeout end at the response headers. The service
   applies `TotalTimeoutSeconds` again to the whole call, so a body that stops arriving is also cut. Either way the
-  failure is `GatewayTimeoutException`.
-- **One circuit per client.** The circuit counts the failures of the `Tooark` client as a whole, not per host. It is
-  the right grain for a client with a `BaseAddress`. If the same client calls many unrelated hosts (webhooks of
-  different customers), the failures of one can open the circuit for all: raise `CircuitBreakerFailureRatio` and
-  `CircuitBreakerMinimumThroughput`, or use a dedicated client per destination.
+  failure is `GatewayTimeoutException`. The exception is
+  [`SendStreamingAsync`](#sendstreamingasync-the-streaming-response): there the timeout ends at the headers, and
+  the deadline of the body read is the caller's.
+- **One circuit per client.** The circuit counts the failures of a client as a whole, not per host. It is the right
+  grain for a client with a `BaseAddress`: register a [named client](#named-clients) for each known destination,
+  and the failures of one destination do not open the circuit of the others. If the same client calls many
+  unrelated hosts (webhooks of different customers), the failures of one can open the circuit for all: raise
+  `CircuitBreakerFailureRatio` and `CircuitBreakerMinimumThroughput`, and keep that traffic on a named client of
+  its own, apart from the circuit of the internal calls.
 - **Valid combinations**: `AttemptTimeoutSeconds` cannot exceed `TotalTimeoutSeconds`, and
   `CircuitBreakerSamplingSeconds` must be at least twice `AttemptTimeoutSeconds`. Raising the attempt timeout above
   15 s therefore requires raising the sampling window too. Both are checked at registration.
@@ -288,6 +487,12 @@ builder.Services.AddTooarkHttpClient(builder.Configuration, options =>
   options.AttemptTimeoutSeconds = 120;
   options.CircuitBreakerSamplingSeconds = 240;
   options.RetryCount = 0;
+});
+
+// A billing service that accepts an idempotency key: POST and PATCH are retried too
+builder.Services.AddTooarkNamedHttpClient("billing", builder.Configuration, options =>
+{
+  options.RetryNonIdempotentMethods = true;
 });
 ```
 
@@ -310,6 +515,7 @@ the Problem Details response of the application with the status below.
 | Absolute URI that is not `http` or `https`      | `BadRequestException`                                | 400    | `Http.RequestUriInvalid`                                           |
 | Relative URI without `BaseAddress`              | `InternalServerErrorException`                       | 500    | `Http.BaseAddressNotConfigured`                                    |
 | Cancellation by the caller's token              | `OperationCanceledException`, untouched              | —      | —                                                                  |
+| Body read failure in `SendStreamingAsync`       | `IOException`/`HttpRequestException`, untouched      | —      | —                                                                  |
 
 The original exception (the `HttpRequestException`, the Polly rejection) is kept in `InnerException` for the log.
 
@@ -317,7 +523,8 @@ The original exception (the `HttpRequestException`, the Polly rejection) is kept
 
 An error status of the called service is **not** the status of the application: a `404` or a `401` from another
 service must not become a `404` or a `401` for whoever called the application. `HttpRequestFailedException` is
-always a `502`, and exposes the original status in `UpstreamStatusCode` and the request URI in `RequestUri`.
+always a `502`, and exposes the original status in `UpstreamStatusCode`, the request URI in `RequestUri` and the
+body of the error response in [`UpstreamBody`](#error-response-body).
 
 ```csharp
 using System.Net;
@@ -367,10 +574,55 @@ The notifications of the exception depend on the body of the error response:
   ```
 
 - **Any other body** — a single item with the message `Http.RequestFailed;{status}`. The raw body never goes into
-  the message: it may carry internal details of the called service.
+  the message or the notifications: it may carry internal details of the called service.
 
-The error body is read up to 64 KB; a larger one is ignored. At most 50 errors are used, and each text is cut at
-1024 characters. `RequestUri` may carry sensitive data in the query string: do not return it in a response.
+The error body is read up to 64 KB, in any format; a larger one is ignored. At most 50 errors are used, and each
+text is cut at 1024 characters. `RequestUri` may carry sensitive data in the query string: do not return it in a
+response.
+
+### Error response body
+
+Since v4.11.0, `HttpRequestFailedException` exposes the body of the error response in `UpstreamBody`, as text and
+in any format: the error JSON of a provider, plain text, an HTML page. It lets the application read the reason for
+the failure and build its own message:
+
+```csharp
+using System.Net;
+using Tooark.Exceptions;
+using Tooark.Http.Exceptions;
+using Tooark.Http.Interfaces;
+
+public sealed record SubscriptionDto(int PlanId);
+
+public sealed class SubscriptionGateway(IHttpClientService http)
+{
+  public async Task SubscribeAsync(SubscriptionDto subscription, CancellationToken cancellationToken)
+  {
+    try
+    {
+      await http.PostAsync("subscriptions", subscription, cancellationToken);
+    }
+    catch (HttpRequestFailedException exception) when (exception.UpstreamStatusCode == HttpStatusCode.PaymentRequired)
+    {
+      // The application reads what the provider said and answers with its own key, not with the provider's text
+      throw new UnprocessableEntityException(
+        IsOutOfFunds(exception.UpstreamBody) ? "Subscription.OutOfFunds" : "Subscription.PaymentRefused");
+    }
+  }
+
+  // The body comes from outside: it may be null, not be JSON or not have the expected shape
+  private static bool IsOutOfFunds(string? body) =>
+    body is not null && body.Contains("insufficient_funds", StringComparison.Ordinal);
+}
+```
+
+- **Null** when the response has no body, when the body exceeds 64 KB or when reading it fails.
+- **Outside the message**: the message and the notifications of the exception stay the same,
+  `Http.RequestFailed;{status}` or the errors of the Tooark Problem Details. The package does not put the body in
+  the message, in the notifications or in the log.
+- **Untrusted**: it is what the called service wrote, and it may carry internal data of that service or text
+  controlled by third parties. **Do not return it as it is in the response of the application**: read what you
+  need and build your own message.
 
 ---
 
@@ -432,8 +684,26 @@ public sealed class WebhookSender(IHttpClientService http)
 }
 ```
 
-Or keep the `Tooark` client for internal services and guard a client of the application with
-`AddTooarkOutboundGuard`, where the guard is on by default:
+Or keep the `Tooark` client for internal services and give the webhooks a [named client](#named-clients), with the
+guard on for it alone and its own circuit:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Tooark.Http.Injections;
+using Tooark.Http.Interfaces;
+
+builder.Services.AddTooarkHttpClient(builder.Configuration);
+builder.Services.AddTooarkNamedHttpClient("notifications", options => options.OutboundGuard.Enabled = true);
+
+public sealed class WebhookSender([FromKeyedServices("notifications")] IHttpClientService http)
+{
+  public Task SendAsync(string webhookUrl, OrderPaidEvent payload, CancellationToken cancellationToken) =>
+    http.PostAsync(webhookUrl, payload, cancellationToken);
+}
+```
+
+On a client that is not a Tooark one (a named or typed `HttpClient` of the application itself), the guard goes in
+through `AddTooarkOutboundGuard`, where it is on by default:
 
 ```csharp
 using Tooark.Http.Injections;
@@ -448,7 +718,9 @@ webhooks.AddTooarkOutboundGuard();
 On such a client, `HttpClient` throws the `OutboundBlockedException` itself. Call `AddTooarkOutboundGuard`
 **after** the resilience handler and after any configuration of the primary handler: a resilience handler added
 later would treat the refusal as a transient failure, and a `ConfigurePrimaryHttpMessageHandler` that replaces the
-handler later removes the connection check.
+handler later removes the connection check. On a client registered by `AddTooarkHttpClient` or by
+`AddTooarkNamedHttpClient`, turn the guard on with the option `OutboundGuard.Enabled`, which already places it in
+that order.
 
 The guard needs a `SocketsHttpHandler` as the primary handler. One that the application already configured is kept,
 with only its `ConnectCallback` replaced. A primary handler of another type, such as an `HttpClientHandler` with
@@ -521,8 +793,10 @@ name is resolved and checked on the request.
 - **Public destinations.** The guard does not know which public hosts the application should talk to. An allowlist
   of destinations per customer is the application's rule.
 - **Hosts in `AllowedHosts`**: they are not checked at all.
-- **The response.** The guard does not limit the size or the content of what the destination returns, and the
-  service buffers a success body in memory. Do not return the response of a user-provided URL to the user as it is.
+- **The response.** The guard does not limit the size or the content of what the destination returns. The service
+  buffers a success body in memory (except in `SendStreamingAsync`, where the read is the caller's) and up to
+  64 KB of an error body, in `UpstreamBody`. Do not return the response of a user-provided URL to the user as it
+  is, nor its `UpstreamBody`.
 - **HTTP/3.** A QUIC connection does not go through `ConnectCallback`, so a guarded client keeps requests on
   HTTP/1.1 or HTTP/2.
 - **Ports.** Any port of an allowed address is reachable.
@@ -588,7 +862,11 @@ is the one at connection time.
 
 ### Without dependency injection
 
-The service has a public constructor, for tools and tests. It needs an `IHttpClientFactory`:
+The service has public constructors, for tools and tests: the one of the default client, with
+`IOptions<HttpClientOptions>`, and, since v4.11.0, the one of a named client,
+`HttpClientService(IHttpClientFactory, HttpClientOptions, string)`. Both need an `IHttpClientFactory`, and the
+resilience and the guard are those of the client registered in the factory under that name. The shortest path is
+to build a service provider:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -602,11 +880,23 @@ using var provider = new ServiceCollection()
 var http = provider.GetRequiredService<IHttpClientService>();
 ```
 
-In tests of the application, mock `IHttpClientService`, or replace the primary handler of the named client:
+In tests of the application, mock `IHttpClientService`, or replace the primary handler of the client:
 
 ```csharp
 services.AddHttpClient(HttpClientService.ClientName).ConfigurePrimaryHttpMessageHandler(() => fakeHandler);
+
+// On a named client, the name is the one of the registration
+services.AddHttpClient("models").ConfigurePrimaryHttpMessageHandler(() => fakeHandler);
 ```
+
+When faking `IHttpClientService`:
+
+- **Methods with a request adjustment**: they are extensions, and they call the `SendAsync` of the fake, not its
+  `PostAsync` or `GetAsync`. It is `SendAsync` that must return the response, with the status and the JSON body.
+- **`SendStreamingAsync`**: a hand-written fake that does not implement it answers through its own `SendAsync`, by
+  the default implementation of the interface.
+- **Named client**: register the fake under the same key, with
+  `services.AddKeyedSingleton<IHttpClientService>("models", fake)`.
 
 ---
 
@@ -629,21 +919,29 @@ services.AddHttpClient(HttpClientService.ClientName).ConfigurePrimaryHttpMessage
    that calls internal services.
 3. **Prefer `AllowedHosts` with exact names** — a suffix trusts every name under it, and a network trusts every
    address in it.
-4. **Decide the retries per service** — POST and PATCH are retried like the other verbs. Use `RetryCount: 0` for a
-   service that is not idempotent.
+4. **Decide the retries per service** — POST and PATCH are not retried by default. Turn
+   `RetryNonIdempotentMethods` on only for the client that calls an idempotent service, and use `RetryCount: 0` to
+   turn the retries off for every verb.
 5. **Do not expose the upstream failure** — log `UpstreamStatusCode` and `RequestUri`; the response of the
-   application is the `502` with the notifications.
+   application is the `502` with the notifications. `UpstreamBody` is untrusted: read what you need from it and do
+   not return it as it is.
 6. **Pass the `CancellationToken` of the request** — the caller's cancellation stops the retries and is not
    reported as a timeout.
 7. **Do not catch `Exception` around the calls** — the exceptions already carry the right status; catch
    `HttpRequestFailedException` only where an upstream status has a meaning for the application.
+8. **Use a named client per destination** — each destination gets its own base address, its own timeouts and its
+   own circuit, instead of one default client tuned for the worst case.
+9. **Dispose the response of `SendStreamingAsync` and give the read a deadline** — disposing it releases the
+   connection, and the timeout of the call does not cover the body.
 
 ---
 
 ## ⚠️ Error Codes and Solutions
 
 Configuration errors are `InternalServerErrorException` thrown **at registration** (`AddTooarkHttpClient`,
-`AddTooarkOutboundGuard`) or when creating the service without dependency injection.
+`AddTooarkNamedHttpClient`, `AddTooarkOutboundGuard`) or when creating the service without dependency injection. A
+named client uses the same messages, without the client name. An invalid client name (empty, with `:` or `Tooark`)
+is not in the table: it is an `ArgumentException`.
 
 | Message                                                           | Description                                                                                       | Solution                                                              |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -658,12 +956,13 @@ Configuration errors are `InternalServerErrorException` thrown **at registration
 | `Options.HttpClient.CircuitBreakerBreakInvalid;{min};{max}`       | `CircuitBreakerBreakSeconds` outside 1 to 86400                                                   | Use a value in the range                                              |
 | `Options.HttpClient.OutboundGuard.AllowedHostInvalid;{value}`     | Entry of `AllowedHosts` that is not a host name                                                   | Remove scheme, port, path and `*`; put addresses in `AllowedNetworks` |
 | `Options.HttpClient.OutboundGuard.AllowedNetworkInvalid;{value}`  | Entry of `AllowedNetworks` that is not a CIDR block with the network address                      | Use `10.20.0.0/16`; a single address takes `/32` or `/128`            |
+| `Options.Configuration.UnknownKey;{section};{key}`                | Unknown key in `HttpClient` or `HttpClients:{name}`, with strict configuration on                 | Fix the key name, or remove it from the section                       |
 
 Call errors are thrown by the service:
 
 | Message                         | Exception                      | Description                                                            | Solution                                                                |
 | ------------------------------- | ------------------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `Http.RequestFailed;{status}`   | `HttpRequestFailedException`   | The called service answered with an error status                       | Check `UpstreamStatusCode` and the log of the called service            |
+| `Http.RequestFailed;{status}`   | `HttpRequestFailedException`   | The called service answered with an error status                       | Check `UpstreamStatusCode`, `UpstreamBody` and the called service's log |
 | `Http.RequestTimeout`           | `GatewayTimeoutException`      | No response within the attempt or the total timeout                    | Check the called service; adjust the timeouts if it is slow by design   |
 | `Http.CircuitOpen`              | `ServiceUnavailableException`  | Too many failures: the circuit is open and calls are refused           | Wait for `CircuitBreakerBreakSeconds`; investigate the called service   |
 | `Http.ConcurrencyLimitReached`  | `ServiceUnavailableException`  | More than 1000 simultaneous requests on the client                     | Reduce the concurrency of the calls                                     |
@@ -671,7 +970,7 @@ Call errors are thrown by the service:
 | `Http.InvalidResponse`          | `BadGatewayException`          | The success body is not valid JSON for the response type               | Check the contract and the DTO                                          |
 | `Http.OutboundBlocked;{host}`   | `OutboundBlockedException`     | The guard refused the destination                                      | Fix the URL; for a legitimate internal destination, use the allow lists |
 | `Http.RequestUriInvalid`        | `BadRequestException`          | The request URI is not a valid `http` or `https` URI                   | Validate the URL before calling                                         |
-| `Http.BaseAddressNotConfigured` | `InternalServerErrorException` | Relative URI and no `BaseAddress`                                      | Configure `HttpClient:BaseAddress` or pass an absolute URI              |
+| `Http.BaseAddressNotConfigured` | `InternalServerErrorException` | Relative URI and no `BaseAddress`                                      | Configure the `BaseAddress` of the client or pass an absolute URI       |
 
 ---
 

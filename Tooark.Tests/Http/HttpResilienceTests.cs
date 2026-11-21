@@ -67,13 +67,13 @@ public class HttpResilienceTests
     Assert.Equal(chamadasEsperadas, handler.Calls);
   }
 
-  // Testa se o POST também é tentado de novo, como no handler padrão, e reenvia o mesmo corpo
+  // Testa se o POST, com a nova tentativa dele ligada, é tentado de novo e reenvia o mesmo corpo
   [Fact]
   public async Task Retry_ShouldRetryPostWithTheSameBody()
   {
     // Arrange
     var handler = FalhaAte(1);
-    using var provider = HttpTestHost.WithHandler(handler);
+    using var provider = HttpTestHost.WithHandler(handler, options => options.RetryNonIdempotentMethods = true);
 
     // Act
     await provider.Service().PostAsync(Endereco, new Recibo("ABC-1"), TestContext.Current.CancellationToken);

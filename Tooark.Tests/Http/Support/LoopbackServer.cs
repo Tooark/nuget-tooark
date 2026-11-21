@@ -14,12 +14,18 @@ internal sealed class LoopbackServer : IAsyncDisposable
 {
   private readonly TcpListener _listener = new(IPAddress.Loopback, 0);
   private readonly CancellationTokenSource _stop = new();
-  private readonly Func<string, string> _respond;
+  private readonly Func<string, Stream, CancellationToken, Task> _respond;
   private readonly List<string> _targets = [];
   private readonly Task _loop;
 
   // Inicia o servidor; a função recebe o alvo da requisição (caminho e consulta) e devolve a resposta bruta
   public LoopbackServer(Func<string, string> respond)
+    : this((target, stream, cancellationToken) => stream.WriteAsync(Encoding.UTF8.GetBytes(respond(target)), cancellationToken).AsTask())
+  {
+  }
+
+  // Inicia o servidor; a função recebe o alvo e escreve a resposta bruta na conexão, no ritmo que quiser
+  public LoopbackServer(Func<string, Stream, CancellationToken, Task> respond)
   {
     _respond = respond;
     _listener.Start();
@@ -108,7 +114,7 @@ internal sealed class LoopbackServer : IAsyncDisposable
           _targets.Add(target);
         }
 
-        await stream.WriteAsync(Encoding.UTF8.GetBytes(_respond(target)), _stop.Token);
+        await _respond(target, stream, _stop.Token);
         await stream.FlushAsync(_stop.Token);
       }
     }

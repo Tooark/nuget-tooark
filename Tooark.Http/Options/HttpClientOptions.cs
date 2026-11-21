@@ -19,6 +19,15 @@ public class HttpClientOptions
   /// </summary>
   public const string Section = "HttpClient";
 
+  /// <summary>
+  /// Seção de configuração dos clientes HTTP com nome: cada cliente lê <c>HttpClients:{nome}</c>.
+  /// </summary>
+  /// <remarks>
+  /// Fica fora da seção <see cref="Section"/>, que é a do cliente padrão: as duas têm as mesmas chaves, e uma
+  /// subseção com o nome de um cliente dentro dela seria uma chave desconhecida para a configuração estrita.
+  /// </remarks>
+  public const string NamedSection = "HttpClients";
+
   #endregion
 
   #region Constants
@@ -76,10 +85,23 @@ public class HttpClientOptions
   /// Quantidade de novas tentativas depois da primeira. Padrão: 3. Zero desliga as novas tentativas.
   /// </summary>
   /// <remarks>
-  /// A nova tentativa acontece em falha de conexão, tempo limite da tentativa e respostas 408, 429 e 5xx, para
-  /// qualquer verbo, inclusive POST e PATCH: o serviço chamado precisa ser idempotente, ou este valor deve ser zero.
+  /// A nova tentativa acontece em falha de conexão, tempo limite da tentativa e respostas 408, 429 e 5xx. Os verbos
+  /// que não são idempotentes, POST e PATCH, seguem <see cref="RetryNonIdempotentMethods"/>.
   /// </remarks>
   public int RetryCount { get; set; } = 3;
+
+  /// <summary>
+  /// Indica se POST e PATCH também são tentados de novo. Padrão: falso.
+  /// </summary>
+  /// <remarks>
+  /// GET, PUT e DELETE são idempotentes: repetir a chamada leva ao mesmo estado. POST e PATCH não são, e a nova
+  /// tentativa pode repetir o efeito de uma chamada que o serviço chamado já tinha processado (um pedido criado
+  /// duas vezes, uma chamada paga cobrada duas vezes). Por isso a falha de um POST ou de um PATCH é devolvida na
+  /// primeira tentativa, e os demais verbos continuam sendo tentados de novo. Ligue quando o serviço chamado é
+  /// idempotente (aceita uma chave de idempotência, por exemplo). Na 4.x, onde a opção surgiu (v4.11.0), o padrão
+  /// era verdadeiro.
+  /// </remarks>
+  public bool RetryNonIdempotentMethods { get; set; }
 
   /// <summary>
   /// Espera base entre tentativas, em milissegundos. Padrão: 2000. A espera cresce de forma exponencial, com

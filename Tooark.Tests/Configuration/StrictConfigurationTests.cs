@@ -83,6 +83,20 @@ public class StrictConfigurationTests
       (services, configuration) => services.AddTooarkHttpClient(configuration)),
 
     new Site(
+      "HttpClientNamed", "HttpClients:pagamentos",
+      new()
+      {
+        ["HttpClients:pagamentos:BaseAddress"] = "https://pagamentos.exemplo.com/v2",
+        ["HttpClients:pagamentos:TotalTimeoutSeconds"] = "120",
+        ["HttpClients:pagamentos:RetryNonIdempotentMethods"] = "false",
+        ["HttpClients:pagamentos:OutboundGuard:Enabled"] = "true",
+        // Outro cliente na mesma seção não é chave desconhecida para este
+        ["HttpClients:modelos:TotalTimeoutSeconds"] = "600"
+      },
+      "HttpClients:pagamentos:RetryNonIdempotentMethod", "RetryNonIdempotentMethod",
+      (services, configuration) => services.AddTooarkNamedHttpClient("pagamentos", configuration)),
+
+    new Site(
       "JwtToken", "Jwt",
       new()
       {

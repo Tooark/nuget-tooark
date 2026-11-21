@@ -98,8 +98,8 @@ A conferência vem ligada por padrão (na linha 4.x era opcional). Para desligá
 "Tooark": { "StrictConfiguration": false }
 ```
 
-- **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
-  `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
+- **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `HttpClients:{nome}`, `Jwt`,
+  `Observability`, `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
 - **Só o que os pacotes registrados leem.** A conferência acontece no registro (`AddTooark...`): um pacote que a
   aplicação não registra não confere nada, e as outras seções da aplicação (`Logging`, as suas) não são tocadas.
 - **Chaves ausentes continuam opcionais.** A opção só recusa o que sobra, nunca o que falta.

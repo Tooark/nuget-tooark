@@ -97,8 +97,8 @@ The check is on by default (on the 4.x line it was opt-in). To turn it off:
 "Tooark": { "StrictConfiguration": false }
 ```
 
-- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
-  `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
+- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `HttpClients:{name}`, `Jwt`,
+  `Observability`, `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
 - **Only what the registered packages read.** The check runs at registration (`AddTooark...`): a package the
   application does not register checks nothing, and the application's other sections (`Logging`, your own) are
   left alone.
