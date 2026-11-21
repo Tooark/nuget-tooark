@@ -13,17 +13,18 @@ namespace Tooark.Http;
 /// Serviço de chamadas HTTP de saída com JSON, sobre o <see cref="IHttpClientFactory"/>.
 /// </summary>
 /// <remarks>
-/// É uma camada fina: o cliente nomeado <see cref="ClientName"/> é pedido à fábrica a cada chamada, e a resiliência
-/// e a guarda de saída ficam no pipeline de handlers dele, e não aqui. O serviço cuida do JSON
+/// É uma camada fina: o cliente nomeado é pedido à fábrica a cada chamada, e a resiliência e a guarda de saída
+/// ficam no pipeline de handlers dele, e não aqui. O serviço cuida do JSON
 /// (<see cref="JsonSerializerDefaults.Web"/>), do tempo limite da chamada inteira e da conversão das falhas nas
-/// exceções do Tooark. Não guarda estado por chamada e é seguro para uso concorrente.
+/// exceções do Tooark. Não guarda estado por chamada e é seguro para uso concorrente. O serviço padrão usa o cliente
+/// <see cref="ClientName"/>; cada cliente registrado com nome tem a própria instância, com as próprias opções.
 /// </remarks>
 public sealed class HttpClientService : IHttpClientService
 {
   #region Constants
 
   /// <summary>
-  /// Nome do cliente HTTP do Tooark no <see cref="IHttpClientFactory"/>.
+  /// Nome do cliente HTTP padrão do Tooark no <see cref="IHttpClientFactory"/>.
   /// </summary>
   public const string ClientName = "Tooark";
 
@@ -42,6 +43,11 @@ public sealed class HttpClientService : IHttpClientService
   private readonly IHttpClientFactory _httpClientFactory;
 
   /// <summary>
+  /// Nome do cliente pedido à fábrica.
+  /// </summary>
+  private readonly string _clientName;
+
+  /// <summary>
   /// Tempo limite da chamada inteira.
   /// </summary>
   private readonly TimeSpan _totalTimeout;
@@ -51,21 +57,38 @@ public sealed class HttpClientService : IHttpClientService
   #region Constructor
 
   /// <summary>
-  /// Cria o serviço a partir da fábrica de clientes e das opções do cliente HTTP.
+  /// Cria o serviço do cliente padrão a partir da fábrica de clientes e das opções do cliente HTTP.
   /// </summary>
   /// <param name="httpClientFactory">Fábrica de clientes HTTP.</param>
   /// <param name="options">Opções do cliente HTTP.</param>
   /// <exception cref="InternalServerErrorException">Quando as opções são inválidas.</exception>
   public HttpClientService(IHttpClientFactory httpClientFactory, IOptions<HttpClientOptions> options)
+    : this(httpClientFactory, GetValue(options), ClientName) { }
+
+  /// <summary>
+  /// Cria o serviço de um cliente com nome, a partir da fábrica de clientes e das opções desse cliente.
+  /// </summary>
+  /// <remarks>
+  /// É o construtor usado pelo <c>AddTooarkNamedHttpClient</c>. O nome é o do cliente no
+  /// <see cref="IHttpClientFactory"/>: a resiliência e a guarda de saída são as do pipeline registrado para ele.
+  /// </remarks>
+  /// <param name="httpClientFactory">Fábrica de clientes HTTP.</param>
+  /// <param name="options">Opções do cliente HTTP.</param>
+  /// <param name="clientName">Nome do cliente no <see cref="IHttpClientFactory"/>.</param>
+  /// <exception cref="ArgumentException">Quando o nome é vazio ou só espaços.</exception>
+  /// <exception cref="InternalServerErrorException">Quando as opções são inválidas.</exception>
+  public HttpClientService(IHttpClientFactory httpClientFactory, HttpClientOptions options, string clientName)
   {
     ArgumentNullException.ThrowIfNull(httpClientFactory);
     ArgumentNullException.ThrowIfNull(options);
+    ArgumentException.ThrowIfNullOrWhiteSpace(clientName);
 
     // Pelo registro as opções já chegam validadas; a conferência vale para quem cria o serviço à mão
-    options.Value.Validate();
+    options.Validate();
 
     _httpClientFactory = httpClientFactory;
-    _totalTimeout = TimeSpan.FromSeconds(options.Value.TotalTimeoutSeconds);
+    _clientName = clientName;
+    _totalTimeout = TimeSpan.FromSeconds(options.TotalTimeoutSeconds);
   }
 
   #endregion
@@ -109,20 +132,50 @@ public sealed class HttpClientService : IHttpClientService
     SendAsync<TResponse>(HttpMethod.Delete, requestUri, null, readBody: true, cancellationToken);
 
   /// <inheritdoc />
-  public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default)
-  {
-    ArgumentNullException.ThrowIfNull(request);
+  public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default) =>
+    // O corpo é carregado dentro do tempo limite: quem recebe a resposta não depende mais da conexão
+    SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken);
 
+  /// <inheritdoc />
+  public Task<HttpResponseMessage> SendStreamingAsync(HttpRequestMessage request, CancellationToken cancellationToken = default) =>
+    // Só os cabeçalhos são aguardados: o corpo fica na conexão, para quem chama ler aos poucos
+    SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+  #endregion
+
+  #region Internal Methods
+
+  /// <summary>
+  /// Envia uma requisição já montada, converte a resposta de erro em exceção e lê o corpo JSON da resposta de sucesso.
+  /// </summary>
+  /// <remarks>
+  /// É o caminho dos métodos por verbo, aberto para as extensões que deixam quem chama ajustar a requisição
+  /// (cabeçalhos por chamada). Quem monta a requisição a descarta.
+  /// </remarks>
+  /// <typeparam name="TResponse">Tipo do corpo da resposta.</typeparam>
+  /// <param name="request">A requisição.</param>
+  /// <param name="readBody">Indica se o corpo da resposta de sucesso é lido.</param>
+  /// <param name="cancellationToken">Token de cancelamento de quem chamou.</param>
+  /// <returns>O corpo da resposta, ou o valor padrão quando não é lido, a resposta é 204 ou não tem corpo.</returns>
+  internal async Task<TResponse?> SendJsonAsync<TResponse>(
+    HttpRequestMessage request,
+    bool readBody,
+    CancellationToken cancellationToken
+  )
+  {
     using var timeout = CreateTimeout(cancellationToken);
 
     try
     {
       var client = CreateClient(request.RequestUri);
 
-      // O corpo é carregado dentro do tempo limite: quem recebe a resposta não depende mais da conexão
-      return await client
-        .SendAsync(request, HttpCompletionOption.ResponseContentRead, timeout.Token)
+      // Só os cabeçalhos são aguardados aqui: o corpo é lido abaixo, o de erro com limite de tamanho, e os dois
+      // dentro do tempo limite da chamada, que os tempos limite do handler de resiliência não cobrem
+      using var response = await client
+        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token)
         .ConfigureAwait(false);
+
+      return await ReadResponseAsync<TResponse>(response, readBody, timeout.Token).ConfigureAwait(false);
     }
     catch (Exception exception) when (HttpErrorMapper.Map(exception, cancellationToken) is { } mapped)
     {
@@ -130,12 +183,90 @@ public sealed class HttpClientService : IHttpClientService
     }
   }
 
+  /// <summary>
+  /// Converte a resposta de erro em exceção e lê o corpo JSON da resposta de sucesso.
+  /// </summary>
+  /// <typeparam name="TResponse">Tipo do corpo da resposta.</typeparam>
+  /// <param name="response">A resposta do serviço chamado.</param>
+  /// <param name="readBody">Indica se o corpo da resposta de sucesso é lido.</param>
+  /// <param name="cancellationToken">Token de cancelamento.</param>
+  /// <returns>O corpo da resposta, ou o valor padrão quando não é lido, a resposta é 204 ou não tem corpo.</returns>
+  /// <exception cref="Exceptions.HttpRequestFailedException">Quando a resposta tem um status de erro.</exception>
+  /// <exception cref="JsonException">Quando o corpo não é um JSON válido para o tipo.</exception>
+  internal static async Task<TResponse?> ReadResponseAsync<TResponse>(
+    HttpResponseMessage response,
+    bool readBody,
+    CancellationToken cancellationToken
+  )
+  {
+    if (!response.IsSuccessStatusCode)
+    {
+      throw await HttpErrorMapper.FromResponseAsync(response, cancellationToken).ConfigureAwait(false);
+    }
+
+    if (!readBody || response.StatusCode == HttpStatusCode.NoContent)
+    {
+      return default;
+    }
+
+    return await ReadAsync<TResponse>(response, cancellationToken).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  /// Interpreta a URI da requisição.
+  /// </summary>
+  /// <param name="requestUri">O texto da URI.</param>
+  /// <returns>A URI, ou nulo quando o texto é vazio e a requisição vai para o endereço base.</returns>
+  /// <exception cref="BadRequestException">Quando o texto não é uma URI.</exception>
+  internal static Uri? ParseRequestUri(string? requestUri)
+  {
+    if (string.IsNullOrEmpty(requestUri))
+    {
+      return null;
+    }
+
+    return Uri.TryCreate(requestUri, UriKind.RelativeOrAbsolute, out var uri)
+      ? uri
+      : throw new BadRequestException("Http.RequestUriInvalid");
+  }
+
+  /// <summary>
+  /// Serializa o corpo da requisição em JSON.
+  /// </summary>
+  /// <remarks>
+  /// O corpo é serializado antes do envio, para bytes: a requisição sai com <c>Content-Length</c> e pode ser
+  /// reenviada pelas novas tentativas sem serializar de novo.
+  /// </remarks>
+  /// <typeparam name="TRequest">Tipo do corpo da requisição.</typeparam>
+  /// <param name="body">Corpo da requisição.</param>
+  /// <returns>O conteúdo da requisição.</returns>
+  internal static ByteArrayContent Serialize<TRequest>(TRequest body)
+  {
+    var content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(body, JsonOptions));
+
+    content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
+
+    return content;
+  }
+
   #endregion
 
   #region Private Methods
 
   /// <summary>
-  /// Envia a requisição, converte a resposta de erro em exceção e lê o corpo JSON da resposta de sucesso.
+  /// Lê as opções do cliente padrão.
+  /// </summary>
+  /// <param name="options">Opções do cliente HTTP.</param>
+  /// <returns>As opções.</returns>
+  private static HttpClientOptions GetValue(IOptions<HttpClientOptions> options)
+  {
+    ArgumentNullException.ThrowIfNull(options);
+
+    return options.Value;
+  }
+
+  /// <summary>
+  /// Monta a requisição de um método por verbo e a envia pelo caminho do JSON.
   /// </summary>
   /// <typeparam name="TResponse">Tipo do corpo da resposta.</typeparam>
   /// <param name="method">O verbo HTTP.</param>
@@ -153,29 +284,34 @@ public sealed class HttpClientService : IHttpClientService
   )
   {
     using var request = new HttpRequestMessage(method, ParseRequestUri(requestUri)) { Content = content };
+
+    return await SendJsonAsync<TResponse>(request, readBody, cancellationToken).ConfigureAwait(false);
+  }
+
+  /// <summary>
+  /// Envia uma requisição montada por quem chama e devolve a resposta como veio.
+  /// </summary>
+  /// <param name="request">A requisição.</param>
+  /// <param name="completionOption">Indica se a resposta volta com o corpo carregado ou só com os cabeçalhos.</param>
+  /// <param name="cancellationToken">Token de cancelamento de quem chamou.</param>
+  /// <returns>A resposta do serviço chamado, com qualquer status.</returns>
+  private async Task<HttpResponseMessage> SendAsync(
+    HttpRequestMessage request,
+    HttpCompletionOption completionOption,
+    CancellationToken cancellationToken
+  )
+  {
+    ArgumentNullException.ThrowIfNull(request);
+
+    // O tempo limite vale até a resposta voltar: com o corpo carregado, cobre a chamada inteira; só com os
+    // cabeçalhos, termina neles, e a leitura do corpo fica com quem chama
     using var timeout = CreateTimeout(cancellationToken);
 
     try
     {
       var client = CreateClient(request.RequestUri);
 
-      // Só os cabeçalhos são aguardados aqui: o corpo é lido abaixo, o de erro com limite de tamanho, e os dois
-      // dentro do tempo limite da chamada, que os tempos limite do handler de resiliência não cobrem
-      using var response = await client
-        .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token)
-        .ConfigureAwait(false);
-
-      if (!response.IsSuccessStatusCode)
-      {
-        throw await HttpErrorMapper.FromResponseAsync(response, timeout.Token).ConfigureAwait(false);
-      }
-
-      if (!readBody || response.StatusCode == HttpStatusCode.NoContent)
-      {
-        return default;
-      }
-
-      return await ReadAsync<TResponse>(response, timeout.Token).ConfigureAwait(false);
+      return await client.SendAsync(request, completionOption, timeout.Token).ConfigureAwait(false);
     }
     catch (Exception exception) when (HttpErrorMapper.Map(exception, cancellationToken) is { } mapped)
     {
@@ -184,7 +320,7 @@ public sealed class HttpClientService : IHttpClientService
   }
 
   /// <summary>
-  /// Cria o cliente nomeado do Tooark e confere se a URI da requisição pode ser enviada por ele.
+  /// Cria o cliente nomeado deste serviço e confere se a URI da requisição pode ser enviada por ele.
   /// </summary>
   /// <param name="requestUri">A URI da requisição.</param>
   /// <returns>O cliente HTTP.</returns>
@@ -192,7 +328,7 @@ public sealed class HttpClientService : IHttpClientService
   /// <exception cref="BadRequestException">Quando a URI absoluta não é <c>http</c> nem <c>https</c>.</exception>
   private HttpClient CreateClient(Uri? requestUri)
   {
-    var client = _httpClientFactory.CreateClient(ClientName);
+    var client = _httpClientFactory.CreateClient(_clientName);
 
     if (requestUri is null || !requestUri.IsAbsoluteUri)
     {
@@ -223,43 +359,6 @@ public sealed class HttpClientService : IHttpClientService
     timeout.CancelAfter(_totalTimeout);
 
     return timeout;
-  }
-
-  /// <summary>
-  /// Interpreta a URI da requisição.
-  /// </summary>
-  /// <param name="requestUri">O texto da URI.</param>
-  /// <returns>A URI, ou nulo quando o texto é vazio e a requisição vai para o endereço base.</returns>
-  /// <exception cref="BadRequestException">Quando o texto não é uma URI.</exception>
-  private static Uri? ParseRequestUri(string? requestUri)
-  {
-    if (string.IsNullOrEmpty(requestUri))
-    {
-      return null;
-    }
-
-    return Uri.TryCreate(requestUri, UriKind.RelativeOrAbsolute, out var uri)
-      ? uri
-      : throw new BadRequestException("Http.RequestUriInvalid");
-  }
-
-  /// <summary>
-  /// Serializa o corpo da requisição em JSON.
-  /// </summary>
-  /// <remarks>
-  /// O corpo é serializado antes do envio, para bytes: a requisição sai com <c>Content-Length</c> e pode ser
-  /// reenviada pelas novas tentativas sem serializar de novo.
-  /// </remarks>
-  /// <typeparam name="TRequest">Tipo do corpo da requisição.</typeparam>
-  /// <param name="body">Corpo da requisição.</param>
-  /// <returns>O conteúdo da requisição.</returns>
-  private static ByteArrayContent Serialize<TRequest>(TRequest body)
-  {
-    var content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(body, JsonOptions));
-
-    content.Headers.ContentType = new MediaTypeHeaderValue("application/json") { CharSet = "utf-8" };
-
-    return content;
   }
 
   /// <summary>

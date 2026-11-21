@@ -97,8 +97,8 @@ seção lida por um pacote Tooark passa a falhar no startup quando traz uma chav
 A aplicação não sobe, com `Options.Configuration.UnknownKey;Observability;SampligRatio`
 (`InternalServerErrorException`), que aponta a seção e a chave.
 
-- **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
-  `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
+- **Seções conferidas:** `Cryptography`, `DataProtection`, `HttpClient`, `HttpClients:{nome}`, `Jwt`,
+  `Observability`, `OpenId:{provedor}`, `PasswordHash`, `Sanitizers`, `Secrets` e `Storage`.
 - **Só o que os pacotes registrados leem.** A conferência acontece no registro (`AddTooark...`): um pacote que a
   aplicação não registra não confere nada, e as outras seções da aplicação (`Logging`, as suas) não são tocadas.
 - **Chaves ausentes continuam opcionais.** A opção só recusa o que sobra, nunca o que falta.
