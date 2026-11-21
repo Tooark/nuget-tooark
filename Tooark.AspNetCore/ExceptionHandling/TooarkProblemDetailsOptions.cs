@@ -69,14 +69,18 @@ public sealed class TooarkProblemDetailsOptions
 
   #endregion
 
-  #region Internal Methods
+  #region Methods
 
   /// <summary>
-  /// Resolve o nível do log de um status.
+  /// Resolve o nível do log de um status, pela mesma regra que o <see cref="TooarkExceptionHandler"/> aplica.
   /// </summary>
+  /// <remarks>
+  /// Serve para conferir a configuração sem capturar o log: num teste da aplicação, por exemplo, que garante que
+  /// um 404 fica em <see cref="LogLevel.Debug"/> e que um 500 continua em <see cref="LogLevel.Error"/>.
+  /// </remarks>
   /// <param name="statusCode">Status da resposta.</param>
   /// <returns>O nível configurado para o status, ou o da faixa dele.</returns>
-  internal LogLevel GetLogLevel(int statusCode)
+  public LogLevel GetLogLevel(int statusCode)
   {
     // O nível do status vence o da faixa
     if (StatusCodeLogLevels.TryGetValue(statusCode, out var logLevel))

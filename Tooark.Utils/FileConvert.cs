@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Tooark.Exceptions;
 using Tooark.Utils.Messages;
 
@@ -43,34 +42,39 @@ public static class FileConvert
   }
 
   /// <summary>
-  /// Converte uma IFormFile para <see cref="MemoryStream"/>.
+  /// Copia o conteúdo de um <see cref="Stream"/> para um <see cref="MemoryStream"/>, com limite de tamanho.
   /// </summary>
   /// <remarks>
-  /// Copia o conteúdo binário do arquivo. O <see cref="MemoryStream"/> retornado já vem posicionado no início.
+  /// A leitura começa na posição atual do fluxo de origem, que não é fechado. Quando o fluxo informa o tamanho,
+  /// o excesso é recusado antes de qualquer alocação; nos demais, o limite é conferido bloco a bloco durante a
+  /// cópia. O <see cref="MemoryStream"/> retornado já vem posicionado no início.
   /// </remarks>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
-  /// <param name="maxBytes">Tamanho máximo do arquivo em bytes. Valor não positivo aplica <see cref="DefaultMaxBytes"/>.</param>
-  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o arquivo for nulo ou vazio.</returns>
-  /// <exception cref="PayloadTooLargeException">Se o arquivo exceder o tamanho máximo permitido.</exception>
-  public static MemoryStream? ToMemoryStream(IFormFile? fromFile, long maxBytes = 0)
+  /// <param name="stream">Fluxo de origem, como o de um arquivo enviado.</param>
+  /// <param name="maxBytes">Tamanho máximo do conteúdo em bytes. Valor não positivo aplica <see cref="DefaultMaxBytes"/>.</param>
+  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o fluxo for nulo ou não tiver conteúdo.</returns>
+  /// <exception cref="PayloadTooLargeException">Se o conteúdo exceder o tamanho máximo permitido.</exception>
+  public static MemoryStream? CopyToMemoryStream(Stream? stream, long maxBytes = 0)
   {
-    return InternalFileConvert.ToMemoryStream(fromFile, maxBytes);
+    return InternalFileConvert.CopyToMemoryStream(stream, maxBytes);
   }
 
   /// <summary>
-  /// Converte uma IFormFile para <see cref="MemoryStream"/> de forma assíncrona.
+  /// Copia o conteúdo de um <see cref="Stream"/> para um <see cref="MemoryStream"/> de forma assíncrona, com limite
+  /// de tamanho.
   /// </summary>
   /// <remarks>
-  /// Copia o conteúdo binário do arquivo. O <see cref="MemoryStream"/> retornado já vem posicionado no início.
+  /// A leitura começa na posição atual do fluxo de origem, que não é fechado. Quando o fluxo informa o tamanho,
+  /// o excesso é recusado antes de qualquer alocação; nos demais, o limite é conferido bloco a bloco durante a
+  /// cópia. O <see cref="MemoryStream"/> retornado já vem posicionado no início.
   /// </remarks>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
-  /// <param name="maxBytes">Tamanho máximo do arquivo em bytes. Valor não positivo aplica <see cref="DefaultMaxBytes"/>.</param>
+  /// <param name="stream">Fluxo de origem, como o de um arquivo enviado.</param>
+  /// <param name="maxBytes">Tamanho máximo do conteúdo em bytes. Valor não positivo aplica <see cref="DefaultMaxBytes"/>.</param>
   /// <param name="cancellationToken">Token de cancelamento da operação.</param>
-  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o arquivo for nulo ou vazio.</returns>
-  /// <exception cref="PayloadTooLargeException">Se o arquivo exceder o tamanho máximo permitido.</exception>
-  public static Task<MemoryStream?> ToMemoryStreamAsync(IFormFile? fromFile, long maxBytes = 0, CancellationToken cancellationToken = default)
+  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o fluxo for nulo ou não tiver conteúdo.</returns>
+  /// <exception cref="PayloadTooLargeException">Se o conteúdo exceder o tamanho máximo permitido.</exception>
+  public static Task<MemoryStream?> CopyToMemoryStreamAsync(Stream? stream, long maxBytes = 0, CancellationToken cancellationToken = default)
   {
-    return InternalFileConvert.ToMemoryStreamAsync(fromFile, maxBytes, cancellationToken);
+    return InternalFileConvert.CopyToMemoryStreamAsync(stream, maxBytes, cancellationToken);
   }
 
   /// <summary>
@@ -89,17 +93,18 @@ public static class FileConvert
   }
 
   /// <summary>
-  /// Extrai a extensão do arquivo.
+  /// Extrai a extensão a partir do nome do arquivo.
   /// </summary>
   /// <remarks>
-  /// A extensão vem do nome do arquivo, que é informado por quem envia o arquivo. São aceitas apenas
-  /// extensões com letras e dígitos ASCII e no máximo dez caracteres; qualquer outra coisa resulta em nulo.
+  /// O nome é informado por quem envia o arquivo. São aceitas apenas extensões com letras e dígitos ASCII e no
+  /// máximo dez caracteres; qualquer outra coisa resulta em nulo. O que vier antes de um separador de diretório
+  /// é descartado.
   /// </remarks>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
+  /// <param name="fileName">Nome do arquivo, como <c>relatorio.pdf</c>.</param>
   /// <returns>Retorna a extensão do arquivo em maiúsculas, sem o ponto, ou nulo se não for possível extraí-la.</returns>
-  public static string? Extension(IFormFile? fromFile)
+  public static string? ExtensionFromFileName(string? fileName)
   {
-    return InternalFileConvert.Extension(fromFile);
+    return InternalFileConvert.ExtensionFromFileName(fileName);
   }
 
   #endregion
@@ -178,32 +183,29 @@ internal static class InternalFileConvert
   }
 
   /// <summary>
-  /// Converte uma IFormFile para <see cref="MemoryStream"/>.
+  /// Copia o conteúdo de um <see cref="Stream"/> para um <see cref="MemoryStream"/>.
   /// </summary>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
-  /// <param name="maxBytes">Tamanho máximo do arquivo em bytes.</param>
-  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o arquivo for nulo ou vazio.</returns>
-  /// <exception cref="PayloadTooLargeException">Se o arquivo exceder o tamanho máximo permitido.</exception>
-  internal static MemoryStream? ToMemoryStream(IFormFile? fromFile, long maxBytes = 0)
+  /// <param name="stream">Fluxo de origem.</param>
+  /// <param name="maxBytes">Tamanho máximo do conteúdo em bytes.</param>
+  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o fluxo for nulo ou não tiver conteúdo.</returns>
+  /// <exception cref="PayloadTooLargeException">Se o conteúdo exceder o tamanho máximo permitido.</exception>
+  internal static MemoryStream? CopyToMemoryStream(Stream? stream, long maxBytes = 0)
   {
     // Resolve o limite aplicável
     var limit = ResolveMaxBytes(maxBytes);
 
-    // Verifica se há conteúdo a copiar e se o tamanho declarado cabe no limite
-    if (!ShouldCopy(fromFile, limit))
+    // Verifica se há conteúdo a copiar e se o tamanho informado pelo fluxo cabe no limite
+    if (!ShouldCopy(stream, limit, out var capacity))
     {
-      // Retorna nulo caso o arquivo seja inválido
+      // Retorna nulo caso o fluxo seja nulo ou não tenha conteúdo
       return null;
     }
 
-    // Cria o destino já com o tamanho declarado, evitando o redimensionamento durante a cópia
-    var destination = new MemoryStream((int)fromFile!.Length);
+    // Cria o destino já com o tamanho conhecido, evitando o redimensionamento durante a cópia
+    var destination = new MemoryStream(capacity);
 
     try
     {
-      // Copia o conteúdo binário do arquivo, sem interpretá-lo como texto
-      using var stream = fromFile.OpenReadStream();
-
       // Aloca o bloco de cópia
       var buffer = new byte[CopyBufferSize];
 
@@ -211,8 +213,8 @@ internal static class InternalFileConvert
       long total = 0;
       int read;
 
-      // Copia bloco a bloco, para que o limite valha mesmo se o tamanho declarado não corresponder ao real
-      while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
+      // Copia bloco a bloco, para que o limite valha mesmo quando o fluxo não informa o tamanho
+      while ((read = stream!.Read(buffer, 0, buffer.Length)) > 0)
       {
         total += read;
 
@@ -234,41 +236,46 @@ internal static class InternalFileConvert
       throw;
     }
 
+    // Um fluxo que não informa o tamanho só revela que está vazio depois da leitura
+    if (destination.Length == 0)
+    {
+      destination.Dispose();
+
+      return null;
+    }
+
     // Posiciona o fluxo no início para que o consumidor possa lê-lo
     destination.Position = 0;
 
-    // Retorna o arquivo em MemoryStream
+    // Retorna o conteúdo em MemoryStream
     return destination;
   }
 
   /// <summary>
-  /// Converte uma IFormFile para <see cref="MemoryStream"/> de forma assíncrona.
+  /// Copia o conteúdo de um <see cref="Stream"/> para um <see cref="MemoryStream"/> de forma assíncrona.
   /// </summary>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
-  /// <param name="maxBytes">Tamanho máximo do arquivo em bytes.</param>
+  /// <param name="stream">Fluxo de origem.</param>
+  /// <param name="maxBytes">Tamanho máximo do conteúdo em bytes.</param>
   /// <param name="cancellationToken">Token de cancelamento da operação.</param>
-  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o arquivo for nulo ou vazio.</returns>
-  /// <exception cref="PayloadTooLargeException">Se o arquivo exceder o tamanho máximo permitido.</exception>
-  internal static async Task<MemoryStream?> ToMemoryStreamAsync(IFormFile? fromFile, long maxBytes = 0, CancellationToken cancellationToken = default)
+  /// <returns>Retorna um <see cref="MemoryStream"/>, ou nulo se o fluxo for nulo ou não tiver conteúdo.</returns>
+  /// <exception cref="PayloadTooLargeException">Se o conteúdo exceder o tamanho máximo permitido.</exception>
+  internal static async Task<MemoryStream?> CopyToMemoryStreamAsync(Stream? stream, long maxBytes = 0, CancellationToken cancellationToken = default)
   {
     // Resolve o limite aplicável
     var limit = ResolveMaxBytes(maxBytes);
 
-    // Verifica se há conteúdo a copiar e se o tamanho declarado cabe no limite
-    if (!ShouldCopy(fromFile, limit))
+    // Verifica se há conteúdo a copiar e se o tamanho informado pelo fluxo cabe no limite
+    if (!ShouldCopy(stream, limit, out var capacity))
     {
-      // Retorna nulo caso o arquivo seja inválido
+      // Retorna nulo caso o fluxo seja nulo ou não tenha conteúdo
       return null;
     }
 
-    // Cria o destino já com o tamanho declarado, evitando o redimensionamento durante a cópia
-    var destination = new MemoryStream((int)fromFile!.Length);
+    // Cria o destino já com o tamanho conhecido, evitando o redimensionamento durante a cópia
+    var destination = new MemoryStream(capacity);
 
     try
     {
-      // Copia o conteúdo binário do arquivo, sem interpretá-lo como texto
-      await using var stream = fromFile.OpenReadStream();
-
       // Aloca o bloco de cópia
       var buffer = new byte[CopyBufferSize];
 
@@ -276,8 +283,8 @@ internal static class InternalFileConvert
       long total = 0;
       int read;
 
-      // Copia bloco a bloco, para que o limite valha mesmo se o tamanho declarado não corresponder ao real
-      while ((read = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+      // Copia bloco a bloco, para que o limite valha mesmo quando o fluxo não informa o tamanho
+      while ((read = await stream!.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
       {
         total += read;
 
@@ -299,10 +306,18 @@ internal static class InternalFileConvert
       throw;
     }
 
+    // Um fluxo que não informa o tamanho só revela que está vazio depois da leitura
+    if (destination.Length == 0)
+    {
+      await destination.DisposeAsync().ConfigureAwait(false);
+
+      return null;
+    }
+
     // Posiciona o fluxo no início para que o consumidor possa lê-lo
     destination.Position = 0;
 
-    // Retorna o arquivo em MemoryStream
+    // Retorna o conteúdo em MemoryStream
     return destination;
   }
 
@@ -341,21 +356,21 @@ internal static class InternalFileConvert
   }
 
   /// <summary>
-  /// Extrai a extensão do arquivo.
+  /// Extrai a extensão a partir do nome do arquivo.
   /// </summary>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
+  /// <param name="fileName">Nome do arquivo.</param>
   /// <returns>Retorna a extensão do arquivo em maiúsculas, sem o ponto, ou nulo se não for possível extraí-la.</returns>
-  internal static string? Extension(IFormFile? fromFile)
+  internal static string? ExtensionFromFileName(string? fileName)
   {
-    // Verifica se o arquivo é nulo ou se não possui nome
-    if (string.IsNullOrEmpty(fromFile?.FileName))
+    // Verifica se o nome é nulo ou vazio
+    if (string.IsNullOrEmpty(fileName))
     {
-      // Retorna nulo caso o arquivo seja inválido
+      // Retorna nulo caso o nome seja inválido
       return null;
     }
 
     // Pega a extensão do arquivo, que já descarta o que vier antes de um separador de diretório
-    var extension = Path.GetExtension(fromFile.FileName);
+    var extension = Path.GetExtension(fileName);
 
     // Verifica se a extensão não é nula ou vazia
     if (string.IsNullOrEmpty(extension))
@@ -479,27 +494,49 @@ internal static class InternalFileConvert
   }
 
   /// <summary>
-  /// Verifica se o arquivo tem conteúdo a copiar e se o tamanho declarado cabe no limite.
+  /// Verifica se o fluxo tem conteúdo a copiar e se o tamanho que ele informa cabe no limite.
   /// </summary>
-  /// <param name="fromFile">Arquivo em formato de <see cref="IFormFile"/>.</param>
+  /// <param name="stream">Fluxo de origem.</param>
   /// <param name="limit">O limite a ser aplicado, em bytes.</param>
+  /// <param name="capacity">A capacidade inicial do destino: o tamanho restante, quando o fluxo o informa.</param>
   /// <returns>Verdadeiro se a cópia deve ser feita.</returns>
-  /// <exception cref="PayloadTooLargeException">Se o arquivo exceder o tamanho máximo permitido.</exception>
-  private static bool ShouldCopy(IFormFile? fromFile, long limit)
+  /// <exception cref="PayloadTooLargeException">Se o conteúdo exceder o tamanho máximo permitido.</exception>
+  private static bool ShouldCopy(Stream? stream, long limit, out int capacity)
   {
-    // Verifica se o arquivo é nulo ou vazio
-    if (fromFile == null || fromFile.Length <= 0)
+    capacity = 0;
+
+    // Verifica se o fluxo é nulo
+    if (stream == null)
     {
-      // Retorna falso caso o arquivo seja inválido
+      // Retorna falso caso não haja fluxo
       return false;
     }
 
-    // Verifica o tamanho declarado antes de reservar memória
-    if (fromFile.Length > limit)
+    // Um fluxo sem posição (o corpo de uma requisição, por exemplo) só tem o limite conferido durante a cópia
+    if (!stream.CanSeek)
+    {
+      return true;
+    }
+
+    // Calcula o que resta a partir da posição atual
+    var remaining = stream.Length - stream.Position;
+
+    // Verifica se há conteúdo a copiar
+    if (remaining <= 0)
+    {
+      // Retorna falso caso o fluxo esteja vazio ou já tenha sido lido até o fim
+      return false;
+    }
+
+    // Verifica o tamanho informado antes de reservar memória
+    if (remaining > limit)
     {
       // Lança a exceção de carga muito grande com o limite aplicado
       throw TooLarge(limit);
     }
+
+    // O limite nunca passa de int.MaxValue, então o tamanho restante cabe em um inteiro
+    capacity = (int)remaining;
 
     // Retorna verdadeiro para que a cópia seja feita
     return true;

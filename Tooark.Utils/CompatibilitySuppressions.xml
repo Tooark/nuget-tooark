@@ -3,6 +3,55 @@
 <Suppressions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileConvert.Extension(Microsoft.AspNetCore.Http.IFormFile)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileConvert.ToMemoryStream(Microsoft.AspNetCore.Http.IFormFile,System.Int64)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileConvert.ToMemoryStreamAsync(Microsoft.AspNetCore.Http.IFormFile,System.Int64,System.Threading.CancellationToken)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileValid.IsCustom(Microsoft.AspNetCore.Http.IFormFile,System.Int64,System.String[])</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileValid.IsDocument(Microsoft.AspNetCore.Http.IFormFile,System.Int64)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileValid.IsImage(Microsoft.AspNetCore.Http.IFormFile,System.Int64)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:Tooark.Utils.FileValid.IsVideo(Microsoft.AspNetCore.Http.IFormFile,System.Int64)</Target>
+    <Left>lib/net10.0/Tooark.Utils.dll</Left>
+    <Right>lib/net10.0/Tooark.Utils.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:Tooark.Utils.GenerateString.Token(System.Int32)</Target>
     <Left>lib/net10.0/Tooark.Utils.dll</Left>
     <Right>lib/net10.0/Tooark.Utils.dll</Right>

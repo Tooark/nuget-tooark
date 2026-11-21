@@ -26,7 +26,8 @@ Biblioteca que concentra o que o Tooark tem de específico de ASP.NET Core, mant
 
 O pacote `Tooark.AspNetCore` fornece:
 
-- extensões para tipos do ASP.NET Core, hoje o `ModelStateDictionary`;
+- extensões para tipos do ASP.NET Core: o `ModelStateDictionary` e o `IFormFile`;
+- a conversão e a validação de arquivos enviados, com as extensões de `IFormFile` do `FormFileExtension`;
 - o corpo `ResponseDto` para as falhas de validação dos controllers com `[ApiController]`, com `AddTooarkModelStateEnvelope`;
 - a validação dos atributos do `Tooark.Attributes` no MVC sem a mensagem duplicada do campo ausente, com `AddTooarkValidationAttributes`;
 - Problem Details (RFC 9457) para as exceções do `Tooark.Exceptions`, em controllers e minimal APIs, com `AddTooarkProblemDetails`;
@@ -61,7 +62,8 @@ A partir da v4 o requisito mora aqui. Quem faz web referencia este pacote; quem 
 dotnet add package Tooark.AspNetCore
 ```
 
-`GetErrors` é um método de extensão e funciona sem configuração. A [resposta de validação](#resposta-de-validação)
+`GetErrors` e as [extensões de `IFormFile`](#arquivos-enviados) são métodos de extensão e funcionam sem
+configuração. A [resposta de validação](#resposta-de-validação)
 e a [validação dos atributos](#atributos-do-tooark-na-validação-do-mvc) têm registro, e os dois são
 **opcionais**: nem o pacote nem o `AddTooarkService` do agregador `Tooark` os ligam por conta própria. A resposta
 muda o corpo de toda falha de validação da API, e a validação dos atributos muda as mensagens de um campo ausente.
@@ -316,6 +318,20 @@ O nível de um status em `StatusCodeLogLevels` vence o nível da faixa dele, e `
 log. As opções são só por código: não há seção de configuração para elas. Na 4.x, onde surgiram (v4.10.0), o
 padrão dos 4xx era `Warning`.
 
+O `GetLogLevel(int statusCode)` devolve o nível que um status resolve, pela mesma regra que o manipulador aplica:
+o nível do status quando ele está em `StatusCodeLogLevels`; senão, o `ServerErrorLogLevel` de 500 em diante e o
+`ClientErrorLogLevel` nos demais. É público desde a v4.11.0 e serve para conferir a configuração em um teste, sem
+capturar o log. Com a configuração acima:
+
+```csharp
+// factory: a WebApplicationFactory<Program> do teste
+var options = factory.Services.GetRequiredService<IOptions<TooarkProblemDetailsOptions>>().Value;
+
+Assert.Equal(LogLevel.Debug, options.GetLogLevel(StatusCodes.Status404NotFound));          // nível do status
+Assert.Equal(LogLevel.Information, options.GetLogLevel(StatusCodes.Status409Conflict));    // nível da faixa 4xx
+Assert.Equal(LogLevel.Error, options.GetLogLevel(StatusCodes.Status500InternalServerError));
+```
+
 **Falhas de validação no formato do Tooark.** O `ValidationProblemDetails` do ASP.NET Core traz `errors` como um objeto
 com as mensagens por campo, e o Problem Details do Tooark traz `errors` como a lista de `code`, `key` e `message`. Para
 o cliente receber um único formato, as falhas de validação do ASP.NET Core também saem na lista do Tooark, uma entrada
@@ -406,6 +422,21 @@ return TooarkResults.ValidationProblem(itens);
 return Results.ValidationProblem(pedido.Notifications.ToValidationErrors());
 ```
 
+Desde a v4.11.0 os itens convertidos também podem ser lançados como exceção. A `NotificationList` do
+[`Tooark.Notifications`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Notifications) monta uma
+notificação a partir de itens prontos, e toda exceção do Tooark aceita uma notificação e preserva a chave e o
+código de cada item. Com o [`AddTooarkProblemDetails`](#problem-details-para-as-exceções), cada item chega à lista
+`errors` da resposta:
+
+```csharp
+using Tooark.AspNetCore.Extensions;
+using Tooark.Exceptions;
+using Tooark.Notifications;
+
+// errors: IDictionary<string, string[]>, o formato de validação do ASP.NET Core
+throw new BadRequestException(new NotificationList(errors.ToNotificationItems()));
+```
+
 ### Integração com as validações
 
 As mensagens devolvidas são o que os atributos do
@@ -422,6 +453,80 @@ Um campo não anulável ausente pode trazer as duas mensagens: a chave `Field.Re
 que o MVC infere, com o texto do framework. O `AddTooarkValidationAttributes` deixa só a chave: veja
 [Atributos do Tooark na validação do MVC](#atributos-do-tooark-na-validação-do-mvc).
 
+### Arquivos enviados
+
+- `FormFileExtension.ToMemoryStream(IFormFile?, long maxBytes = 0)`: copia o conteúdo binário do arquivo para um
+  `MemoryStream`, com limite de tamanho.
+- `FormFileExtension.ToMemoryStreamAsync(IFormFile?, long maxBytes = 0, CancellationToken cancellationToken = default)`:
+  o mesmo, de forma assíncrona.
+- `FormFileExtension.GetExtension(IFormFile?)`: devolve a extensão do nome do arquivo, em maiúsculas e sem o ponto.
+- `FormFileExtension.IsImage(IFormFile?, long maxBytes = 0)`: verifica se o arquivo é uma imagem válida, pela
+  extensão do nome e pelo tamanho.
+- `FormFileExtension.IsDocument(IFormFile?, long maxBytes = 0)`: o mesmo, para um documento.
+- `FormFileExtension.IsVideo(IFormFile?, long maxBytes = 0)`: o mesmo, para um vídeo.
+- `FormFileExtension.IsCustom(IFormFile?, long maxBytes = 0, string[]? permittedExtensions = null)`: o mesmo, para
+  as extensões informadas.
+
+São métodos de extensão de `IFormFile`, no namespace `Tooark.AspNetCore.Files`, e existem desde a v4.11.0. Aplicam
+as regras do `FileConvert` e do `FileValid` do
+[`Tooark.Utils`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.Utils): o mesmo limite de tamanho, as
+mesmas extensões e a mesma exceção. Ficam neste pacote porque o `IFormFile` é um tipo do ASP.NET Core.
+
+```csharp
+using Tooark.AspNetCore.Files;
+using Tooark.Exceptions;
+
+if (!arquivo.IsImage(maxBytes: 2 * 1024 * 1024))
+{
+  throw new BadRequestException("Arquivo.ImagemInvalida");
+}
+
+await using var conteudo = await arquivo.ToMemoryStreamAsync(2 * 1024 * 1024, cancellationToken);
+```
+
+**Conversão.** O `ToMemoryStream` e o `ToMemoryStreamAsync` devolvem `null` para um arquivo nulo ou vazio. Acima de
+`maxBytes` lançam uma `PayloadTooLargeException` (HTTP 413), com a mensagem `File.SizeExceeded;{limite}`. Valor não
+positivo aplica o `FileConvert.DefaultMaxBytes`, de 5242880 bytes (5MB), e o teto absoluto é `int.MaxValue`. O
+tamanho declarado é recusado antes de o arquivo ser aberto, e o limite é conferido de novo durante a leitura, para
+valer mesmo quando o tamanho declarado não corresponde ao conteúdo. O `MemoryStream` devolvido já vem posicionado
+no início.
+
+**Extensão.** O `GetExtension` lê o nome do arquivo, que é informado por quem o envia. Só passam letras e dígitos
+ASCII, com no máximo dez caracteres; qualquer outra coisa, e um arquivo nulo, resultam em `null`.
+
+**Validação.** O `IsImage`, o `IsDocument`, o `IsVideo` e o `IsCustom` conferem o tamanho e a extensão declarada no
+nome do arquivo. O conteúdo não é inspecionado, então não substituem a checagem do tipo real do arquivo quando o
+envio não é confiável. Um arquivo nulo, vazio ou acima de `maxBytes` resulta em `false`, sem exceção, e o valor não
+positivo aplica o padrão de 5MB.
+
+| Método       | Extensões aceitas                                                                       |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `IsImage`    | `.JPG`, `.JPEG`, `.PNG`, `.GIF`, `.BMP`, `.SVG` e `.WEBP`                               |
+| `IsDocument` | `.TXT`, `.CSV`, `.LOG`, `.PDF`, `.DOC`, `.DOCX`, `.XLS`, `.XLSX`, `.PPT` e `.PPTX`      |
+| `IsVideo`    | `.AVI`, `.MP4`, `.MPG`, `.MPEG` e `.WMV`                                                |
+| `IsCustom`   | As de `permittedExtensions`; nulo ou vazio aplica todas as de imagem, documento e vídeo |
+
+As extensões do `IsCustom` são comparadas sem diferenciar maiúsculas de minúsculas e podem ser informadas com ou
+sem o ponto inicial: `"pdf"` e `".PDF"` têm o mesmo efeito.
+
+**Migração do `Tooark.Utils`.** Os métodos do `Tooark.Utils` que recebiam um `IFormFile` foram removidos na v5,
+junto com a dependência dele no pacote `Microsoft.AspNetCore.Http` 2.x; estavam obsoletos desde a v4.11.0. Cada um
+tem uma extensão aqui, com as mesmas regras:
+
+| Removido (`Tooark.Utils`)                  | Extensão (`Tooark.AspNetCore.Files`) |
+| ------------------------------------------ | ------------------------------------ |
+| `FileConvert.ToMemoryStream(arquivo)`      | `arquivo.ToMemoryStream()`           |
+| `FileConvert.ToMemoryStreamAsync(arquivo)` | `arquivo.ToMemoryStreamAsync()`      |
+| `FileConvert.Extension(arquivo)`           | `arquivo.GetExtension()`             |
+| `FileValid.IsImage(arquivo)`               | `arquivo.IsImage()`                  |
+| `FileValid.IsDocument(arquivo)`            | `arquivo.IsDocument()`               |
+| `FileValid.IsVideo(arquivo)`               | `arquivo.IsVideo()`                  |
+| `FileValid.IsCustom(arquivo)`              | `arquivo.IsCustom()`                 |
+
+Os parâmetros opcionais continuam na mesma ordem. Nos métodos de validação, o tamanho máximo se chamava `fileSize`
+e passa a se chamar `maxBytes`: quem o informa pelo nome precisa trocá-lo. Para um arquivo que não chega como
+`IFormFile`, o `Tooark.Utils` tem as versões por `Stream` e por nome de arquivo.
+
 ### Filtros e middlewares
 
 Ainda não distribuídos. A resposta de validação não é um filtro: o ASP.NET Core já chama uma factory no ponto em
@@ -436,9 +541,9 @@ separados não reduziria nada.
 
 ### Namespaces
 
-As extensões ficam em `Tooark.AspNetCore.Extensions`, os registros em `Tooark.AspNetCore.Injections`, o
-manipulador de exceções e as opções dele em `Tooark.AspNetCore.ExceptionHandling` e os resultados de minimal API em
-`Tooark.AspNetCore.Results`.
+As extensões de ModelState e de validação ficam em `Tooark.AspNetCore.Extensions`, as de `IFormFile` em
+`Tooark.AspNetCore.Files`, os registros em `Tooark.AspNetCore.Injections`, o manipulador de exceções e as opções
+dele em `Tooark.AspNetCore.ExceptionHandling` e os resultados de minimal API em `Tooark.AspNetCore.Results`.
 
 ---
 
@@ -756,17 +861,55 @@ O mesmo `AddTooarkProblemDetails` e `UseExceptionHandler` atendem o controller: 
 os filtros do MVC e chega ao middleware. O [envelope](#resposta-de-validação), quando registrado, continua
 respondendo a validação do `[ApiController]`, que acontece antes da action.
 
+### Exemplo de envio de arquivo em um controller
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using Tooark.AspNetCore.Files;
+using Tooark.Exceptions;
+
+[ApiController]
+[Route("usuarios")]
+public sealed class FotosController(IFotoRepository fotos) : ControllerBase
+{
+  private const long TamanhoMaximo = 2 * 1024 * 1024; // 2MB
+
+  [HttpPut("{id:guid}/foto")]
+  public async Task<IActionResult> Enviar(Guid id, IFormFile arquivo, CancellationToken cancellationToken)
+  {
+    // Extensão de imagem e até 2MB; o conteúdo não é inspecionado
+    if (!arquivo.IsImage(TamanhoMaximo))
+    {
+      throw new BadRequestException("Arquivo.ImagemInvalida");
+    }
+
+    // Depois do IsImage o arquivo tem conteúdo e extensão, então nenhum dos dois é nulo
+    await using var conteudo = await arquivo.ToMemoryStreamAsync(TamanhoMaximo, cancellationToken);
+    var extensao = arquivo.GetExtension(); // PNG, por exemplo
+
+    await fotos.SalvarAsync(id, conteudo!, extensao!, cancellationToken);
+
+    return NoContent();
+  }
+}
+```
+
+O `IsImage` devolve `false` para um arquivo acima do limite, e a action lança a `BadRequestException`. O
+`ToMemoryStreamAsync` confere o mesmo limite durante a leitura e, se o conteúdo real passar dele, lança a
+`PayloadTooLargeException`. Com o [`AddTooarkProblemDetails`](#problem-details-para-as-exceções), as duas exceções
+saem como Problem Details, no status de cada uma: 400 e 413.
+
 ---
 
 ## 📋 Dependências
 
-| Pacote                                                                                                          | Versão   | Descrição                                                                                                  |
-| --------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| [`Tooark.Attributes`](https://www.nuget.org/packages/Tooark.Attributes)                                         | 4.x      | Os atributos reconhecidos pelo `AddTooarkValidationAttributes`                                             |
-| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                                     | 4.x      | `ResponseDto`, o corpo da resposta de validação                                                            |
-| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                         | 4.x      | As exceções respondidas com Problem Details, e os itens de notificação delas                               |
-| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro                                                                          |
-| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 10.x     | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler` e `IProblemDetailsService` |
+| Pacote                                                                                                          | Versão   | Descrição                                                                                                               |
+| --------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [`Tooark.Attributes`](https://www.nuget.org/packages/Tooark.Attributes)                                         | 4.x      | Os atributos reconhecidos pelo `AddTooarkValidationAttributes`                                                          |
+| [`Tooark.Dtos`](https://www.nuget.org/packages/Tooark.Dtos)                                                     | 4.x      | `ResponseDto`, o corpo da resposta de validação                                                                         |
+| [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)                                         | 4.x      | As exceções respondidas com Problem Details, e os itens de notificação delas                                            |
+| [`Tooark.Extensions`](https://www.nuget.org/packages/Tooark.Extensions)                                         | 4.x      | Localização das mensagens de erro                                                                                       |
+| [`Microsoft.AspNetCore.App`](https://www.nuget.org/packages/Microsoft.AspNetCore.App) (framework compartilhado) | 10.x     | `ModelStateDictionary`, `ApiBehaviorOptions`, `MvcOptions`, `IExceptionHandler`, `IProblemDetailsService` e `IFormFile` |
 
 ---
 

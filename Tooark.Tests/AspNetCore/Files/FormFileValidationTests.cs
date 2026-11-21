@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Tooark.Utils;
+using Tooark.AspNetCore.Files;
 
-namespace Tooark.Tests.Utils;
+namespace Tooark.Tests.AspNetCore.Files;
 
-public class FileValidTests
+public class FormFileValidationTests
 {
   // Teste de arquivo para validar imagem
   [Theory]
@@ -39,7 +39,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsImage(fileMock.Object, 2048);
+    var result = fileMock.Object.IsImage(2048);
 
     // Assert
     Assert.Equal(expected, result);
@@ -78,7 +78,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsDocument(fileMock.Object, 2048);
+    var result = fileMock.Object.IsDocument(2048);
 
     // Assert
     Assert.Equal(expected, result);
@@ -117,7 +117,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsVideo(fileMock.Object, 2048);
+    var result = fileMock.Object.IsVideo(2048);
 
     // Assert
     Assert.Equal(expected, result);
@@ -156,7 +156,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsCustom(fileMock.Object, 2048);
+    var result = fileMock.Object.IsCustom(2048);
 
     // Assert
     Assert.Equal(expected, result);
@@ -196,7 +196,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsCustom(fileMock.Object, 2048, extensions);
+    var result = fileMock.Object.IsCustom(2048, extensions);
 
     // Assert
     Assert.Equal(expected, result);
@@ -212,7 +212,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns("test.jpg");
 
     // Act
-    var result = FileValid.IsImage(fileMock.Object, 512);
+    var result = fileMock.Object.IsImage(512);
 
     // Assert
     Assert.False(result);
@@ -228,7 +228,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns("test.doc");
 
     // Act
-    var result = FileValid.IsDocument(fileMock.Object, 512);
+    var result = fileMock.Object.IsDocument(512);
 
     // Assert
     Assert.False(result);
@@ -244,7 +244,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns("test.avi");
 
     // Act
-    var result = FileValid.IsVideo(fileMock.Object, 512);
+    var result = fileMock.Object.IsVideo(512);
 
     // Assert
     Assert.False(result);
@@ -261,7 +261,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns("test.tiff");
 
     // Act
-    var result = FileValid.IsCustom(fileMock.Object, 512, extensions);
+    var result = fileMock.Object.IsCustom(512, extensions);
 
     // Assert
     Assert.False(result);
@@ -283,7 +283,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns("test.pdf");
 
     // Act
-    var result = FileValid.IsCustom(fileMock.Object, 2048, [extension]);
+    var result = fileMock.Object.IsCustom(2048, [extension]);
 
     // Assert
     Assert.Equal(expected, result);
@@ -301,7 +301,7 @@ public class FileValidTests
     fileMock.Setup(f => f.FileName).Returns(fileName);
 
     // Act
-    var result = FileValid.IsCustom(fileMock.Object, 2048, ["", "   ", "."]);
+    var result = fileMock.Object.IsCustom(2048, ["", "   ", "."]);
 
     // Assert
     Assert.Equal(expected, result);
@@ -312,7 +312,7 @@ public class FileValidTests
   public void IsCustom_ShouldReturnFalse_WhenFileIsNull()
   {
     // Arrange & Act
-    var result = FileValid.IsCustom(null, 2048, [".pdf"]);
+    var result = ((IFormFile?)null).IsCustom(2048, [".pdf"]);
 
     // Assert
     Assert.False(result);

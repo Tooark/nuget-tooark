@@ -1,6 +1,4 @@
 using System.Net;
-using Microsoft.AspNetCore.Http;
-using Moq;
 using Tooark.Exceptions;
 using Tooark.Utils;
 
@@ -51,79 +49,6 @@ public class FileConvertTests
     Assert.Null(result);
   }
 
-  // Teste para o método ToMemoryStream(IFormFile) com um upload binário, preservando os bytes originais.
-  [Fact]
-  public void ToMemoryStream_FromIFormFile_ReturnsSameBytes()
-  {
-    // Arrange
-    byte[] content = [0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x33, 0x0A, 0x25, 0xC7, 0xEC, 0x8F, 0xA2];
-    var mockFile = CreateFormFile(content, "test.pdf");
-
-    // Act
-    MemoryStream? result = FileConvert.ToMemoryStream(mockFile);
-
-    // Assert
-    Assert.NotNull(result);
-    Assert.Equal(0, result.Position);
-    Assert.Equal(content, result.ToArray());
-  }
-
-  // Teste para o método ToMemoryStream(IFormFile) com um IFormFile vazio.
-  [Fact]
-  public void ToMemoryStream_EmptyIFormFile_ReturnsNull()
-  {
-    // Arrange
-    var mockFile = CreateFormFile([], "test.pdf");
-
-    // Act
-    MemoryStream? result = FileConvert.ToMemoryStream(mockFile);
-
-    // Assert
-    Assert.Null(result);
-  }
-
-  // Teste para o método ToMemoryStreamAsync(IFormFile) com um upload binário, preservando os bytes originais.
-  [Fact]
-  public async Task ToMemoryStreamAsync_FromIFormFile_ReturnsSameBytes()
-  {
-    // Arrange
-    byte[] content = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46];
-    var mockFile = CreateFormFile(content, "test.jpg");
-
-    // Act
-    MemoryStream? result = await FileConvert.ToMemoryStreamAsync(mockFile, cancellationToken: TestContext.Current.CancellationToken);
-
-    // Assert
-    Assert.NotNull(result);
-    Assert.Equal(0, result.Position);
-    Assert.Equal(content, result.ToArray());
-  }
-
-  // Teste para o método ToMemoryStreamAsync(IFormFile) com um IFormFile nulo.
-  [Fact]
-  public async Task ToMemoryStreamAsync_NullIFormFile_ReturnsNull()
-  {
-    // Arrange & Act
-    MemoryStream? result = await FileConvert.ToMemoryStreamAsync(null, cancellationToken: TestContext.Current.CancellationToken);
-
-    // Assert
-    Assert.Null(result);
-  }
-
-  // Teste para o método ToMemoryStream(IFormFile) com um IFormFile nulo.
-  [Fact]
-  public void ToMemoryStream_NullIFormFile_ReturnsNull()
-  {
-    // Arrange
-    IFormFile? nullFile = null;
-
-    // Act
-    MemoryStream? result = FileConvert.ToMemoryStream(nullFile!);
-
-    // Assert
-    Assert.Null(result);
-  }
-
   // Teste para o método Extension(string) com uma string base64 válida.
   [Fact]
   public void Extension_ValidBase64String_ReturnsExtension()
@@ -166,51 +91,6 @@ public class FileConvertTests
     Assert.Null(result);
   }
 
-  // Teste para o método Extension(IFormFile) com um IFormFile válido.
-  [Fact]
-  public void Extension_FromIFormFile_ReturnsExtension()
-  {
-    // Arrange
-    var mockFile = new Mock<IFormFile>();
-    mockFile.Setup(_ => _.FileName).Returns("test.pdf");
-
-    // Act
-    string? result = FileConvert.Extension(mockFile.Object);
-
-    // Assert
-    Assert.Equal("PDF", result);
-  }
-
-  // Teste para o método Extension(IFormFile) com um IFormFile nulo.
-  [Fact]
-  public void Extension_NullIFormFile_ReturnsNull()
-  {
-    // Arrange
-    IFormFile? nullFile = null;
-
-    // Act
-    string? result = FileConvert.Extension(nullFile!);
-
-    // Assert
-    Assert.Null(result);
-  }
-
-  // Teste para o método Extension(IFormFile) com um IFormFile sem extensão.
-  [Fact]
-  public void Extension_IFormFileWithoutExtension_ReturnsNull()
-  {
-    // Arrange
-    var mockFile = new Mock<IFormFile>();
-    var fileName = "testfile"; // No extension
-    mockFile.Setup(_ => _.FileName).Returns(fileName);
-
-    // Act
-    string? result = FileConvert.Extension(mockFile.Object);
-
-    // Assert
-    Assert.Null(result);
-  }
-
   // Teste para o método Extension(string) com uma base64 sem o separador de tipo.
   [Theory]
   [InlineData("data:image;base64,QQ==")]
@@ -223,32 +103,6 @@ public class FileConvertTests
 
     // Assert
     Assert.Null(result);
-  }
-
-  // Teste para o método Extension(IFormFile) com um nome de arquivo terminado em ponto.
-  [Fact]
-  public void Extension_IFormFileWithTrailingDot_ReturnsNull()
-  {
-    // Arrange
-    var mockFile = new Mock<IFormFile>();
-    mockFile.Setup(_ => _.FileName).Returns("testfile.");
-
-    // Act
-    string? result = FileConvert.Extension(mockFile.Object);
-
-    // Assert
-    Assert.Null(result);
-  }
-
-  // Monta um IFormFile com o conteúdo binário informado.
-  private static IFormFile CreateFormFile(byte[] content, string fileName, long? declaredLength = null)
-  {
-    var mockFile = new Mock<IFormFile>();
-    mockFile.Setup(_ => _.OpenReadStream()).Returns(() => new MemoryStream(content));
-    mockFile.Setup(_ => _.FileName).Returns(fileName);
-    mockFile.Setup(_ => _.Length).Returns(declaredLength ?? content.Length);
-
-    return mockFile.Object;
   }
 
   // Teste para o método Extension(string) com tipo declarado que não tem forma de extensão.
@@ -297,41 +151,6 @@ public class FileConvertTests
 
     // Assert
     Assert.Equal("PNG", result);
-  }
-
-  // Teste para o método Extension(IFormFile) com nome de arquivo hostil.
-  [Theory]
-  // O byte nulo fica antes do ultimo ponto, entao a extensao real e mesmo .aspx
-  [InlineData("arquivo.png\u0000.aspx", "ASPX")]
-  [InlineData("shell.aspx;.png", "PNG")]
-  [InlineData("..\\..\\..\\web.config", "CONFIG")]
-  [InlineData("foto.png", "PNG")]
-  public void Extension_FromIFormFileWithHostileName_IsSanitized(string fileName, string? expected)
-  {
-    // Arrange
-    var mockFile = new Mock<IFormFile>();
-    mockFile.Setup(_ => _.FileName).Returns(fileName);
-
-    // Act
-    string? result = FileConvert.Extension(mockFile.Object);
-
-    // Assert
-    Assert.Equal(expected, result);
-  }
-
-  // Teste para o método Extension(IFormFile) com extensão maior que o comprimento aceito.
-  [Fact]
-  public void Extension_FromIFormFileWithLongExtension_ReturnsNull()
-  {
-    // Arrange
-    var mockFile = new Mock<IFormFile>();
-    mockFile.Setup(_ => _.FileName).Returns($"arquivo.{new string('A', 200)}");
-
-    // Act
-    string? result = FileConvert.Extension(mockFile.Object);
-
-    // Assert
-    Assert.Null(result);
   }
 
   // Teste do marcador de base64 exigido no formato completo.
@@ -419,90 +238,5 @@ public class FileConvertTests
     // Assert
     Assert.NotNull(result);
     Assert.Equal(64, result.Length);
-  }
-
-  // Teste do limite aplicado ao tamanho declarado do upload.
-  [Fact]
-  public void ToMemoryStream_IFormFileAboveGivenLimit_Throws()
-  {
-    // Arrange
-    var mockFile = CreateFormFile(new byte[128], "test.pdf");
-
-    // Act & Assert
-    var exception = Assert.Throws<PayloadTooLargeException>(() => FileConvert.ToMemoryStream(mockFile, 64));
-
-    // Assert
-    Assert.Equal("File.SizeExceeded;64", exception.Message);
-  }
-
-  // Teste do limite aplicado durante a leitura, quando o tamanho declarado não corresponde ao conteúdo real.
-  [Fact]
-  public void ToMemoryStream_IFormFileLyingAboutLength_Throws()
-  {
-    // Arrange
-    var mockFile = CreateFormFile(new byte[256 * 1024], "test.pdf", declaredLength: 32);
-
-    // Act & Assert
-    var exception = Assert.Throws<PayloadTooLargeException>(() => FileConvert.ToMemoryStream(mockFile, 64));
-
-    // Assert
-    Assert.Equal("File.SizeExceeded;64", exception.Message);
-  }
-
-  // Teste do limite aplicado durante a leitura na versão assíncrona.
-  [Fact]
-  public async Task ToMemoryStreamAsync_IFormFileLyingAboutLength_Throws()
-  {
-    // Arrange
-    var mockFile = CreateFormFile(new byte[256 * 1024], "test.pdf", declaredLength: 32);
-
-    // Act & Assert
-    var exception = await Assert.ThrowsAsync<PayloadTooLargeException>(() =>
-      FileConvert.ToMemoryStreamAsync(mockFile, 64, TestContext.Current.CancellationToken));
-
-    // Assert
-    Assert.Equal("File.SizeExceeded;64", exception.Message);
-  }
-
-  // Teste do limite aplicado ao tamanho declarado do upload na versão assíncrona.
-  [Fact]
-  public async Task ToMemoryStreamAsync_IFormFileAboveGivenLimit_Throws()
-  {
-    // Arrange
-    var mockFile = CreateFormFile(new byte[128], "test.pdf");
-
-    // Act & Assert
-    var exception = await Assert.ThrowsAsync<PayloadTooLargeException>(() =>
-      FileConvert.ToMemoryStreamAsync(mockFile, 64, TestContext.Current.CancellationToken));
-
-    // Assert
-    Assert.Equal("File.SizeExceeded;64", exception.Message);
-  }
-
-  // Teste do upload maior que o padrão, aceito quando o limite é ampliado.
-  [Fact]
-  public void ToMemoryStream_IFormFileAboveDefaultWithHigherLimit_ReturnsMemoryStream()
-  {
-    // Arrange
-    var content = new byte[(int)FileConvert.DefaultMaxBytes + 1024];
-    var mockFile = CreateFormFile(content, "test.pdf");
-
-    // Act
-    MemoryStream? result = FileConvert.ToMemoryStream(mockFile, FileConvert.DefaultMaxBytes * 2);
-
-    // Assert
-    Assert.NotNull(result);
-    Assert.Equal(content.Length, result.Length);
-  }
-
-  // Teste do upload acima do limite padrão, sem limite informado.
-  [Fact]
-  public void ToMemoryStream_IFormFileAboveDefaultLimit_Throws()
-  {
-    // Arrange
-    var mockFile = CreateFormFile(new byte[(int)FileConvert.DefaultMaxBytes + 1], "test.pdf");
-
-    // Act & Assert
-    Assert.Throws<PayloadTooLargeException>(() => FileConvert.ToMemoryStream(mockFile));
   }
 }
