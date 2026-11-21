@@ -77,6 +77,10 @@ Ao usar a formatação, o formato incompatível com os parâmetros **não** lan�
 recebida. A exceção existe para reportar o erro original, e falhar na própria apresentação trocaria o erro
 real por uma `FormatException`. Mensagens com chaves literais, como JSON, caem nesse caso.
 
+> **Itens de notificação**: não há construtor que receba `NotificationItem` diretamente. Para criar a exceção
+> a partir de uma lista de itens, passe uma `NotificationList` (desde a v4.11.0) ao construtor de
+> `Notification`, como no [exemplo 4](#4-a-partir-de-notification).
+
 ---
 
 ## 💬 Mensagens de Erro
@@ -170,6 +174,30 @@ throw new BadRequestException(notification);
 ```
 
 Os itens da notificação são preservados como estão, mantendo a chave e o código de cada um.
+
+Quando os itens já existem (os erros por campo de uma validação, os erros devolvidos por outro serviço), a
+`NotificationList` do `Tooark.Notifications`, disponível desde a v4.11.0, monta a notificação a partir deles,
+sem uma classe própria:
+
+```csharp
+using Tooark.Notifications;
+
+NotificationItem[] items =
+[
+  new("E-mail é obrigatório.", "Email", "T.DOM1"),
+  new("Nome muito curto.", "Name", "T.DOM2")
+];
+
+throw new BadRequestException(new NotificationList(items));
+```
+
+Os itens seguem na ordem recebida, e `GetNotifications()` devolve a chave e o código de cada um. Uma lista
+vazia registra `Exceptions.ErrorsNullOrEmpty`, como qualquer notificação sem itens. Uma coleção nula lança
+`ArgumentNullException` na própria `NotificationList`, antes de a exceção ser criada.
+
+Para os erros de validação do ASP.NET Core, o `ToNotificationItems` do
+[`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore) converte o dicionário de erros por campo
+nos itens que a `NotificationList` recebe.
 
 ### 5) Preservando a causa raiz
 

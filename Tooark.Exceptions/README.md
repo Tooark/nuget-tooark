@@ -77,6 +77,10 @@ When formatting, a format incompatible with the parameters does **not** throw: t
 received. The exception exists to report the original error, and failing in its own presentation would trade
 the real error for a `FormatException`. Messages with literal braces, such as JSON, fall into this case.
 
+> **Notification items**: no constructor takes `NotificationItem` directly. To create the exception from a
+> list of items, pass a `NotificationList` (since v4.11.0) to the `Notification` constructor, as in
+> [example 4](#4-from-a-notification).
+
 ---
 
 ## 💬 Error Messages
@@ -170,6 +174,30 @@ throw new BadRequestException(notification);
 ```
 
 The notification items are preserved as they are, keeping the key and the code of each one.
+
+When the items already exist (the field errors of a validation, the errors returned by another service),
+`NotificationList` from `Tooark.Notifications`, available since v4.11.0, builds the notification from them,
+without a class of your own:
+
+```csharp
+using Tooark.Notifications;
+
+NotificationItem[] items =
+[
+  new("Email is required.", "Email", "T.DOM1"),
+  new("Name is too short.", "Name", "T.DOM2")
+];
+
+throw new BadRequestException(new NotificationList(items));
+```
+
+The items go in the order received, and `GetNotifications()` returns the key and the code of each one. An
+empty list records `Exceptions.ErrorsNullOrEmpty`, like any notification without items. A null collection
+throws `ArgumentNullException` in `NotificationList` itself, before the exception is created.
+
+For ASP.NET Core validation errors, `ToNotificationItems` from
+[`Tooark.AspNetCore`](https://www.nuget.org/packages/Tooark.AspNetCore) converts the dictionary of errors per
+field into the items `NotificationList` takes.
 
 ### 5) Preserving the root cause
 
