@@ -1110,7 +1110,7 @@ user.TotpLastUsedStep = step;
 
 ```csharp
 // Cadastro: gera, exibe uma vez, guarda só os hashes
-var codes = RecoveryCodes.Generate();                                 // 10 códigos como "7KQ2M-8XR4N"
+var codes = RecoveryCodes.Generate();                                 // 10 códigos como "7KQ2M-8XR4N-PD6WT-3HJ9B"
 user.RecoveryCodeHashes = codes
     .Select(code => SecureToken.Hash(RecoveryCodes.Normalize(code)))
     .ToList();
@@ -1128,7 +1128,18 @@ user.RecoveryCodeHashes.Remove(match);                                // cada c�
 ```
 
 O alfabeto não tem `0`/`O` nem `1`/`I`, então um código impresso é digitado sem ambiguidade. O `Generate` devolve
-códigos distintos, 10 de 10 caracteres por padrão (1 a 50 códigos, 8 a 32 caracteres).
+códigos distintos, 10 de 20 caracteres por padrão (1 a 50 códigos, 8 a 32 caracteres). O código é exibido em
+grupos de cinco caracteres separados por hífen: no tamanho padrão, `XXXXX-XXXXX-XXXXX-XXXXX`, com 23 caracteres
+contando os hífens. Cada caractere vale 5 bits, então o código padrão tem 100 bits.
+
+O tamanho padrão é 20 desde a v4.11.0. Até a v4.10.0 era 10 (`XXXXX-XXXXX`, 50 bits), pouco para um valor guardado
+com o hash rápido do `SecureToken`: com o banco vazado, a força bruta ficava ao alcance de quem tem GPU.
+
+- **Códigos já emitidos**: os de 10 caracteres continuam valendo. A conferência não depende do tamanho, e o que
+  vai ao banco é o hash, de tamanho fixo.
+- **Manter o tamanho anterior**: informe `RecoveryCodes.Generate(length: 10)`. Os códigos voltam a ter 50 bits.
+- **Ao atualizar**: confira a tela que exibe os códigos e qualquer validação de tamanho ou de formato no campo em
+  que o usuário digita o código.
 
 ---
 
@@ -1576,6 +1587,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 3. **Cifre o segredo TOTP em repouso** - Quem o lê gera códigos válidos; use o `ICryptographyService`
 4. **Persista o `matchedStep`** - Sem ele, um código interceptado dentro da janela é aceito duas vezes
 5. **Mostre os códigos de recuperação uma vez** - E invalide cada um no uso
+6. **Mantenha o tamanho padrão dos códigos de recuperação** - 20 caracteres (100 bits); com 10 caracteres (50 bits), um código guardado com hash rápido fica ao alcance de força bruta em GPU se o banco vazar
 
 ### Data Protection
 
