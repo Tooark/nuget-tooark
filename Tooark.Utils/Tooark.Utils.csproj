@@ -18,10 +18,12 @@
 
   <ItemGroup>
     <!--
-      FileConvert e FileValid recebem IFormFile. O tipo vem do pacote Microsoft.AspNetCore.Http 2.x, o último
-      publicado fora do framework compartilhado, de propósito: assim o pacote continua utilizável em console,
-      worker e testes sem o Microsoft.AspNetCore.App. Numa aplicação ASP.NET Core o SDK resolve o conflito
-      em favor do assembly do framework, e o IFormFile é o mesmo tipo.
+      FileConvert e FileValid ainda têm métodos que recebem IFormFile, obsoletos desde a v4.11.0. O tipo vem do
+      pacote Microsoft.AspNetCore.Http 2.x, o último publicado fora do framework compartilhado, para o pacote
+      continuar utilizável em console, worker e testes sem o Microsoft.AspNetCore.App. Numa aplicação ASP.NET
+      Core o SDK resolve o conflito em favor do assembly do framework, e o IFormFile é o mesmo tipo.
+      Na v5 esses métodos e esta referência saem: os substitutos por Stream e por nome de arquivo já estão
+      aqui, e as extensões de IFormFile, no Tooark.AspNetCore (Tooark.AspNetCore.Files).
     -->
     <PackageReference Include="Microsoft.AspNetCore.Http" />
   </ItemGroup>

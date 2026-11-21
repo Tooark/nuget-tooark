@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http;
 using Moq;
 using Tooark.Utils;
 
+#pragma warning disable CS0618 // Os métodos com IFormFile são obsoletos: os testes garantem que continuam funcionando até a v5
+
 namespace Tooark.Tests.Utils;
 
 public class FileValidTests
