@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Polly.CircuitBreaker;
 using Polly.RateLimiting;
@@ -106,31 +107,45 @@ internal static class HttpErrorMapper
   /// </summary>
   /// <remarks>
   /// Quando o corpo é o Problem Details do Tooark (<c>application/problem+json</c> com a lista <c>errors</c> de
-  /// <c>code</c>, <c>key</c> e <c>message</c>), cada erro vira um item de notificação. Qualquer outro corpo é
-  /// ignorado: ele nunca entra na mensagem.
+  /// <c>code</c>, <c>key</c> e <c>message</c>), cada erro vira um item de notificação. Qualquer outro corpo fica
+  /// fora da mensagem e das notificações. O corpo, em qualquer formato, vai como texto para
+  /// <see cref="HttpRequestFailedException.UpstreamBody"/>, dentro do limite de <see cref="MaximumErrorBodyBytes"/>.
   /// </remarks>
   /// <param name="response">A resposta de erro.</param>
   /// <param name="cancellationToken">Token de cancelamento.</param>
-  /// <returns>A exceção com o status e os erros do serviço chamado.</returns>
+  /// <returns>A exceção com o status, os erros e o corpo do serviço chamado.</returns>
   internal static async Task<HttpRequestFailedException> FromResponseAsync(
     HttpResponseMessage response,
     CancellationToken cancellationToken
   )
   {
     var requestUri = response.RequestMessage?.RequestUri;
-    List<NotificationItem> notifications;
+    List<NotificationItem> notifications = [];
+    string? upstreamBody = null;
 
     try
     {
-      notifications = await ReadProblemAsync(response, cancellationToken).ConfigureAwait(false);
+      var body = await ReadErrorBodyAsync(response, cancellationToken).ConfigureAwait(false);
+
+      if (!body.IsEmpty)
+      {
+        var contentType = response.Content.Headers.ContentType;
+
+        // Só o Problem Details vira notificação; os demais formatos seguem apenas como texto
+        if (string.Equals(contentType?.MediaType, ProblemMediaType, StringComparison.OrdinalIgnoreCase))
+        {
+          notifications = ParseProblem(body);
+        }
+
+        upstreamBody = DecodeBody(body, contentType?.CharSet);
+      }
     }
     catch (Exception exception) when (exception is HttpRequestException or IOException)
     {
       // A conexão caiu no meio do corpo de erro: o status já chegou, e é ele que importa para quem chamou
-      notifications = [];
     }
 
-    return new HttpRequestFailedException(response.StatusCode, requestUri, notifications);
+    return new HttpRequestFailedException(response.StatusCode, requestUri, notifications, upstreamBody);
   }
 
   /// <summary>
@@ -192,21 +207,20 @@ internal static class HttpErrorMapper
   #region Private Methods
 
   /// <summary>
-  /// Lê os erros do Problem Details da resposta, limitando o tamanho do corpo lido.
+  /// Lê o corpo da resposta de erro, limitando o tamanho lido.
   /// </summary>
   /// <param name="response">A resposta de erro.</param>
   /// <param name="cancellationToken">Token de cancelamento.</param>
-  /// <returns>Os erros aproveitáveis; vazio quando não há Problem Details do Tooark.</returns>
-  private static async Task<List<NotificationItem>> ReadProblemAsync(
+  /// <returns>O corpo; vazio quando a resposta não tem corpo ou quando ele passa do limite.</returns>
+  private static async Task<ReadOnlyMemory<byte>> ReadErrorBodyAsync(
     HttpResponseMessage response,
     CancellationToken cancellationToken
   )
   {
-    var mediaType = response.Content.Headers.ContentType?.MediaType;
-
-    if (!string.Equals(mediaType, ProblemMediaType, StringComparison.OrdinalIgnoreCase))
+    // O tamanho declarado já resolve os dois extremos sem ler nada: sem corpo, ou acima do limite
+    if (response.Content.Headers.ContentLength is 0 or > MaximumErrorBodyBytes)
     {
-      return [];
+      return ReadOnlyMemory<byte>.Empty;
     }
 
     // Um byte além do limite basta para saber que o corpo passou dele, sem ler o resto
@@ -230,7 +244,35 @@ internal static class HttpErrorMapper
       }
     }
 
-    return length > MaximumErrorBodyBytes ? [] : ParseProblem(buffer.AsMemory(0, length));
+    return length > MaximumErrorBodyBytes ? ReadOnlyMemory<byte>.Empty : buffer.AsMemory(0, length);
+  }
+
+  /// <summary>
+  /// Converte o corpo da resposta de erro em texto.
+  /// </summary>
+  /// <param name="body">O corpo da resposta.</param>
+  /// <param name="charSet">O conjunto de caracteres declarado no <c>Content-Type</c>, quando houver.</param>
+  /// <returns>O texto, ou nulo quando o corpo está em branco.</returns>
+  private static string? DecodeBody(ReadOnlyMemory<byte> body, string? charSet)
+  {
+    var encoding = Encoding.UTF8;
+
+    if (!string.IsNullOrWhiteSpace(charSet))
+    {
+      try
+      {
+        // O valor pode vir entre aspas: charset="utf-8"
+        encoding = Encoding.GetEncoding(charSet.Trim().Trim('"'));
+      }
+      catch (ArgumentException)
+      {
+        // Conjunto de caracteres desconhecido para o runtime: segue como UTF-8, o padrão do JSON
+      }
+    }
+
+    var text = encoding.GetString(SkipByteOrderMark(body).Span);
+
+    return string.IsNullOrWhiteSpace(text) ? null : text;
   }
 
   /// <summary>

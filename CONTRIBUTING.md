@@ -151,9 +151,13 @@ to run the security scanner locally.
   the `Microsoft.AspNetCore.App` shared framework goes into a package that
   declares it (`Tooark.AspNetCore`, `Tooark.Dtos`, `Tooark.Observability`,
   `Tooark.Securities.OpenId`); the others must keep running on the base
-  runtime. The one deliberate exception is `Tooark.Utils`, which takes
-  `IFormFile` from the out-of-band `Microsoft.AspNetCore.Http` 2.x package
-  precisely to avoid the shared framework.
+  runtime. The one exception left in the 4.x line is `Tooark.Utils`, which
+  takes `IFormFile` from the out-of-band `Microsoft.AspNetCore.Http` 2.x
+  package. Those methods are obsolete since v4.11.0 and leave in v5, together
+  with the package reference: do not add new `IFormFile` members to
+  `Tooark.Utils`. New code that needs `IFormFile` goes into
+  `Tooark.AspNetCore` (see `Tooark.AspNetCore.Files`), built on the `Stream`
+  and file-name members of `Tooark.Utils`.
 - **Tests** use xUnit with the Arrange/Act/Assert layout and a one-line
   Portuguese comment describing each test.
 

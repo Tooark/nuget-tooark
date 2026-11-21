@@ -96,8 +96,8 @@ read by a Tooark package fails at startup when it has a key the package does not
 The application does not start, with `Options.Configuration.UnknownKey;Observability;SampligRatio`
 (`InternalServerErrorException`), which names the section and the key.
 
-- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `Jwt`, `Observability`,
-  `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
+- **Sections checked:** `Cryptography`, `DataProtection`, `HttpClient`, `HttpClients:{name}`, `Jwt`,
+  `Observability`, `OpenId:{provider}`, `PasswordHash`, `Sanitizers`, `Secrets` and `Storage`.
 - **Only what the registered packages read.** The check runs at registration (`AddTooark...`): a package the
   application does not register checks nothing, and the application's other sections (`Logging`, your own) are
   left alone.

@@ -7,8 +7,11 @@ namespace Tooark.Http.Interfaces;
 /// Interface do serviço de chamadas HTTP de saída com JSON.
 /// </summary>
 /// <remarks>
-/// Todos os métodos enviam pelo cliente nomeado do Tooark, criado pelo <see cref="IHttpClientFactory"/>, e por isso
-/// passam pela resiliência e pela guarda de saída configuradas. As falhas chegam como exceções do Tooark:
+/// Todos os métodos enviam pelo cliente nomeado do serviço, criado pelo <see cref="IHttpClientFactory"/>, e por isso
+/// passam pela resiliência e pela guarda de saída configuradas para ele. O serviço padrão usa o cliente
+/// <c>Tooark</c>; um cliente registrado com nome (<c>AddTooarkNamedHttpClient</c>) é resolvido pela chave, com
+/// <c>[FromKeyedServices("nome")]</c>. Os métodos por verbo com cabeçalhos por chamada são extensões, em
+/// <c>Tooark.Http.Extensions</c>. As falhas chegam como exceções do Tooark:
 /// <list type="bullet">
 /// <item><see cref="HttpRequestFailedException"/> (502) quando o serviço chamado responde com um status de erro;</item>
 /// <item><see cref="GatewayTimeoutException"/> (504) no tempo limite;</item>
@@ -113,14 +116,42 @@ public interface IHttpClientService
   /// Envia uma requisição montada por quem chama e devolve a resposta como veio.
   /// </summary>
   /// <remarks>
-  /// É a saída para o que os métodos por verbo não cobrem: cabeçalhos próprios, corpo que não é JSON, leitura do
-  /// status. A requisição passa pelo mesmo cliente, com a resiliência e a guarda de saída, e a resposta volta com o
-  /// corpo já carregado em memória. Um status de erro <b>não</b> vira exceção aqui; as falhas de transporte (tempo
-  /// limite, circuito aberto, conexão, destino bloqueado) viram, como nos demais métodos. Quem chama descarta a
-  /// resposta.
+  /// É a saída para o que os métodos por verbo não cobrem: corpo que não é JSON, outro verbo, leitura do status e
+  /// dos cabeçalhos da resposta. Para só incluir um cabeçalho na requisição há as versões dos métodos por verbo com
+  /// ajuste da requisição, em <c>Tooark.Http.Extensions</c>. A requisição passa pelo mesmo cliente, com a
+  /// resiliência e a guarda de saída, e a resposta volta com o corpo já carregado em memória. Um status de erro
+  /// <b>não</b> vira exceção aqui; as falhas de transporte (tempo limite, circuito aberto, conexão, destino
+  /// bloqueado) viram, como nos demais métodos. Quem chama descarta a resposta.
   /// </remarks>
   /// <param name="request">A requisição.</param>
   /// <param name="cancellationToken">Token de cancelamento.</param>
   /// <returns>A resposta do serviço chamado, com qualquer status.</returns>
   Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken = default);
+
+  /// <summary>
+  /// Envia uma requisição montada por quem chama e devolve a resposta assim que os cabeçalhos chegam, sem carregar o
+  /// corpo em memória.
+  /// </summary>
+  /// <remarks>
+  /// É o envio para respostas longas ou contínuas: eventos enviados pelo servidor (<c>text/event-stream</c>), a
+  /// resposta de um modelo de linguagem em pedaços, um arquivo grande. A requisição passa pelo mesmo cliente, com a
+  /// resiliência e a guarda de saída. Como no <see cref="SendAsync"/>, um status de erro <b>não</b> vira exceção, e
+  /// as falhas de transporte até os cabeçalhos viram.
+  /// <para>
+  /// O tempo limite da chamada termina nos cabeçalhos: a leitura do corpo pode durar mais que ele. Quem chama lê o
+  /// corpo com <c>response.Content.ReadAsStreamAsync</c>, controla o prazo dessa leitura com o próprio token e
+  /// descarta a resposta, o que devolve a conexão. Uma falha durante a leitura do corpo chega como a exceção do
+  /// transporte (<see cref="IOException"/>, <see cref="HttpRequestException"/>), e não como exceção do Tooark, e
+  /// não é tentada de novo.
+  /// </para>
+  /// <para>
+  /// A implementação padrão da interface, usada por uma implementação escrita antes deste método existir, devolve
+  /// o mesmo que o <see cref="SendAsync"/>: a resposta com o corpo já carregado.
+  /// </para>
+  /// </remarks>
+  /// <param name="request">A requisição.</param>
+  /// <param name="cancellationToken">Token de cancelamento, que vale até os cabeçalhos da resposta.</param>
+  /// <returns>A resposta do serviço chamado, com qualquer status e o corpo ainda por ler.</returns>
+  Task<HttpResponseMessage> SendStreamingAsync(HttpRequestMessage request, CancellationToken cancellationToken = default) =>
+    SendAsync(request, cancellationToken);
 }

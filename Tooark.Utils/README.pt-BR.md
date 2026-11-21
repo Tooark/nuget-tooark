@@ -48,10 +48,12 @@ Conversão de arquivos e extração de extensões.
 **Métodos:**
 
 - `ToMemoryStream(string? stringFile, long maxBytes = 0)`: Converte uma string base64 para `MemoryStream`.
-- `ToMemoryStream(IFormFile? fromFile, long maxBytes = 0)`: Converte um `IFormFile` para `MemoryStream`.
-- `ToMemoryStreamAsync(IFormFile? fromFile, long maxBytes = 0, CancellationToken cancellationToken = default)`: Converte um `IFormFile` para `MemoryStream` de forma assíncrona.
+- `CopyToMemoryStream(Stream? stream, long maxBytes = 0)`: Copia o conteúdo de um `Stream` para um `MemoryStream`.
+- `CopyToMemoryStreamAsync(Stream? stream, long maxBytes = 0, CancellationToken cancellationToken = default)`: Copia o conteúdo de um `Stream` para um `MemoryStream` de forma assíncrona.
 - `Extension(string? stringFile)`: Extrai a extensão do arquivo de uma string base64.
-- `Extension(IFormFile? fromFile)`: Extrai a extensão do arquivo de um `IFormFile`.
+- `ExtensionFromFileName(string? fileName)`: Extrai a extensão a partir do nome do arquivo.
+
+`CopyToMemoryStream`, `CopyToMemoryStreamAsync` e `ExtensionFromFileName` existem desde a v4.11.0.
 
 **Constante:**
 
@@ -61,13 +63,26 @@ A chave da mensagem de erro do limite está em [`UtilErrorMessages`](#7-mensagen
 
 **Comportamento:**
 
-- A conversão de um `IFormFile` copia o conteúdo binário do arquivo. O `MemoryStream` retornado já vem posicionado no início.
-- A conversão retorna `null` quando o arquivo é nulo ou vazio, e quando a string não contém um base64 válido.
-- **Limite de tamanho**: acima de `maxBytes` é lançada uma `PayloadTooLargeException` (HTTP 413), com a mensagem `File.SizeExceeded;{limite}`. Valor não positivo aplica `DefaultMaxBytes`; o teto absoluto é `int.MaxValue`, que é o que um `MemoryStream` comporta. O limite é conferido **antes** de reservar memória, e também bloco a bloco durante a leitura do upload, para valer mesmo quando o tamanho declarado não corresponde ao conteúdo real.
+- A cópia de um `Stream` começa na **posição atual** da origem e leva o conteúdo binário até o fim. A origem não é fechada: quem abriu o fluxo é quem o descarta. O `MemoryStream` retornado já vem posicionado no início.
+- A conversão retorna `null` quando o fluxo é nulo, está vazio ou já foi lido até o fim, e quando a string não contém um base64 válido.
+- **Limite de tamanho**: acima de `maxBytes` é lançada uma `PayloadTooLargeException` (HTTP 413), com a mensagem `File.SizeExceeded;{limite}`. Valor não positivo aplica `DefaultMaxBytes`; o teto absoluto é `int.MaxValue`, que é o que um `MemoryStream` comporta. Em uma string, o limite é conferido pelo comprimento do trecho base64, **antes** de reservar memória. Em um `Stream` que informa o tamanho, o excesso também é recusado antes de qualquer alocação; nos demais, como o corpo de uma requisição, o limite é conferido bloco a bloco durante a cópia.
 - A string precisa trazer o marcador `;base64,`, e o conteúdo é lido logo depois dele. Um `base64,` solto em outra posição não é aceito.
 - A extensão extraída de uma string base64 vem do tipo declarado no formato `data:tipo/extensao;base64,conteudo`, e o tipo pode trazer parâmetros (`data:image/png;charset=utf-8;base64,...`).
+- A extensão extraída de um nome de arquivo é o que vem depois do último ponto. O que vier antes de um separador de diretório é descartado.
 - **A extensão é validada**: só passam letras e dígitos ASCII, com no máximo dez caracteres. Qualquer outra coisa resulta em `null`. Como a extensão vem do que o cliente declarou — o nome do arquivo ou o tipo da data URL — sem essa validação o retorno poderia carregar separador de diretório, marcação ou texto de tamanho arbitrário para dentro de quem a consome. Tipos MIME que não têm forma de extensão, como `image/svg+xml` e `application/vnd.ms-excel`, resultam em `null`.
 - A extensão é sempre retornada em maiúsculas e sem o ponto inicial. Ela reflete o que foi **declarado**, e não o conteúdo real do arquivo.
+
+**Métodos com `IFormFile`:**
+
+Os três métodos do `FileConvert` que recebem um `IFormFile` estão **obsoletos desde a v4.11.0 e são removidos na v5**, junto com a [dependência](#-dependências) do pacote no `Microsoft.AspNetCore.Http` 2.x: o `IFormFile` é um tipo do ASP.NET Core, e o pacote só referencia o ASP.NET Core por causa deles. Continuam funcionando na 4.x, com o aviso `CS0618`. As versões que recebem uma string (`ToMemoryStream(string?)` e `Extension(string?)`) não estão obsoletas.
+
+| Obsoleto                                                   | Com `IFormFile` (`Tooark.AspNetCore.Files`) | Sem `IFormFile`                   |
+| ---------------------------------------------------------- | ------------------------------------------- | --------------------------------- |
+| `ToMemoryStream(IFormFile?, long)`                         | `arquivo.ToMemoryStream()`                  | `CopyToMemoryStream(stream)`      |
+| `ToMemoryStreamAsync(IFormFile?, long, CancellationToken)` | `arquivo.ToMemoryStreamAsync()`             | `CopyToMemoryStreamAsync(stream)` |
+| `Extension(IFormFile?)`                                    | `arquivo.GetExtension()`                    | `ExtensionFromFileName(nome)`     |
+
+Em uma aplicação ASP.NET Core, use as extensões de `IFormFile` do [`Tooark.AspNetCore`](https://github.com/Tooark/nuget-tooark/tree/main/Tooark.AspNetCore), que aplicam as mesmas regras. Fora dela, use as versões por `Stream` e por nome de arquivo.
 
 [**Exemplo de Uso**](#conversão-de-arquivos-e-extração-de-extensões)
 
@@ -78,17 +93,33 @@ Verificação da validade de arquivos.
 
 **Métodos:**
 
-- `IsImage(IFormFile? file, long fileSize = 0)`: Verifica se o arquivo é uma imagem válida.
-- `IsDocument(IFormFile? file, long fileSize = 0)`: Verifica se o arquivo é um documento válido.
-- `IsVideo(IFormFile? file, long fileSize = 0)`: Verifica se o arquivo é um vídeo válido.
-- `IsCustom(IFormFile? file, long fileSize = 0, string[]? permittedExtensions = null)`: Verifica se o arquivo é válido para extensões personalizadas.
+- `IsImageFile(string? fileName, long length, long maxBytes = 0)`: Verifica, pelo nome e pelo tamanho, se o arquivo é uma imagem válida.
+- `IsDocumentFile(string? fileName, long length, long maxBytes = 0)`: Verifica, pelo nome e pelo tamanho, se o arquivo é um documento válido.
+- `IsVideoFile(string? fileName, long length, long maxBytes = 0)`: Verifica, pelo nome e pelo tamanho, se o arquivo é um vídeo válido.
+- `IsCustomFile(string? fileName, long length, long maxBytes = 0, string[]? permittedExtensions = null)`: Verifica, pelo nome e pelo tamanho, se o arquivo é válido para extensões personalizadas.
+
+Os quatro existem desde a v4.11.0. `fileName` é o nome do arquivo, de onde sai a extensão, `length` é o tamanho dele em bytes e `maxBytes` é o tamanho máximo aceito.
 
 **Comportamento:**
 
 - A verificação considera o **tamanho** e a **extensão declarada no nome do arquivo**. Ela não inspeciona o conteúdo, portanto não substitui a checagem do tipo real do arquivo quando o conteúdo enviado não é confiável.
-- O tamanho padrão é 5242880 bytes (5MB), aplicado quando `fileSize` é zero ou negativo.
+- As extensões de imagem são `.JPG`, `.JPEG`, `.PNG`, `.GIF`, `.BMP`, `.SVG` e `.WEBP`; as de documento, `.TXT`, `.CSV`, `.LOG`, `.PDF`, `.DOC`, `.DOCX`, `.XLS`, `.XLSX`, `.PPT` e `.PPTX`; as de vídeo, `.AVI`, `.MP4`, `.MPG`, `.MPEG` e `.WMV`.
+- O tamanho máximo padrão é 5242880 bytes (5MB), aplicado quando `maxBytes` é zero ou negativo. Um arquivo com `length` zero ou negativo é inválido.
 - As extensões personalizadas são comparadas sem diferenciar maiúsculas de minúsculas e podem ser informadas **com ou sem o ponto inicial**: `"pdf"` e `".PDF"` têm o mesmo efeito.
 - Se `permittedExtensions` for nulo, vazio ou contiver apenas entradas em branco, todas as extensões de imagem, documento e vídeo são aceitas.
+
+**Métodos com `IFormFile`:**
+
+Os quatro métodos do `FileValid` que recebem um `IFormFile` estão **obsoletos desde a v4.11.0 e são removidos na v5**, pelo mesmo motivo dos [métodos do `FileConvert`](#1-conversão-de-arquivos-e-extração-de-extensões). Continuam funcionando na 4.x, com o aviso `CS0618`.
+
+| Obsoleto                                | Com `IFormFile` (`Tooark.AspNetCore.Files`) | Sem `IFormFile`                 |
+| --------------------------------------- | ------------------------------------------- | ------------------------------- |
+| `IsImage(IFormFile?, long)`             | `arquivo.IsImage()`                         | `IsImageFile(nome, tamanho)`    |
+| `IsDocument(IFormFile?, long)`          | `arquivo.IsDocument()`                      | `IsDocumentFile(nome, tamanho)` |
+| `IsVideo(IFormFile?, long)`             | `arquivo.IsVideo()`                         | `IsVideoFile(nome, tamanho)`    |
+| `IsCustom(IFormFile?, long, string[]?)` | `arquivo.IsCustom()`                        | `IsCustomFile(nome, tamanho)`   |
+
+O parâmetro do tamanho máximo, que nos métodos obsoletos se chama `fileSize`, chama-se `maxBytes` nos substitutos: quem o informa pelo nome (`fileSize: ...`) precisa trocá-lo na migração.
 
 [**Exemplo de Uso**](#validação-de-arquivos)
 
@@ -193,26 +224,29 @@ As traduções acompanham os recursos do [Tooark.Extensions](https://github.com/
 
 ```csharp
 using Tooark.Utils;
-using Microsoft.AspNetCore.Http;
 using Tooark.Exceptions;
 
 var base64String = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQ...";
 
 // Limite padrão de 5MB
 MemoryStream? memoryStream = FileConvert.ToMemoryStream(base64String);
-MemoryStream? fromUpload = FileConvert.ToMemoryStream(formFile);
 
-// Limite próprio, em bytes
-MemoryStream? grande = FileConvert.ToMemoryStream(formFile, 20 * 1024 * 1024);
-MemoryStream? assincrono = await FileConvert.ToMemoryStreamAsync(formFile, cancellationToken: cancellationToken);
+// De um Stream: a cópia começa na posição atual, e quem abriu a origem é quem a descarta
+using var relatorio = File.OpenRead("relatorio.pdf");
+MemoryStream? fromStream = FileConvert.CopyToMemoryStream(relatorio);
+
+// Limite próprio, em bytes, na versão assíncrona
+await using var video = File.OpenRead("video.mp4");
+MemoryStream? grande = await FileConvert.CopyToMemoryStreamAsync(video, 20 * 1024 * 1024, cancellationToken);
 
 string? extension = FileConvert.Extension(base64String); // PNG
-string? extensionFromFile = FileConvert.Extension(formFile); // TXT
+string? extensionFromName = FileConvert.ExtensionFromFileName("relatorio.pdf"); // PDF
 
 // Acima do limite, o erro é explícito e já carrega o status HTTP 413
 try
 {
-  FileConvert.ToMemoryStream(formFile, 1024);
+  using var planilha = File.OpenRead("planilha.xlsx");
+  FileConvert.CopyToMemoryStream(planilha, 1024);
 }
 catch (PayloadTooLargeException ex)
 {
@@ -225,14 +259,16 @@ catch (PayloadTooLargeException ex)
 
 ```csharp
 using Tooark.Utils;
-using Microsoft.AspNetCore.Http;
 
-bool isImage = FileValid.IsImage(formFile);
-bool isDocument = FileValid.IsDocument(formFile, 10485760); // 10MB
-bool isVideo = FileValid.IsVideo(formFile);
+// O nome e o tamanho vêm de onde o arquivo estiver: disco, armazenamento, mensagem
+var foto = new FileInfo("foto.png");
+
+bool isImage = FileValid.IsImageFile(foto.Name, foto.Length);
+bool isDocument = FileValid.IsDocumentFile("contrato.pdf", 2097152, 10485760); // 2MB, com limite de 10MB
+bool isVideo = FileValid.IsVideoFile("aula.mp4", 4194304);
 
 // Com ou sem o ponto inicial, o resultado é o mesmo
-bool isCustom = FileValid.IsCustom(formFile, permittedExtensions: ["txt", ".csv"]);
+bool isCustom = FileValid.IsCustomFile("dados.csv", 1024, permittedExtensions: ["txt", ".csv"]);
 ```
 
 ### Geração de Strings
@@ -297,10 +333,11 @@ string withSymbols = Normalize.Value("R&D 100$"); // RANDD100DOLLAR
 ## 📋 Dependências
 
 - [Microsoft.AspNetCore.Http](https://www.nuget.org/packages/Microsoft.AspNetCore.Http/) 2.x — traz o `IFormFile`
-- [Microsoft.AspNetCore.WebUtilities](https://www.nuget.org/packages/Microsoft.AspNetCore.WebUtilities/) 2.3.14 — dependência transitiva do pacote acima, fixada na versão que corrige a CVE-2026-118750, para o consumidor nunca resolver a 2.3.x vulnerável
-  para o `FileConvert` e o `FileValid` sem exigir o framework compartilhado `Microsoft.AspNetCore.App`, então o
-  pacote também roda em aplicações console e worker. Dentro de uma aplicação ASP.NET Core o assembly do próprio
-  framework prevalece e o `IFormFile` é o mesmo tipo.
+  para os métodos obsoletos do `FileConvert` e do `FileValid` sem exigir o framework compartilhado
+  `Microsoft.AspNetCore.App`, então o pacote também roda em aplicações console e worker. Dentro de uma aplicação
+  ASP.NET Core o assembly do próprio framework prevalece e o `IFormFile` é o mesmo tipo. **Sai do pacote na v5**,
+  junto com os métodos que recebem um `IFormFile`, obsoletos desde a v4.11.0.
+- [Microsoft.AspNetCore.WebUtilities](https://www.nuget.org/packages/Microsoft.AspNetCore.WebUtilities/) 2.3.14 — dependência transitiva do pacote acima, fixada na versão que corrige a CVE-2026-118750, para o consumidor nunca resolver a 2.3.x vulnerável. Sai junto com ele na v5.
 - [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions)
 - [`Tooark.Validations`](https://www.nuget.org/packages/Tooark.Validations)
 

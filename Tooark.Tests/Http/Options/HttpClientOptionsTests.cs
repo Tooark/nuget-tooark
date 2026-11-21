@@ -20,10 +20,13 @@ public class HttpClientOptionsTests
 
     // Assert
     Assert.Equal("HttpClient", HttpClientOptions.Section);
+    Assert.Equal("HttpClients", HttpClientOptions.NamedSection);
     Assert.Null(options.BaseAddress);
     Assert.Equal(30, options.TotalTimeoutSeconds);
     Assert.Equal(10, options.AttemptTimeoutSeconds);
     Assert.Equal(3, options.RetryCount);
+    // Na 4.x POST e PATCH seguem sendo tentados de novo por padrão; a v5 inverte
+    Assert.True(options.RetryNonIdempotentMethods);
     Assert.Equal(2000, options.RetryDelayMilliseconds);
     Assert.Equal(0.1, options.CircuitBreakerFailureRatio);
     Assert.Equal(100, options.CircuitBreakerMinimumThroughput);

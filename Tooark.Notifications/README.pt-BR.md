@@ -14,7 +14,8 @@ Biblioteca para criação e gerenciamento de notificações e alertas, facilitan
 - [Classes](#-classes)
   - [NotificationItem](#1-item-de-notificação)
   - [Notification](#2-notificação)
-  - [NotificationErrorMessages](#3-mensagens-de-erro)
+  - [NotificationList](#3-lista-de-notificações)
+  - [NotificationErrorMessages](#4-mensagens-de-erro)
 - [Exemplos de Uso](#-exemplos-de-uso)
 - [Contribuindo](#-contribuindo)
 - [Ajuda & Segurança](#-ajuda--segurança)
@@ -31,7 +32,8 @@ dotnet add package Tooark.Notifications
 
 O pacote não tem configuração. `Notification` é usada por herança, em classes que acumulam o resultado
 de várias verificações — como os objetos de valor e as entidades do Tooark —, e os mutadores são
-protegidos: quem acumula a notificação é o próprio objeto, não quem o consome.
+protegidos: quem acumula a notificação é o próprio objeto, não quem o consome. Para itens que já existem,
+vindos de fora do objeto, há a `NotificationList` (desde a v4.11.0), criada diretamente a partir deles.
 
 As mensagens são guardadas como **chave**, e não como texto final. Quem traduz é a camada que monta a
 resposta, como o `ResponseDto` do
@@ -123,7 +125,32 @@ A criação e a limpeza de notificações são protegidas: apenas o próprio obj
 
 [**Exemplo de Uso**](#notificação)
 
-### 3. Mensagens de Erro
+### 3. Lista de Notificações
+
+**Funcionalidade:**
+Classe selada `NotificationList`, disponível desde a v4.11.0: uma notificação concreta, criada a partir de itens que já existem. Herda de `Notification`, então tem as mesmas propriedades e é aceita onde uma `Notification` é esperada.
+
+A `Notification` só recebe itens por métodos protegidos, porque quem notifica é o próprio objeto. A `NotificationList` cobre o caso em que os itens vêm de fora do objeto e precisam seguir como uma notificação: os erros por campo de uma validação, os erros devolvidos por outro serviço, uma lista montada pela aplicação.
+
+As exceções do [`Tooark.Exceptions`](https://www.nuget.org/packages/Tooark.Exceptions) aceitam uma `Notification` e preservam a chave e o código de cada item, então `new BadRequestException(new NotificationList(items))` leva a lista inteira até a resposta.
+
+**Métodos:**
+
+- `NotificationList(IEnumerable<NotificationItem> notifications)`: Cria a notificação com os itens informados, na ordem em que vieram, mantendo a mensagem, a chave e o código de cada um. A sequência é percorrida uma única vez.
+
+Os itens entram só pelo construtor: não há método público para incluir um item depois. A agregação pública (`AddNotifications`) continua disponível, como em qualquer `Notification`.
+
+**Tratamento de valores nulos:**
+
+| Situação                    | Comportamento                                   |
+| --------------------------- | ----------------------------------------------- |
+| Coleção nula                | Lança `ArgumentNullException`                   |
+| Item nulo dentro da coleção | Ignorado, sem alterar a lista                   |
+| Coleção vazia               | Notificação sem itens, com `IsValid` verdadeiro |
+
+[**Exemplo de Uso**](#lista-de-notificações)
+
+### 4. Mensagens de Erro
 
 **Funcionalidade:**
 Classe estática `NotificationErrorMessages` com as mensagens geradas pela própria biblioteca. São chaves de tradução, e não textos finais.
@@ -186,6 +213,36 @@ public class MyValidation : Notification
 var validation = new MyValidation();
 
 validation.AddNotifications(myNotification, myOtherNotification);
+```
+
+### Lista de Notificações
+
+```csharp
+// Itens que já existem, vindos de fora do objeto: erros por campo de uma validação, erros de outro serviço
+NotificationItem[] items =
+[
+  new("E-mail é obrigatório.", "Email", "XPTO1"),
+  new("Nome muito curto.", "Name", "XPTO2")
+];
+
+var list = new NotificationList(items);
+
+var isValid = list.IsValid; // False
+var count = list.Count; // 2
+var codes = list.Codes; // ["XPTO1", "XPTO2"]
+var keys = list.Keys; // ["Email", "Name"]
+var messages = list.Messages; // ["E-mail é obrigatório.", "Nome muito curto."]
+
+// Uma lista vazia é uma notificação válida, sem itens
+var empty = new NotificationList([]);
+var emptyIsValid = empty.IsValid; // True
+```
+
+```csharp
+// A lista é uma Notification: outra notificação a agrega, e uma exceção do Tooark.Exceptions a recebe
+validation.AddNotifications(list);
+
+throw new BadRequestException(list);
 ```
 
 ---
