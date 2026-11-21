@@ -1153,7 +1153,7 @@ user.TotpLastUsedStep = step;
 
 ```csharp
 // Enrollment: generate, show once, store only the hashes
-var codes = RecoveryCodes.Generate();                                 // 10 codes like "7KQ2M-8XR4N"
+var codes = RecoveryCodes.Generate();                                 // 10 codes like "7KQ2M-8XR4N-PD6WT-3HJ9B"
 user.RecoveryCodeHashes = codes
     .Select(code => SecureToken.Hash(RecoveryCodes.Normalize(code)))
     .ToList();
@@ -1171,7 +1171,19 @@ user.RecoveryCodeHashes.Remove(match);                                // each co
 ```
 
 The alphabet has no `0`/`O` nor `1`/`I`, so a printed code is typed without ambiguity. `Generate` returns distinct
-codes, 10 of 10 characters by default (1 to 50 codes, 8 to 32 characters).
+codes, 10 of 20 characters by default (1 to 50 codes, 8 to 32 characters). The code is shown in groups of five
+characters separated by hyphens: at the default length, `XXXXX-XXXXX-XXXXX-XXXXX`, 23 characters counting the
+hyphens. Each character is worth 5 bits, so the default code has 100 bits.
+
+The default length is 20 since v4.11.0. Up to v4.10.0 it was 10 (`XXXXX-XXXXX`, 50 bits), too little for a value
+stored with the fast hash of `SecureToken`: with a leaked database, brute force was within reach of anyone with a
+GPU.
+
+- **Codes already issued**: the 10-character ones remain valid. Verification does not depend on the length, and
+  what goes to the database is the hash, of fixed size.
+- **Keeping the previous length**: pass `RecoveryCodes.Generate(length: 10)`. The codes go back to 50 bits.
+- **When upgrading**: check the screen that shows the codes and any length or format validation on the field
+  where the user types the code.
 
 ---
 
@@ -1620,6 +1632,7 @@ openssl pkcs12 -export -inkey dataprotection.key -in dataprotection.crt \
 3. **Encrypt the TOTP secret at rest** - Whoever reads it generates valid codes; use `ICryptographyService`
 4. **Persist `matchedStep`** - Without it, a code intercepted within the window is accepted twice
 5. **Show recovery codes once** - And invalidate each one on use
+6. **Keep the default recovery code length** - 20 characters (100 bits); with 10 characters (50 bits), a code stored with a fast hash is within reach of GPU brute force if the database leaks
 
 ### Data Protection
 

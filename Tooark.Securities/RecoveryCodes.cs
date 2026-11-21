@@ -27,9 +27,14 @@ public static class RecoveryCodes
   public const int DefaultCount = 10;
 
   /// <summary>
-  /// Quantidade padrão de caracteres por código, sem contar o separador.
+  /// Quantidade padrão de caracteres por código, sem contar os separadores.
   /// </summary>
-  public const int DefaultLength = 10;
+  /// <remarks>
+  /// São 100 bits por código (5 bits por caractere). Até a v4.10.0 o padrão era 10 caracteres (50 bits), pouco para
+  /// um valor guardado com um hash rápido: com o banco vazado, a força bruta ficava ao alcance de quem tem GPU. Os
+  /// códigos já emitidos com 10 caracteres continuam valendo, porque a conferência não depende do tamanho.
+  /// </remarks>
+  public const int DefaultLength = 20;
 
   /// <summary>
   /// Tamanho dos grupos separados por hífen na exibição.
@@ -44,7 +49,9 @@ public static class RecoveryCodes
   /// Gera códigos de recuperação aleatórios, formatados em grupos de cinco caracteres separados por hífen.
   /// </summary>
   /// <param name="count">Quantidade de códigos, entre 1 e 50. Padrão: 10.</param>
-  /// <param name="length">Caracteres por código, entre 8 e 32, sem contar os hífens. Padrão: 10 (<c>XXXXX-XXXXX</c>).</param>
+  /// <param name="length">
+  /// Caracteres por código, entre 8 e 32, sem contar os hífens. Padrão: 20 (<c>XXXXX-XXXXX-XXXXX-XXXXX</c>).
+  /// </param>
   /// <returns>Os códigos, distintos entre si, na forma exibida ao usuário.</returns>
   /// <exception cref="ArgumentOutOfRangeException">Quando a quantidade ou o tamanho estão fora da faixa.</exception>
   public static IReadOnlyList<string> Generate(int count = DefaultCount, int length = DefaultLength)

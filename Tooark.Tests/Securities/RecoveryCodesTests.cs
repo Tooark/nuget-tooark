@@ -4,7 +4,7 @@ namespace Tooark.Tests.Securities;
 
 public class RecoveryCodesTests
 {
-  // Testa se os códigos padrão saem em dois grupos de cinco, no alfabeto sem caracteres ambíguos, e distintos
+  // Testa se os códigos padrão saem em quatro grupos de cinco, no alfabeto sem caracteres ambíguos, e distintos
   [Fact]
   public void Generate_ShouldReturnTenDistinctFormattedCodes_ByDefault()
   {
@@ -14,7 +14,35 @@ public class RecoveryCodesTests
     // Assert
     Assert.Equal(10, codes.Count);
     Assert.Equal(10, codes.Distinct().Count());
-    Assert.All(codes, code => Assert.Matches("^[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}$", code));
+    Assert.All(codes, code => Assert.Matches("^[A-HJ-NP-Z2-9]{5}(-[A-HJ-NP-Z2-9]{5}){3}$", code));
+  }
+
+  // Testa se o tamanho padrão é o de 100 bits: 20 caracteres de 5 bits
+  [Fact]
+  public void DefaultLength_ShouldBeTwentyCharacters()
+  {
+    // Act
+    var code = Assert.Single(RecoveryCodes.Generate(count: 1));
+
+    // Assert
+    Assert.Equal(20, RecoveryCodes.DefaultLength);
+    Assert.Equal(RecoveryCodes.DefaultLength, RecoveryCodes.Normalize(code).Length);
+  }
+
+  // Testa se um código de 10 caracteres, o padrão até a v4.10.0, continua conferindo depois da troca do padrão
+  [Fact]
+  public void Verify_ShouldStillAcceptACodeWithTheFormerDefaultLength()
+  {
+    // Arrange
+    var code = Assert.Single(RecoveryCodes.Generate(count: 1, length: 10));
+    var hash = SecureToken.Hash(RecoveryCodes.Normalize(code));
+
+    // Act
+    var valid = SecureToken.Verify(RecoveryCodes.Normalize(code.ToLowerInvariant()), hash);
+
+    // Assert
+    Assert.Matches("^[A-HJ-NP-Z2-9]{5}-[A-HJ-NP-Z2-9]{5}$", code);
+    Assert.True(valid);
   }
 
   // Testa se a quantidade e o tamanho informados são respeitados, com o último grupo menor quando não divide por cinco
