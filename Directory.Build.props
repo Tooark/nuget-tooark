@@ -39,7 +39,9 @@
     -->
     <EnablePackageValidation>true</EnablePackageValidation>
     <!--
-      v5: a baseline é a 4.10.0, a última 4.x. As quebras de API intencionais da major (a saída do alvo
+      v5: a baseline é a 4.10.0. A última 4.x é a 4.11.0, e ela entra aqui quando estiver publicada no
+      nuget.org, de onde a validação baixa o pacote; as supressões não mudam com a troca, porque a 4.11.0 só
+      acrescenta membros. As quebras de API intencionais da major (a saída do alvo
       net8.0 e os membros obsoletos removidos, listados em Notes/v5.0.0.md) ficam registradas no
       CompatibilitySuppressions.xml de cada pacote afetado; qualquer outra quebra falha o "dotnet pack".
       Ao incorporar uma quebra nova, documente-a nas notas e gere os arquivos de novo com
